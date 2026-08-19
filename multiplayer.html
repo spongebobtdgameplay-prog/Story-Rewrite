@@ -9,18 +9,21 @@
 <link rel="icon" type="image/png" sizes="16x16" href="favicon_io/favicon-16x16.png?v=1000001">
 <link rel="stylesheet" href="looks.css">
 <link rel="stylesheet" href="multiplayer.css">
+<link rel="stylesheet" href="shell-ui.css">
 </head>
 <body class="MultiplayerPage">
 <div class="MultiplayerShell">
     <header class="MultiplayerHero">
         <div>
+            <div class="CompactTopActions" style="margin-bottom:14px;">
+                <button class="IconBackButton" type="button" data-story-back="main.html" aria-label="Go back"></button>
+            </div>
             <div class="Kicker">Co-op rewrite</div>
             <h1>Multiplayer</h1>
             <p>Create a code, invite up to three other players, chat, vote on sentences, and share three team lives.</p>
         </div>
         <div class="RoomFooterActions">
-            <a class="SecondaryButton" href="main.html">Home</a>
-            <button class="DangerButton" id="LogoutButton" type="button">Sign Out</button>
+            <button class="IconNavButton" type="button" data-story-go="account.html" data-account-icon aria-label="Account"></button>
         </div>
     </header>
 
@@ -70,6 +73,7 @@
 <script src="network.js"></script>
 <script src="app.js"></script>
 <script src="audio.js"></script>
+<script src="shell-ui.js"></script>
 <script src="https://cdn.socket.io/4.8.3/socket.io.min.js" integrity="sha384-kzavj5fiMwLKzzD1f8S7TeoVIEi7uKHvbTA3ueZkrzYq75pNQUiUi6Dy98Q3fxb0" crossorigin="anonymous"></script>
 <script src="multiplayer.js"></script>
 </body>
