@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Story Rewrite — Account</title>
+<link rel="stylesheet" href="looks.css">
+<link rel="stylesheet" href="multiplayer.css">
+</head>
+<body class="AccountPage">
+<main class="AccountShell">
+    <section class="AccountCard">
+        <div class="AccountBrand">Story Rewrite</div>
+        <h1 id="AccountTitle">Create your account</h1>
+        <p class="AccountLead">Your progress, lives, stars, and multiplayer data are stored on the game server.</p>
+
+        <div class="AccountTabs">
+            <button class="AccountTab Active" id="RegisterTab" type="button">Create Account</button>
+            <button class="AccountTab" id="LoginTab" type="button">Sign In</button>
+        </div>
+
+        <form id="AccountForm" class="AccountForm">
+            <label>Username<input id="UsernameInput" autocomplete="username" maxlength="20" required></label>
+            <label>Password<input id="PasswordInput" type="password" autocomplete="new-password" maxlength="128" required></label>
+            <label id="ConfirmLabel">Confirm Password<input id="ConfirmInput" type="password" autocomplete="new-password" maxlength="128"></label>
+            <button class="PrimaryButton AccountSubmit" id="AccountSubmit" type="submit">Create Account</button>
+        </form>
+
+        <div class="ServerSetup Hidden" id="ServerSetup">
+            <label>Server URL<input id="ServerUrlInput" placeholder="https://your-story-rewrite-server.example.com"></label>
+            <button class="SecondaryButton" id="SaveServerButton" type="button">Use This Server</button>
+        </div>
+
+        <div class="StatusText Hidden" id="AccountStatus"></div>
+    </section>
+</main>
+<script src="server-config.js"></script>
+<script src="network.js"></script>
+<script src="app.js"></script>
+<script src="auth.js"></script>
+</body>
+</html>
