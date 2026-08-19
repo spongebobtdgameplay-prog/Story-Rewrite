@@ -1,0 +1,395 @@
+.AccountPage,
+.MultiplayerPage {
+    min-height: 100vh;
+    margin: 0;
+    color: #f5ead8;
+    background:
+        radial-gradient(circle at 18% 8%, rgba(213, 165, 95, .16), transparent 30%),
+        linear-gradient(145deg, #432718 0%, #21130d 48%, #100906 100%);
+}
+
+.AccountShell {
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+}
+
+.AccountCard {
+    width: min(520px, 100%);
+    padding: 32px;
+    border: 1px solid #765138;
+    border-radius: 22px;
+    background: linear-gradient(180deg, #3a2418, #21130d);
+    box-shadow: 0 28px 80px rgba(0,0,0,.42), inset 0 1px rgba(255,240,211,.08);
+}
+
+.AccountBrand {
+    color: #d9a65e;
+    font: 900 11px/1.2 system-ui, sans-serif;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+}
+
+.AccountCard h1 {
+    margin: 8px 0 8px;
+    color: #fff0d2;
+    font-size: clamp(38px, 7vw, 58px);
+    line-height: .96;
+}
+
+.AccountLead {
+    margin: 0 0 22px;
+    color: #c8b18e;
+    line-height: 1.5;
+}
+
+.AccountTabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 7px;
+    padding: 5px;
+    border: 1px solid #67462f;
+    border-radius: 12px;
+    background: #160d09;
+}
+
+.AccountTab {
+    min-height: 40px;
+    cursor: pointer;
+    color: #bda98b;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    font-weight: 900;
+}
+
+.AccountTab.Active {
+    color: #27160e;
+    background: linear-gradient(180deg, #f0d5a8, #c9995c);
+}
+
+.AccountForm,
+.ServerSetup {
+    display: grid;
+    gap: 13px;
+    margin-top: 18px;
+}
+
+.AccountForm label,
+.ServerSetup label {
+    display: grid;
+    gap: 6px;
+    color: #d5be9c;
+    font: 800 10px/1.2 system-ui, sans-serif;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.AccountForm input,
+.ServerSetup input,
+.JoinCodeInput,
+.ChatInput {
+    width: 100%;
+    min-height: 46px;
+    padding: 10px 12px;
+    color: #fff1d7;
+    border: 1px solid #705039;
+    border-radius: 10px;
+    outline: none;
+    background: #150d09;
+    font: 700 15px/1.2 system-ui, sans-serif;
+}
+
+.AccountForm input:focus,
+.ServerSetup input:focus,
+.JoinCodeInput:focus,
+.ChatInput:focus {
+    border-color: #d7a35a;
+    box-shadow: 0 0 0 3px rgba(215,163,90,.14);
+}
+
+.AccountSubmit {
+    margin-top: 3px;
+}
+
+.MultiplayerShell {
+    width: min(1320px, calc(100% - 28px));
+    margin: 16px auto 50px;
+}
+
+.MultiplayerHero {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 22px 24px;
+    border: 1px solid #68462e;
+    border-radius: 18px;
+    background: linear-gradient(120deg, #4a2b1a, #24150e 70%);
+    box-shadow: 0 18px 50px rgba(0,0,0,.28);
+}
+
+.MultiplayerHero h1 {
+    margin: 4px 0;
+    color: #ffedcf;
+    font-size: clamp(34px, 5vw, 52px);
+}
+
+.MultiplayerHero p {
+    margin: 0;
+    color: #c8af8a;
+}
+
+.RoomActions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-top: 16px;
+}
+
+.RoomActionCard,
+.RoomPanel,
+.ChatPanel {
+    border: 1px solid #69472e;
+    border-radius: 16px;
+    background: linear-gradient(180deg, #392317, #21130d);
+    box-shadow: 0 12px 32px rgba(0,0,0,.22);
+}
+
+.RoomActionCard {
+    padding: 20px;
+}
+
+.RoomActionCard h2,
+.RoomPanel h2,
+.ChatPanel h2 {
+    margin: 0 0 8px;
+    color: #ffe7bc;
+}
+
+.JoinRow {
+    display: flex;
+    gap: 8px;
+}
+
+.JoinCodeInput {
+    text-transform: uppercase;
+    letter-spacing: .18em;
+}
+
+.ActiveRoomGrid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(300px, .8fr);
+    gap: 14px;
+    margin-top: 16px;
+}
+
+.RoomPanel,
+.ChatPanel {
+    padding: 18px;
+}
+
+.RoomCodeDisplay {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    padding: 15px;
+    border: 1px solid #8b613d;
+    border-radius: 12px;
+    background: #150c08;
+}
+
+.RoomCodeValue {
+    color: #ffd88e;
+    font: 900 30px/1 system-ui, sans-serif;
+    letter-spacing: .18em;
+}
+
+.PlayerList {
+    display: grid;
+    gap: 8px;
+    margin-top: 14px;
+}
+
+.PlayerRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 11px 12px;
+    border: 1px solid #63442f;
+    border-radius: 10px;
+    background: #2a190f;
+}
+
+.PlayerName {
+    color: #f8e6c7;
+    font-weight: 900;
+}
+
+.PlayerStatus {
+    color: #a99577;
+    font: 900 9px/1.2 system-ui,sans-serif;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.PlayerStatus.Ready {
+    color: #8fd199;
+}
+
+.RoomFooterActions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 14px;
+}
+
+.ChatMessages {
+    height: 360px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    padding: 10px;
+    border: 1px solid #533824;
+    border-radius: 10px;
+    background: #120a07;
+}
+
+.ChatMessage {
+    padding: 8px 9px;
+    color: #d8c4a3;
+    border-radius: 8px;
+    background: #21140d;
+    font: 600 13px/1.42 system-ui,sans-serif;
+}
+
+.ChatMessage strong {
+    color: #efc679;
+}
+
+.ChatForm {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 7px;
+    margin-top: 8px;
+}
+
+.LivesBar {
+    margin-top: 10px;
+    padding: 12px;
+    border: 1px solid #744c31;
+    border-radius: 10px;
+    background: #24140d;
+}
+
+.LivesLabel {
+    color: #c19c6e;
+    font: 900 9px/1.2 system-ui,sans-serif;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+}
+
+.LivesHearts {
+    display: flex;
+    gap: 7px;
+    margin-top: 7px;
+}
+
+.LifeHeart {
+    color: #9f352f;
+    font-size: 25px;
+    text-shadow: 0 2px 8px rgba(159,53,47,.28);
+}
+
+.LifeHeart.Empty {
+    color: #57463d;
+    text-shadow: none;
+}
+
+.MultiplayerDock {
+    position: fixed;
+    right: 16px;
+    bottom: 16px;
+    z-index: 60;
+    width: min(360px, calc(100vw - 32px));
+    overflow: hidden;
+    border: 1px solid #704b31;
+    border-radius: 14px;
+    background: #1a0f0a;
+    box-shadow: 0 20px 60px rgba(0,0,0,.38);
+}
+
+.MultiplayerDockHeader {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 12px;
+    color: #ffdea2;
+    background: #3b2215;
+    font: 900 10px/1.2 system-ui,sans-serif;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.MultiplayerDock .ChatMessages {
+    height: 150px;
+    border: 0;
+    border-radius: 0;
+}
+
+.MultiplayerDock .ChatForm {
+    margin: 0;
+    padding: 8px;
+    border-top: 1px solid #4d3322;
+}
+
+.VoteCount {
+    float: right;
+    margin-left: 8px;
+    padding: 2px 6px;
+    color: #d8bb8d;
+    border: 1px solid #a67c4e;
+    border-radius: 999px;
+    background: rgba(44,25,14,.12);
+    font: 900 9px/1.2 system-ui,sans-serif;
+}
+
+.GameOverCard {
+    max-width: 560px;
+    padding: 34px;
+    text-align: center;
+}
+
+.GameOverCard h2 {
+    margin: 8px 0;
+    color: #7d201d;
+    font-size: 46px;
+}
+
+.AccountBadge {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 11px;
+    color: #f8dfb3;
+    border: 1px solid #775238;
+    border-radius: 10px;
+    background: #20130d;
+    font: 800 11px/1.2 system-ui,sans-serif;
+}
+
+@media (max-width: 850px) {
+    .RoomActions,
+    .ActiveRoomGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .MultiplayerHero {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}
