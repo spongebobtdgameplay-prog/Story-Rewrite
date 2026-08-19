@@ -1,3 +1,9 @@
+const Favicon = document.createElement("link");
+Favicon.rel = "icon";
+Favicon.type = "image/png";
+Favicon.href = "Icon.png?v=1";
+document.head.appendChild(Favicon);
+
 const STORY_DATA_URL = "stages.json";
 
 async function LoadStoryData() {
