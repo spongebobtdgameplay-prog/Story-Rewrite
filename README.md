@@ -12,11 +12,11 @@ Story Rewrite is a browser puzzle game where players cross out sentences to chan
 - `multiplayer.html` / `multiplayer.js` — create/join game codes, lobby, ready states, player list, group chat
 - `network.js` — REST and Socket.IO client helpers
 - `server-config.js` — deployed backend URL for a separate static frontend
-- `audio.js` — background music and sound engine with Web Audio fallbacks
+- `audio.js` — background music and sound engine with a built-in procedural soundtrack
 - `server.js` — Node HTTP, account, save, lives, validation, chat, and Socket.IO multiplayer server
 - `stages.json` — five worlds and fifty stages
 - `looks.css` / `game-ui.css` / `multiplayer.css` — UI styling
-- `AUDIO_SOURCES.md` — vetted audio sources and expected filenames
+- `AUDIO_SOURCES.md` — optional external audio sources and expected filenames
 
 ## Run the full game locally
 
@@ -66,7 +66,7 @@ Rooms survive normal page navigation long enough for players to reconnect when m
 
 ## GitHub Pages
 
-GitHub Pages can still host the frontend, but Pages cannot run the Node/WebSocket backend. For a Pages deployment, deploy `server.js` to a Node host with WebSocket support, then set the backend address in:
+GitHub Pages can still host the frontend, but the Node/WebSocket backend must run on a server that can execute Node and accept WebSocket connections. For a Pages deployment, deploy `server.js`, then set the backend address in:
 
 ```javascript
 window.STORY_REWRITE_SERVER_URL = "https://your-backend.example.com";
@@ -86,6 +86,6 @@ Use persistent storage for `DATA_DIR` if the hosting provider has an ephemeral f
 
 ## Audio
 
-The repository contains the complete audio engine and the folder layout for music and sound effects. Until actual MP3/WAV files are uploaded, the game uses generated Web Audio fallback sounds so missing audio files do not break gameplay.
+The game already produces continuous original ambience through the Web Audio API. There are distinct procedural presets for the menu, multiplayer lobby, Fromville, Neon Exorcists, Blackthorn Manor, Spirit Grove, False City, and danger states. UI, story, multiplayer, failure, life-loss, and success sounds also have synthesized fallbacks.
 
-See `AUDIO_SOURCES.md` for royalty-free source candidates and exact filenames.
+If real MP3/WAV files are later added under the expected `music/` and `sounds/` paths, the engine automatically uses those instead. See `AUDIO_SOURCES.md` for optional source candidates and licensing notes.
