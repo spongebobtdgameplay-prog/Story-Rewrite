@@ -21,10 +21,7 @@
         </div>
     </div>
     <nav class="TopActions">
-        <a class="UiButton" href="main.html">Home</a>
-        <a class="UiButton" href="levels.html">Worlds</a>
-        <a class="UiButton" href="tutorial.html">Tutorial</a>
-        <a class="UiButton" href="rules.html">Rules</a>
+        <button class="UiButton" type="button" onclick="if (history.length > 1) history.back(); else location.href='main.html';" aria-label="Go back">← Back</button>
     </nav>
 </header>
 
@@ -46,8 +43,8 @@
         </div>
 
         <div class="HomeActions">
-            <a class="PrimaryButton" href="levels.html">World Select</a>
-            <a class="SecondaryButton" href="tutorial.html">Tutorial</a>
+            <button class="PrimaryButton" type="button" onclick="location.href='levels.html';">World Select</button>
+            <button class="SecondaryButton" type="button" onclick="location.href='tutorial.html';">Tutorial</button>
         </div>
     </section>
 </main>
