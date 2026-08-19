@@ -111,9 +111,7 @@ if (typeof RenderSentences === "function" && !RenderSentences.V11Wrapped) {
 
                 const Voters = document.createElement("span");
                 Voters.className = "SentenceVoters";
-                Voters.textContent = VoteUsers.length
-                    ? VoteUsers.join(", ")
-                    : "No votes yet";
+                Voters.textContent = VoteUsers.length ? VoteUsers.join(", ") : "No votes yet";
                 VoteMeta.appendChild(Voters);
 
                 Content.appendChild(VoteMeta);
@@ -224,9 +222,7 @@ function EnsureReviveUi() {
 }
 
 function GetAvailableRevives() {
-    return RoomCode
-        ? Number(MultiplayerState?.revives || 0)
-        : Number(Save?.revives || 0);
+    return RoomCode ? Number(MultiplayerState?.revives || 0) : Number(Save?.revives || 0);
 }
 
 function SyncReviveUi() {
@@ -234,9 +230,7 @@ function SyncReviveUi() {
     const SidebarCount = document.getElementById("SidebarReviveCount");
     const OverlayCount = document.getElementById("ReviveCount");
     const Button = document.getElementById("ReviveButton");
-    const Lives = RoomCode
-        ? Number(MultiplayerState?.lives ?? 3)
-        : Number(Save?.lives ?? 3);
+    const Lives = RoomCode ? Number(MultiplayerState?.lives ?? 3) : Number(Save?.lives ?? 3);
     const IsHost = !RoomCode || MultiplayerState?.hostUsername === Profile?.username;
 
     if (SidebarCount) SidebarCount.textContent = String(Count);
@@ -334,8 +328,6 @@ if (typeof CheckServerStage === "function" && !CheckServerStage.V11Wrapped) {
 
 function InitializeV11GameEnhancements() {
     EnsureReviveUi();
-    RenderSentences?.();
-    RenderIllustration?.();
     SyncReviveUi();
 
     const ChatInput = document.getElementById("GameChatInput");
