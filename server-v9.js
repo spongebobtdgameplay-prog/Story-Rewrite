@@ -50,15 +50,7 @@ ReplaceRequired(
 
 ReplaceRequired(
     "function EmitRoom(Room) {",
-    `function NormalizeChatForFilter(Value) {
-    return String(Value || "")
-        .toLowerCase()
-        .replace(/[013457@$!]/g, Character => ({
-            "0": "o", "1": "i", "3": "e", "4": "a", "5": "s", "7": "t", "@": "a", "$": "s", "!": "i"
-        }[Character] || Character));
-}
-
-function CensorChatText(Value) {
+    `function CensorChatText(Value) {
     let Text = String(Value || "")
         .replace(/[\\u0000-\\u001F\\u007F]/g, " ")
         .replace(/\\s+/g, " ")
@@ -66,7 +58,7 @@ function CensorChatText(Value) {
         .slice(0, ChatMaxLength);
 
     for (const Word of ProfanityWords) {
-        const Pattern = new RegExp(`\\\\b${Word.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}\\\\b`, "gi");
+        const Pattern = new RegExp("\\\\b" + Word + "\\\\b", "gi");
         Text = Text.replace(Pattern, Match => "*".repeat(Math.min(Match.length, 12)));
     }
 
