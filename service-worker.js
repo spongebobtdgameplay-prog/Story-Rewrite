@@ -1,4 +1,4 @@
-const STORY_CACHE = "story-rewrite-frontend-v8";
+const STORY_CACHE = "story-rewrite-frontend-v9";
 
 const STORY_STATIC_FILES = [
     "./",
@@ -13,6 +13,7 @@ const STORY_STATIC_FILES = [
     "./account.html",
     "./looks.css",
     "./game-ui.css",
+    "./scene-fix.css",
     "./multiplayer.css",
     "./shell-ui.css",
     "./server-config.js",
