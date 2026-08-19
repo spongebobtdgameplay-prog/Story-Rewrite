@@ -63,17 +63,18 @@ function DefaultSave() {
         lives: MaxLives,
         maxLives: MaxLives,
         deaths: 0,
-        settings: {
-            musicVolume: 0.45,
-            soundVolume: 0.75
-        }
+        settings: { musicVolume: 0.45, soundVolume: 0.75 }
     };
+}
+
+function ClampNumber(Value, Minimum, Maximum, Fallback) {
+    const NumberValue = Number(Value);
+    return Number.isFinite(NumberValue) ? Math.max(Minimum, Math.min(Maximum, NumberValue)) : Fallback;
 }
 
 function NormalizeSave(Save) {
     const Base = DefaultSave();
     const Result = Save && typeof Save === "object" ? Save : Base;
-
     Result.version = 5;
     if (!Array.isArray(Result.unlockedWorlds)) Result.unlockedWorlds = [...Base.unlockedWorlds];
     if (!Array.isArray(Result.unlockedStages)) Result.unlockedStages = [...Base.unlockedStages];
@@ -85,18 +86,10 @@ function NormalizeSave(Save) {
     if (!Result.settings || typeof Result.settings !== "object") Result.settings = { ...Base.settings };
     Result.settings.musicVolume = ClampNumber(Result.settings.musicVolume, 0, 1, Base.settings.musicVolume);
     Result.settings.soundVolume = ClampNumber(Result.settings.soundVolume, 0, 1, Base.settings.soundVolume);
-
     if (!Result.unlockedWorlds.includes(Base.unlockedWorlds[0])) Result.unlockedWorlds.push(Base.unlockedWorlds[0]);
     if (!Result.unlockedStages.includes(Base.unlockedStages[0])) Result.unlockedStages.push(Base.unlockedStages[0]);
     Result.lives = Math.max(0, Math.min(Result.maxLives, Result.lives));
-
     return Result;
-}
-
-function ClampNumber(Value, Minimum, Maximum, Fallback) {
-    const NumberValue = Number(Value);
-    if (!Number.isFinite(NumberValue)) return Fallback;
-    return Math.max(Minimum, Math.min(Maximum, NumberValue));
 }
 
 function NormalizeUsername(Value) {
@@ -125,16 +118,12 @@ function PasswordMatches(Password, Account) {
     return Actual.length === Expected.length && crypto.timingSafeEqual(Actual, Expected);
 }
 
-function EncodeBase64Url(Value) {
-    return Buffer.from(Value).toString("base64url");
-}
-
 function CreateToken(Username) {
-    const Payload = EncodeBase64Url(JSON.stringify({
+    const Payload = Buffer.from(JSON.stringify({
         username: Username,
         expiresAt: Date.now() + 1000 * 60 * 60 * 24 * 30,
         nonce: crypto.randomBytes(12).toString("hex")
-    }));
+    })).toString("base64url");
     const Signature = crypto.createHmac("sha256", SessionSecret).update(Payload).digest("base64url");
     return `${Payload}.${Signature}`;
 }
@@ -148,9 +137,8 @@ function VerifyToken(Token) {
         if (!crypto.timingSafeEqual(Buffer.from(Signature), Buffer.from(Expected))) return null;
         const Parsed = JSON.parse(Buffer.from(Payload, "base64url").toString("utf8"));
         if (!Parsed.username || Parsed.expiresAt < Date.now()) return null;
-        const Key = UsernameKey(Parsed.username);
-        if (!Accounts[Key]) return null;
-        return Accounts[Key].username;
+        const Account = Accounts[UsernameKey(Parsed.username)];
+        return Account ? Account.username : null;
     } catch {
         return null;
     }
@@ -163,8 +151,7 @@ function GetBearerToken(Request) {
 
 function GetAccountByToken(Token) {
     const Username = VerifyToken(Token);
-    if (!Username) return null;
-    return Accounts[UsernameKey(Username)] || null;
+    return Username ? Accounts[UsernameKey(Username)] || null : null;
 }
 
 function PublicProfile(Account) {
@@ -192,59 +179,44 @@ function UnlockStage(Save, StageId) {
 function ComputeStars(Stage, RemovedIndexes) {
     const Required = new Set(Stage.requiredRemoved);
     const ExtraRemoved = RemovedIndexes.filter(Index => !Required.has(Index)).length;
-    const RemovedCount = RemovedIndexes.length;
-
-    if (ExtraRemoved === 0 && RemovedCount <= Stage.par) return 3;
-    if (ExtraRemoved <= 1 && RemovedCount <= Stage.par + 1) return 2;
+    if (ExtraRemoved === 0 && RemovedIndexes.length <= Stage.par) return 3;
+    if (ExtraRemoved <= 1 && RemovedIndexes.length <= Stage.par + 1) return 2;
     return 1;
 }
 
 function ValidateStageResult(StageId, RemovedIndexes) {
     const Stage = StagesData.stages[StageId];
-    if (!Stage) return { valid: false, reason: "Unknown stage." };
+    if (!Stage) return { success: false, reason: "Unknown stage.", aftermath: "The page could not be read." };
 
     const UniqueIndexes = [...new Set((Array.isArray(RemovedIndexes) ? RemovedIndexes : []).map(Number))]
         .filter(Index => Number.isInteger(Index) && Index >= 0 && Index < Stage.sentences.length)
         .sort((A, B) => A - B);
-
     const RemovedSet = new Set(UniqueIndexes);
     const HasAllRequired = Stage.requiredRemoved.every(Index => RemovedSet.has(Index));
     const RemovedForbidden = Stage.forbiddenRemoved.some(Index => RemovedSet.has(Index));
 
     if (!HasAllRequired || RemovedForbidden) {
         return {
-            valid: true,
             success: false,
             removedIndexes: UniqueIndexes,
-            reason: RemovedForbidden
-                ? "You erased something the successful ending still needs."
-                : "At least one cause of failure is still active.",
+            reason: RemovedForbidden ? "You erased something the successful ending still needs." : "At least one cause of failure is still active.",
             aftermath: Stage.aftermath
         };
     }
 
-    return {
-        valid: true,
-        success: true,
-        removedIndexes: UniqueIndexes,
-        stars: ComputeStars(Stage, UniqueIndexes),
-        stage: Stage
-    };
+    return { success: true, removedIndexes: UniqueIndexes, stars: ComputeStars(Stage, UniqueIndexes), stage: Stage };
 }
 
 function ApplySuccessToAccount(Account, StageId, Stars) {
     const Save = NormalizeSave(Account.save);
     const Stage = StagesData.stages[StageId];
-
     Save.stars[StageId] = Math.max(Number(Save.stars[StageId] || 0), Stars);
-
     if (Stage.nextStage) {
         UnlockStage(Save, Stage.nextStage);
         Save.currentStage = Stage.nextStage;
     } else {
         Save.currentStage = StageId;
     }
-
     if (Stage.isChapterEnd) Save.lives = Save.maxLives;
     Account.save = Save;
 }
@@ -271,30 +243,27 @@ function RestartChapterForAccount(Account, WorldId) {
     return Save;
 }
 
-function SendJson(Response, Status, Payload, Origin) {
-    const Headers = {
-        "Content-Type": "application/json; charset=utf-8",
-        "Cache-Control": "no-store"
-    };
-    if (Origin) Headers["Access-Control-Allow-Origin"] = Origin;
-    Headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization";
-    Headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS";
-    Response.writeHead(Status, Headers);
-    Response.end(JSON.stringify(Payload));
-}
-
 function IsAllowedOrigin(Origin) {
     if (!Origin) return true;
-    const Configured = String(process.env.ALLOWED_ORIGINS || "")
-        .split(",")
-        .map(Value => Value.trim())
-        .filter(Boolean);
-    const Defaults = [
+    const Configured = String(process.env.ALLOWED_ORIGINS || "").split(",").map(Value => Value.trim()).filter(Boolean);
+    return [
         `http://localhost:${Port}`,
         `http://127.0.0.1:${Port}`,
-        "https://spongebobtdgameplay-prog.github.io"
-    ];
-    return [...Defaults, ...Configured].includes(Origin);
+        "https://spongebobtdgameplay-prog.github.io",
+        ...Configured
+    ].includes(Origin);
+}
+
+function SendJson(Response, Status, Payload, Origin = "") {
+    const Headers = {
+        "Content-Type": "application/json; charset=utf-8",
+        "Cache-Control": "no-store",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization",
+        "Access-Control-Allow-Methods": "GET, POST, OPTIONS"
+    };
+    if (Origin) Headers["Access-Control-Allow-Origin"] = Origin;
+    Response.writeHead(Status, Headers);
+    Response.end(JSON.stringify(Payload));
 }
 
 function ReadJson(Request) {
@@ -302,7 +271,7 @@ function ReadJson(Request) {
         let Body = "";
         Request.on("data", Chunk => {
             Body += Chunk;
-            if (Body.length > 1024 * 128) Request.destroy();
+            if (Body.length > 131072) Request.destroy();
         });
         Request.on("end", () => {
             try {
@@ -316,20 +285,9 @@ function ReadJson(Request) {
 }
 
 async function HandleApi(Request, Response, RequestPath, Origin) {
-    if (!IsAllowedOrigin(Origin)) {
-        SendJson(Response, 403, { error: "Origin not allowed." });
-        return true;
-    }
-
-    if (Request.method === "OPTIONS") {
-        SendJson(Response, 204, {}, Origin);
-        return true;
-    }
-
-    if (RequestPath === "/api/health" && Request.method === "GET") {
-        SendJson(Response, 200, { ok: true, multiplayer: true, version: 2 }, Origin);
-        return true;
-    }
+    if (!IsAllowedOrigin(Origin)) return SendJson(Response, 403, { error: "Origin not allowed." });
+    if (Request.method === "OPTIONS") return SendJson(Response, 204, {}, Origin);
+    if (RequestPath === "/api/health" && Request.method === "GET") return SendJson(Response, 200, { ok: true, multiplayer: true, version: 2 }, Origin);
 
     if (RequestPath === "/api/register" && Request.method === "POST") {
         try {
@@ -337,21 +295,9 @@ async function HandleApi(Request, Response, RequestPath, Origin) {
             const Username = NormalizeUsername(Body.username);
             const Password = Body.password;
             const Key = UsernameKey(Username);
-
-            if (!ValidateUsername(Username)) {
-                SendJson(Response, 400, { error: "Username must be 3-20 letters, numbers, or underscores." }, Origin);
-                return true;
-            }
-
-            if (!ValidatePassword(Password)) {
-                SendJson(Response, 400, { error: "Password must be 8-128 characters." }, Origin);
-                return true;
-            }
-
-            if (Accounts[Key]) {
-                SendJson(Response, 409, { error: "That username already exists." }, Origin);
-                return true;
-            }
+            if (!ValidateUsername(Username)) return SendJson(Response, 400, { error: "Username must be 3-20 letters, numbers, or underscores." }, Origin);
+            if (!ValidatePassword(Password)) return SendJson(Response, 400, { error: "Password must be 8-128 characters." }, Origin);
+            if (Accounts[Key]) return SendJson(Response, 409, { error: "That username already exists." }, Origin);
 
             const Salt = crypto.randomBytes(16).toString("hex");
             const Account = {
@@ -361,14 +307,11 @@ async function HandleApi(Request, Response, RequestPath, Origin) {
                 createdAt: new Date().toISOString(),
                 save: DefaultSave()
             };
-
             Accounts[Key] = Account;
             WriteAccounts();
-            SendJson(Response, 201, { token: CreateToken(Username), profile: PublicProfile(Account), save: Account.save }, Origin);
-            return true;
+            return SendJson(Response, 201, { token: CreateToken(Username), profile: PublicProfile(Account), save: Account.save }, Origin);
         } catch {
-            SendJson(Response, 400, { error: "Invalid request." }, Origin);
-            return true;
+            return SendJson(Response, 400, { error: "Invalid request." }, Origin);
         }
     }
 
@@ -376,76 +319,49 @@ async function HandleApi(Request, Response, RequestPath, Origin) {
         try {
             const Body = await ReadJson(Request);
             const Account = Accounts[UsernameKey(Body.username)];
-
             if (!Account || !ValidatePassword(Body.password) || !PasswordMatches(Body.password, Account)) {
-                SendJson(Response, 401, { error: "Wrong username or password." }, Origin);
-                return true;
+                return SendJson(Response, 401, { error: "Wrong username or password." }, Origin);
             }
-
             Account.save = NormalizeSave(Account.save);
             WriteAccounts();
-            SendJson(Response, 200, { token: CreateToken(Account.username), profile: PublicProfile(Account), save: Account.save }, Origin);
-            return true;
+            return SendJson(Response, 200, { token: CreateToken(Account.username), profile: PublicProfile(Account), save: Account.save }, Origin);
         } catch {
-            SendJson(Response, 400, { error: "Invalid request." }, Origin);
-            return true;
+            return SendJson(Response, 400, { error: "Invalid request." }, Origin);
         }
     }
 
     const Account = GetAccountByToken(GetBearerToken(Request));
-    if (!Account) {
-        SendJson(Response, 401, { error: "Sign in required." }, Origin);
-        return true;
-    }
-
+    if (!Account) return SendJson(Response, 401, { error: "Sign in required." }, Origin);
     Account.save = NormalizeSave(Account.save);
 
-    if (RequestPath === "/api/me" && Request.method === "GET") {
-        SendJson(Response, 200, { profile: PublicProfile(Account) }, Origin);
-        return true;
-    }
-
-    if (RequestPath === "/api/save" && Request.method === "GET") {
-        SendJson(Response, 200, { save: Account.save }, Origin);
-        return true;
-    }
+    if (RequestPath === "/api/me" && Request.method === "GET") return SendJson(Response, 200, { profile: PublicProfile(Account) }, Origin);
+    if (RequestPath === "/api/save" && Request.method === "GET") return SendJson(Response, 200, { save: Account.save }, Origin);
 
     if (RequestPath === "/api/account/reset" && Request.method === "POST") {
         Account.save = DefaultSave();
         WriteAccounts();
-        SendJson(Response, 200, { save: Account.save }, Origin);
-        return true;
+        return SendJson(Response, 200, { save: Account.save }, Origin);
     }
 
     if (RequestPath === "/api/stage/enter" && Request.method === "POST") {
         const Body = await ReadJson(Request).catch(() => ({}));
         const Stage = StagesData.stages[Body.stageId];
-
-        if (!Stage || !Account.save.unlockedStages.includes(Stage.id)) {
-            SendJson(Response, 403, { error: "Stage is locked." }, Origin);
-            return true;
-        }
-
+        if (!Stage || !Account.save.unlockedStages.includes(Stage.id)) return SendJson(Response, 403, { error: "Stage is locked." }, Origin);
         Account.save.currentStage = Stage.id;
         WriteAccounts();
-        SendJson(Response, 200, { save: Account.save }, Origin);
-        return true;
+        return SendJson(Response, 200, { save: Account.save }, Origin);
     }
 
     if (RequestPath === "/api/stage/check" && Request.method === "POST") {
         const Body = await ReadJson(Request).catch(() => ({}));
         const Stage = StagesData.stages[Body.stageId];
-
-        if (!Stage || !Account.save.unlockedStages.includes(Stage.id)) {
-            SendJson(Response, 403, { error: "Stage is locked." }, Origin);
-            return true;
-        }
-
+        if (!Stage || !Account.save.unlockedStages.includes(Stage.id)) return SendJson(Response, 403, { error: "Stage is locked." }, Origin);
         const Result = ValidateStageResult(Stage.id, Body.removedIndexes);
+
         if (!Result.success) {
             const Save = ApplyFailureToAccount(Account);
             WriteAccounts();
-            SendJson(Response, 200, {
+            return SendJson(Response, 200, {
                 success: false,
                 reason: Result.reason,
                 aftermath: Result.aftermath,
@@ -454,12 +370,11 @@ async function HandleApi(Request, Response, RequestPath, Origin) {
                 gameOver: Save.lives <= 0,
                 save: Save
             }, Origin);
-            return true;
         }
 
         ApplySuccessToAccount(Account, Stage.id, Result.stars);
         WriteAccounts();
-        SendJson(Response, 200, {
+        return SendJson(Response, 200, {
             success: true,
             stars: Result.stars,
             nextStage: Stage.nextStage,
@@ -468,15 +383,13 @@ async function HandleApi(Request, Response, RequestPath, Origin) {
             maxLives: Account.save.maxLives,
             save: Account.save
         }, Origin);
-        return true;
     }
 
     if (RequestPath === "/api/chapter/restart" && Request.method === "POST") {
         const Body = await ReadJson(Request).catch(() => ({}));
         const Save = RestartChapterForAccount(Account, Body.worldId);
         WriteAccounts();
-        SendJson(Response, 200, { save: Save }, Origin);
-        return true;
+        return SendJson(Response, 200, { save: Save }, Origin);
     }
 
     if (RequestPath === "/api/settings" && Request.method === "POST") {
@@ -484,12 +397,10 @@ async function HandleApi(Request, Response, RequestPath, Origin) {
         Account.save.settings.musicVolume = ClampNumber(Body.musicVolume, 0, 1, Account.save.settings.musicVolume);
         Account.save.settings.soundVolume = ClampNumber(Body.soundVolume, 0, 1, Account.save.settings.soundVolume);
         WriteAccounts();
-        SendJson(Response, 200, { settings: Account.save.settings }, Origin);
-        return true;
+        return SendJson(Response, 200, { settings: Account.save.settings }, Origin);
     }
 
-    SendJson(Response, 404, { error: "API route not found." }, Origin);
-    return true;
+    return SendJson(Response, 404, { error: "API route not found." }, Origin);
 }
 
 const HttpServer = http.createServer(async (Request, Response) => {
@@ -503,9 +414,9 @@ const HttpServer = http.createServer(async (Request, Response) => {
     }
 
     if (RequestPath === "/") RequestPath = "/index.html";
-
     const RelativePath = RequestPath.replace(/^\/+/, "");
     const FilePath = path.resolve(Root, RelativePath);
+
     if (!FilePath.startsWith(`${Root}${path.sep}`) && FilePath !== Root) {
         Response.writeHead(403);
         Response.end("Forbidden");
@@ -522,7 +433,7 @@ const HttpServer = http.createServer(async (Request, Response) => {
         const Extension = path.extname(FilePath).toLowerCase();
         Response.writeHead(200, {
             "Content-Type": MimeTypes[Extension] || "application/octet-stream",
-            "Cache-Control": Extension === ".mp3" || Extension === ".ogg" || Extension === ".wav" ? "public, max-age=3600" : "no-store"
+            "Cache-Control": [".mp3", ".ogg", ".wav"].includes(Extension) ? "public, max-age=3600" : "no-store"
         });
         fs.createReadStream(FilePath).pipe(Response);
     });
@@ -531,8 +442,7 @@ const HttpServer = http.createServer(async (Request, Response) => {
 const Io = new SocketServer(HttpServer, {
     cors: {
         origin(Origin, Callback) {
-            if (IsAllowedOrigin(Origin)) Callback(null, true);
-            else Callback(new Error("Origin not allowed"));
+            IsAllowedOrigin(Origin) ? Callback(null, true) : Callback(new Error("Origin not allowed"));
         },
         methods: ["GET", "POST"]
     }
@@ -543,37 +453,30 @@ function GenerateRoomCode() {
     let Code = "";
     do {
         Code = "";
-        for (let Index = 0; Index < 6; Index += 1) {
-            Code += Alphabet[crypto.randomInt(0, Alphabet.length)];
-        }
+        for (let Index = 0; Index < 6; Index += 1) Code += Alphabet[crypto.randomInt(0, Alphabet.length)];
     } while (Rooms.has(Code));
     return Code;
 }
 
-function GetRoomPlayer(Room, Socket) {
-    return Room.players.get(Socket.id) || null;
-}
-
 function GetRoomForSocket(Socket) {
-    if (!Socket.data.roomCode) return null;
-    return Rooms.get(Socket.data.roomCode) || null;
+    return Socket.data.roomCode ? Rooms.get(Socket.data.roomCode) || null : null;
 }
 
 function GetVoteState(Room) {
     const Players = [...Room.players.values()];
-    const Threshold = Math.floor(Players.length / 2) + 1;
+    const Threshold = Math.max(1, Math.floor(Players.length / 2) + 1);
+    const ActiveNames = new Set(Players.map(Player => Player.username));
     const Votes = {};
     const SelectedIndexes = [];
 
     for (const [Index, Usernames] of Room.votes.entries()) {
-        const ActiveNames = new Set(Players.map(Player => Player.username));
         const Count = [...Usernames].filter(Username => ActiveNames.has(Username)).length;
         Votes[Index] = Count;
         if (Count >= Threshold) SelectedIndexes.push(Number(Index));
     }
 
     SelectedIndexes.sort((A, B) => A - B);
-    return { votes: Votes, selectedIndexes: SelectedIndexes, threshold };
+    return { votes: Votes, selectedIndexes: SelectedIndexes, threshold: Threshold };
 }
 
 function BuildRoomState(Room) {
@@ -585,10 +488,7 @@ function BuildRoomState(Room) {
         stageId: Room.stageId,
         lives: Room.lives,
         maxLives: Room.maxLives,
-        players: [...Room.players.values()].map(Player => ({
-            username: Player.username,
-            ready: Player.ready
-        })),
+        players: [...Room.players.values()].map(Player => ({ username: Player.username, ready: Player.ready })),
         messages: Room.messages.slice(-50),
         selectedIndexes: VoteState.selectedIndexes,
         votes: VoteState.votes,
@@ -601,47 +501,59 @@ function EmitRoom(Room) {
     Io.to(Room.code).emit("room:state", BuildRoomState(Room));
 }
 
-function LeaveRoom(Socket) {
+function ScheduleRoomCleanup(Room) {
+    clearTimeout(Room.cleanupTimer);
+    Room.cleanupTimer = setTimeout(() => {
+        if (Room.players.size === 0) Rooms.delete(Room.code);
+    }, 60000);
+}
+
+function ReassignHost(Room) {
+    const Next = [...Room.players.entries()][0];
+    if (!Next) return;
+    Room.hostSocketId = Next[0];
+    Room.hostUsername = Next[1].username;
+}
+
+function LeaveRoom(Socket, Explicit = false) {
     const Room = GetRoomForSocket(Socket);
     if (!Room) return;
-
     const Player = Room.players.get(Socket.id);
     Room.players.delete(Socket.id);
-
-    if (Player) {
-        for (const Usernames of Room.votes.values()) Usernames.delete(Player.username);
-    }
-
     Socket.leave(Room.code);
     Socket.data.roomCode = null;
 
-    if (Room.players.size === 0) {
-        Rooms.delete(Room.code);
-        return;
+    if (Player && Explicit) {
+        Room.memberNames.delete(Player.username);
+        for (const Usernames of Room.votes.values()) Usernames.delete(Player.username);
     }
 
     if (Room.hostSocketId === Socket.id) {
-        const [NextSocketId, NextPlayer] = Room.players.entries().next().value;
-        Room.hostSocketId = NextSocketId;
-        Room.hostUsername = NextPlayer.username;
+        Room.hostSocketId = null;
+        if (Explicit) ReassignHost(Room);
+        else {
+            setTimeout(() => {
+                if (!Rooms.has(Room.code) || Room.hostSocketId) return;
+                ReassignHost(Room);
+                EmitRoom(Room);
+            }, 5000);
+        }
     }
 
-    EmitRoom(Room);
+    if (Room.players.size === 0) ScheduleRoomCleanup(Room);
+    else EmitRoom(Room);
 }
 
 Io.use((Socket, Next) => {
     const Username = VerifyToken(Socket.handshake.auth?.token);
-    if (!Username) {
-        Next(new Error("AUTH_REQUIRED"));
-        return;
-    }
+    if (!Username) return Next(new Error("AUTH_REQUIRED"));
     Socket.data.username = Username;
     Next();
 });
 
 Io.on("connection", Socket => {
     Socket.on("room:create", (Payload, Reply = () => {}) => {
-        LeaveRoom(Socket);
+        LeaveRoom(Socket, true);
         const Account = Accounts[UsernameKey(Socket.data.username)];
         const Save = NormalizeSave(Account.save);
         const Code = GenerateRoomCode();
@@ -650,15 +562,16 @@ Io.on("connection", Socket => {
             hostSocketId: Socket.id,
             hostUsername: Socket.data.username,
             players: new Map(),
+            memberNames: new Set([Socket.data.username]),
             messages: [],
             votes: new Map(),
             lives: MaxLives,
             maxLives: MaxLives,
             stageId: Save.currentStage,
             status: "lobby",
-            lastOutcome: null
+            lastOutcome: null,
+            cleanupTimer: null
         };
-
         Room.players.set(Socket.id, { username: Socket.data.username, ready: false });
         Rooms.set(Code, Room);
         Socket.join(Code);
@@ -670,27 +583,32 @@ Io.on("connection", Socket => {
     Socket.on("room:join", (Payload, Reply = () => {}) => {
         const Code = String(Payload?.code || "").trim().toUpperCase();
         const Room = Rooms.get(Code);
-
         if (!Room) return Reply({ ok: false, error: "Game code not found." });
-        if (Room.status !== "lobby") return Reply({ ok: false, error: "That game already started." });
-        if (Room.players.size >= MaxPlayers) return Reply({ ok: false, error: "That game is full." });
-        if ([...Room.players.values()].some(Player => Player.username === Socket.data.username)) {
-            return Reply({ ok: false, error: "That account is already in the room." });
-        }
 
-        LeaveRoom(Socket);
-        Room.players.set(Socket.id, { username: Socket.data.username, ready: false });
+        const ExistingConnected = [...Room.players.values()].some(Player => Player.username === Socket.data.username);
+        if (ExistingConnected) return Reply({ ok: false, error: "That account is already connected to the room." });
+
+        const ReturningMember = Room.memberNames.has(Socket.data.username);
+        if (Room.status !== "lobby" && !ReturningMember) return Reply({ ok: false, error: "That game already started." });
+        if (!ReturningMember && Room.memberNames.size >= MaxPlayers) return Reply({ ok: false, error: "That game is full." });
+
+        LeaveRoom(Socket, true);
+        clearTimeout(Room.cleanupTimer);
+        Room.cleanupTimer = null;
+        Room.memberNames.add(Socket.data.username);
+        Room.players.set(Socket.id, { username: Socket.data.username, ready: Room.status !== "lobby" });
         Socket.join(Code);
         Socket.data.roomCode = Code;
+        if (Room.hostUsername === Socket.data.username) Room.hostSocketId = Socket.id;
         Reply({ ok: true, code, state: BuildRoomState(Room) });
         EmitRoom(Room);
     });
 
-    Socket.on("room:leave", () => LeaveRoom(Socket));
+    Socket.on("room:leave", () => LeaveRoom(Socket, true));
 
     Socket.on("room:ready", Payload => {
         const Room = GetRoomForSocket(Socket);
-        const Player = Room ? GetRoomPlayer(Room, Socket) : null;
+        const Player = Room?.players.get(Socket.id);
         if (!Room || !Player || Room.status !== "lobby") return;
         Player.ready = Boolean(Payload?.ready);
         EmitRoom(Room);
@@ -701,13 +619,10 @@ Io.on("connection", Socket => {
         if (!Room) return;
         const Text = String(Payload?.text || "").trim().slice(0, 300);
         if (!Text) return;
-        Room.messages.push({
-            username: Socket.data.username,
-            text: Text,
-            sentAt: Date.now()
-        });
+        const Message = { username: Socket.data.username, text: Text, sentAt: Date.now() };
+        Room.messages.push(Message);
         Room.messages = Room.messages.slice(-50);
-        Io.to(Room.code).emit("room:chat", Room.messages[Room.messages.length - 1]);
+        Io.to(Room.code).emit("room:chat", Message);
     });
 
     Socket.on("room:start", (Payload, Reply = () => {}) => {
@@ -715,15 +630,11 @@ Io.on("connection", Socket => {
         if (!Room) return Reply({ ok: false, error: "Room missing." });
         if (Room.hostSocketId !== Socket.id) return Reply({ ok: false, error: "Only the host can start." });
         if (Room.status !== "lobby") return Reply({ ok: false, error: "Game already started." });
-        if ([...Room.players.values()].some(Player => !Player.ready && Player.username !== Room.hostUsername)) {
-            return Reply({ ok: false, error: "Everyone else must be ready." });
-        }
+        if ([...Room.players.values()].some(Player => !Player.ready && Player.username !== Room.hostUsername)) return Reply({ ok: false, error: "Everyone else must be ready." });
 
         const RequestedStage = StagesData.stages[Payload?.stageId] || StagesData.stages[Room.stageId];
         const HostAccount = Accounts[UsernameKey(Room.hostUsername)];
-        if (!RequestedStage || !NormalizeSave(HostAccount.save).unlockedStages.includes(RequestedStage.id)) {
-            return Reply({ ok: false, error: "The host has not unlocked that stage." });
-        }
+        if (!RequestedStage || !NormalizeSave(HostAccount.save).unlockedStages.includes(RequestedStage.id)) return Reply({ ok: false, error: "The host has not unlocked that stage." });
 
         Room.stageId = RequestedStage.id;
         Room.status = "playing";
@@ -741,12 +652,10 @@ Io.on("connection", Socket => {
         const Stage = StagesData.stages[Room.stageId];
         const Index = Number(Payload?.index);
         if (!Stage || !Number.isInteger(Index) || Index < 0 || Index >= Stage.sentences.length) return;
-
         if (!Room.votes.has(Index)) Room.votes.set(Index, new Set());
-        const Set = Room.votes.get(Index);
-        if (Set.has(Socket.data.username)) Set.delete(Socket.data.username);
-        else Set.add(Socket.data.username);
-        if (Set.size === 0) Room.votes.delete(Index);
+        const Votes = Room.votes.get(Index);
+        Votes.has(Socket.data.username) ? Votes.delete(Socket.data.username) : Votes.add(Socket.data.username);
+        if (Votes.size === 0) Room.votes.delete(Index);
         EmitRoom(Room);
     });
 
@@ -754,7 +663,6 @@ Io.on("connection", Socket => {
         const Room = GetRoomForSocket(Socket);
         if (!Room || Room.status !== "playing") return Reply({ ok: false, error: "Game is not active." });
         if (Room.hostSocketId !== Socket.id) return Reply({ ok: false, error: "Only the host can check survival." });
-
         const Result = ValidateStageResult(Room.stageId, GetVoteState(Room).selectedIndexes);
         const Stage = StagesData.stages[Room.stageId];
 
@@ -771,16 +679,14 @@ Io.on("connection", Socket => {
             if (Room.lives <= 0) Room.status = "gameover";
             Io.to(Room.code).emit("game:outcome", Room.lastOutcome);
             EmitRoom(Room);
-            Reply({ ok: true });
-            return;
+            return Reply({ ok: true });
         }
 
-        for (const Player of Room.players.values()) {
-            const Account = Accounts[UsernameKey(Player.username)];
+        for (const Username of Room.memberNames) {
+            const Account = Accounts[UsernameKey(Username)];
             if (Account) ApplySuccessToAccount(Account, Stage.id, Result.stars);
         }
         WriteAccounts();
-
         Room.lastOutcome = {
             success: true,
             stars: Result.stars,
@@ -808,11 +714,7 @@ Io.on("connection", Socket => {
         const Room = GetRoomForSocket(Socket);
         if (!Room || Room.hostSocketId !== Socket.id || !Room.lastOutcome?.success) return;
         const Stage = StagesData.stages[Room.stageId];
-        if (!Stage?.nextStage) {
-            Io.to(Room.code).emit("game:finished");
-            return;
-        }
-
+        if (!Stage?.nextStage) return Io.to(Room.code).emit("game:finished");
         Room.stageId = Stage.nextStage;
         Room.votes.clear();
         Room.lastOutcome = null;
@@ -832,18 +734,16 @@ Io.on("connection", Socket => {
         Room.votes.clear();
         Room.lastOutcome = null;
         Room.status = "playing";
-
-        for (const Player of Room.players.values()) {
-            const Account = Accounts[UsernameKey(Player.username)];
+        for (const Username of Room.memberNames) {
+            const Account = Accounts[UsernameKey(Username)];
             if (Account) RestartChapterForAccount(Account, World.id);
         }
         WriteAccounts();
-
         EmitRoom(Room);
         Io.to(Room.code).emit("game:stage", { stageId: Room.stageId, restarted: true });
     });
 
-    Socket.on("disconnect", () => LeaveRoom(Socket));
+    Socket.on("disconnect", () => LeaveRoom(Socket, false));
 });
 
 HttpServer.listen(Port, () => {
