@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Story Rewrite — Multiplayer</title>
+<link rel="stylesheet" href="looks.css">
+<link rel="stylesheet" href="multiplayer.css">
+</head>
+<body class="MultiplayerPage">
+<div class="MultiplayerShell">
+    <header class="MultiplayerHero">
+        <div>
+            <div class="Kicker">Co-op rewrite</div>
+            <h1>Multiplayer</h1>
+            <p>Create a code, invite up to three other players, chat, vote on sentences, and share three team lives.</p>
+        </div>
+        <div class="RoomFooterActions">
+            <a class="SecondaryButton" href="main.html">Home</a>
+            <button class="DangerButton" id="LogoutButton" type="button">Sign Out</button>
+        </div>
+    </header>
+
+    <section class="RoomActions" id="RoomActions">
+        <div class="RoomActionCard">
+            <h2>Create Game</h2>
+            <p>Start a private room and get a six-character game code.</p>
+            <button class="PrimaryButton" id="CreateRoomButton" type="button">Create Game</button>
+        </div>
+        <div class="RoomActionCard">
+            <h2>Join Game</h2>
+            <p>Enter the code your friend sent you.</p>
+            <div class="JoinRow">
+                <input class="JoinCodeInput" id="JoinCodeInput" maxlength="6" placeholder="ABC123">
+                <button class="PrimaryButton" id="JoinRoomButton" type="button">Join</button>
+            </div>
+        </div>
+    </section>
+
+    <section class="ActiveRoomGrid Hidden" id="ActiveRoom">
+        <div class="RoomPanel">
+            <div class="RoomCodeDisplay">
+                <div>
+                    <div class="Kicker">Game code</div>
+                    <div class="RoomCodeValue" id="RoomCodeValue">------</div>
+                </div>
+                <button class="SecondaryButton" id="CopyCodeButton" type="button">Copy</button>
+            </div>
+
+            <div class="LivesBar">
+                <div class="LivesLabel">Team lives</div>
+                <div class="LivesHearts" id="LobbyLives"></div>
+            </div>
+
+            <div class="PlayerList" id="PlayerList"></div>
+
+            <div class="RoomFooterActions">
+                <button class="SecondaryButton" id="ReadyButton" type="button">Ready</button>
+                <button class="PrimaryButton Hidden" id="StartButton" type="button">Start Story</button>
+                <button class="DangerButton" id="LeaveButton" type="button">Leave Room</button>
+            </div>
+            <div class="StatusText Hidden" id="RoomStatus"></div>
+        </div>
+
+        <div class="ChatPanel">
+            <h2>Group Chat</h2>
+            <div class="ChatMessages" id="ChatMessages"></div>
+            <form class="ChatForm" id="ChatForm">
+                <input class="ChatInput" id="ChatInput" maxlength="300" placeholder="Type to your group..." autocomplete="off">
+                <button class="PrimaryButton" type="submit">Send</button>
+            </form>
+        </div>
+    </section>
+</div>
+<script src="server-config.js"></script>
+<script src="network.js"></script>
+<script src="https://cdn.socket.io/4.8.3/socket.io.min.js" integrity="sha384-kzavj5fiMwLKzzD1f8S7TeoVIEi7uKHvbTA3ueZkrzYq75pNQUiUi6Dy98Q3fxb0" crossorigin="anonymous"></script>
+<script src="multiplayer.js"></script>
+</body>
+</html>
