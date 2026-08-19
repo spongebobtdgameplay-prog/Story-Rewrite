@@ -1,4 +1,4 @@
-const FAVICON_VERSION = "3";
+const FAVICON_VERSION = "999";
 
 const HeadLinks = [
     {
