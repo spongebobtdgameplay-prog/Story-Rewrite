@@ -3,35 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Story Rewrite | Level Select</title>
+    <title>Story Rewrite | Chapter Map</title>
     <link rel="stylesheet" href="looks.css">
+    <link rel="stylesheet" href="game-ui.css">
     <script defer src="app.js"></script>
     <script defer src="levels.js"></script>
 </head>
-<body class="paper-body">
-    <div class="paper-shell">
-        <header class="select-hero">
-            <a class="top-button" href="main.html">Back</a>
+<body class="LevelSelectPage">
+    <div class="LevelSelectShell">
+        <header class="GameSelectHeader">
+            <a class="GameBackButton" href="main.html">Home</a>
 
-            <div class="select-hero-copy">
-                <div class="eyebrow">Story Rewrite</div>
-                <h1>Choose a Chapter</h1>
-                <p>Pick a world, choose an unlocked level, and rewrite the story.</p>
+            <div class="GameHeaderCopy">
+                <div class="GameHeaderEyebrow">Story Rewrite</div>
+                <h1>Chapter Map</h1>
+                <p>Choose a world, follow its route, and open the next page.</p>
             </div>
 
-            <div class="hero-stat-strip" id="OverviewStats"></div>
+            <div class="GameHeaderActions">
+                <a class="GameHeaderButton" href="tutorial.html">How to Play</a>
+                <a class="GameHeaderButton" href="rules.html">Rules</a>
+            </div>
         </header>
 
-        <section class="world-rail-wrap">
-            <div class="world-rail-title">
-                <h2>Worlds</h2>
-                <p>Finish chapters to unlock what comes next.</p>
-            </div>
-            <div class="world-rail" id="WorldRail"></div>
+        <section class="GameStatsBar" id="OverviewStats"></section>
+
+        <section class="WorldStripPanel">
+            <div class="WorldStrip" id="WorldRail"></div>
         </section>
 
-        <section id="SelectedWorld"></section>
-
+        <main id="SelectedWorld"></main>
         <div class="page-error" id="PageError" hidden></div>
     </div>
 </body>
