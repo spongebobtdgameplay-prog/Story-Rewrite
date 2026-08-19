@@ -1,4 +1,4 @@
-const STORY_CACHE = "story-rewrite-frontend-v15";
+const STORY_CACHE = "story-rewrite-frontend-v16";
 
 const STORY_STATIC_FILES = [
     "./",
@@ -26,6 +26,7 @@ const STORY_STATIC_FILES = [
     "./app.js",
     "./audio.js",
     "./audio-enhancements.js",
+    "./real-audio.js",
     "./shell-ui.js",
     "./auth.js",
     "./main.js",
