@@ -59,59 +59,48 @@ function DefaultSave(Data) {
     const FirstStage = FirstWorld.entryStage;
 
     return {
-        version: 4,
+        version: 5,
         unlockedWorlds: [FirstWorld.id],
         unlockedStages: [FirstStage],
         stars: {},
         currentStage: FirstStage,
-        tutorialSeen: false
+        lives: 3,
+        maxLives: 3,
+        deaths: 0,
+        settings: {
+            musicVolume: 0.45,
+            soundVolume: 0.75
+        }
     };
 }
 
-function LoadSave(Data) {
-    let Save = null;
+function NormalizeSave(Data, Save) {
+    const Base = DefaultSave(Data);
+    const Result = Save && typeof Save === "object" ? Save : Base;
 
-    try {
-        const Raw = localStorage.getItem(Data.saveKey);
+    if (!Array.isArray(Result.unlockedWorlds)) Result.unlockedWorlds = [...Base.unlockedWorlds];
+    if (!Array.isArray(Result.unlockedStages)) Result.unlockedStages = [...Base.unlockedStages];
+    if (!Result.stars || typeof Result.stars !== "object") Result.stars = {};
+    if (!Data.stages[Result.currentStage]) Result.currentStage = Base.currentStage;
+    if (!Number.isInteger(Result.lives)) Result.lives = Base.lives;
+    if (!Number.isInteger(Result.maxLives)) Result.maxLives = Base.maxLives;
+    if (!Number.isInteger(Result.deaths)) Result.deaths = 0;
+    if (!Result.settings || typeof Result.settings !== "object") Result.settings = { ...Base.settings };
 
-        if (Raw) {
-            Save = JSON.parse(Raw);
-        }
-    } catch {}
+    if (!Result.unlockedWorlds.includes(Data.worlds[0].id)) Result.unlockedWorlds.push(Data.worlds[0].id);
+    if (!Result.unlockedStages.includes(Data.worlds[0].entryStage)) Result.unlockedStages.push(Data.worlds[0].entryStage);
 
-    if (!Save || typeof Save !== "object") {
-        Save = DefaultSave(Data);
-    }
+    Result.version = 5;
+    return Result;
+}
 
-    if (!Array.isArray(Save.unlockedWorlds)) {
-        Save.unlockedWorlds = [Data.worlds[0].id];
-    }
-
-    if (!Array.isArray(Save.unlockedStages)) {
-        Save.unlockedStages = [Data.worlds[0].entryStage];
-    }
-
-    if (!Save.stars || typeof Save.stars !== "object") {
-        Save.stars = {};
-    }
-
-    if (!Data.stages[Save.currentStage]) {
-        Save.currentStage = Data.worlds[0].entryStage;
-    }
-
-    if (!Save.unlockedWorlds.includes(Data.worlds[0].id)) {
-        Save.unlockedWorlds.push(Data.worlds[0].id);
-    }
-
-    if (!Save.unlockedStages.includes(Data.worlds[0].entryStage)) {
-        Save.unlockedStages.push(Data.worlds[0].entryStage);
-    }
-
-    return Save;
+async function LoadSave(Data) {
+    const Save = await FetchServerSave();
+    return NormalizeSave(Data, Save);
 }
 
 function SaveProgress(Data, Save) {
-    localStorage.setItem(Data.saveKey, JSON.stringify(Save));
+    return NormalizeSave(Data, Save);
 }
 
 function GetWorld(Data, WorldId) {
@@ -125,10 +114,7 @@ function GetWorldStages(Data, WorldId) {
             const LevelA = Number(A.levelNumber || 0);
             const LevelB = Number(B.levelNumber || 0);
 
-            if (LevelA !== LevelB) {
-                return LevelA - LevelB;
-            }
-
+            if (LevelA !== LevelB) return LevelA - LevelB;
             return String(A.id).localeCompare(String(B.id));
         });
 }
@@ -146,41 +132,12 @@ function GetStageStars(Save, StageId) {
 }
 
 function UnlockStage(Data, Save, StageId) {
-    if (!StageId || !Data.stages[StageId]) {
-        return;
-    }
+    if (!StageId || !Data.stages[StageId]) return;
 
-    if (!Save.unlockedStages.includes(StageId)) {
-        Save.unlockedStages.push(StageId);
-    }
+    if (!Save.unlockedStages.includes(StageId)) Save.unlockedStages.push(StageId);
 
     const WorldId = Data.stages[StageId].worldId;
-
-    if (!Save.unlockedWorlds.includes(WorldId)) {
-        Save.unlockedWorlds.push(WorldId);
-    }
-}
-
-function CompleteStage(Data, Save, StageId, Stars) {
-    const Stage = Data.stages[StageId];
-
-    if (!Stage) {
-        return;
-    }
-
-    Save.stars[StageId] = Math.max(
-        Number(Save.stars[StageId] || 0),
-        Number(Stars || 0)
-    );
-
-    if (Stage.nextStage) {
-        UnlockStage(Data, Save, Stage.nextStage);
-        Save.currentStage = Stage.nextStage;
-    } else {
-        Save.currentStage = StageId;
-    }
-
-    SaveProgress(Data, Save);
+    if (!Save.unlockedWorlds.includes(WorldId)) Save.unlockedWorlds.push(WorldId);
 }
 
 function TotalStars(Save) {
@@ -191,9 +148,7 @@ function TotalStars(Save) {
 }
 
 function ClearedStages(Save) {
-    return Object.values(Save.stars).filter(
-        Stars => Number(Stars) > 0
-    ).length;
+    return Object.values(Save.stars).filter(Stars => Number(Stars) > 0).length;
 }
 
 function Roman(NumberValue) {
@@ -222,16 +177,17 @@ function Go(Page) {
     window.location.href = Page;
 }
 
-function GoStage(StageId) {
-    window.location.href = `dialog.html?stage=${encodeURIComponent(StageId)}`;
+function GoStage(StageId, RoomCode = "") {
+    const RoomPart = RoomCode ? `&room=${encodeURIComponent(RoomCode)}` : "";
+    window.location.href = `dialog.html?stage=${encodeURIComponent(StageId)}${RoomPart}`;
 }
 
 function Delay(Milliseconds) {
     return new Promise(Resolve => setTimeout(Resolve, Milliseconds));
 }
 
-function ResetSave(Data) {
-    localStorage.removeItem(Data.saveKey);
+async function ResetSave() {
+    return ResetServerSave();
 }
 
 function EscapeText(Value) {
