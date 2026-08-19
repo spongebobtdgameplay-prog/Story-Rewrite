@@ -9,6 +9,7 @@ let TransitionBusy = false;
 let MultiplayerSocket = null;
 let MultiplayerState = null;
 let RoomCode = "";
+let GameChatUnreadCount = 0;
 
 window.addEventListener("DOMContentLoaded", async () => {
     try {
@@ -58,6 +59,7 @@ function BindActions() {
     document.getElementById("RestartChapterButton").addEventListener("click", RestartChapter);
     document.getElementById("GameOverMapButton").addEventListener("click", () => window.location.href = RoomCode ? "multiplayer.html" : "levels.html");
     document.getElementById("GameChatForm").addEventListener("submit", SendGameChat);
+    document.getElementById("ToggleGameChatButton").addEventListener("click", ToggleGameChat);
 }
 
 function RenderStage() {
@@ -192,7 +194,6 @@ function BuildSceneVisual(Mode = "active") {
     return `
         <div class="GameScene SceneTheme-${Theme} ${StateClass}">
             <div class="SceneAtmosphere"></div>
-            <div class="SceneGeometry"></div>
             ${BuildSceneEyes()}
             <div class="SceneHudTop"><span>${EscapeText(Kicker)}</span><span class="SceneStateBadge">${GetSceneStateLabel(Mode)}</span></div>
             <div class="SceneFocus"><div class="SceneChapter">${EscapeText(World.shortName || World.name)}</div><h3>${EscapeText(Title)}</h3><p>${EscapeText(GetSceneMessage(Mode))}</p></div>
@@ -416,6 +417,7 @@ async function RestartChapter() {
 function StartMultiplayer() {
     document.getElementById("MultiplayerDock").classList.remove("Hidden");
     document.getElementById("MultiplayerRoomLabel").textContent = `Room ${RoomCode}`;
+    SetGameChatCollapsed(true);
     MultiplayerSocket = ConnectStorySocket();
 
     MultiplayerSocket.on("connect", () => {
@@ -432,6 +434,10 @@ function StartMultiplayer() {
 
     MultiplayerSocket.on("room:state", ApplyRoomState);
     MultiplayerSocket.on("room:chat", Message => AppendGameChat(Message));
+    MultiplayerSocket.on("room:chatError", Payload => {
+        document.getElementById("StatusText").className = "StatusText Bad";
+        document.getElementById("StatusText").textContent = Payload?.error || "Chat message was blocked.";
+    });
     MultiplayerSocket.on("game:outcome", HandleMultiplayerOutcome);
     MultiplayerSocket.on("game:retry", () => {
         RemovedSentences.clear();
@@ -487,16 +493,23 @@ function HandleMultiplayerOutcome(Result) {
 
 function SendGameChat(Event) {
     Event.preventDefault();
-    if (!MultiplayerSocket) return;
+    if (!MultiplayerSocket?.connected) return;
     const Input = document.getElementById("GameChatInput");
     const Text = Input.value.trim();
     if (!Text) return;
-    MultiplayerSocket.emit("room:chat", { text });
+    if (Text.length > 180) {
+        document.getElementById("StatusText").className = "StatusText Bad";
+        document.getElementById("StatusText").textContent = "Messages are limited to 180 characters.";
+        return;
+    }
+    MultiplayerSocket.emit("room:chat", { text: Text });
     Input.value = "";
 }
 
 function AppendGameChat(Message, Scroll = true) {
     const Container = document.getElementById("GameChatMessages");
+    if (!Container) return;
+
     const Element = document.createElement("div");
     Element.className = "ChatMessage";
     const Strong = document.createElement("strong");
@@ -504,6 +517,45 @@ function AppendGameChat(Message, Scroll = true) {
     Element.appendChild(Strong);
     Element.appendChild(document.createTextNode(Message.text));
     Container.appendChild(Element);
-    StoryAudio.PlaySound("message");
-    if (Scroll) Container.scrollTop = Container.scrollHeight;
+
+    while (Container.childElementCount > 30) {
+        Container.firstElementChild.remove();
+    }
+
+    if (Scroll) {
+        StoryAudio.PlaySound("message");
+        Container.scrollTop = Container.scrollHeight;
+
+        const Dock = document.getElementById("MultiplayerDock");
+        if (Dock.classList.contains("IsCollapsed") && Message.username !== Profile?.username) {
+            GameChatUnreadCount += 1;
+            UpdateGameChatUnread();
+        }
+    }
+}
+
+function ToggleGameChat() {
+    const Dock = document.getElementById("MultiplayerDock");
+    SetGameChatCollapsed(!Dock.classList.contains("IsCollapsed"));
+}
+
+function SetGameChatCollapsed(Collapsed) {
+    const Dock = document.getElementById("MultiplayerDock");
+    const Button = document.getElementById("ToggleGameChatButton");
+    Dock.classList.toggle("IsCollapsed", Collapsed);
+    Button.setAttribute("aria-expanded", String(!Collapsed));
+    Button.setAttribute("aria-label", Collapsed ? "Show chat" : "Hide chat");
+
+    if (!Collapsed) {
+        GameChatUnreadCount = 0;
+        UpdateGameChatUnread();
+        const Messages = document.getElementById("GameChatMessages");
+        Messages.scrollTop = Messages.scrollHeight;
+    }
+}
+
+function UpdateGameChatUnread() {
+    const Badge = document.getElementById("GameChatUnread");
+    Badge.textContent = String(GameChatUnreadCount);
+    Badge.classList.toggle("HasUnread", GameChatUnreadCount > 0);
 }
