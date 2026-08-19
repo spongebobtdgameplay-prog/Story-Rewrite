@@ -1,4 +1,4 @@
-const STORY_CACHE = "story-rewrite-frontend-v9";
+const STORY_CACHE = "story-rewrite-frontend-v10";
 
 const STORY_STATIC_FILES = [
     "./",
@@ -26,6 +26,7 @@ const STORY_STATIC_FILES = [
     "./levels.js",
     "./dialog.js",
     "./multiplayer.js",
+    "./multiplayer-connection.js",
     "./tutorial.js",
     "./account.js",
     "./stages.json",
