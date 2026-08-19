@@ -30,12 +30,27 @@ function SetServerOverride(Value) {
 }
 
 function GetAuthToken() {
-    return sessionStorage.getItem(STORY_AUTH_TOKEN_KEY) || "";
+    const PersistentToken = localStorage.getItem(STORY_AUTH_TOKEN_KEY) || "";
+    if (PersistentToken) return PersistentToken;
+
+    const LegacySessionToken = sessionStorage.getItem(STORY_AUTH_TOKEN_KEY) || "";
+    if (LegacySessionToken) {
+        localStorage.setItem(STORY_AUTH_TOKEN_KEY, LegacySessionToken);
+        sessionStorage.removeItem(STORY_AUTH_TOKEN_KEY);
+        return LegacySessionToken;
+    }
+
+    return "";
 }
 
 function SetAuthToken(Token) {
-    if (Token) sessionStorage.setItem(STORY_AUTH_TOKEN_KEY, Token);
-    else sessionStorage.removeItem(STORY_AUTH_TOKEN_KEY);
+    if (Token) {
+        localStorage.setItem(STORY_AUTH_TOKEN_KEY, Token);
+        sessionStorage.removeItem(STORY_AUTH_TOKEN_KEY);
+    } else {
+        localStorage.removeItem(STORY_AUTH_TOKEN_KEY);
+        sessionStorage.removeItem(STORY_AUTH_TOKEN_KEY);
+    }
 }
 
 function LogoutAccount() {
@@ -59,9 +74,16 @@ async function GuardProtectedPage() {
 
     try {
         await GetAccountProfile();
-    } catch {
-        SetAuthToken("");
-        window.location.replace("auth.html");
+    } catch (Error) {
+        // ApiRequest removes the token only for a confirmed HTTP 401.
+        // Do not log the player out for a Render cold start, temporary
+        // connection failure, CORS hiccup, or other transient server error.
+        if (!GetAuthToken()) {
+            window.location.replace("auth.html");
+            return;
+        }
+
+        console.warn("Account verification temporarily unavailable:", Error);
     }
 }
 
@@ -127,7 +149,7 @@ async function RequireAccount() {
     try {
         return await GetAccountProfile();
     } catch (Error) {
-        window.location.replace("auth.html");
+        if (!GetAuthToken()) window.location.replace("auth.html");
         throw Error;
     }
 }
