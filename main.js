@@ -4,7 +4,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         const Data = await LoadStoryData();
         const Save = await LoadSave(Data);
 
-        document.getElementById("AccountBadge").textContent = ProfileResult.profile.username;
+        document.getElementById("AccountButtonLabel").textContent = ProfileResult.profile.username;
         document.getElementById("WorldCount").textContent = Data.worlds.length;
         document.getElementById("LevelCount").textContent = Object.keys(Data.stages).length;
         document.getElementById("StarCount").textContent = TotalStars(Save);
@@ -21,14 +21,6 @@ document.addEventListener("DOMContentLoaded", async () => {
             StoryAudio.PlaySound("click");
             GoStage(StageId);
         });
-
-        document.getElementById("ResetButton").addEventListener("click", async () => {
-            if (!confirm("Reset all Story Rewrite server progress?")) return;
-            await ResetSave();
-            window.location.reload();
-        });
-
-        document.getElementById("LogoutButton").addEventListener("click", LogoutAccount);
     } catch (Error) {
         const ErrorBox = document.getElementById("LoadError");
         if (ErrorBox) {
