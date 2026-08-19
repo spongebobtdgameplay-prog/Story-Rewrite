@@ -12,13 +12,11 @@ async function InitLevelsPage() {
     const ErrorBox = document.getElementById("PageError");
 
     try {
+        await RequireAccount();
         LevelPageState.Data = await LoadStoryData();
-        LevelPageState.Save = LoadSave(LevelPageState.Data);
-
-        if (!IsStageUnlocked(LevelPageState.Save, LevelPageState.Save.currentStage)) {
-            UnlockStage(LevelPageState.Data, LevelPageState.Save, LevelPageState.Save.currentStage);
-            SaveProgress(LevelPageState.Data, LevelPageState.Save);
-        }
+        LevelPageState.Save = await LoadSave(LevelPageState.Data);
+        StoryAudio.Configure(LevelPageState.Save.settings);
+        StoryAudio.PlayMusic("menu");
 
         const Params = new URLSearchParams(window.location.search);
         const RequestedWorldId = Params.get("unlock") || Params.get("world");
@@ -47,8 +45,8 @@ async function InitLevelsPage() {
         if (LevelPageState.AutoStartStageId) {
             const Node = document.querySelector(`[data-stage-node="${CSS.escape(LevelPageState.AutoStartStageId)}"]`);
             if (Node) Node.classList.add("Unlocking");
-
             await Delay(1450);
+            await EnterServerStage(LevelPageState.AutoStartStageId);
             GoStage(LevelPageState.AutoStartStageId);
         }
     } catch (Error) {
@@ -86,18 +84,10 @@ function RenderOverviewStats() {
     const UnlockedWorlds = LevelPageState.Save.unlockedWorlds.length;
 
     Container.innerHTML = `
-        <div class="GameStat">
-            <span class="GameStatLabel">Worlds Unlocked</span>
-            <strong class="GameStatValue">${UnlockedWorlds} / ${LevelPageState.Data.worlds.length}</strong>
-        </div>
-        <div class="GameStat">
-            <span class="GameStatLabel">Levels Cleared</span>
-            <strong class="GameStatValue">${Cleared} / ${TotalStages}</strong>
-        </div>
-        <div class="GameStat">
-            <span class="GameStatLabel">Stars Recovered</span>
-            <strong class="GameStatValue">${Stars} / ${TotalStages * 3}</strong>
-        </div>
+        <div class="GameStat"><span class="GameStatLabel">Worlds Unlocked</span><strong class="GameStatValue">${UnlockedWorlds} / ${LevelPageState.Data.worlds.length}</strong></div>
+        <div class="GameStat"><span class="GameStatLabel">Levels Cleared</span><strong class="GameStatValue">${Cleared} / ${TotalStages}</strong></div>
+        <div class="GameStat"><span class="GameStatLabel">Stars Recovered</span><strong class="GameStatValue">${Stars} / ${TotalStages * 3}</strong></div>
+        <div class="GameStat"><span class="GameStatLabel">Lives</span><strong class="GameStatValue">${LevelPageState.Save.lives} / ${LevelPageState.Save.maxLives}</strong></div>
     `;
 }
 
@@ -111,12 +101,7 @@ function RenderWorldRail() {
         const Cleared = Stages.filter(Stage => GetStageStars(LevelPageState.Save, Stage.id) > 0).length;
 
         return `
-            <button
-                class="WorldTab ${Active ? "Active" : ""} ${Unlocked ? "" : "Locked"}"
-                type="button"
-                data-world-id="${EscapeText(World.id)}"
-                ${Unlocked ? "" : "disabled"}
-            >
+            <button class="WorldTab ${Active ? "Active" : ""} ${Unlocked ? "" : "Locked"}" type="button" data-world-id="${EscapeText(World.id)}" ${Unlocked ? "" : "disabled"}>
                 <span class="WorldTabNumber">World ${World.number}</span>
                 <span class="WorldTabName">${EscapeText(World.shortName || World.name)}</span>
                 <span class="WorldTabProgress">${Unlocked ? `${Cleared}/${Stages.length} cleared` : "Locked"}</span>
@@ -126,6 +111,7 @@ function RenderWorldRail() {
 
     Rail.querySelectorAll(".WorldTab:not(.Locked)").forEach(Button => {
         Button.addEventListener("click", () => {
+            StoryAudio.PlaySound("click");
             LevelPageState.SelectedWorldId = Button.dataset.worldId;
             LevelPageState.SelectedStageId = GetDefaultStageId(LevelPageState.SelectedWorldId);
             RenderLevelsPage();
@@ -164,16 +150,14 @@ function RenderSelectedWorld() {
                         ${Stages.map((Stage, Index) => BuildStageNode(Stage, Index + 1)).join("")}
                     </div>
                 </section>
-
-                <aside class="StageBriefing" id="StageBriefing">
-                    ${BuildStageBriefing(SelectedStage)}
-                </aside>
+                <aside class="StageBriefing" id="StageBriefing">${BuildStageBriefing(SelectedStage)}</aside>
             </div>
         </section>
     `;
 
     Mount.querySelectorAll(".StageNode:not(.Locked)").forEach(Button => {
         Button.addEventListener("click", () => {
+            StoryAudio.PlaySound("click");
             LevelPageState.SelectedStageId = Button.dataset.stageNode;
             RenderSelectedWorld();
         });
@@ -181,7 +165,11 @@ function RenderSelectedWorld() {
 
     const PlayButton = Mount.querySelector(".BriefingPlay[data-stage-id]");
     if (PlayButton) {
-        PlayButton.addEventListener("click", () => GoStage(PlayButton.dataset.stageId));
+        PlayButton.addEventListener("click", async () => {
+            StoryAudio.PlaySound("click");
+            await EnterServerStage(PlayButton.dataset.stageId);
+            GoStage(PlayButton.dataset.stageId);
+        });
     }
 }
 
@@ -191,26 +179,12 @@ function BuildStageNode(Stage, Position) {
     const Completed = Stars > 0;
     const Current = LevelPageState.Save.currentStage === Stage.id;
     const Selected = LevelPageState.SelectedStageId === Stage.id;
-    const Classes = [
-        "StageNode",
-        Unlocked ? "" : "Locked",
-        Completed ? "Completed" : "",
-        Current ? "Current" : "",
-        Selected ? "Selected" : ""
-    ].filter(Boolean).join(" ");
+    const Classes = ["StageNode", Unlocked ? "" : "Locked", Completed ? "Completed" : "", Current ? "Current" : "", Selected ? "Selected" : ""].filter(Boolean).join(" ");
 
     return `
         <div class="StageNodeWrap ${Selected ? "Selected" : ""}" data-position="${Position}">
             <div class="StageNodeDifficulty">${EscapeText(String(Stage.difficulty || "Normal").toUpperCase())}</div>
-            <button
-                class="${Classes}"
-                type="button"
-                data-stage-node="${EscapeText(Stage.id)}"
-                ${Unlocked ? "" : "disabled"}
-                aria-label="Level ${Stage.levelNumber}: ${EscapeText(Stage.name)}"
-            >
-                ${Unlocked ? Stage.levelNumber : "×"}
-            </button>
+            <button class="${Classes}" type="button" data-stage-node="${EscapeText(Stage.id)}" ${Unlocked ? "" : "disabled"} aria-label="Level ${Stage.levelNumber}: ${EscapeText(Stage.name)}">${Unlocked ? Stage.levelNumber : "×"}</button>
             <div class="StageNodeLabel">${EscapeText(Stage.name)}</div>
         </div>
     `;
@@ -231,41 +205,17 @@ function BuildStageBriefing(Stage) {
                 <span class="BriefingBadge">3★ Par ${Stage.par}</span>
             </div>
         </div>
-
-        <div class="BriefingSection">
-            <span class="BriefingLabel">Objective</span>
-            <p>${EscapeText(Stage.objective)}</p>
-        </div>
-
-        <div class="BriefingSection">
-            <span class="BriefingLabel">Threat</span>
-            <p>${EscapeText(Stage.threat)}</p>
-        </div>
-
-        <div class="BriefingSection">
-            <span class="BriefingLabel">Must Survive</span>
-            <p>${EscapeText(Stage.survivalRule)}</p>
-        </div>
-
+        <div class="BriefingSection"><span class="BriefingLabel">Objective</span><p>${EscapeText(Stage.objective)}</p></div>
+        <div class="BriefingSection"><span class="BriefingLabel">Threat</span><p>${EscapeText(Stage.threat)}</p></div>
+        <div class="BriefingSection"><span class="BriefingLabel">Must Survive</span><p>${EscapeText(Stage.survivalRule)}</p></div>
         <div class="BriefingStars">${BuildStars(Stars)}</div>
-
-        <button
-            class="BriefingPlay"
-            type="button"
-            ${Unlocked ? `data-stage-id="${EscapeText(Stage.id)}"` : "disabled"}
-        >
-            ${Unlocked ? "Open This Page" : "Level Locked"}
-        </button>
+        <button class="BriefingPlay" type="button" ${Unlocked ? `data-stage-id="${EscapeText(Stage.id)}"` : "disabled"}>${Unlocked ? "Open This Page" : "Level Locked"}</button>
     `;
 }
 
 function BuildStars(Count) {
     const Stars = Number(Count || 0);
     let Html = "";
-
-    for (let Index = 0; Index < 3; Index += 1) {
-        Html += `<span class="${Index < Stars ? "Filled" : ""}">★</span>`;
-    }
-
+    for (let Index = 0; Index < 3; Index += 1) Html += `<span class="${Index < Stars ? "Filled" : ""}">★</span>`;
     return Html;
 }
