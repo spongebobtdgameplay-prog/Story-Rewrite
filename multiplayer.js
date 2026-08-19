@@ -7,7 +7,8 @@ let SocketClientPromise = null;
 let StartingRoom = false;
 
 const SOCKET_CLIENT_URL = "https://story-rewrite-backend.onrender.com/socket.io/socket.io.js";
-const REQUIRED_MULTIPLAYER_SERVER_VERSION = 7;
+const REQUIRED_MULTIPLAYER_SERVER_VERSION = 8;
+const CHAT_MAX_LENGTH = 180;
 
 window.addEventListener("DOMContentLoaded", () => {
     BindUi();
@@ -27,6 +28,7 @@ function BindUi() {
     document.getElementById("StartButton").addEventListener("click", StartRoom);
     document.getElementById("LeaveButton").addEventListener("click", LeaveRoom);
     document.getElementById("ChatForm").addEventListener("submit", SendChat);
+    document.getElementById("ToggleLobbyChatButton").addEventListener("click", ToggleLobbyChat);
 }
 
 async function EnsureBackendVersion() {
@@ -182,6 +184,10 @@ function BindSocket(Socket) {
     Socket.on("room:chat", Message => {
         StoryAudio.PlaySound("message");
         AppendChat(Message);
+    });
+
+    Socket.on("room:chatError", Payload => {
+        ShowRoomStatus(Payload?.error || "Chat message was blocked.", false);
     });
 
     Socket.on("game:started", Payload => {
@@ -369,8 +375,20 @@ function SendChat(Event) {
     const Input = document.getElementById("ChatInput");
     const Text = Input.value.trim();
     if (!Text || !MultiplayerSocket?.connected) return;
+    if (Text.length > CHAT_MAX_LENGTH) {
+        ShowRoomStatus(`Messages are limited to ${CHAT_MAX_LENGTH} characters.`, false);
+        return;
+    }
     MultiplayerSocket.emit("room:chat", { text: Text });
     Input.value = "";
+}
+
+function ToggleLobbyChat() {
+    const Panel = document.getElementById("LobbyChatPanel");
+    const Button = document.getElementById("ToggleLobbyChatButton");
+    const Collapsed = Panel.classList.toggle("IsCollapsed");
+    Button.setAttribute("aria-expanded", String(!Collapsed));
+    Button.setAttribute("aria-label", Collapsed ? "Show chat" : "Hide chat");
 }
 
 function RenderRoom() {
@@ -380,6 +398,9 @@ function RenderRoom() {
     document.getElementById("ActiveRoom").classList.remove("Hidden");
     document.getElementById("RoomCodeValue").textContent = MultiplayerState.code;
     RenderLives(MultiplayerState.lives, MultiplayerState.maxLives);
+
+    const MaxPlayers = Number(MultiplayerState.maxPlayers || 5);
+    document.getElementById("PlayerCount").textContent = `${MultiplayerState.players.length} / ${MaxPlayers}`;
 
     const IsHost = MultiplayerState.hostUsername === CurrentProfile.username;
     document.getElementById("StartButton").classList.toggle("Hidden", !IsHost);
@@ -412,6 +433,11 @@ function AppendChat(Message, Scroll = true) {
     Element.appendChild(Name);
     Element.appendChild(document.createTextNode(Message.text));
     Container.appendChild(Element);
+
+    while (Container.childElementCount > 30) {
+        Container.firstElementChild.remove();
+    }
+
     if (Scroll) Container.scrollTop = Container.scrollHeight;
 }
 
