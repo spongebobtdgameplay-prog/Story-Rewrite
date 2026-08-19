@@ -2,30 +2,46 @@ let Data;
 let Save;
 let Stage;
 let World;
+let Profile;
 let RemovedSentences = new Set();
 let LastCheckFailed = false;
 let TransitionBusy = false;
+let MultiplayerSocket = null;
+let MultiplayerState = null;
+let RoomCode = "";
 
-document.addEventListener("DOMContentLoaded", async () => {
+window.addEventListener("DOMContentLoaded", async () => {
     try {
+        const ProfileResult = await RequireAccount();
+        Profile = ProfileResult.profile;
         Data = await LoadStoryData();
-        Save = LoadSave(Data);
+        Save = await LoadSave(Data);
 
         const Params = new URLSearchParams(window.location.search);
         const StageId = Params.get("stage") || Save.currentStage;
-
+        RoomCode = String(Params.get("room") || "").trim().toUpperCase();
         Stage = Data.stages[StageId];
-        if (!Stage || !IsStageUnlocked(Save, StageId)) {
+
+        if (!Stage) {
+            window.location.href = "levels.html";
+            return;
+        }
+
+        if (!RoomCode && !IsStageUnlocked(Save, StageId)) {
             window.location.href = "levels.html";
             return;
         }
 
         World = GetWorld(Data, Stage.worldId);
-        Save.currentStage = Stage.id;
-        SaveProgress(Data, Save);
 
-        RenderStage();
+        if (!RoomCode) Save = await EnterServerStage(Stage.id);
+
+        StoryAudio.Configure(Save.settings);
+        StoryAudio.PlayMusic(World.theme || "menu");
         BindActions();
+        RenderStage();
+
+        if (RoomCode) StartMultiplayer();
     } catch (Error) {
         document.getElementById("GameRoot").innerHTML = `<div class="Panel" style="padding:28px">${EscapeText(Error.message)}</div>`;
     }
@@ -34,11 +50,14 @@ document.addEventListener("DOMContentLoaded", async () => {
 function BindActions() {
     document.getElementById("CheckButton").addEventListener("click", CheckStage);
     document.getElementById("RestoreButton").addEventListener("click", RestoreStage);
-    document.getElementById("BackButton").addEventListener("click", () => window.location.href = "levels.html");
+    document.getElementById("BackButton").addEventListener("click", () => window.location.href = RoomCode ? "multiplayer.html" : "levels.html");
     document.getElementById("NextButton").addEventListener("click", NextStage);
     document.getElementById("ReplayButton").addEventListener("click", ReplayStage);
     document.getElementById("CompleteSelectButton").addEventListener("click", ReturnToSelectWithTrail);
     document.getElementById("TbcSelectButton").addEventListener("click", () => window.location.href = "levels.html");
+    document.getElementById("RestartChapterButton").addEventListener("click", RestartChapter);
+    document.getElementById("GameOverMapButton").addEventListener("click", () => window.location.href = RoomCode ? "multiplayer.html" : "levels.html");
+    document.getElementById("GameChatForm").addEventListener("submit", SendGameChat);
 }
 
 function RenderStage() {
@@ -54,38 +73,66 @@ function RenderStage() {
     document.getElementById("SurvivalText").textContent = Stage.survivalRule;
     document.getElementById("HintText").textContent = Stage.hint;
     document.getElementById("ParCount").textContent = Stage.par;
-    document.getElementById("CrossedCount").textContent = RemovedSentences.size;
+    document.getElementById("EraseHint").textContent = RoomCode
+        ? "Vote on sentences with your group. A sentence is crossed out when a majority agrees."
+        : "Click a sentence to cross it out. Click it again to restore it. When you are ready, check survival.";
 
+    RenderSentences();
+    RenderLives();
+    RenderIllustration();
+    RenderRemainingStory();
+}
+
+function RenderSentences() {
     const SentenceList = document.getElementById("SentenceList");
     SentenceList.innerHTML = "";
 
     Stage.sentences.forEach((Text, Index) => {
         const Button = document.createElement("button");
         Button.className = `Sentence ${RemovedSentences.has(Index) ? "Crossed" : ""}`;
-        Button.textContent = Text;
-        Button.addEventListener("click", () => ToggleSentence(Index, Button));
+        Button.type = "button";
+
+        const TextNode = document.createElement("span");
+        TextNode.textContent = Text;
+        Button.appendChild(TextNode);
+
+        if (RoomCode) {
+            const VoteCount = document.createElement("span");
+            VoteCount.className = "VoteCount";
+            const Count = Number(MultiplayerState?.votes?.[Index] || 0);
+            VoteCount.textContent = `${Count}/${MultiplayerState?.voteThreshold || 1}`;
+            Button.appendChild(VoteCount);
+        }
+
+        Button.addEventListener("click", () => ToggleSentence(Index));
         SentenceList.appendChild(Button);
     });
 
-    RenderIllustration();
-    RenderRemainingStory();
+    document.getElementById("CrossedCount").textContent = RemovedSentences.size;
 }
 
-function ToggleSentence(Index, Button) {
-    if (RemovedSentences.has(Index)) {
-        RemovedSentences.delete(Index);
-        Button.classList.remove("Crossed");
-    } else {
-        RemovedSentences.add(Index);
-        Button.classList.add("Crossed");
+function ToggleSentence(Index) {
+    LastCheckFailed = false;
+    document.getElementById("Aftermath").classList.add("Hidden");
+
+    if (RoomCode) {
+        if (!MultiplayerSocket) return;
+        StoryAudio.PlaySound("click");
+        MultiplayerSocket.emit("game:vote", { index: Index });
+        return;
     }
 
-    LastCheckFailed = false;
-    document.getElementById("CrossedCount").textContent = RemovedSentences.size;
-    document.getElementById("Aftermath").classList.add("Hidden");
+    if (RemovedSentences.has(Index)) {
+        RemovedSentences.delete(Index);
+        StoryAudio.PlaySound("restore");
+    } else {
+        RemovedSentences.add(Index);
+        StoryAudio.PlaySound("cross");
+    }
+
     document.getElementById("StatusText").className = "StatusText";
     document.getElementById("StatusText").textContent = "The story changed. Check survival when you think the route is safe.";
-
+    RenderSentences();
     RenderIllustration();
     RenderRemainingStory();
 }
@@ -101,25 +148,27 @@ function RenderRemainingStory() {
         : `<div class="RemainingLine">Nothing remains on the page.</div>`;
 }
 
+function RenderLives() {
+    const Lives = RoomCode ? Number(MultiplayerState?.lives ?? 3) : Number(Save?.lives ?? 3);
+    const MaxLives = RoomCode ? Number(MultiplayerState?.maxLives ?? 3) : Number(Save?.maxLives ?? 3);
+    document.getElementById("LivesLabel").textContent = RoomCode ? "Team lives" : "Lives";
+    const Container = document.getElementById("LivesHearts");
+    Container.innerHTML = "";
+
+    for (let Index = 0; Index < MaxLives; Index += 1) {
+        const Heart = document.createElement("span");
+        Heart.className = `LifeHeart ${Index < Lives ? "" : "Empty"}`;
+        Heart.textContent = "♥";
+        Container.appendChild(Heart);
+    }
+}
+
 function GetSceneMessage(Mode) {
-    if (Mode === "failure") {
-        return Stage.aftermath;
-    }
-
-    if (Mode === "chapter") {
-        return World.chapterEnding;
-    }
-
-    const RemovedCount = RemovedSentences.size;
-    if (RemovedCount === 0) {
-        return "The original account is still intact. The danger has not been rewritten yet.";
-    }
-
-    if (RemovedCount === 1) {
-        return "One event has been removed. The route is changing, but survival has not been checked.";
-    }
-
-    return `${RemovedCount} events have been removed. The rewritten route is waiting for a survival check.`;
+    if (Mode === "failure") return Stage.aftermath;
+    if (Mode === "chapter") return World.chapterEnding;
+    if (RemovedSentences.size === 0) return "The original account is still intact. The danger has not been rewritten yet.";
+    if (RemovedSentences.size === 1) return "One event has been removed. The route is changing, but survival has not been checked.";
+    return `${RemovedSentences.size} events have been removed. The rewritten route is waiting for a survival check.`;
 }
 
 function GetSceneStateLabel(Mode) {
@@ -130,14 +179,7 @@ function GetSceneStateLabel(Mode) {
 
 function BuildSceneEyes() {
     if (World.theme !== "fromville") return "";
-
-    return `
-        <div class="SceneEyes">
-            <i></i>
-            <i></i>
-            <i></i>
-        </div>
-    `;
+    return `<div class="SceneEyes"><i></i><i></i><i></i></div>`;
 }
 
 function BuildSceneVisual(Mode = "active") {
@@ -145,7 +187,6 @@ function BuildSceneVisual(Mode = "active") {
     const StateClass = Mode === "failure" ? "SceneMode-failure" : Mode === "chapter" ? "SceneMode-chapter" : "SceneMode-active";
     const Kicker = Mode === "chapter" ? `WORLD ${World.number} COMPLETE` : `WORLD ${World.number} · LEVEL ${Stage.levelNumber}`;
     const Title = Mode === "chapter" ? World.name : Stage.name;
-    const FooterLeft = EscapeText(World.shortName || World.name);
     const FooterRight = Mode === "failure" ? "SURVIVAL FAILED" : Mode === "chapter" ? "ROUTE OPEN" : `${RemovedSentences.size} CROSSED OUT`;
 
     return `
@@ -153,73 +194,83 @@ function BuildSceneVisual(Mode = "active") {
             <div class="SceneAtmosphere"></div>
             <div class="SceneGeometry"></div>
             ${BuildSceneEyes()}
-
-            <div class="SceneHudTop">
-                <span>${EscapeText(Kicker)}</span>
-                <span class="SceneStateBadge">${GetSceneStateLabel(Mode)}</span>
-            </div>
-
-            <div class="SceneFocus">
-                <div class="SceneChapter">${EscapeText(World.shortName || World.name)}</div>
-                <h3>${EscapeText(Title)}</h3>
-                <p>${EscapeText(GetSceneMessage(Mode))}</p>
-            </div>
-
-            <div class="SceneHudBottom">
-                <span>${FooterLeft}</span>
-                <span>${EscapeText(FooterRight)}</span>
-            </div>
+            <div class="SceneHudTop"><span>${EscapeText(Kicker)}</span><span class="SceneStateBadge">${GetSceneStateLabel(Mode)}</span></div>
+            <div class="SceneFocus"><div class="SceneChapter">${EscapeText(World.shortName || World.name)}</div><h3>${EscapeText(Title)}</h3><p>${EscapeText(GetSceneMessage(Mode))}</p></div>
+            <div class="SceneHudBottom"><span>${EscapeText(World.shortName || World.name)}</span><span>${EscapeText(FooterRight)}</span></div>
         </div>
     `;
 }
 
 function RenderIllustration() {
-    const Illustration = document.getElementById("Illustration");
-    Illustration.innerHTML = BuildSceneVisual(LastCheckFailed ? "failure" : "active");
+    document.getElementById("Illustration").innerHTML = BuildSceneVisual(LastCheckFailed ? "failure" : "active");
 }
 
-function CheckStage() {
-    const HasAllRequired = Stage.requiredRemoved.every(Index => RemovedSentences.has(Index));
-    const RemovedForbidden = Stage.forbiddenRemoved.some(Index => RemovedSentences.has(Index));
+async function CheckStage() {
     const Status = document.getElementById("StatusText");
+    document.getElementById("CheckButton").disabled = true;
 
-    if (!HasAllRequired || RemovedForbidden) {
-        LastCheckFailed = true;
+    try {
+        if (RoomCode) {
+            if (!MultiplayerState || MultiplayerState.hostUsername !== Profile.username) {
+                Status.className = "StatusText";
+                Status.textContent = `Only ${MultiplayerState?.hostUsername || "the host"} can check survival.`;
+                return;
+            }
+
+            MultiplayerSocket.emit("game:check", {}, Result => {
+                if (!Result?.ok) {
+                    Status.className = "StatusText Bad";
+                    Status.textContent = Result?.error || "Could not check survival.";
+                }
+            });
+            return;
+        }
+
+        const Result = await CheckServerStage(Stage.id, [...RemovedSentences]);
+        Save = NormalizeSave(Data, Result.save);
+        RenderLives();
+
+        if (!Result.success) {
+            ApplyFailureOutcome(Result);
+            return;
+        }
+
+        LastCheckFailed = false;
+        StoryAudio.PlaySound("success");
+        Status.className = "StatusText Good";
+        Status.textContent = "The rewritten account satisfies the objective and survival rule.";
+        ShowComplete(Result.stars);
+    } catch (Error) {
         Status.className = "StatusText Bad";
-        Status.textContent = RemovedForbidden
-            ? "You erased something the successful ending still needs. The bad aftermath happens anyway."
-            : "At least one cause of failure is still active. The bad aftermath happens.";
-
-        const Aftermath = document.getElementById("Aftermath");
-        Aftermath.classList.remove("Hidden");
-        Aftermath.innerHTML = `<strong>Bad aftermath</strong>${EscapeText(Stage.aftermath)}`;
-
-        RenderIllustration();
-        ShakeBook();
-        return;
+        Status.textContent = Error.message;
+    } finally {
+        document.getElementById("CheckButton").disabled = false;
     }
+}
 
-    const ExtraRemoved = [...RemovedSentences].filter(Index => !Stage.requiredRemoved.includes(Index)).length;
-    const RemovedCount = RemovedSentences.size;
-    let Stars = 1;
+function ApplyFailureOutcome(Result) {
+    LastCheckFailed = true;
+    StoryAudio.PlaySound(Result.gameOver ? "life" : "fail");
+    StoryAudio.PlayMusic("danger");
+    const Status = document.getElementById("StatusText");
+    Status.className = "StatusText Bad";
+    Status.textContent = `${Result.reason} Life lost.`;
 
-    if (ExtraRemoved === 0 && RemovedCount <= Stage.par) {
-        Stars = 3;
-    } else if (ExtraRemoved <= 1 && RemovedCount <= Stage.par + 1) {
-        Stars = 2;
+    const Aftermath = document.getElementById("Aftermath");
+    Aftermath.classList.remove("Hidden");
+    Aftermath.innerHTML = `<strong>Bad outcome</strong>${EscapeText(Result.aftermath)}`;
+    RenderIllustration();
+    RenderLives();
+    ShakeBook();
+
+    if (Result.gameOver) {
+        document.getElementById("GameOverText").textContent = `${Result.aftermath} No lives remain. Restart the chapter to continue.`;
+        document.getElementById("GameOverOverlay").classList.add("Show");
     }
-
-    LastCheckFailed = false;
-    Status.className = "StatusText Good";
-    Status.textContent = "The rewritten account satisfies the objective and survival rule.";
-
-    CompleteStage(Data, Save, Stage.id, Stars);
-    ShowComplete(Stars);
 }
 
 function ShakeBook() {
-    const Book = document.getElementById("Book");
-    Book.animate([
+    document.getElementById("Book").animate([
         { transform: "translateX(0)" },
         { transform: "translateX(-7px)" },
         { transform: "translateX(7px)" },
@@ -229,11 +280,19 @@ function ShakeBook() {
 }
 
 function RestoreStage() {
+    if (RoomCode) {
+        document.getElementById("StatusText").className = "StatusText";
+        document.getElementById("StatusText").textContent = "In multiplayer, remove votes by clicking the voted sentences again.";
+        return;
+    }
+
     RemovedSentences.clear();
     LastCheckFailed = false;
+    StoryAudio.PlaySound("restore");
     document.getElementById("Aftermath").classList.add("Hidden");
     document.getElementById("StatusText").className = "StatusText";
     document.getElementById("StatusText").textContent = "The whole page has been restored.";
+    StoryAudio.PlayMusic(World.theme || "menu");
     RenderStage();
 }
 
@@ -241,36 +300,19 @@ function ShowComplete(Stars) {
     document.getElementById("CompleteDifficulty").textContent = Stage.difficulty;
     document.getElementById("CompleteText").textContent = `${World.name} · ${Stage.name}`;
     document.getElementById("StarRow").textContent = `${"★".repeat(Stars)}${"☆".repeat(3 - Stars)}`;
-    document.getElementById("NextButton").textContent = Stage.isChapterEnd
-        ? (Stage.nextStage ? "Finish Chapter" : "Finish Final Chapter")
-        : "Next Level";
+    document.getElementById("NextButton").textContent = Stage.isChapterEnd ? (Stage.nextStage ? "Finish Chapter" : "Finish Final Chapter") : "Next Level";
     document.getElementById("CompleteOverlay").classList.add("Show");
 }
 
 async function ShowTrail(TargetStageId, SelectOnly = false) {
     if (TransitionBusy) return false;
     TransitionBusy = true;
-
     const Overlay = document.getElementById("TravelOverlay");
     const Target = TargetStageId ? Data.stages[TargetStageId] : null;
 
-    document.getElementById("TravelTitle").textContent = SelectOnly
-        ? "Returning to the chapter map..."
-        : Target
-            ? `Opening Level ${Target.levelNumber}...`
-            : "Following the final route...";
-
-    document.getElementById("TravelCaption").textContent = SelectOnly
-        ? "The current page closes."
-        : Target
-            ? Target.name
-            : "There are no recovered pages beyond this point.";
-
-    document.getElementById("TravelTarget").textContent = SelectOnly
-        ? "☰"
-        : Target
-            ? Target.levelNumber
-            : "?";
+    document.getElementById("TravelTitle").textContent = SelectOnly ? "Returning to the chapter map..." : Target ? `Opening Level ${Target.levelNumber}...` : "Following the final route...";
+    document.getElementById("TravelCaption").textContent = SelectOnly ? "The current page closes." : Target ? Target.name : "There are no recovered pages beyond this point.";
+    document.getElementById("TravelTarget").textContent = SelectOnly ? "☰" : Target ? Target.levelNumber : "?";
 
     Overlay.querySelectorAll(".TrailDot").forEach(Dot => {
         Dot.style.animation = "none";
@@ -290,7 +332,6 @@ async function ShowChapterComplete() {
     document.getElementById("ChapterTitle").textContent = World.name;
     document.getElementById("ChapterText").textContent = World.chapterEnding;
     document.getElementById("ChapterArt").innerHTML = BuildSceneVisual("chapter");
-
     Overlay.classList.add("Show");
     await Delay(2500);
     Overlay.classList.remove("Show");
@@ -298,16 +339,25 @@ async function ShowChapterComplete() {
 
 async function NextStage() {
     if (TransitionBusy) return;
+
+    if (RoomCode) {
+        if (MultiplayerState?.hostUsername !== Profile.username) {
+            document.getElementById("CompleteText").textContent = `Waiting for ${MultiplayerState?.hostUsername || "the host"} to continue...`;
+            return;
+        }
+        document.getElementById("CompleteOverlay").classList.remove("Show");
+        MultiplayerSocket.emit("game:next");
+        return;
+    }
+
     document.getElementById("CompleteOverlay").classList.remove("Show");
 
     if (Stage.isChapterEnd) {
         await ShowChapterComplete();
-
         if (!Stage.nextStage) {
             document.getElementById("TbcOverlay").classList.add("Show");
             return;
         }
-
         const Next = Data.stages[Stage.nextStage];
         await ShowTrail(Stage.nextStage, false);
         window.location.href = `levels.html?unlock=${encodeURIComponent(Next.worldId)}&autostart=${encodeURIComponent(Stage.nextStage)}`;
@@ -324,18 +374,136 @@ async function NextStage() {
 }
 
 async function ReturnToSelectWithTrail() {
-    if (TransitionBusy) return;
     document.getElementById("CompleteOverlay").classList.remove("Show");
+    if (RoomCode) {
+        window.location.href = "multiplayer.html";
+        return;
+    }
     const Traveled = await ShowTrail(null, true);
     if (Traveled) window.location.href = "levels.html";
 }
 
 function ReplayStage() {
     document.getElementById("CompleteOverlay").classList.remove("Show");
+
+    if (RoomCode) {
+        if (MultiplayerState?.hostUsername === Profile.username) MultiplayerSocket.emit("game:retry");
+        return;
+    }
+
     RemovedSentences.clear();
     LastCheckFailed = false;
     document.getElementById("Aftermath").classList.add("Hidden");
     document.getElementById("StatusText").className = "StatusText";
     document.getElementById("StatusText").textContent = "The page has been reset.";
+    StoryAudio.PlayMusic(World.theme || "menu");
     RenderStage();
+}
+
+async function RestartChapter() {
+    if (RoomCode) {
+        if (MultiplayerState?.hostUsername !== Profile.username) return;
+        document.getElementById("GameOverOverlay").classList.remove("Show");
+        MultiplayerSocket.emit("game:restartChapter");
+        return;
+    }
+
+    Save = await RestartServerChapter(World.id);
+    document.getElementById("GameOverOverlay").classList.remove("Show");
+    GoStage(GetWorld(Data, World.id).entryStage);
+}
+
+function StartMultiplayer() {
+    document.getElementById("MultiplayerDock").classList.remove("Hidden");
+    document.getElementById("MultiplayerRoomLabel").textContent = `Room ${RoomCode}`;
+    MultiplayerSocket = ConnectStorySocket();
+
+    MultiplayerSocket.on("connect", () => {
+        MultiplayerSocket.emit("room:join", { code: RoomCode }, Result => {
+            if (!Result?.ok) {
+                document.getElementById("StatusText").className = "StatusText Bad";
+                document.getElementById("StatusText").textContent = Result?.error || "Could not reconnect to the multiplayer room.";
+                return;
+            }
+            MultiplayerState = Result.state;
+            ApplyRoomState(Result.state);
+        });
+    });
+
+    MultiplayerSocket.on("room:state", ApplyRoomState);
+    MultiplayerSocket.on("room:chat", Message => AppendGameChat(Message));
+    MultiplayerSocket.on("game:outcome", HandleMultiplayerOutcome);
+    MultiplayerSocket.on("game:retry", () => {
+        RemovedSentences.clear();
+        LastCheckFailed = false;
+        document.getElementById("Aftermath").classList.add("Hidden");
+        document.getElementById("CompleteOverlay").classList.remove("Show");
+        StoryAudio.PlayMusic(World.theme || "menu");
+        RenderStage();
+    });
+    MultiplayerSocket.on("game:stage", Payload => {
+        window.location.href = `dialog.html?stage=${encodeURIComponent(Payload.stageId)}&room=${encodeURIComponent(RoomCode)}`;
+    });
+    MultiplayerSocket.on("game:finished", () => document.getElementById("TbcOverlay").classList.add("Show"));
+    MultiplayerSocket.on("connect_error", Error => {
+        document.getElementById("StatusText").className = "StatusText Bad";
+        document.getElementById("StatusText").textContent = Error.message;
+    });
+}
+
+function ApplyRoomState(State) {
+    MultiplayerState = State;
+    RemovedSentences = new Set(State.selectedIndexes || []);
+    RenderLives();
+    RenderSentences();
+    RenderRemainingStory();
+    RenderIllustration();
+    document.getElementById("MultiplayerVoteLabel").textContent = `Majority ${State.voteThreshold}`;
+
+    const IsHost = State.hostUsername === Profile.username;
+    document.getElementById("CheckButton").textContent = IsHost ? "Check Team Survival" : `Host ${State.hostUsername} Checks`;
+    document.getElementById("CheckButton").disabled = !IsHost;
+
+    const Chat = document.getElementById("GameChatMessages");
+    if (Chat && Chat.childElementCount === 0 && State.messages) {
+        for (const Message of State.messages) AppendGameChat(Message, false);
+        Chat.scrollTop = Chat.scrollHeight;
+    }
+}
+
+function HandleMultiplayerOutcome(Result) {
+    RenderLives();
+    if (!Result.success) {
+        ApplyFailureOutcome(Result);
+        return;
+    }
+
+    LastCheckFailed = false;
+    StoryAudio.PlaySound("success");
+    document.getElementById("StatusText").className = "StatusText Good";
+    document.getElementById("StatusText").textContent = "The team rewrite survived.";
+    ShowComplete(Result.stars);
+}
+
+function SendGameChat(Event) {
+    Event.preventDefault();
+    if (!MultiplayerSocket) return;
+    const Input = document.getElementById("GameChatInput");
+    const Text = Input.value.trim();
+    if (!Text) return;
+    MultiplayerSocket.emit("room:chat", { text });
+    Input.value = "";
+}
+
+function AppendGameChat(Message, Scroll = true) {
+    const Container = document.getElementById("GameChatMessages");
+    const Element = document.createElement("div");
+    Element.className = "ChatMessage";
+    const Strong = document.createElement("strong");
+    Strong.textContent = `${Message.username}: `;
+    Element.appendChild(Strong);
+    Element.appendChild(document.createTextNode(Message.text));
+    Container.appendChild(Element);
+    StoryAudio.PlaySound("message");
+    if (Scroll) Container.scrollTop = Container.scrollHeight;
 }
