@@ -41,15 +41,15 @@ async function ApiRequest(Path, Options = {}) {
         throw new Error("Multiplayer server is not configured yet. Run server.js locally or set the deployed server URL in server-config.js.");
     }
 
-    const Headers = new Headers(Options.headers || {});
-    if (!Headers.has("Content-Type") && Options.body !== undefined) Headers.set("Content-Type", "application/json");
+    const RequestHeaders = new window.Headers(Options.headers || {});
+    if (!RequestHeaders.has("Content-Type") && Options.body !== undefined) RequestHeaders.set("Content-Type", "application/json");
 
     const Token = GetAuthToken();
-    if (Token) Headers.set("Authorization", `Bearer ${Token}`);
+    if (Token) RequestHeaders.set("Authorization", `Bearer ${Token}`);
 
     const Response = await fetch(`${ServerUrl}${Path}`, {
         ...Options,
-        headers: Headers,
+        headers: RequestHeaders,
         cache: "no-store"
     });
 
