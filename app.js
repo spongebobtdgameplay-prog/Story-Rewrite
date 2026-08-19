@@ -1,4 +1,5 @@
 const FAVICON_VERSION = "1000001";
+const SCENE_FIX_VERSION = "20260819-11";
 
 const HeadLinks = [
     {
@@ -40,6 +41,14 @@ for (const LinkData of HeadLinks) {
     }
 
     document.head.appendChild(Link);
+}
+
+if (!document.head.querySelector('link[data-story-scene-fix="1"]')) {
+    const SceneFixLink = document.createElement("link");
+    SceneFixLink.rel = "stylesheet";
+    SceneFixLink.href = new URL(`scene-fix.css?v=${SCENE_FIX_VERSION}`, window.location.href).href;
+    SceneFixLink.setAttribute("data-story-scene-fix", "1");
+    document.head.appendChild(SceneFixLink);
 }
 
 const STORY_DATA_URL = "stages.json";
