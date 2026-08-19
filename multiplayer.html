@@ -7,9 +7,9 @@
 <link rel="icon" type="image/x-icon" href="favicon_io/favicon.ico?v=1000001">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon_io/favicon-32x32.png?v=1000001">
 <link rel="icon" type="image/png" sizes="16x16" href="favicon_io/favicon-16x16.png?v=1000001">
-<link rel="stylesheet" href="looks.css?v=20260819-9">
-<link rel="stylesheet" href="multiplayer.css?v=20260819-9">
-<link rel="stylesheet" href="shell-ui.css?v=20260819-9">
+<link rel="stylesheet" href="looks.css?v=20260819-10">
+<link rel="stylesheet" href="multiplayer.css?v=20260819-10">
+<link rel="stylesheet" href="shell-ui.css?v=20260819-10">
 </head>
 <body class="MultiplayerPage">
 <div class="MultiplayerShell">
@@ -20,7 +20,7 @@
             </div>
             <div class="Kicker">Co-op rewrite</div>
             <h1>Multiplayer</h1>
-            <p>Create a code, invite up to three other players, chat, vote on sentences, and share three team lives.</p>
+            <p>Create a code, invite up to four other players, chat, vote on sentences, and share three team lives.</p>
         </div>
         <div class="RoomFooterActions">
             <button class="IconNavButton" type="button" data-story-go="account.html" data-account-icon aria-label="Account"></button>
@@ -30,7 +30,7 @@
     <section class="RoomActions" id="RoomActions">
         <div class="RoomActionCard">
             <h2>Create Game</h2>
-            <p>Start a private room and get a six-character game code.</p>
+            <p>Start a private room for up to five players and get a six-character game code.</p>
             <button class="PrimaryButton" id="CreateRoomButton" type="button">Create Game</button>
         </div>
         <div class="RoomActionCard">
@@ -52,6 +52,7 @@
                 <button class="SecondaryButton" id="CopyCodeButton" type="button">Copy</button>
             </div>
             <div class="LivesBar"><div class="LivesLabel">Team lives</div><div class="LivesHearts" id="LobbyLives"></div></div>
+            <div class="LobbyPlayersHeader"><h2>Players</h2><span id="PlayerCount">0 / 5</span></div>
             <div class="PlayerList" id="PlayerList"></div>
             <div class="RoomFooterActions">
                 <button class="SecondaryButton" id="ReadyButton" type="button">Ready</button>
@@ -61,21 +62,28 @@
             <div class="StatusText Hidden" id="RoomStatus" aria-live="polite"></div>
         </div>
 
-        <div class="ChatPanel">
-            <h2>Group Chat</h2>
-            <div class="ChatMessages" id="ChatMessages"></div>
-            <form class="ChatForm" id="ChatForm">
-                <input class="ChatInput" id="ChatInput" maxlength="300" placeholder="Type to your group..." autocomplete="off">
-                <button class="PrimaryButton" type="submit">Send</button>
-            </form>
+        <div class="ChatPanel" id="LobbyChatPanel">
+            <div class="ChatPanelHeader">
+                <h2>Group Chat</h2>
+                <button class="ChatToggleButton" id="ToggleLobbyChatButton" type="button" aria-label="Hide chat" aria-expanded="true">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5.5h14v10H9l-4 3v-13Z"></path><path d="M8 9h8M8 12h5"></path></svg>
+                </button>
+            </div>
+            <div class="ChatPanelBody">
+                <div class="ChatMessages" id="ChatMessages"></div>
+                <form class="ChatForm" id="ChatForm">
+                    <input class="ChatInput" id="ChatInput" maxlength="180" placeholder="Type to your group..." autocomplete="off">
+                    <button class="PrimaryButton" type="submit">Send</button>
+                </form>
+            </div>
         </div>
     </section>
 </div>
-<script src="server-config.js?v=20260819-9"></script>
-<script src="network.js?v=20260819-9"></script>
-<script src="app.js?v=20260819-9"></script>
-<script src="audio.js?v=20260819-9"></script>
-<script src="shell-ui.js?v=20260819-9"></script>
-<script src="multiplayer.js?v=20260819-9"></script>
+<script src="server-config.js?v=20260819-10"></script>
+<script src="network.js?v=20260819-10"></script>
+<script src="app.js?v=20260819-10"></script>
+<script src="audio.js?v=20260819-10"></script>
+<script src="shell-ui.js?v=20260819-10"></script>
+<script src="multiplayer.js?v=20260819-10"></script>
 </body>
 </html>
