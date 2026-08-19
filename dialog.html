@@ -5,8 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Story Rewrite</title>
 <link rel="stylesheet" href="looks.css">
+<link rel="stylesheet" href="game-ui.css">
 </head>
-<body>
+<body class="GamePage">
 <div id="App">
 
 <header class="TopBar">
@@ -19,7 +20,7 @@
     </div>
     <nav class="TopActions">
         <a class="UiButton" href="main.html">Home</a>
-        <a class="UiButton" href="levels.html">Worlds</a>
+        <a class="UiButton" href="levels.html">Chapter Map</a>
         <a class="UiButton" href="tutorial.html">Tutorial</a>
         <a class="UiButton" href="rules.html">Rules</a>
     </nav>
@@ -36,17 +37,17 @@
                     </div>
                     <h2 id="LevelTitle"></h2>
                     <div class="SentenceList" id="SentenceList"></div>
-                    <div class="EraseHint">Click a sentence to cross it out. Click it again to restore it. The illustration does not tell you whether your answer is closer to correct.</div>
+                    <div class="EraseHint">Click a sentence to cross it out. Click it again to restore it. When you are ready, check survival.</div>
                 </article>
 
                 <article class="Page Right">
                     <div class="BookMeta">
-                        <div class="ChapterLabel">Illustrated account</div>
-                        <div class="BookDifficulty">Picture-book plate</div>
+                        <div class="ChapterLabel">Story Scene</div>
+                        <div class="BookDifficulty">Live Outcome</div>
                     </div>
                     <div class="Scene" id="Illustration"></div>
-                    <h2 class="ResultTitle">What remains in the story</h2>
-                    <div class="SceneCaption" id="SceneCaption"></div>
+                    <h2 class="ResultTitle">Story still in play</h2>
+                    <div class="SceneCaption StoryTranscript" id="SceneCaption"></div>
                     <div class="Aftermath Hidden" id="Aftermath"></div>
                 </article>
             </div>
@@ -65,17 +66,17 @@
             <div class="InfoBox"><span class="InfoLabel">Clue</span><p id="HintText"></p></div>
 
             <div class="InfoBox StatsBox">
-                <span class="InfoLabel">Ledger stats</span>
+                <span class="InfoLabel">Attempt</span>
                 <div class="StatLine"><span>Crossed out</span><strong id="CrossedCount">0</strong></div>
                 <div class="StatLine"><span>3-star par</span><strong id="ParCount">0</strong></div>
             </div>
 
-            <div class="StatusText" id="StatusText">Redact the page, then check whether the objective and survival rule are both true.</div>
+            <div class="StatusText" id="StatusText">Rewrite the page, then check whether the objective and survival rule both hold.</div>
 
             <div class="GameActions">
                 <button class="PrimaryButton" id="CheckButton">Check Survival</button>
                 <button class="SecondaryButton" id="RestoreButton">Restore Whole Page</button>
-                <button class="SecondaryButton" id="BackButton">World Select</button>
+                <button class="SecondaryButton" id="BackButton">Chapter Map</button>
             </div>
         </aside>
     </div>
@@ -90,15 +91,15 @@
         <div class="OverlayActions">
             <button class="PrimaryButton" id="NextButton">Next Level</button>
             <button class="SecondaryButton" id="ReplayButton">Replay</button>
-            <button class="SecondaryButton" id="CompleteSelectButton">World Select</button>
+            <button class="SecondaryButton" id="CompleteSelectButton">Chapter Map</button>
         </div>
     </div>
 </div>
 
 <div class="Overlay" id="TravelOverlay">
     <div class="OverlayCard TravelCard">
-        <div class="Kicker">Ink route</div>
-        <h2 class="TravelTitle" id="TravelTitle">Following the dots...</h2>
+        <div class="Kicker">Story route</div>
+        <h2 class="TravelTitle" id="TravelTitle">Following the route...</h2>
         <div class="Trail">
             <div class="TrailLine"></div>
             <div class="TrailDot"></div>
@@ -128,7 +129,7 @@
         <div class="Kicker">The recovered anthology ends here</div>
         <h2 class="TbcTitle">TO BE CONTINUED</h2>
         <p>The next world has not been written yet.</p>
-        <button class="PrimaryButton" id="TbcSelectButton">Return to World Select</button>
+        <button class="PrimaryButton" id="TbcSelectButton">Return to Chapter Map</button>
     </div>
 </div>
 </div>
