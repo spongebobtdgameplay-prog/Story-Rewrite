@@ -7,6 +7,7 @@ let SocketClientPromise = null;
 let StartingRoom = false;
 
 const SOCKET_CLIENT_URL = "https://story-rewrite-backend.onrender.com/socket.io/socket.io.js";
+const REQUIRED_MULTIPLAYER_SERVER_VERSION = 5;
 
 window.addEventListener("DOMContentLoaded", () => {
     BindUi();
@@ -28,6 +29,21 @@ function BindUi() {
     document.getElementById("ChatForm").addEventListener("submit", SendChat);
 }
 
+async function EnsureBackendVersion() {
+    const Health = await ApiRequest("/api/health");
+    const Version = Number(Health?.version || 0);
+
+    if (!Health?.ok || !Health?.multiplayer) {
+        throw new Error("The multiplayer backend is not ready.");
+    }
+
+    if (Version < REQUIRED_MULTIPLAYER_SERVER_VERSION) {
+        throw new Error(`The multiplayer backend is still updating (server v${Version || "?"}; waiting for v${REQUIRED_MULTIPLAYER_SERVER_VERSION}).`);
+    }
+
+    return Health;
+}
+
 async function EnsureMultiplayerReady() {
     if (MultiplayerSocket?.connected && CurrentProfile) return MultiplayerSocket;
 
@@ -45,6 +61,8 @@ async function EnsureMultiplayerReady() {
 
 async function InitializeMultiplayer() {
     ShowLobbyStatus("Connecting to the game server...", null);
+
+    await EnsureBackendVersion();
 
     const ProfileResult = await RequireAccount();
     CurrentProfile = ProfileResult.profile;
@@ -183,6 +201,11 @@ function FriendlyConnectionError(Error) {
     return Message || "Could not connect to multiplayer.";
 }
 
+function ResultError(Result, Fallback) {
+    const Message = Result?.error || Fallback;
+    return Result?.code ? `${Message} [${Result.code}]` : Message;
+}
+
 function EmitWithAck(EventName, Payload, TimeoutMilliseconds = 12000) {
     return new Promise((Resolve, Reject) => {
         if (!MultiplayerSocket?.connected) {
@@ -206,14 +229,14 @@ async function CreateRoom() {
     Button.disabled = true;
     Button.textContent = "Creating...";
     StoryAudio.PlaySound("click");
-    ShowLobbyStatus("Connecting to the game server...", null);
+    ShowLobbyStatus("Creating your room...", null);
 
     try {
         await EnsureMultiplayerReady();
         const Result = await EmitWithAck("room:create", {});
 
         if (!Result?.ok) {
-            throw new Error(Result?.error || "Could not create the game.");
+            throw new Error(ResultError(Result, "Could not create the game."));
         }
 
         MultiplayerState = Result.state;
@@ -238,14 +261,14 @@ async function JoinRoom() {
     const Button = document.getElementById("JoinRoomButton");
     Button.disabled = true;
     Button.textContent = "Joining...";
-    ShowLobbyStatus("Connecting to the game server...", null);
+    ShowLobbyStatus("Connecting to the room...", null);
 
     try {
         await EnsureMultiplayerReady();
         const Result = await EmitWithAck("room:join", { code: Code });
 
         if (!Result?.ok) {
-            throw new Error(Result?.error || "Could not join the game.");
+            throw new Error(ResultError(Result, "Could not join the game."));
         }
 
         StoryAudio.PlaySound("join");
@@ -299,7 +322,7 @@ async function StartRoom() {
         const Result = await EmitWithAck("room:start", {});
 
         if (!Result?.ok) {
-            throw new Error(Result?.error || "Could not start the game.");
+            throw new Error(ResultError(Result, "Could not start the game."));
         }
 
         const StageId = Result.stageId || MultiplayerState?.stageId;
