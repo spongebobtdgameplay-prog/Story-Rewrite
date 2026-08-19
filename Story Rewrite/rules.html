@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rules — Story Rewrite</title>
+<link rel="stylesheet" href="looks.css">
+</head>
+<body>
+<div id="App">
+
+<header class="TopBar">
+    <div class="Brand">
+        <div class="BrandMark">✦</div>
+        <div>
+            <div class="BrandTitle">Story Rewrite</div>
+            <div class="BrandSub">Cross out the sentence. Rewrite what happens.</div>
+        </div>
+    </div>
+    <nav class="TopActions">
+        <a class="UiButton" href="main.html">Home</a>
+        <a class="UiButton" href="levels.html">Worlds</a>
+        <a class="UiButton" href="tutorial.html">Tutorial</a>
+        <a class="UiButton" href="rules.html">Rules</a>
+    </nav>
+</header>
+
+<main class="Main">
+    <section class="Panel RulesShell">
+        <div class="Kicker">Rules</div>
+        <h1>Story Rewrite rules</h1>
+        <p class="HomeText">Every stage is deterministic. The answer is based only on which sentences remain in the page.</p>
+
+        <div class="RulesGrid">
+            <article class="RuleCard"><div class="Eyebrow">Rule 1</div><h3>Cross-outs remove events</h3><p>A crossed-out sentence no longer happens. Restore it by clicking it again.</p></article>
+            <article class="RuleCard"><div class="Eyebrow">Rule 2</div><h3>Required facts must remain</h3><p>Some sentences are necessary for the successful ending. Removing them makes the story fail even if they sound dangerous.</p></article>
+            <article class="RuleCard"><div class="Eyebrow">Rule 3</div><h3>Causes matter more than consequences</h3><p>Later levels hide a failure several sentences after its actual cause. Trace the chain backward.</p></article>
+            <article class="RuleCard"><div class="Eyebrow">Rule 4</div><h3>No answer meter</h3><p>The UI does not become green, safe, stable, warmer, or colder while you edit. Only Check Survival judges the page.</p></article>
+            <article class="RuleCard"><div class="Eyebrow">Rule 5</div><h3>Bad checks have consequences</h3><p>When you check an incorrect page, the illustration becomes an aftermath scene showing what your version caused.</p></article>
+            <article class="RuleCard"><div class="Eyebrow">Rule 6</div><h3>Three-star par</h3><p>A correct page always clears the level. Clean solutions at or under par earn the maximum three stars.</p></article>
+            <article class="RuleCard"><div class="Eyebrow">Rule 7</div><h3>World progression</h3><p>Levels unlock in order. Finishing level 10 unlocks the next world and triggers its world-route dot animation.</p></article>
+            <article class="RuleCard"><div class="Eyebrow">Rule 8</div><h3>Progress stays in the browser</h3><p>The game uses localStorage. GitHub Pages works without a database or login.</p></article>
+        </div>
+
+        <div class="HomeActions">
+            <a class="PrimaryButton" href="levels.html">World Select</a>
+            <a class="SecondaryButton" href="tutorial.html">Tutorial</a>
+        </div>
+    </section>
+</main>
+</div>
+<script src="app.js"></script>
+</body>
+</html>
