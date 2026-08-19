@@ -7,7 +7,7 @@ let SocketClientPromise = null;
 let StartingRoom = false;
 
 const SOCKET_CLIENT_URL = "https://story-rewrite-backend.onrender.com/socket.io/socket.io.js";
-const REQUIRED_MULTIPLAYER_SERVER_VERSION = 6;
+const REQUIRED_MULTIPLAYER_SERVER_VERSION = 7;
 
 window.addEventListener("DOMContentLoaded", () => {
     BindUi();
