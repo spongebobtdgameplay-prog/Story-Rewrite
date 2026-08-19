@@ -207,10 +207,35 @@
     letter-spacing: .18em;
 }
 
+.LobbyPlayersHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.LobbyPlayersHeader h2 {
+    margin: 0;
+}
+
+.LobbyPlayersHeader span {
+    display: inline-flex;
+    align-items: center;
+    min-height: 30px;
+    padding: 5px 10px;
+    border: 1px solid #6f4c32;
+    border-radius: 999px;
+    color: #e9c98f;
+    background: #1b100b;
+    font: 900 10px/1 system-ui, sans-serif;
+    letter-spacing: .08em;
+}
+
 .PlayerList {
     display: grid;
     gap: 8px;
-    margin-top: 14px;
+    margin-top: 10px;
 }
 
 .PlayerRow {
@@ -247,6 +272,62 @@
     margin-top: 14px;
 }
 
+.ChatPanelHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.ChatPanelHeader h2 {
+    margin: 0;
+}
+
+.ChatPanelBody {
+    margin-top: 12px;
+}
+
+.ChatPanel.IsCollapsed {
+    align-self: start;
+}
+
+.ChatPanel.IsCollapsed .ChatPanelBody {
+    display: none;
+}
+
+.ChatToggleButton {
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #f2d3a0;
+    border: 1px solid #795537;
+    border-radius: 11px;
+    background: linear-gradient(180deg, #4a2c1b, #2c190f);
+    transition: transform .15s ease, border-color .15s ease, background .15s ease;
+}
+
+.ChatToggleButton:hover {
+    transform: translateY(-1px);
+    border-color: #c08a4d;
+    background: linear-gradient(180deg, #5d3821, #342013);
+}
+
+.ChatToggleButton svg {
+    width: 19px;
+    height: 19px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    pointer-events: none;
+}
+
 .ChatMessages {
     height: 360px;
     overflow-y: auto;
@@ -260,6 +341,7 @@
 }
 
 .ChatMessage {
+    overflow-wrap: anywhere;
     padding: 8px 9px;
     color: #d8c4a3;
     border-radius: 8px;
@@ -273,7 +355,7 @@
 
 .ChatForm {
     display: grid;
-    grid-template-columns: 1fr auto;
+    grid-template-columns: minmax(0, 1fr) auto;
     gap: 7px;
     margin-top: 8px;
 }
@@ -321,18 +403,51 @@
     border-radius: 14px;
     background: #1a0f0a;
     box-shadow: 0 20px 60px rgba(0,0,0,.38);
+    transition: width .18s ease, box-shadow .18s ease;
 }
 
 .MultiplayerDockHeader {
     display: flex;
+    align-items: center;
     justify-content: space-between;
     gap: 10px;
-    padding: 10px 12px;
+    min-height: 52px;
+    padding: 8px 10px 8px 12px;
     color: #ffdea2;
     background: #3b2215;
     font: 900 10px/1.2 system-ui,sans-serif;
     letter-spacing: .08em;
     text-transform: uppercase;
+}
+
+.MultiplayerDockHeaderMeta {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.ChatDockActions {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.ChatUnreadBadge {
+    display: none;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 6px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    color: #2a150d;
+    background: #efc679;
+    font: 900 10px/1 system-ui, sans-serif;
+}
+
+.ChatUnreadBadge.HasUnread {
+    display: inline-flex;
 }
 
 .MultiplayerDock .ChatMessages {
@@ -345,6 +460,15 @@
     margin: 0;
     padding: 8px;
     border-top: 1px solid #4d3322;
+}
+
+.MultiplayerDock.IsCollapsed {
+    width: min(245px, calc(100vw - 32px));
+    box-shadow: 0 12px 34px rgba(0,0,0,.28);
+}
+
+.MultiplayerDock.IsCollapsed .GameChatBody {
+    display: none;
 }
 
 .VoteCount {
@@ -391,5 +515,9 @@
     .MultiplayerHero {
         align-items: flex-start;
         flex-direction: column;
+    }
+
+    .ChatMessages {
+        height: 260px;
     }
 }
