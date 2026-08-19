@@ -1,0 +1,235 @@
+.MobileGameControls {
+    display: none;
+}
+
+@media (max-width: 900px), (pointer: coarse) and (max-width: 1200px) {
+    html {
+        scroll-padding-bottom: 104px;
+    }
+
+    body.GamePage {
+        padding-bottom: calc(92px + env(safe-area-inset-bottom));
+        overscroll-behavior-y: contain;
+    }
+
+    body.GamePage .GameActions {
+        display: none !important;
+    }
+
+    body.GamePage .Sentence {
+        min-height: 56px;
+        padding: 14px 15px;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    body.GamePage button,
+    body.GamePage .Sentence,
+    body.GamePage .ChatToggleButton {
+        touch-action: manipulation;
+    }
+
+    .MobileGameControls {
+        position: fixed;
+        left: max(8px, env(safe-area-inset-left));
+        right: max(8px, env(safe-area-inset-right));
+        bottom: max(8px, env(safe-area-inset-bottom));
+        z-index: 115;
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 7px;
+        padding: 8px;
+        border: 1px solid rgba(224, 177, 103, .3);
+        border-radius: 18px;
+        background: rgba(25, 14, 9, .94);
+        box-shadow: 0 18px 52px rgba(0, 0, 0, .48), inset 0 1px rgba(255, 235, 196, .07);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        transition: transform .18s ease, opacity .18s ease;
+    }
+
+    .MobileGameControls:not(.HasChat) {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .MobileControlButton {
+        min-width: 0;
+        min-height: 62px;
+        padding: 7px 5px 6px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+        cursor: pointer;
+        color: #e8c99b;
+        border: 1px solid rgba(211, 159, 91, .2);
+        border-radius: 13px;
+        background: linear-gradient(180deg, rgba(92, 54, 31, .82), rgba(48, 27, 17, .9));
+        box-shadow: inset 0 1px rgba(255, 235, 198, .055);
+        font: 800 10px/1 system-ui, sans-serif;
+        letter-spacing: .055em;
+        text-transform: uppercase;
+        -webkit-tap-highlight-color: transparent;
+        user-select: none;
+    }
+
+    .MobileControlButton:active {
+        transform: scale(.96);
+        background: linear-gradient(180deg, rgba(109, 66, 37, .92), rgba(54, 30, 18, .96));
+    }
+
+    .MobileControlButton.Primary {
+        color: #2a170d;
+        border-color: rgba(255, 219, 158, .68);
+        background: linear-gradient(180deg, #efc982, #c8873f);
+        box-shadow: inset 0 1px rgba(255,255,255,.28), 0 7px 20px rgba(190, 120, 48, .2);
+    }
+
+    .MobileControlButton.Primary:active {
+        background: linear-gradient(180deg, #dfb96f, #b97835);
+    }
+
+    .MobileControlButton:disabled {
+        cursor: default;
+        opacity: .42;
+        transform: none;
+    }
+
+    .MobileControlButton.IsHidden {
+        display: none;
+    }
+
+    .MobileControlIcon {
+        position: relative;
+        width: 23px;
+        height: 23px;
+        display: grid;
+        place-items: center;
+    }
+
+    .MobileControlIcon svg {
+        width: 22px;
+        height: 22px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.9;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        pointer-events: none;
+    }
+
+    .MobileControlBadge {
+        position: absolute;
+        top: -7px;
+        right: -9px;
+        display: none;
+        min-width: 19px;
+        height: 19px;
+        padding: 0 5px;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        color: #2b170d;
+        background: #f0c878;
+        box-shadow: 0 3px 9px rgba(0,0,0,.3);
+        font: 900 9px/1 system-ui, sans-serif;
+    }
+
+    .MobileControlBadge.HasUnread {
+        display: inline-flex;
+    }
+
+    .MultiplayerDock {
+        right: max(8px, env(safe-area-inset-right));
+        bottom: calc(88px + env(safe-area-inset-bottom));
+        max-height: calc(100dvh - 112px - env(safe-area-inset-bottom));
+    }
+
+    .MultiplayerDock:not(.IsCollapsed) {
+        left: max(8px, env(safe-area-inset-left));
+        width: auto;
+    }
+
+    .MultiplayerDock .GameChatBody {
+        max-height: min(42dvh, 360px);
+    }
+
+    .MultiplayerDock .ChatMessages {
+        height: min(28dvh, 230px);
+    }
+
+    body.MobileTyping .MobileGameControls {
+        pointer-events: none;
+        opacity: 0;
+        transform: translateY(calc(100% + 24px));
+    }
+
+    body.MobileTyping .MultiplayerDock {
+        bottom: max(8px, env(safe-area-inset-bottom));
+    }
+
+    body:has(.Overlay.Show) .MobileGameControls {
+        pointer-events: none;
+        opacity: 0;
+        transform: translateY(calc(100% + 24px));
+    }
+}
+
+@media (max-width: 620px) {
+    body.GamePage .TopBar {
+        min-height: 58px;
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+
+    body.GamePage .BrandSub {
+        display: none;
+    }
+
+    body.GamePage .MobileGameControls {
+        gap: 5px;
+        padding: 6px;
+        border-radius: 16px;
+    }
+
+    .MobileControlButton {
+        min-height: 58px;
+        border-radius: 11px;
+        font-size: 9px;
+    }
+
+    .MobileControlIcon,
+    .MobileControlIcon svg {
+        width: 21px;
+        height: 21px;
+    }
+}
+
+@media (orientation: landscape) and (max-height: 560px) and (pointer: coarse) {
+    body.GamePage {
+        padding-bottom: calc(70px + env(safe-area-inset-bottom));
+    }
+
+    .MobileGameControls {
+        left: 50%;
+        right: auto;
+        width: min(580px, calc(100vw - 24px));
+        transform: translateX(-50%);
+    }
+
+    body.MobileTyping .MobileGameControls,
+    body:has(.Overlay.Show) .MobileGameControls {
+        transform: translate(-50%, calc(100% + 24px));
+    }
+
+    .MobileControlButton {
+        min-height: 48px;
+        flex-direction: row;
+        gap: 7px;
+    }
+
+    .MultiplayerDock {
+        bottom: calc(68px + env(safe-area-inset-bottom));
+    }
+}
