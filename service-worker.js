@@ -1,4 +1,4 @@
-const STORY_CACHE = "story-rewrite-frontend-v13";
+const STORY_CACHE = "story-rewrite-frontend-v14";
 
 const STORY_STATIC_FILES = [
     "./",
@@ -18,6 +18,8 @@ const STORY_STATIC_FILES = [
     "./shell-ui.css",
     "./mobile-controls.css",
     "./host-controls.css",
+    "./chat-ai.css",
+    "./tutorial.css",
     "./server-config.js",
     "./network.js",
     "./app.js",
@@ -33,6 +35,7 @@ const STORY_STATIC_FILES = [
     "./multiplayer-connection.js",
     "./moderation-version.js",
     "./host-controls.js",
+    "./ai-chat.js",
     "./tutorial.js",
     "./account.js",
     "./stages.json",
