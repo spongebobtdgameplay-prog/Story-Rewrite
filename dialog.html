@@ -10,20 +10,17 @@
 <link rel="stylesheet" href="looks.css">
 <link rel="stylesheet" href="game-ui.css">
 <link rel="stylesheet" href="multiplayer.css">
+<link rel="stylesheet" href="shell-ui.css">
 </head>
 <body class="GamePage">
 <div id="App">
-<header class="TopBar">
+<header class="TopBar CompactPageTopBar">
     <div class="Brand">
-        <div class="BrandMark">✦</div>
-        <div><div class="BrandTitle">Story Rewrite</div><div class="BrandSub">Cross out the sentence. Rewrite what happens.</div></div>
+        <button class="IconBackButton" type="button" data-story-back="levels.html" aria-label="Go back"></button>
+        <div><div class="BrandTitle">Story Rewrite</div><div class="BrandSub">Rewrite the page and survive the outcome.</div></div>
     </div>
-    <nav class="TopActions">
-        <a class="UiButton" href="main.html">Home</a>
-        <a class="UiButton" href="levels.html">Chapter Map</a>
-        <a class="UiButton" href="multiplayer.html">Multiplayer</a>
-        <a class="UiButton" href="tutorial.html">Tutorial</a>
-        <a class="UiButton" href="rules.html">Rules</a>
+    <nav class="TopActions CompactTopActions">
+        <button class="IconNavButton" type="button" data-story-go="account.html" data-account-icon aria-label="Account"></button>
     </nav>
 </header>
 
@@ -77,6 +74,7 @@
 <script src="network.js"></script>
 <script src="app.js"></script>
 <script src="audio.js"></script>
+<script src="shell-ui.js"></script>
 <script src="https://cdn.socket.io/4.8.3/socket.io.min.js" integrity="sha384-kzavj5fiMwLKzzD1f8S7TeoVIEi7uKHvbTA3ueZkrzYq75pNQUiUi6Dy98Q3fxb0" crossorigin="anonymous"></script>
 <script src="dialog.js"></script>
 </body>
