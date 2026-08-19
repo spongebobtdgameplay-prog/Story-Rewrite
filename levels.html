@@ -6,6 +6,24 @@
     <title>Story Rewrite | Chapter Map</title>
     <link rel="stylesheet" href="looks.css">
     <link rel="stylesheet" href="game-ui.css">
+    <style>
+        .StageNodeDifficulty {
+            min-height: 18px;
+            padding: 3px 6px;
+            color: #c49a61;
+            border: 1px solid rgba(196, 154, 97, .2);
+            border-radius: 5px;
+            background: rgba(0, 0, 0, .2);
+            font: 900 7px/1.2 system-ui, sans-serif;
+            letter-spacing: .09em;
+            text-transform: uppercase;
+        }
+
+        .StageNodeWrap.Selected .StageNodeDifficulty {
+            color: #ffe0a8;
+            border-color: rgba(240, 190, 112, .45);
+        }
+    </style>
     <script defer src="app.js"></script>
     <script defer src="levels.js"></script>
 </head>
