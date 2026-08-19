@@ -1,13 +1,23 @@
-const STORY_AUTH_TOKEN_KEY = "StoryRewriteSessionToken";
+const STORY_AUTH_TOKEN_KEY = "StoryRewriteAuthToken";
+const STORY_LEGACY_AUTH_TOKEN_KEY = "StoryRewriteSessionToken";
 const STORY_SERVER_OVERRIDE_KEY = "StoryRewriteServerOverride";
+const STORY_AUTH_VALIDATED_AT_KEY = "StoryRewriteAuthValidatedAt";
+const STORY_AUTH_VALIDATION_WINDOW = 1000 * 60 * 10;
 const STORY_PROTECTED_PAGES = new Set([
     "main.html",
     "levels.html",
     "dialog.html",
     "multiplayer.html",
     "tutorial.html",
-    "rules.html"
+    "rules.html",
+    "account.html"
 ]);
+
+function BuildStoryUrl(Page = "") {
+    const CleanPage = String(Page || "").replace(/^\/+/, "");
+    const BaseUrl = new URL(".", window.location.href);
+    return new URL(CleanPage, BaseUrl).href;
+}
 
 function GetServerUrl() {
     const Configured = String(window.STORY_REWRITE_SERVER_URL || "").trim().replace(/\/$/, "");
@@ -30,32 +40,50 @@ function SetServerOverride(Value) {
 }
 
 function GetAuthToken() {
-    const PersistentToken = localStorage.getItem(STORY_AUTH_TOKEN_KEY) || "";
-    if (PersistentToken) return PersistentToken;
+    const Persistent = localStorage.getItem(STORY_AUTH_TOKEN_KEY) || "";
+    if (Persistent) return Persistent;
 
-    const LegacySessionToken = sessionStorage.getItem(STORY_AUTH_TOKEN_KEY) || "";
-    if (LegacySessionToken) {
-        localStorage.setItem(STORY_AUTH_TOKEN_KEY, LegacySessionToken);
-        sessionStorage.removeItem(STORY_AUTH_TOKEN_KEY);
-        return LegacySessionToken;
+    const LegacyPersistent = localStorage.getItem(STORY_LEGACY_AUTH_TOKEN_KEY) || "";
+    if (LegacyPersistent) {
+        localStorage.setItem(STORY_AUTH_TOKEN_KEY, LegacyPersistent);
+        localStorage.removeItem(STORY_LEGACY_AUTH_TOKEN_KEY);
+        return LegacyPersistent;
     }
 
-    return "";
+    const LegacySession = sessionStorage.getItem(STORY_LEGACY_AUTH_TOKEN_KEY) || "";
+    if (!LegacySession) return "";
+
+    localStorage.setItem(STORY_AUTH_TOKEN_KEY, LegacySession);
+    sessionStorage.removeItem(STORY_LEGACY_AUTH_TOKEN_KEY);
+    return LegacySession;
 }
 
 function SetAuthToken(Token) {
     if (Token) {
         localStorage.setItem(STORY_AUTH_TOKEN_KEY, Token);
-        sessionStorage.removeItem(STORY_AUTH_TOKEN_KEY);
-    } else {
-        localStorage.removeItem(STORY_AUTH_TOKEN_KEY);
-        sessionStorage.removeItem(STORY_AUTH_TOKEN_KEY);
+        localStorage.removeItem(STORY_LEGACY_AUTH_TOKEN_KEY);
+        sessionStorage.removeItem(STORY_LEGACY_AUTH_TOKEN_KEY);
+        return;
     }
+
+    localStorage.removeItem(STORY_AUTH_TOKEN_KEY);
+    localStorage.removeItem(STORY_LEGACY_AUTH_TOKEN_KEY);
+    sessionStorage.removeItem(STORY_LEGACY_AUTH_TOKEN_KEY);
+    localStorage.removeItem(STORY_AUTH_VALIDATED_AT_KEY);
+}
+
+function MarkAuthValidated() {
+    localStorage.setItem(STORY_AUTH_VALIDATED_AT_KEY, String(Date.now()));
+}
+
+function WasAuthRecentlyValidated() {
+    const ValidatedAt = Number(localStorage.getItem(STORY_AUTH_VALIDATED_AT_KEY) || 0);
+    return ValidatedAt > 0 && Date.now() - ValidatedAt < STORY_AUTH_VALIDATION_WINDOW;
 }
 
 function LogoutAccount() {
     SetAuthToken("");
-    window.location.href = "auth.html";
+    window.location.replace(BuildStoryUrl("auth.html"));
 }
 
 function GetCurrentPageName() {
@@ -68,22 +96,20 @@ async function GuardProtectedPage() {
     if (!STORY_PROTECTED_PAGES.has(GetCurrentPageName())) return;
 
     if (!GetAuthToken()) {
-        window.location.replace("auth.html");
+        window.location.replace(BuildStoryUrl("auth.html"));
         return;
     }
 
+    if (WasAuthRecentlyValidated()) return;
+
     try {
         await GetAccountProfile();
+        MarkAuthValidated();
     } catch (Error) {
-        // ApiRequest removes the token only for a confirmed HTTP 401.
-        // Do not log the player out for a Render cold start, temporary
-        // connection failure, CORS hiccup, or other transient server error.
-        if (!GetAuthToken()) {
-            window.location.replace("auth.html");
-            return;
+        if (Error?.status === 401) {
+            SetAuthToken("");
+            window.location.replace(BuildStoryUrl("auth.html"));
         }
-
-        console.warn("Account verification temporarily unavailable:", Error);
     }
 }
 
@@ -112,7 +138,10 @@ async function ApiRequest(Path, Options = {}) {
 
     if (!Response.ok) {
         if (Response.status === 401) SetAuthToken("");
-        throw new Error(Data.error || `Server request failed: ${Response.status}`);
+        const RequestError = new Error(Data.error || `Server request failed: ${Response.status}`);
+        RequestError.status = Response.status;
+        RequestError.data = Data;
+        throw RequestError;
     }
 
     return Data;
@@ -124,6 +153,7 @@ async function RegisterAccount(Username, Password) {
         body: JSON.stringify({ username: Username, password: Password })
     });
     SetAuthToken(Result.token);
+    MarkAuthValidated();
     return Result;
 }
 
@@ -133,6 +163,7 @@ async function LoginAccount(Username, Password) {
         body: JSON.stringify({ username: Username, password: Password })
     });
     SetAuthToken(Result.token);
+    MarkAuthValidated();
     return Result;
 }
 
@@ -142,14 +173,16 @@ async function GetAccountProfile() {
 
 async function RequireAccount() {
     if (!GetAuthToken()) {
-        window.location.replace("auth.html");
+        window.location.replace(BuildStoryUrl("auth.html"));
         throw new Error("Sign in required.");
     }
 
     try {
-        return await GetAccountProfile();
+        const Profile = await GetAccountProfile();
+        MarkAuthValidated();
+        return Profile;
     } catch (Error) {
-        if (!GetAuthToken()) window.location.replace("auth.html");
+        if (Error?.status === 401) window.location.replace(BuildStoryUrl("auth.html"));
         throw Error;
     }
 }
@@ -205,4 +238,17 @@ function ConnectStorySocket() {
     });
 }
 
+function RegisterStoryServiceWorker() {
+    if (!("serviceWorker" in navigator)) return;
+    if (location.protocol !== "https:" && location.hostname !== "localhost") return;
+
+    window.addEventListener("load", () => {
+        navigator.serviceWorker.register(BuildStoryUrl("service-worker.js"), {
+            scope: new URL(".", window.location.href).pathname,
+            updateViaCache: "none"
+        }).catch(() => {});
+    }, { once: true });
+}
+
 GuardProtectedPage();
+RegisterStoryServiceWorker();
