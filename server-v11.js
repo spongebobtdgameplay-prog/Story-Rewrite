@@ -25,10 +25,6 @@ const ChatSafetyTimeout = 15000;
 const MaxRevives = 3;
 const ReviveEarnEvery = 5;`;
 
-const ProfanityDeclaration = `const ProfanityWords = [
-    "fuck", "fucking", "fucker", "shit", "bitch", "asshole", "dick", "cunt", "nigger", "nigga", "faggot", "retard"
-];`;
-
 const OldCensorFunction = `function CensorChatText(Value) {
     let Text = String(Value || "")
         .replace(/[\\u0000-\\u001F\\u007F]/g, " ")
@@ -636,7 +632,7 @@ const StoryBotCensorReturnReplacement = `        return NormalizeChatText(Reply)
 
 const V11PatchCode = [
     `ReplaceRequired(${JSON.stringify(V11ConstantsSearch)}, ${JSON.stringify(V11ConstantsReplacement)}, "v11 constants");`,
-    `ReplaceRequired(${JSON.stringify(ProfanityDeclaration)}, "", "remove hardcoded profanity list");`,
+    `Source = Source.replace(/const ProfanityWords = \\[\\s\\S]*?\\];\\n/, "");`,
     `ReplaceRequired(${JSON.stringify(OldCensorFunction)}, ${JSON.stringify(NewNormalizeFunction)}, "replace hardcoded censor");`,
     `ReplaceRequired(${JSON.stringify(SaveDefaultsSearch)}, ${JSON.stringify(SaveDefaultsReplacement)}, "save defaults");`,
     `ReplaceRequired(${JSON.stringify(NormalizeSaveSearch)}, ${JSON.stringify(NormalizeSaveReplacement)}, "normalize save progression");`,
