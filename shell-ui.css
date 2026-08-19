@@ -1,0 +1,295 @@
+.IconBackButton,
+.IconNavButton {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    padding: 0;
+    border: 1px solid rgba(235, 190, 126, .28);
+    border-radius: 14px;
+    background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.025));
+    color: #f7e5c4;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 8px 22px rgba(0,0,0,.2);
+    transition: transform .16s ease, border-color .16s ease, background .16s ease, box-shadow .16s ease;
+}
+
+.IconBackButton:hover,
+.IconNavButton:hover {
+    transform: translateY(-1px);
+    border-color: rgba(244, 198, 128, .58);
+    background: linear-gradient(180deg, rgba(244,198,128,.13), rgba(255,255,255,.035));
+    box-shadow: 0 10px 26px rgba(0,0,0,.26);
+}
+
+.IconBackButton:active,
+.IconNavButton:active {
+    transform: translateY(0) scale(.97);
+}
+
+.IconBackButton svg,
+.IconNavButton svg,
+.PasswordToggle svg {
+    width: 21px;
+    height: 21px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    pointer-events: none;
+}
+
+.AccountNavButton {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.AccountNavButton svg {
+    width: 17px;
+    height: 17px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.9;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.CompactTopActions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.CompactPageTopBar {
+    min-height: 68px;
+}
+
+.PasswordInputWrap {
+    position: relative;
+    display: block;
+}
+
+.PasswordInputWrap input {
+    width: 100%;
+    padding-right: 54px !important;
+}
+
+.PasswordToggle {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    width: 40px;
+    height: 40px;
+    transform: translateY(-50%);
+    padding: 0;
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+    color: #8d684e;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: color .15s ease, background .15s ease;
+}
+
+.PasswordToggle:hover {
+    color: #2e160d;
+    background: rgba(87, 48, 27, .09);
+}
+
+.AccountSettingsPage {
+    min-height: 100vh;
+}
+
+.AccountSettingsShell {
+    width: min(980px, calc(100% - 32px));
+    margin: 0 auto;
+    padding: 24px 0 48px;
+}
+
+.AccountSettingsHeader {
+    display: grid;
+    grid-template-columns: 54px 1fr 54px;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 18px;
+}
+
+.AccountSettingsHeader h1 {
+    margin: 0;
+    text-align: center;
+    font-family: Georgia, 'Times New Roman', serif;
+    color: #f7e7c7;
+    font-size: clamp(1.55rem, 4vw, 2.2rem);
+}
+
+.AccountSettingsCard {
+    border: 1px solid rgba(221, 169, 108, .23);
+    border-radius: 24px;
+    background: linear-gradient(145deg, rgba(67,31,19,.96), rgba(35,15,10,.96));
+    box-shadow: 0 24px 60px rgba(0,0,0,.32);
+    overflow: hidden;
+}
+
+.AccountIdentity {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    padding: 26px;
+    border-bottom: 1px solid rgba(221,169,108,.15);
+}
+
+.AccountAvatarVector {
+    width: 66px;
+    height: 66px;
+    min-width: 66px;
+    border-radius: 20px;
+    display: grid;
+    place-items: center;
+    border: 1px solid rgba(235,190,126,.26);
+    background: rgba(255,255,255,.045);
+    color: #edc58c;
+}
+
+.AccountAvatarVector svg {
+    width: 31px;
+    height: 31px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.AccountIdentityCopy .Kicker {
+    margin-bottom: 4px;
+}
+
+.AccountIdentityCopy h2 {
+    margin: 0;
+    color: #fff0d3;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: clamp(1.55rem, 4vw, 2.25rem);
+}
+
+.AccountSettingsBody {
+    display: grid;
+    grid-template-columns: 1.2fr .8fr;
+    gap: 18px;
+    padding: 22px;
+}
+
+.AccountSettingsSection {
+    border: 1px solid rgba(221,169,108,.16);
+    border-radius: 18px;
+    background: rgba(0,0,0,.14);
+    padding: 20px;
+}
+
+.AccountSettingsSection h3 {
+    margin: 0 0 16px;
+    color: #f3d7ad;
+    font-size: 1rem;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+}
+
+.AccountStatGrid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0,1fr));
+    gap: 12px;
+}
+
+.AccountStatTile {
+    padding: 16px;
+    border-radius: 14px;
+    border: 1px solid rgba(221,169,108,.14);
+    background: rgba(255,255,255,.025);
+}
+
+.AccountStatTile span {
+    display: block;
+    color: #b99167;
+    font-size: .72rem;
+    text-transform: uppercase;
+    letter-spacing: .09em;
+    font-weight: 800;
+}
+
+.AccountStatTile strong {
+    display: block;
+    margin-top: 6px;
+    color: #fff0d3;
+    font: 700 1.55rem/1 Georgia, 'Times New Roman', serif;
+}
+
+.AccountSettingRow {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 14px;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(221,169,108,.11);
+}
+
+.AccountSettingRow:last-child {
+    border-bottom: 0;
+}
+
+.AccountSettingRow label {
+    color: #e4c69c;
+    font-weight: 700;
+}
+
+.AccountSettingRow input[type='range'] {
+    width: min(220px, 34vw);
+}
+
+.AccountDangerZone {
+    margin-top: 18px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.AccountStatusLine {
+    min-height: 24px;
+    margin-top: 12px;
+    color: #d9b88d;
+}
+
+.GameBackButton.IconBackButton {
+    width: 44px;
+    min-width: 44px;
+    height: 44px;
+    padding: 0;
+    border-radius: 14px;
+    font-size: 0;
+}
+
+@media (max-width: 760px) {
+    .AccountSettingsBody {
+        grid-template-columns: 1fr;
+    }
+
+    .AccountIdentity {
+        align-items: flex-start;
+    }
+
+    .AccountStatGrid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .TopActions {
+        gap: 7px;
+    }
+
+    .AccountNavButton span {
+        display: none;
+    }
+}
