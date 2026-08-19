@@ -1,0 +1,17 @@
+.SceneGeometry {
+    display: none !important;
+}
+
+.SceneTheme-fromville .SceneAtmosphere {
+    opacity: .5;
+    background:
+        radial-gradient(ellipse at 14% 30%, rgba(0, 0, 0, .34) 0%, rgba(0, 0, 0, .15) 28%, transparent 58%),
+        radial-gradient(ellipse at 82% 44%, rgba(0, 0, 0, .28) 0%, rgba(0, 0, 0, .11) 30%, transparent 62%),
+        radial-gradient(ellipse at 50% 92%, rgba(93, 115, 101, .14) 0%, rgba(45, 61, 52, .06) 38%, transparent 70%),
+        linear-gradient(180deg, rgba(0, 0, 0, .03) 0%, rgba(0, 0, 0, .09) 48%, rgba(0, 0, 0, .34) 100%);
+}
+
+.SceneTheme-fromville .SceneAtmosphere::before,
+.SceneTheme-fromville .SceneAtmosphere::after {
+    content: none !important;
+}
