@@ -243,9 +243,11 @@ function RegisterStoryServiceWorker() {
     if (location.protocol !== "https:" && location.hostname !== "localhost") return;
 
     window.addEventListener("load", () => {
-        navigator.serviceWorker.register(BuildStoryUrl("service-worker.js"), {
+        navigator.serviceWorker.register(BuildStoryUrl("service-worker.js?v=7"), {
             scope: new URL(".", window.location.href).pathname,
             updateViaCache: "none"
+        }).then(Registration => {
+            Registration.update().catch(() => {});
         }).catch(() => {});
     }, { once: true });
 }
