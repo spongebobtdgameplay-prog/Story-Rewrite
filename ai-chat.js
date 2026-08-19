@@ -5,6 +5,42 @@ function GetStoryBotChatContainer() {
     return document.getElementById("GameChatMessages") || document.getElementById("ChatMessages");
 }
 
+function GetChatContainers() {
+    return [
+        document.getElementById("ChatMessages"),
+        document.getElementById("GameChatMessages")
+    ].filter(Boolean);
+}
+
+function RefreshQuietChatState(Container = null) {
+    const Containers = Container ? [Container] : GetChatContainers();
+
+    for (const ChatContainer of Containers) {
+        const RealMessages = [...ChatContainer.children].filter(Element => {
+            return !Element.classList.contains("ChatQuietState") &&
+                !Element.classList.contains("StoryBotTyping");
+        });
+
+        let QuietState = ChatContainer.querySelector(".ChatQuietState");
+
+        if (RealMessages.length > 0) {
+            QuietState?.remove();
+            continue;
+        }
+
+        if (!QuietState) {
+            QuietState = document.createElement("div");
+            QuietState.className = "ChatQuietState";
+            QuietState.textContent = "It’s quiet here. Send the first message.";
+            ChatContainer.prepend(QuietState);
+        }
+    }
+}
+
+function RemoveQuietChatState(Container) {
+    Container?.querySelector(".ChatQuietState")?.remove();
+}
+
 function SetStoryBotTyping(Typing) {
     const Container = GetStoryBotChatContainer();
     if (!Container) return;
@@ -13,8 +49,11 @@ function SetStoryBotTyping(Typing) {
 
     if (!Typing) {
         TypingRow?.remove();
+        RefreshQuietChatState(Container);
         return;
     }
+
+    RemoveQuietChatState(Container);
 
     if (!TypingRow) {
         TypingRow = document.createElement("div");
@@ -47,19 +86,29 @@ function ShowStoryBotError(Message) {
     }
 }
 
-function MarkLastStoryBotMessage(ContainerId) {
+function MarkLastChatMessage(ContainerId, Message) {
     const Container = document.getElementById(ContainerId);
     const Last = Container?.lastElementChild;
     if (!Last) return;
-    Last.classList.add("StoryBotMessage");
+
+    if (Message?.bot || Message?.username === STORY_BOT_NAME) {
+        Last.classList.add("StoryBotMessage");
+    }
+
+    if (Message?.system || Message?.vote) {
+        Last.classList.add("VoteActivityMessage");
+    }
 }
 
 function WrapStoryBotRenderers() {
     if (typeof AppendChat === "function" && !AppendChat.StoryBotWrapped) {
         const BaseAppendChat = AppendChat;
         const WrappedAppendChat = function(Message, ...Rest) {
+            const Container = document.getElementById("ChatMessages");
+            RemoveQuietChatState(Container);
             const Result = BaseAppendChat(Message, ...Rest);
-            if (Message?.bot || Message?.username === STORY_BOT_NAME) MarkLastStoryBotMessage("ChatMessages");
+            MarkLastChatMessage("ChatMessages", Message);
+            RefreshQuietChatState(Container);
             return Result;
         };
         WrappedAppendChat.StoryBotWrapped = true;
@@ -69,12 +118,37 @@ function WrapStoryBotRenderers() {
     if (typeof AppendGameChat === "function" && !AppendGameChat.StoryBotWrapped) {
         const BaseAppendGameChat = AppendGameChat;
         const WrappedAppendGameChat = function(Message, ...Rest) {
+            const Container = document.getElementById("GameChatMessages");
+            RemoveQuietChatState(Container);
             const Result = BaseAppendGameChat(Message, ...Rest);
-            if (Message?.bot || Message?.username === STORY_BOT_NAME) MarkLastStoryBotMessage("GameChatMessages");
+            MarkLastChatMessage("GameChatMessages", Message);
+            RefreshQuietChatState(Container);
             return Result;
         };
         WrappedAppendGameChat.StoryBotWrapped = true;
         AppendGameChat = WrappedAppendGameChat;
+    }
+
+    if (typeof RenderRoom === "function" && !RenderRoom.StoryBotWrapped) {
+        const BaseRenderRoom = RenderRoom;
+        const WrappedRenderRoom = function(...Arguments) {
+            const Result = BaseRenderRoom(...Arguments);
+            queueMicrotask(() => RefreshQuietChatState(document.getElementById("ChatMessages")));
+            return Result;
+        };
+        WrappedRenderRoom.StoryBotWrapped = true;
+        RenderRoom = WrappedRenderRoom;
+    }
+
+    if (typeof ApplyRoomState === "function" && !ApplyRoomState.StoryBotChatWrapped) {
+        const BaseApplyRoomState = ApplyRoomState;
+        const WrappedApplyRoomState = function(...Arguments) {
+            const Result = BaseApplyRoomState(...Arguments);
+            queueMicrotask(() => RefreshQuietChatState(document.getElementById("GameChatMessages")));
+            return Result;
+        };
+        WrappedApplyRoomState.StoryBotChatWrapped = true;
+        ApplyRoomState = WrappedApplyRoomState;
     }
 }
 
@@ -123,15 +197,34 @@ function WrapStoryBotSocketHooks() {
 function ConfigureStoryBotInputs() {
     const LobbyInput = document.getElementById("ChatInput");
     const GameInput = document.getElementById("GameChatInput");
+    const JoinInput = document.getElementById("JoinCodeInput");
 
-    if (LobbyInput) LobbyInput.placeholder = "Message the group or ask @StoryBot...";
-    if (GameInput) GameInput.placeholder = "Message the group or ask @StoryBot...";
+    if (LobbyInput) {
+        LobbyInput.placeholder = "Message, type a vote number, or ask @StoryBot...";
+        LobbyInput.autocapitalize = "sentences";
+        LobbyInput.enterKeyHint = "send";
+    }
+
+    if (GameInput) {
+        GameInput.placeholder = "Message, type #3 to vote, or ask @StoryBot...";
+        GameInput.autocapitalize = "sentences";
+        GameInput.enterKeyHint = "send";
+    }
+
+    if (JoinInput) {
+        JoinInput.autocapitalize = "characters";
+        JoinInput.autocomplete = "off";
+        JoinInput.spellcheck = false;
+        JoinInput.enterKeyHint = "go";
+        JoinInput.inputMode = "text";
+    }
 }
 
 function InitializeStoryBotUi() {
     WrapStoryBotRenderers();
     WrapStoryBotSocketHooks();
     ConfigureStoryBotInputs();
+    RefreshQuietChatState();
 }
 
 if (document.readyState === "loading") {
