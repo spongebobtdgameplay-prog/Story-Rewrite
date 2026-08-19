@@ -15,3 +15,5 @@ services:
         generateValue: true
       - key: ALLOWED_ORIGINS
         value: https://spongebobtdgameplay-prog.github.io
+      - key: DATABASE_URL
+        sync: false
