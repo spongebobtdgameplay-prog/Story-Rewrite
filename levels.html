@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>World Select — Story Rewrite</title>
+<link rel="stylesheet" href="looks.css">
+</head>
+<body>
+<div id="App">
+
+<header class="TopBar">
+    <div class="Brand">
+        <div class="BrandMark">✦</div>
+        <div>
+            <div class="BrandTitle">Story Rewrite</div>
+            <div class="BrandSub">Cross out the sentence. Rewrite what happens.</div>
+        </div>
+    </div>
+    <nav class="TopActions">
+        <a class="UiButton" href="main.html">Home</a>
+        <a class="UiButton" href="levels.html">Worlds</a>
+        <a class="UiButton" href="tutorial.html">Tutorial</a>
+        <a class="UiButton" href="rules.html">Rules</a>
+    </nav>
+</header>
+
+<main class="Main">
+    <section class="Panel PageHeader">
+        <div>
+            <div class="Kicker">Story archive</div>
+            <h1>World Select</h1>
+            <p>Each world is a different story theme. Finish a chapter to make the ink dots travel to the next world and light it up.</p>
+        </div>
+        <div class="ProgressBox">
+            <div class="ProgressTop"><span>Campaign progress</span><span id="ProgressText">0 / 50</span></div>
+            <div class="ProgressBar"><div class="ProgressFill" id="ProgressFill"></div></div>
+        </div>
+    </section>
+
+    <section class="WorldRoute">
+        <div class="WorldRouteTitle">
+            <div class="Kicker">World route</div>
+            <h2>The story roads ahead</h2>
+        </div>
+        <div class="WorldTrack" id="WorldTrack"></div>
+    </section>
+
+    <div id="WorldList" class="WorldList"></div>
+
+    <div style="margin-top:18px">
+        <button class="DangerButton" id="ResetButton">Reset Save</button>
+    </div>
+</main>
+</div>
+<script src="app.js"></script>
+<script src="levels.js"></script>
+</body>
+</html>
