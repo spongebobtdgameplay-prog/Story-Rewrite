@@ -1,33 +1,41 @@
+const FAVICON_VERSION = "2";
+
 const HeadLinks = [
     {
         rel: "icon",
         type: "image/x-icon",
-        href: "favicon_io/favicon.ico"
+        href: `favicon_io/favicon.ico?v=${FAVICON_VERSION}`
     },
     {
         rel: "icon",
         type: "image/png",
         sizes: "32x32",
-        href: "favicon_io/favicon-32x32.png"
+        href: `favicon_io/favicon-32x32.png?v=${FAVICON_VERSION}`
     },
     {
         rel: "icon",
         type: "image/png",
         sizes: "16x16",
-        href: "favicon_io/favicon-16x16.png"
+        href: `favicon_io/favicon-16x16.png?v=${FAVICON_VERSION}`
     },
     {
         rel: "apple-touch-icon",
         sizes: "180x180",
-        href: "favicon_io/apple-touch-icon.png"
+        href: `favicon_io/apple-touch-icon.png?v=${FAVICON_VERSION}`
     },
     {
         rel: "manifest",
-        href: "favicon_io/site.webmanifest"
+        href: `favicon_io/site.webmanifest?v=${FAVICON_VERSION}`
     }
 ];
 
 for (const LinkData of HeadLinks) {
+    const ExistingLinks = document.head.querySelectorAll(`link[rel="${LinkData.rel}"]`);
+
+    for (const ExistingLink of ExistingLinks) {
+        ExistingLink.remove();
+    }
+
     const Link = document.createElement("link");
 
     for (const [Property, Value] of Object.entries(LinkData)) {
@@ -41,9 +49,11 @@ const STORY_DATA_URL = "stages.json";
 
 async function LoadStoryData() {
     const Response = await fetch(STORY_DATA_URL, { cache: "no-store" });
+
     if (!Response.ok) {
         throw new Error(`Could not load ${STORY_DATA_URL}: ${Response.status}`);
     }
+
     return Response.json();
 }
 
