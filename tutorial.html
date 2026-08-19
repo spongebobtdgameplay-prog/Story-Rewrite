@@ -7,91 +7,161 @@
 <link rel="icon" type="image/x-icon" href="favicon_io/favicon.ico?v=1000001">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon_io/favicon-32x32.png?v=1000001">
 <link rel="icon" type="image/png" sizes="16x16" href="favicon_io/favicon-16x16.png?v=1000001">
-<link rel="stylesheet" href="looks.css">
-<link rel="stylesheet" href="shell-ui.css">
+<link rel="stylesheet" href="looks.css?v=20260819-17">
+<link rel="stylesheet" href="shell-ui.css?v=20260819-17">
+<link rel="stylesheet" href="tutorial.css?v=20260819-17">
 </head>
 <body>
 <div id="App">
-
 <header class="TopBar CompactPageTopBar">
     <div class="Brand">
         <button class="IconBackButton" type="button" data-story-back="main.html" aria-label="Go back"></button>
         <div>
             <div class="BrandTitle">Tutorial</div>
-            <div class="BrandSub">Everything you need to play.</div>
+            <div class="BrandSub">Single player and multiplayer guides.</div>
         </div>
     </div>
 </header>
 
 <main class="Main">
     <section class="Panel TutorialShell">
-        <div class="Kicker">How to Play</div>
-        <h1>Rewrite the story without breaking the ending</h1>
-        <p class="HomeText">Each stage gives you a dangerous chain of events. Your job is to cross out the causes that make the story fail while keeping every event the successful ending still needs.</p>
-
-        <div class="TutorialSteps">
-            <article class="TutorialStep">
-                <div class="Eyebrow">Step 1</div>
-                <h3>Cross out an event</h3>
-                <p>Click a sentence to remove that event from the active story. Click it again to restore it. Try the sentence below.</p>
-                <div class="TutorialDemo">
-                    <div class="DemoSentence" id="DemoSentence">The creature hears the door slam and turns toward the house.</div>
-                </div>
-            </article>
-
-            <article class="TutorialStep">
-                <div class="Eyebrow">Step 2</div>
-                <h3>Read the stage briefing</h3>
-                <p><strong>Objective</strong> tells you what must happen. <strong>Threat</strong> tells you what can ruin it. <strong>Must survive</strong> tells you what the successful version of the story cannot lose.</p>
-            </article>
-
-            <article class="TutorialStep">
-                <div class="Eyebrow">Step 3</div>
-                <h3>Do not delete everything dangerous</h3>
-                <p>Some scary-looking sentences are still required. If you erase a fact the ending depends on, the story fails even if the page looks safer.</p>
-            </article>
-
-            <article class="TutorialStep">
-                <div class="Eyebrow">Step 4</div>
-                <h3>Find the cause, not just the consequence</h3>
-                <p>Later stages hide the real mistake several sentences before the disaster. Trace the chain backward and remove the event that causes the bad outcome.</p>
-            </article>
-
-            <article class="TutorialStep">
-                <div class="Eyebrow">Step 5</div>
-                <h3>There are no answer hints while editing</h3>
-                <p>Crossing out a sentence will not turn the interface green or red. The game does not tell you whether an edit is correct until you press <strong>Check Survival</strong>.</p>
-            </article>
-
-            <article class="TutorialStep">
-                <div class="Eyebrow">Step 6</div>
-                <h3>A failed check costs a life</h3>
-                <p>If your rewrite fails, the aftermath shows what your version caused and you lose one life. Use that outcome as information, repair the page, and try again.</p>
-            </article>
-
-            <article class="TutorialStep">
-                <div class="Eyebrow">Step 7</div>
-                <h3>Clean solutions earn more stars</h3>
-                <p>Any correct rewrite clears the level. Three stars means you solved it at or under par without erasing unnecessary events. Extra removals can reduce the star score.</p>
-            </article>
-
-            <article class="TutorialStep">
-                <div class="Eyebrow">Step 8</div>
-                <h3>Progress through the chapter map</h3>
-                <p>Stages unlock in order. Finish level 10 to complete the chapter, refill your lives, and open the route into the next world.</p>
-            </article>
+        <div class="TutorialIntro">
+            <div class="Kicker">How to Play</div>
+            <h1>Learn the rewrite, then learn the room</h1>
+            <p class="HomeText">Single Player teaches the story puzzle. Multiplayer teaches codes, voting, team lives, host controls, chat, late joins, and StoryBot.</p>
         </div>
+
+        <div class="TutorialCategoryTabs" role="tablist" aria-label="Tutorial category">
+            <button class="TutorialCategoryButton Active" id="SinglePlayerTab" type="button" role="tab" aria-selected="true" aria-controls="SinglePlayerTutorial" data-tutorial-category="single">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4.5h14v15H5z"></path><path d="M8 8h8M8 11h6M8 14h7"></path></svg>
+                <span>Single Player</span>
+            </button>
+            <button class="TutorialCategoryButton" id="MultiplayerTab" type="button" role="tab" aria-selected="false" aria-controls="MultiplayerTutorial" data-tutorial-category="multiplayer">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="8" r="3"></circle><circle cx="16.5" cy="9" r="2.5"></circle><path d="M3.5 19c.5-4 2.2-6 4.5-6s4 2 4.5 6M13 18.5c.4-3.1 1.7-4.7 3.7-4.7 1.8 0 3.1 1.5 3.8 4.7"></path></svg>
+                <span>Multiplayer</span>
+            </button>
+        </div>
+
+        <section class="TutorialCategoryPanel" id="SinglePlayerTutorial" role="tabpanel" aria-labelledby="SinglePlayerTab" data-tutorial-panel="single">
+            <div class="TutorialCategoryHeader">
+                <div class="Kicker">Single Player</div>
+                <h2>Rewrite the story without breaking the ending</h2>
+                <p>Cross out the causes of failure while preserving everything the successful outcome still needs.</p>
+            </div>
+
+            <div class="TutorialSteps">
+                <article class="TutorialStep">
+                    <div class="Eyebrow">Step 1</div>
+                    <h3>Cross out an event</h3>
+                    <p>Click or tap a sentence to remove that event from the active story. Select it again to restore it.</p>
+                    <div class="TutorialDemo"><div class="DemoSentence" id="DemoSentence">The creature hears the door slam and turns toward the house.</div></div>
+                </article>
+                <article class="TutorialStep">
+                    <div class="Eyebrow">Step 2</div>
+                    <h3>Read the briefing</h3>
+                    <p><strong>Objective</strong> is what must happen. <strong>Threat</strong> is the danger. <strong>Must survive</strong> is what your successful rewrite cannot erase.</p>
+                </article>
+                <article class="TutorialStep">
+                    <div class="Eyebrow">Step 3</div>
+                    <h3>Trace causes backward</h3>
+                    <p>The disaster may happen several sentences after the real mistake. Remove the cause, not only the final consequence.</p>
+                </article>
+                <article class="TutorialStep">
+                    <div class="Eyebrow">Step 4</div>
+                    <h3>Do not erase useful facts</h3>
+                    <p>Some dangerous-looking lines are still required. A rewrite can look safer and still fail because the ending lost something it needed.</p>
+                </article>
+                <article class="TutorialStep">
+                    <div class="Eyebrow">Step 5</div>
+                    <h3>Check Survival when ready</h3>
+                    <p>The editor does not reveal correct answers while you work. Press <strong>Check Survival</strong> when you think the route is safe.</p>
+                </article>
+                <article class="TutorialStep">
+                    <div class="Eyebrow">Step 6</div>
+                    <h3>Lives are limited</h3>
+                    <p>A failed check costs one life and shows the aftermath your rewrite caused. Use that information to repair the story.</p>
+                </article>
+                <article class="TutorialStep">
+                    <div class="Eyebrow">Step 7</div>
+                    <h3>Cleaner solutions earn more stars</h3>
+                    <p>A correct solution clears the stage. Three stars means you stayed at or under par without removing unnecessary events.</p>
+                </article>
+                <article class="TutorialStep">
+                    <div class="Eyebrow">Step 8</div>
+                    <h3>Move through the chapter map</h3>
+                    <p>Stages unlock in order. Completing the chapter opens the next route and refills your chapter lives.</p>
+                </article>
+            </div>
+        </section>
+
+        <section class="TutorialCategoryPanel" id="MultiplayerTutorial" role="tabpanel" aria-labelledby="MultiplayerTab" data-tutorial-panel="multiplayer" hidden>
+            <div class="TutorialCategoryHeader">
+                <div class="Kicker">Multiplayer</div>
+                <h2>Solve one story as a team</h2>
+                <p>Up to five players share the room, votes, story state, and team lives. The host controls the session.</p>
+            </div>
+
+            <div class="TutorialSteps">
+                <article class="TutorialStep">
+                    <div class="Eyebrow">Room codes</div>
+                    <h3>Create or join a private room</h3>
+                    <p>The host creates a six-character code and sends it to the group. Other players enter that code from Multiplayer.</p>
+                </article>
+                <article class="TutorialStep">
+                    <div class="Eyebrow">Lobby</div>
+                    <h3>Ready up before starting</h3>
+                    <p>Players mark themselves Ready. The host starts the story once the group is prepared.</p>
+                </article>
+                <article class="TutorialStep">
+                    <div class="Eyebrow">Voting</div>
+                    <h3>Sentence edits use majority votes</h3>
+                    <p>Tap a sentence to vote for crossing it out. The edit becomes active when it reaches the room's current majority threshold.</p>
+                </article>
+                <article class="TutorialStep">
+                    <div class="Eyebrow">Team survival</div>
+                    <h3>Everyone shares the same lives</h3>
+                    <p>Failed survival checks remove a team life for the whole room. Only the host submits the final survival check.</p>
+                </article>
+                <article class="TutorialStep">
+                    <div class="Eyebrow">Late joins</div>
+                    <h3>Started rooms require host approval</h3>
+                    <p>If a new player enters the code after the game started, the host receives an Allow or Deny request. Returning members can reconnect normally.</p>
+                </article>
+                <article class="TutorialStep">
+                    <div class="Eyebrow">Host controls</div>
+                    <h3>The host moderates the room</h3>
+                    <p>The host can approve late joins, kick players, and disable or restore an individual player's room chat.</p>
+                </article>
+                <article class="TutorialStep">
+                    <div class="Eyebrow">Group chat</div>
+                    <h3>Chat is limited and moderated</h3>
+                    <p>Messages have a length limit and server-side spam protection. Chat can be hidden during gameplay, and filtered messages are handled on the backend.</p>
+                </article>
+                <article class="TutorialStep">
+                    <div class="Eyebrow">AI teammate</div>
+                    <h3>Ask StoryBot from the room</h3>
+                    <p>Mention <span class="TutorialBotTag">@StoryBot</span> followed by your question. StoryBot receives the live stage, room state, votes, and recent chat so it can answer using what is actually happening.</p>
+                    <div class="TutorialCallout">Example: <strong>@StoryBot which event looks like the cause of the current threat?</strong></div>
+                </article>
+                <article class="TutorialStep Wide">
+                    <div class="Eyebrow">Mobile</div>
+                    <h3>Mobile gets dedicated controls</h3>
+                    <p>On touch devices, use the bottom Map, Restore, Check, and Chat controls. Sentence voting still works by tapping the sentence directly.</p>
+                </article>
+            </div>
+        </section>
 
         <div class="HomeActions">
             <button class="PrimaryButton" id="StartButton" type="button">Start Playing</button>
+            <button class="SecondaryButton" id="MultiplayerButton" type="button">Open Multiplayer</button>
         </div>
     </section>
 </main>
 </div>
-<script src="server-config.js"></script>
-<script src="network.js"></script>
-<script src="app.js"></script>
-<script src="shell-ui.js"></script>
-<script src="tutorial.js"></script>
+<script src="server-config.js?v=20260819-17"></script>
+<script src="network.js?v=20260819-17"></script>
+<script src="app.js?v=20260819-17"></script>
+<script src="shell-ui.js?v=20260819-17"></script>
+<script src="tutorial.js?v=20260819-17"></script>
 </body>
 </html>
