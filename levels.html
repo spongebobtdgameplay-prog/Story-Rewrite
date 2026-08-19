@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="looks.css">
     <link rel="stylesheet" href="game-ui.css">
     <link rel="stylesheet" href="multiplayer.css">
+    <link rel="stylesheet" href="shell-ui.css">
     <style>
         .StageNodeDifficulty {
             min-height: 18px;
@@ -31,16 +32,16 @@
 <body class="LevelSelectPage">
     <div class="LevelSelectShell">
         <header class="GameSelectHeader">
-            <a class="GameBackButton" href="main.html">Home</a>
+            <button class="GameBackButton IconBackButton" type="button" data-story-back="main.html" aria-label="Go back"></button>
             <div class="GameHeaderCopy">
                 <div class="GameHeaderEyebrow">Story Rewrite</div>
                 <h1>Chapter Map</h1>
                 <p>Choose a world, follow its route, and open the next page.</p>
             </div>
             <div class="GameHeaderActions">
-                <a class="GameHeaderButton" href="multiplayer.html">Multiplayer</a>
-                <a class="GameHeaderButton" href="tutorial.html">How to Play</a>
-                <a class="GameHeaderButton" href="rules.html">Rules</a>
+                <button class="GameHeaderButton" type="button" data-story-go="multiplayer.html">Multiplayer</button>
+                <button class="GameHeaderButton" type="button" data-story-go="tutorial.html">How to Play</button>
+                <button class="GameHeaderButton" type="button" data-story-go="rules.html">Rules</button>
             </div>
         </header>
         <section class="GameStatsBar" id="OverviewStats"></section>
@@ -52,6 +53,7 @@
 <script src="network.js"></script>
 <script src="app.js"></script>
 <script src="audio.js"></script>
+<script src="shell-ui.js"></script>
 <script src="levels.js"></script>
 </body>
 </html>
