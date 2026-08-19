@@ -1,4 +1,4 @@
-const FAVICON_VERSION = "999";
+const FAVICON_VERSION = "1000001";
 
 const HeadLinks = [
     {
@@ -29,14 +29,11 @@ const HeadLinks = [
     }
 ];
 
+document.head.querySelectorAll('link[data-story-rewrite-icon="1"]').forEach(Link => Link.remove());
+
 for (const LinkData of HeadLinks) {
-    const ExistingLinks = document.head.querySelectorAll(`link[rel="${LinkData.rel}"]`);
-
-    for (const ExistingLink of ExistingLinks) {
-        ExistingLink.remove();
-    }
-
     const Link = document.createElement("link");
+    Link.setAttribute("data-story-rewrite-icon", "1");
 
     for (const [Property, Value] of Object.entries(LinkData)) {
         Link.setAttribute(Property, Value);
@@ -62,7 +59,7 @@ function DefaultSave(Data) {
     const FirstStage = FirstWorld.entryStage;
 
     return {
-        version: 3,
+        version: 4,
         unlockedWorlds: [FirstWorld.id],
         unlockedStages: [FirstStage],
         stars: {},
@@ -121,12 +118,31 @@ function GetWorld(Data, WorldId) {
     return Data.worlds.find(World => World.id === WorldId);
 }
 
+function GetWorldStages(Data, WorldId) {
+    return Object.values(Data.stages)
+        .filter(Stage => Stage.worldId === WorldId)
+        .sort((A, B) => {
+            const LevelA = Number(A.levelNumber || 0);
+            const LevelB = Number(B.levelNumber || 0);
+
+            if (LevelA !== LevelB) {
+                return LevelA - LevelB;
+            }
+
+            return String(A.id).localeCompare(String(B.id));
+        });
+}
+
 function IsWorldUnlocked(Save, WorldId) {
     return Save.unlockedWorlds.includes(WorldId);
 }
 
 function IsStageUnlocked(Save, StageId) {
     return Save.unlockedStages.includes(StageId);
+}
+
+function GetStageStars(Save, StageId) {
+    return Number(Save.stars[StageId] || 0);
 }
 
 function UnlockStage(Data, Save, StageId) {
@@ -154,7 +170,7 @@ function CompleteStage(Data, Save, StageId, Stars) {
 
     Save.stars[StageId] = Math.max(
         Number(Save.stars[StageId] || 0),
-        Stars
+        Number(Stars || 0)
     );
 
     if (Stage.nextStage) {
@@ -189,7 +205,7 @@ function Roman(NumberValue) {
         [1, "I"]
     ];
 
-    let Remaining = NumberValue;
+    let Remaining = Number(NumberValue || 0);
     let Result = "";
 
     for (const [Value, Symbol] of Values) {
@@ -199,7 +215,7 @@ function Roman(NumberValue) {
         }
     }
 
-    return Result;
+    return Result || "I";
 }
 
 function Go(Page) {
@@ -219,7 +235,7 @@ function ResetSave(Data) {
 }
 
 function EscapeText(Value) {
-    return String(Value)
+    return String(Value ?? "")
         .replaceAll("&", "&amp;")
         .replaceAll("<", "&lt;")
         .replaceAll(">", "&gt;")
