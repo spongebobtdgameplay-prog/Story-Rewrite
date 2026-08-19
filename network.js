@@ -1,5 +1,13 @@
 const STORY_AUTH_TOKEN_KEY = "StoryRewriteSessionToken";
 const STORY_SERVER_OVERRIDE_KEY = "StoryRewriteServerOverride";
+const STORY_PROTECTED_PAGES = new Set([
+    "main.html",
+    "levels.html",
+    "dialog.html",
+    "multiplayer.html",
+    "tutorial.html",
+    "rules.html"
+]);
 
 function GetServerUrl() {
     const Configured = String(window.STORY_REWRITE_SERVER_URL || "").trim().replace(/\/$/, "");
@@ -33,6 +41,28 @@ function SetAuthToken(Token) {
 function LogoutAccount() {
     SetAuthToken("");
     window.location.href = "auth.html";
+}
+
+function GetCurrentPageName() {
+    const Path = window.location.pathname || "";
+    const Name = Path.split("/").pop();
+    return Name || "index.html";
+}
+
+async function GuardProtectedPage() {
+    if (!STORY_PROTECTED_PAGES.has(GetCurrentPageName())) return;
+
+    if (!GetAuthToken()) {
+        window.location.replace("auth.html");
+        return;
+    }
+
+    try {
+        await GetAccountProfile();
+    } catch {
+        SetAuthToken("");
+        window.location.replace("auth.html");
+    }
 }
 
 async function ApiRequest(Path, Options = {}) {
@@ -152,3 +182,5 @@ function ConnectStorySocket() {
         transports: ["websocket", "polling"]
     });
 }
+
+GuardProtectedPage();
