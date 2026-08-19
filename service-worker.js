@@ -1,4 +1,4 @@
-const STORY_CACHE = "story-rewrite-frontend-v6";
+const STORY_CACHE = "story-rewrite-frontend-v7";
 
 const STORY_STATIC_FILES = [
     "./",
@@ -53,10 +53,43 @@ self.addEventListener("activate", Event => {
     );
 });
 
-function GetCacheKey(Request) {
+function IsCriticalCodeRequest(Request, Url) {
+    if (Request.mode === "navigate") return true;
+    if (Request.destination === "script" || Request.destination === "style") return true;
+    return Url.pathname.endsWith(".json");
+}
+
+function NormalizeNavigationKey(Request) {
     if (Request.mode !== "navigate") return Request;
     const Url = new URL(Request.url);
     return new Request(`${Url.origin}${Url.pathname}`);
+}
+
+async function PutSuccessfulResponse(Key, Response) {
+    if (!Response || !Response.ok) return;
+    const Cache = await caches.open(STORY_CACHE);
+    await Cache.put(Key, Response.clone());
+}
+
+async function NetworkFirst(Request, CacheKey) {
+    try {
+        const Response = await fetch(Request, { cache: "no-store" });
+        await PutSuccessfulResponse(CacheKey, Response);
+        return Response;
+    } catch (Error) {
+        const Cached = await caches.match(CacheKey);
+        if (Cached) return Cached;
+        throw Error;
+    }
+}
+
+async function CacheFirst(Request) {
+    const Cached = await caches.match(Request);
+    if (Cached) return Cached;
+
+    const Response = await fetch(Request);
+    await PutSuccessfulResponse(Request, Response);
+    return Response;
 }
 
 self.addEventListener("fetch", Event => {
@@ -66,21 +99,11 @@ self.addEventListener("fetch", Event => {
     const Url = new URL(Request.url);
     if (Url.origin !== self.location.origin) return;
 
-    const CacheKey = GetCacheKey(Request);
+    if (IsCriticalCodeRequest(Request, Url)) {
+        const CacheKey = NormalizeNavigationKey(Request);
+        Event.respondWith(NetworkFirst(Request, CacheKey));
+        return;
+    }
 
-    Event.respondWith(
-        caches.match(CacheKey).then(Cached => {
-            const Refresh = fetch(Request)
-                .then(Response => {
-                    if (Response && Response.ok) {
-                        const Copy = Response.clone();
-                        caches.open(STORY_CACHE).then(Cache => Cache.put(CacheKey, Copy));
-                    }
-                    return Response;
-                })
-                .catch(() => Cached);
-
-            return Cached || Refresh;
-        })
-    );
+    Event.respondWith(CacheFirst(Request));
 });
