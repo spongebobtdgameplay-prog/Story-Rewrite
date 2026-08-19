@@ -62,7 +62,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     SoundSlider.addEventListener("change", SaveVolumes);
 
     document.getElementById("ResetProgressButton").addEventListener("click", async () => {
-        if (!confirm("Reset all Story Rewrite progress for this account?")) return;
+        const Confirmed = await StoryConfirm({
+            title: "Reset all progress?",
+            message: "Your stars, unlocked stages, lives, and current story position will be reset. Your account will stay signed in.",
+            confirmText: "Reset Progress",
+            cancelText: "Keep Progress",
+            danger: true
+        });
+
+        if (!Confirmed) return;
 
         try {
             Status.textContent = "Resetting progress...";
@@ -77,8 +85,15 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     document.getElementById("DeleteAccountButton").addEventListener("click", async () => {
         const Username = Profile?.username || "this account";
-        if (!confirm(`Permanently delete ${Username}? This cannot be undone.`)) return;
-        if (!confirm("Delete the account and all of its progress permanently?")) return;
+        const Confirmed = await StoryConfirm({
+            title: `Delete ${Username}?`,
+            message: "This permanently deletes the account and all Story Rewrite progress. This cannot be undone.",
+            confirmText: "Delete Account",
+            cancelText: "Cancel",
+            danger: true
+        });
+
+        if (!Confirmed) return;
 
         const Button = document.getElementById("DeleteAccountButton");
         Button.disabled = true;
