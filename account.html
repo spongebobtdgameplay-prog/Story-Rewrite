@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Story Rewrite — Account</title>
+<link rel="icon" type="image/x-icon" href="favicon_io/favicon.ico?v=1000001">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon_io/favicon-32x32.png?v=1000001">
+<link rel="icon" type="image/png" sizes="16x16" href="favicon_io/favicon-16x16.png?v=1000001">
+<link rel="stylesheet" href="looks.css">
+<link rel="stylesheet" href="shell-ui.css">
+</head>
+<body class="AccountSettingsPage">
+<main class="AccountSettingsShell">
+    <header class="AccountSettingsHeader">
+        <button class="IconBackButton" type="button" data-story-back="main.html" aria-label="Go back"></button>
+        <h1>Account</h1>
+        <div></div>
+    </header>
+
+    <section class="AccountSettingsCard">
+        <div class="AccountIdentity">
+            <div class="AccountAvatarVector" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                    <circle cx="12" cy="8" r="3.5"></circle>
+                    <path d="M5.5 20c.7-4 3-6 6.5-6s5.8 2 6.5 6"></path>
+                </svg>
+            </div>
+            <div class="AccountIdentityCopy">
+                <div class="Kicker">Signed in as</div>
+                <h2 id="AccountUsername">Loading...</h2>
+            </div>
+        </div>
+
+        <div class="AccountSettingsBody">
+            <section class="AccountSettingsSection">
+                <h3>Progress</h3>
+                <div class="AccountStatGrid">
+                    <div class="AccountStatTile"><span>Lives</span><strong id="AccountLives">—</strong></div>
+                    <div class="AccountStatTile"><span>Stars</span><strong id="AccountStars">—</strong></div>
+                    <div class="AccountStatTile"><span>Stages cleared</span><strong id="AccountCleared">—</strong></div>
+                    <div class="AccountStatTile"><span>Failed checks</span><strong id="AccountDeaths">—</strong></div>
+                </div>
+            </section>
+
+            <section class="AccountSettingsSection">
+                <h3>Game settings</h3>
+                <div class="AccountSettingRow">
+                    <label for="MusicVolumeSlider">Music</label>
+                    <div><input id="MusicVolumeSlider" type="range" min="0" max="100" step="1"><span id="MusicVolumeValue">—</span></div>
+                </div>
+                <div class="AccountSettingRow">
+                    <label for="SoundVolumeSlider">Sounds</label>
+                    <div><input id="SoundVolumeSlider" type="range" min="0" max="100" step="1"><span id="SoundVolumeValue">—</span></div>
+                </div>
+                <div class="AccountDangerZone">
+                    <button class="DangerButton" id="ResetProgressButton" type="button">Reset Progress</button>
+                    <button class="SecondaryButton" id="SignOutButton" type="button">Sign Out</button>
+                </div>
+                <div class="AccountStatusLine" id="AccountStatus"></div>
+            </section>
+        </div>
+    </section>
+</main>
+<script src="server-config.js"></script>
+<script src="network.js"></script>
+<script src="app.js"></script>
+<script src="audio.js"></script>
+<script src="shell-ui.js"></script>
+<script src="account.js"></script>
+</body>
+</html>
