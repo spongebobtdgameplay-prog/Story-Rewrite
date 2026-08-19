@@ -454,7 +454,7 @@ async function HandleApi(Request, Response, RequestPath, Origin) {
                 ok: true,
                 multiplayer: true,
                 database: true,
-                version: 5
+                version: 6
             }, Origin);
         } catch {
             return SendJson(Response, 503, {
@@ -543,6 +543,34 @@ async function HandleApi(Request, Response, RequestPath, Origin) {
 
     if (RequestPath === "/api/save" && Request.method === "GET") {
         return SendJson(Response, 200, { save: Account.save }, Origin);
+    }
+
+    if (RequestPath === "/api/room/create" && Request.method === "POST") {
+        const Code = GenerateRoomCode();
+        const Room = {
+            code: Code,
+            hostSocketId: null,
+            hostUsername: Account.username,
+            players: new Map(),
+            memberNames: new Set([Account.username]),
+            messages: [],
+            votes: new Map(),
+            lives: MaxLives,
+            maxLives: MaxLives,
+            stageId: Account.save.currentStage,
+            status: "lobby",
+            lastOutcome: null,
+            cleanupTimer: null
+        };
+
+        Rooms.set(Code, Room);
+        ScheduleRoomCleanup(Room);
+
+        return SendJson(Response, 201, {
+            ok: true,
+            code,
+            state: BuildRoomState(Room)
+        }, Origin);
     }
 
     if (RequestPath === "/api/account/reset" && Request.method === "POST") {
