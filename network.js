@@ -220,6 +220,12 @@ async function ResetServerSave() {
     return Result.save;
 }
 
+async function DeleteAccount() {
+    const Result = await ApiRequest("/api/account", { method: "DELETE" });
+    if (Result?.ok) SetAuthToken("");
+    return Result;
+}
+
 async function SaveAudioSettings(MusicVolume, SoundVolume) {
     return ApiRequest("/api/settings", {
         method: "POST",
@@ -243,7 +249,7 @@ function RegisterStoryServiceWorker() {
     if (location.protocol !== "https:" && location.hostname !== "localhost") return;
 
     window.addEventListener("load", () => {
-        navigator.serviceWorker.register(BuildStoryUrl("service-worker.js?v=7"), {
+        navigator.serviceWorker.register(BuildStoryUrl("service-worker.js?v=8"), {
             scope: new URL(".", window.location.href).pathname,
             updateViaCache: "none"
         }).then(Registration => {
