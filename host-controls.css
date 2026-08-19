@@ -1,0 +1,225 @@
+.HostControlPanel,
+.GameHostControls {
+    margin-top: 16px;
+    padding: 16px;
+    border: 1px solid rgba(220, 169, 101, .22);
+    border-radius: 16px;
+    background: linear-gradient(180deg, rgba(54, 31, 20, .96), rgba(26, 15, 10, .98));
+    box-shadow: 0 14px 34px rgba(0, 0, 0, .28);
+}
+
+.HostControlPanel.Hidden,
+.GameHostControls.Hidden,
+.GameHostToggle.Hidden,
+.HostJoinRequests.Hidden {
+    display: none !important;
+}
+
+.HostPanelHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.HostPanelHeader h3 {
+    margin: 3px 0 0;
+    color: #ffe7bd;
+    font: 800 19px/1.1 Georgia, "Times New Roman", serif;
+}
+
+.HostShieldIcon,
+.GameHostToggle {
+    color: #efc57f;
+}
+
+.HostShieldIcon svg,
+.GameHostToggle svg {
+    width: 22px;
+    height: 22px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.9;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.HostSectionTitle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin: 12px 0 8px;
+    color: #caa77a;
+    font: 900 10px/1.2 system-ui, sans-serif;
+    letter-spacing: .11em;
+    text-transform: uppercase;
+}
+
+.HostSectionTitle span {
+    min-width: 25px;
+    min-height: 25px;
+    display: inline-grid;
+    place-items: center;
+    padding: 0 7px;
+    border: 1px solid #6d4c31;
+    border-radius: 999px;
+    background: #160d09;
+    color: #f0ca8b;
+}
+
+.HostRequestRow,
+.HostPlayerRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 11px 12px;
+    margin-top: 7px;
+    border: 1px solid rgba(211, 160, 93, .16);
+    border-radius: 11px;
+    background: rgba(255, 255, 255, .025);
+}
+
+.HostRequestRow strong,
+.HostPlayerIdentity strong {
+    color: #f7e3c2;
+}
+
+.HostRequestRow span,
+.HostPlayerIdentity span,
+.HostEmptyState {
+    color: #aa9274;
+    font: 650 11px/1.35 system-ui, sans-serif;
+}
+
+.HostPlayerIdentity {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.HostMiniActions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 6px;
+}
+
+.HostMiniActions button,
+.HostCloseButton {
+    min-height: 34px;
+    padding: 7px 10px;
+    cursor: pointer;
+    border-radius: 9px;
+    font: 800 10px/1 system-ui, sans-serif;
+}
+
+.HostAllowButton,
+.HostMuteButton {
+    color: #f7e7cb;
+    border: 1px solid #715033;
+    background: linear-gradient(180deg, #52331f, #301c12);
+}
+
+.HostDenyButton,
+.HostKickButton {
+    color: #ffd8cf;
+    border: 1px solid rgba(190, 83, 66, .55);
+    background: linear-gradient(180deg, rgba(132, 54, 42, .92), rgba(78, 31, 24, .96));
+}
+
+.GameHostToggle {
+    position: fixed;
+    left: 16px;
+    bottom: 16px;
+    z-index: 112;
+    width: 48px;
+    height: 48px;
+    padding: 0;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    border: 1px solid rgba(235, 188, 117, .33);
+    border-radius: 14px;
+    background: rgba(34, 19, 12, .95);
+    box-shadow: 0 14px 34px rgba(0, 0, 0, .4);
+}
+
+.GameHostToggle span {
+    position: absolute;
+    right: -5px;
+    top: -5px;
+    display: none;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 5px;
+    place-items: center;
+    border-radius: 999px;
+    color: #2b170d;
+    background: #efc879;
+    font: 900 9px/1 system-ui, sans-serif;
+}
+
+.GameHostToggle span.HasRequests {
+    display: grid;
+}
+
+.GameHostControls {
+    position: fixed;
+    left: 16px;
+    bottom: 76px;
+    z-index: 111;
+    width: min(390px, calc(100vw - 32px));
+    max-height: min(70vh, 620px);
+    overflow-y: auto;
+    margin: 0;
+    transition: opacity .16s ease, transform .16s ease;
+}
+
+.GameHostControls.IsCollapsed {
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(10px) scale(.98);
+}
+
+.HostCloseButton {
+    width: 34px;
+    padding: 0;
+    color: #e8cba0;
+    border: 1px solid #67472f;
+    background: #21130d;
+    font-size: 20px;
+}
+
+@media (max-width: 700px) {
+    .HostRequestRow,
+    .HostPlayerRow {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .HostMiniActions {
+        width: 100%;
+    }
+
+    .HostMiniActions button {
+        flex: 1;
+        min-height: 42px;
+    }
+
+    .GameHostToggle {
+        left: max(8px, env(safe-area-inset-left));
+        bottom: calc(88px + env(safe-area-inset-bottom));
+    }
+
+    .GameHostControls {
+        left: max(8px, env(safe-area-inset-left));
+        right: max(8px, env(safe-area-inset-right));
+        bottom: calc(144px + env(safe-area-inset-bottom));
+        width: auto;
+        max-height: 54vh;
+    }
+}
