@@ -6,6 +6,7 @@
     <title>Story Rewrite | Chapter Map</title>
     <link rel="stylesheet" href="looks.css">
     <link rel="stylesheet" href="game-ui.css">
+    <link rel="stylesheet" href="multiplayer.css">
     <style>
         .StageNodeDifficulty {
             min-height: 18px;
@@ -18,40 +19,36 @@
             letter-spacing: .09em;
             text-transform: uppercase;
         }
-
         .StageNodeWrap.Selected .StageNodeDifficulty {
             color: #ffe0a8;
             border-color: rgba(240, 190, 112, .45);
         }
     </style>
-    <script defer src="app.js"></script>
-    <script defer src="levels.js"></script>
 </head>
 <body class="LevelSelectPage">
     <div class="LevelSelectShell">
         <header class="GameSelectHeader">
             <a class="GameBackButton" href="main.html">Home</a>
-
             <div class="GameHeaderCopy">
                 <div class="GameHeaderEyebrow">Story Rewrite</div>
                 <h1>Chapter Map</h1>
                 <p>Choose a world, follow its route, and open the next page.</p>
             </div>
-
             <div class="GameHeaderActions">
+                <a class="GameHeaderButton" href="multiplayer.html">Multiplayer</a>
                 <a class="GameHeaderButton" href="tutorial.html">How to Play</a>
                 <a class="GameHeaderButton" href="rules.html">Rules</a>
             </div>
         </header>
-
         <section class="GameStatsBar" id="OverviewStats"></section>
-
-        <section class="WorldStripPanel">
-            <div class="WorldStrip" id="WorldRail"></div>
-        </section>
-
+        <section class="WorldStripPanel"><div class="WorldStrip" id="WorldRail"></div></section>
         <main id="SelectedWorld"></main>
         <div class="page-error" id="PageError" hidden></div>
     </div>
+<script src="server-config.js"></script>
+<script src="network.js"></script>
+<script src="app.js"></script>
+<script src="audio.js"></script>
+<script src="levels.js"></script>
 </body>
 </html>
