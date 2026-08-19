@@ -454,7 +454,7 @@ async function HandleApi(Request, Response, RequestPath, Origin) {
                 ok: true,
                 multiplayer: true,
                 database: true,
-                version: 4
+                version: 5
             }, Origin);
         } catch {
             return SendJson(Response, 503, {
@@ -788,7 +788,10 @@ Io.use(async (Socket, Next) => {
         const Account = await GetAccountByUsername(Username);
         if (!Account) return Next(new Error("AUTH_REQUIRED"));
 
+        const Save = NormalizeSave(Account.save);
         Socket.data.username = Account.username;
+        Socket.data.currentStage = Save.currentStage;
+        Socket.data.unlockedStages = [...Save.unlockedStages];
         Next();
     } catch (Error) {
         console.error("Socket authentication failed", Error);
@@ -798,38 +801,70 @@ Io.use(async (Socket, Next) => {
 
 Io.on("connection", Socket => {
     Socket.on("room:create", async (Payload, Reply = () => {}) => {
+        let CreatedCode = "";
+
         try {
             LeaveRoom(Socket, true);
-            const Account = await GetAccountByUsername(Socket.data.username);
-            if (!Account) return Reply({ ok: false, error: "Account not found." });
 
-            const Save = NormalizeSave(Account.save);
+            const Username = NormalizeUsername(Socket.data.username);
+            if (!Username) {
+                return Reply({
+                    ok: false,
+                    error: "Your multiplayer session is not ready.",
+                    code: "SOCKET_ACCOUNT_MISSING"
+                });
+            }
+
+            const FallbackStage = StagesData.worlds[0].entryStage;
+            const RequestedStage = String(Payload?.stageId || Socket.data.currentStage || FallbackStage);
+            const StageId = StagesData.stages[RequestedStage] ? RequestedStage : FallbackStage;
             const Code = GenerateRoomCode();
+            CreatedCode = Code;
+
             const Room = {
                 code: Code,
                 hostSocketId: Socket.id,
-                hostUsername: Socket.data.username,
+                hostUsername: Username,
                 players: new Map(),
-                memberNames: new Set([Socket.data.username]),
+                memberNames: new Set([Username]),
                 messages: [],
                 votes: new Map(),
                 lives: MaxLives,
                 maxLives: MaxLives,
-                stageId: Save.currentStage,
+                stageId: StageId,
                 status: "lobby",
                 lastOutcome: null,
                 cleanupTimer: null
             };
 
-            Room.players.set(Socket.id, { username: Socket.data.username, ready: false });
+            Room.players.set(Socket.id, { username: Username, ready: false });
+            const State = BuildRoomState(Room);
+
             Rooms.set(Code, Room);
-            Socket.join(Code);
+            await Promise.resolve(Socket.join(Code));
             Socket.data.roomCode = Code;
-            Reply({ ok: true, code, state: BuildRoomState(Room) });
-            EmitRoom(Room);
+
+            Reply({ ok: true, code, state: State });
+
+            try {
+                EmitRoom(Room);
+            } catch (EmitError) {
+                console.error("Room state emit failed", EmitError);
+            }
         } catch (Error) {
+            if (CreatedCode) Rooms.delete(CreatedCode);
+            Socket.data.roomCode = null;
+
+            const ErrorCode = Error?.code
+                ? `ROOM_CREATE_${String(Error.code).replace(/[^A-Za-z0-9_]/g, "_").slice(0, 40)}`
+                : "ROOM_CREATE_FAILED";
+
             console.error("Room create failed", Error);
-            Reply({ ok: false, error: "Could not create the room." });
+            Reply({
+                ok: false,
+                error: "Could not create the room.",
+                code: ErrorCode
+            });
         }
     });
 
