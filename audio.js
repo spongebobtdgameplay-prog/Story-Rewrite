@@ -1,9 +1,10 @@
 const StoryAudio = (() => {
     let AudioContextInstance = null;
-    let MusicElement = null;
+    let AudioUnlocked = false;
     let MusicVolume = 0.45;
     let SoundVolume = 0.75;
     let CurrentTrack = "";
+    let PendingMusicName = "";
     let AmbientName = "";
     let AmbientMaster = null;
     let AmbientFilter = null;
@@ -11,29 +12,6 @@ const StoryAudio = (() => {
     let AmbientLfo = null;
     let AmbientLfoGain = null;
     let AmbientPulseTimer = null;
-
-    const TrackFiles = {
-        menu: "music/menu/menu.mp3",
-        lobby: "music/lobby/lobby.mp3",
-        fromville: "music/fromville/fromville.mp3",
-        anime: "music/neon-exorcists/neon-exorcists.mp3",
-        manor: "music/blackthorn/blackthorn.mp3",
-        forest: "music/spirit-grove/spirit-grove.mp3",
-        city: "music/false-city/false-city.mp3",
-        danger: "music/danger/danger.mp3"
-    };
-
-    const SoundFiles = {
-        click: "sounds/ui/click.wav",
-        cross: "sounds/story/cross.wav",
-        restore: "sounds/story/restore.wav",
-        join: "sounds/multiplayer/join.wav",
-        message: "sounds/multiplayer/message.wav",
-        ready: "sounds/multiplayer/ready.wav",
-        fail: "sounds/danger/fail.wav",
-        life: "sounds/danger/life-lost.wav",
-        success: "sounds/story/success.wav"
-    };
 
     const AmbientPresets = {
         menu: {
@@ -118,52 +96,124 @@ const StoryAudio = (() => {
         }
     };
 
+    function Clamp(Value, Minimum, Maximum, Fallback) {
+        const NumberValue = Number(Value);
+        return Number.isFinite(NumberValue)
+            ? Math.max(Minimum, Math.min(Maximum, NumberValue))
+            : Fallback;
+    }
+
     function Configure(Settings = {}) {
         MusicVolume = Clamp(Settings.musicVolume, 0, 1, MusicVolume);
         SoundVolume = Clamp(Settings.soundVolume, 0, 1, SoundVolume);
-        if (MusicElement) MusicElement.volume = MusicVolume;
         UpdateAmbientVolume();
-    }
 
-    function Clamp(Value, Minimum, Maximum, Fallback) {
-        const NumberValue = Number(Value);
-        return Number.isFinite(NumberValue) ? Math.max(Minimum, Math.min(Maximum, NumberValue)) : Fallback;
-    }
-
-    function EnsureContext() {
-        if (!AudioContextInstance) {
-            const Context = window.AudioContext || window.webkitAudioContext;
-            if (Context) AudioContextInstance = new Context();
+        if (MusicVolume <= 0) {
+            StopAmbient();
+            return;
         }
 
-        if (AudioContextInstance?.state === "suspended") {
-            AudioContextInstance.resume().catch(() => {});
+        if (AudioUnlocked && PendingMusicName && !AmbientMaster) {
+            StartAmbient(PendingMusicName);
+        }
+    }
+
+    function CreateContext() {
+        if (!AudioUnlocked) return null;
+
+        if (!AudioContextInstance) {
+            const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContextClass) return null;
+            AudioContextInstance = new AudioContextClass();
         }
 
         return AudioContextInstance;
     }
 
-    function PlayTone(Frequency, Duration, GainAmount = 0.08, Type = "sine", StartDelay = 0) {
-        const Context = EnsureContext();
-        if (!Context || SoundVolume <= 0) return;
+    function ResumeContextFromGesture() {
+        const Context = CreateContext();
+        if (!Context) return;
 
-        const StartTime = Context.currentTime + StartDelay;
+        if (Context.state === "suspended") {
+            Context.resume().catch(() => {});
+        }
+    }
+
+    function UnlockAudioFromGesture() {
+        if (!AudioUnlocked) AudioUnlocked = true;
+        ResumeContextFromGesture();
+
+        if (PendingMusicName && MusicVolume > 0) {
+            StartAmbient(PendingMusicName);
+        }
+    }
+
+    document.addEventListener("pointerdown", UnlockAudioFromGesture, { capture: true, passive: true });
+    document.addEventListener("keydown", UnlockAudioFromGesture, { capture: true });
+    document.addEventListener("touchstart", UnlockAudioFromGesture, { capture: true, passive: true });
+
+    function PlayTone(Frequency, Duration, GainAmount = 0.08, Type = "sine", StartDelay = 0, EndFrequency = null) {
+        const Context = CreateContext();
+        if (!Context || Context.state !== "running" || SoundVolume <= 0) return;
+
+        const StartTime = Context.currentTime + Math.max(0, StartDelay);
+        const EndTime = StartTime + Math.max(0.03, Duration);
         const Oscillator = Context.createOscillator();
         const Gain = Context.createGain();
 
         Oscillator.type = Type;
-        Oscillator.frequency.value = Frequency;
+        Oscillator.frequency.setValueAtTime(Math.max(20, Frequency), StartTime);
+
+        if (Number.isFinite(EndFrequency)) {
+            Oscillator.frequency.exponentialRampToValueAtTime(Math.max(20, EndFrequency), EndTime);
+        }
+
         Gain.gain.setValueAtTime(0.0001, StartTime);
-        Gain.gain.exponentialRampToValueAtTime(Math.max(0.0001, GainAmount * SoundVolume), StartTime + 0.025);
-        Gain.gain.exponentialRampToValueAtTime(0.0001, StartTime + Duration);
+        Gain.gain.exponentialRampToValueAtTime(
+            Math.max(0.0001, GainAmount * SoundVolume),
+            StartTime + Math.min(0.025, Duration * 0.25)
+        );
+        Gain.gain.exponentialRampToValueAtTime(0.0001, EndTime);
 
         Oscillator.connect(Gain);
         Gain.connect(Context.destination);
         Oscillator.start(StartTime);
-        Oscillator.stop(StartTime + Duration + 0.03);
+        Oscillator.stop(EndTime + 0.04);
     }
 
-    function StopAmbientFallback() {
+    function PlayNoise(Duration = 0.12, GainAmount = 0.06, StartDelay = 0, FilterFrequency = 1800) {
+        const Context = CreateContext();
+        if (!Context || Context.state !== "running" || SoundVolume <= 0) return;
+
+        const SampleCount = Math.max(1, Math.floor(Context.sampleRate * Duration));
+        const Buffer = Context.createBuffer(1, SampleCount, Context.sampleRate);
+        const Data = Buffer.getChannelData(0);
+
+        for (let Index = 0; Index < SampleCount; Index += 1) {
+            const Fade = 1 - Index / SampleCount;
+            Data[Index] = (Math.random() * 2 - 1) * Fade;
+        }
+
+        const Source = Context.createBufferSource();
+        const Filter = Context.createBiquadFilter();
+        const Gain = Context.createGain();
+        const StartTime = Context.currentTime + Math.max(0, StartDelay);
+
+        Source.buffer = Buffer;
+        Filter.type = "lowpass";
+        Filter.frequency.value = FilterFrequency;
+        Filter.Q.value = 0.7;
+        Gain.gain.setValueAtTime(Math.max(0.0001, GainAmount * SoundVolume), StartTime);
+        Gain.gain.exponentialRampToValueAtTime(0.0001, StartTime + Duration);
+
+        Source.connect(Filter);
+        Filter.connect(Gain);
+        Gain.connect(Context.destination);
+        Source.start(StartTime);
+        Source.stop(StartTime + Duration + 0.02);
+    }
+
+    function StopAmbient() {
         if (AmbientPulseTimer) {
             clearInterval(AmbientPulseTimer);
             AmbientPulseTimer = null;
@@ -189,40 +239,47 @@ const StoryAudio = (() => {
 
     function UpdateAmbientVolume() {
         if (!AmbientMaster || !AudioContextInstance) return;
+
         const Target = Math.max(0.0001, MusicVolume * 0.075);
         AmbientMaster.gain.cancelScheduledValues(AudioContextInstance.currentTime);
         AmbientMaster.gain.setTargetAtTime(Target, AudioContextInstance.currentTime, 0.12);
     }
 
-    function StartAmbientFallback(Name) {
+    function StartAmbient(Name) {
+        if (!AudioUnlocked || MusicVolume <= 0) return;
+
+        const Context = CreateContext();
+        if (!Context || Context.state !== "running") return;
+
         if (AmbientName === Name && AmbientMaster) {
             UpdateAmbientVolume();
             return;
         }
 
-        StopAmbientFallback();
-        const Context = EnsureContext();
-        if (!Context || MusicVolume <= 0) return;
+        StopAmbient();
 
         const Preset = AmbientPresets[Name] || AmbientPresets.menu;
         AmbientName = Name;
         AmbientMaster = Context.createGain();
         AmbientFilter = Context.createBiquadFilter();
+
         AmbientFilter.type = "lowpass";
         AmbientFilter.frequency.value = Preset.filter;
         AmbientFilter.Q.value = 0.7;
-
         AmbientMaster.gain.value = Math.max(0.0001, MusicVolume * 0.075);
+
         AmbientFilter.connect(AmbientMaster);
         AmbientMaster.connect(Context.destination);
 
         Preset.voices.forEach((Multiplier, Index) => {
             const Oscillator = Context.createOscillator();
             const VoiceGain = Context.createGain();
+
             Oscillator.type = Index === 0 ? Preset.type : "sine";
             Oscillator.frequency.value = Preset.base * Multiplier;
             Oscillator.detune.value = Preset.detune[Index] || 0;
             VoiceGain.gain.value = Index === 0 ? 0.34 : Index === 1 ? 0.17 : 0.09;
+
             Oscillator.connect(VoiceGain);
             VoiceGain.connect(AmbientFilter);
             Oscillator.start();
@@ -243,8 +300,8 @@ const StoryAudio = (() => {
     }
 
     function ScheduleAmbientPulse(Preset) {
-        const Context = EnsureContext();
-        if (!Context || !AmbientMaster || MusicVolume <= 0) return;
+        const Context = AudioContextInstance;
+        if (!Context || Context.state !== "running" || !AmbientMaster || !AmbientFilter || MusicVolume <= 0) return;
 
         const Root = Preset.pulse[Math.floor(Math.random() * Preset.pulse.length)];
         const Notes = [Root, Root * 1.25, Root * 1.5];
@@ -259,7 +316,10 @@ const StoryAudio = (() => {
             Oscillator.frequency.value = Frequency;
             Oscillator.detune.value = (Math.random() - 0.5) * 7;
             Gain.gain.setValueAtTime(0.0001, StartTime);
-            Gain.gain.exponentialRampToValueAtTime(Math.max(0.0001, MusicVolume * 0.018), StartTime + 0.14);
+            Gain.gain.exponentialRampToValueAtTime(
+                Math.max(0.0001, MusicVolume * 0.018),
+                StartTime + 0.14
+            );
             Gain.gain.exponentialRampToValueAtTime(0.0001, StartTime + Duration);
 
             Oscillator.connect(Gain);
@@ -269,117 +329,79 @@ const StoryAudio = (() => {
         });
     }
 
-    async function PlayMusic(Name) {
-        const Source = TrackFiles[Name] || TrackFiles.menu;
+    function PlayMusic(Name) {
+        const SelectedName = AmbientPresets[Name] ? Name : "menu";
+        PendingMusicName = SelectedName;
+        CurrentTrack = SelectedName;
 
-        if (CurrentTrack === Source && (MusicElement || AmbientName === Name)) {
-            UpdateAmbientVolume();
-            return;
-        }
-
-        CurrentTrack = Source;
-        StopAmbientFallback();
-
-        if (MusicElement) {
-            MusicElement.pause();
-            MusicElement.removeAttribute("src");
-            MusicElement.load();
-            MusicElement = null;
-        }
-
-        MusicElement = new Audio(Source);
-        MusicElement.loop = true;
-        MusicElement.volume = MusicVolume;
-        MusicElement.preload = "auto";
-
-        let Failed = false;
-        const UseFallback = () => {
-            if (Failed) return;
-            Failed = true;
-            if (MusicElement) {
-                MusicElement.pause();
-                MusicElement = null;
-            }
-            StartAmbientFallback(Name);
-        };
-
-        MusicElement.addEventListener("error", UseFallback, { once: true });
-
-        try {
-            await MusicElement.play();
-        } catch (Error) {
-            if (MusicElement?.error) {
-                UseFallback();
-                return;
-            }
-
-            const StartAfterGesture = async () => {
-                document.removeEventListener("pointerdown", StartAfterGesture);
-                document.removeEventListener("keydown", StartAfterGesture);
-
-                try {
-                    if (!MusicElement) {
-                        StartAmbientFallback(Name);
-                        return;
-                    }
-                    await MusicElement.play();
-                } catch {
-                    UseFallback();
-                }
-            };
-
-            document.addEventListener("pointerdown", StartAfterGesture, { once: true });
-            document.addEventListener("keydown", StartAfterGesture, { once: true });
-        }
-
-        setTimeout(() => {
-            if (CurrentTrack !== Source || Failed) return;
-            if (!MusicElement || MusicElement.readyState === 0 || MusicElement.networkState === HTMLMediaElement.NETWORK_NO_SOURCE) {
-                UseFallback();
-            }
-        }, 1800);
+        if (!AudioUnlocked) return;
+        StartAmbient(SelectedName);
     }
 
     function PlaySound(Name) {
-        const Source = SoundFiles[Name];
-        if (!Source) return;
+        if (!AudioUnlocked || SoundVolume <= 0) return;
 
-        const Sound = new Audio(Source);
-        Sound.volume = SoundVolume;
-        Sound.preload = "auto";
+        switch (Name) {
+            case "click":
+                PlayTone(560, 0.055, 0.045, "square", 0, 440);
+                break;
 
-        Sound.play().catch(() => PlayFallbackSound(Name));
-        Sound.addEventListener("error", () => PlayFallbackSound(Name), { once: true });
-    }
+            case "cross":
+                PlayNoise(0.1, 0.055, 0, 1200);
+                PlayTone(260, 0.14, 0.05, "sawtooth", 0, 145);
+                break;
 
-    function PlayFallbackSound(Name) {
-        const Fallbacks = {
-            click: [[520, 0, .06, "square"]],
-            cross: [[230, 0, .12, "sawtooth"], [170, .05, .1, "triangle"]],
-            restore: [[330, 0, .1, "triangle"], [440, .07, .12, "sine"]],
-            join: [[520, 0, .12, "sine"], [660, .09, .16, "sine"]],
-            message: [[760, 0, .08, "sine"]],
-            ready: [[400, 0, .1, "triangle"], [600, .08, .14, "triangle"]],
-            fail: [[110, 0, .36, "sawtooth"], [73, .11, .5, "square"]],
-            life: [[92, 0, .5, "square"], [61, .15, .72, "sawtooth"]],
-            success: [[523.25, 0, .18, "triangle"], [659.25, .12, .22, "triangle"], [783.99, .24, .34, "sine"]]
-        };
+            case "restore":
+                PlayTone(280, 0.1, 0.05, "triangle", 0, 390);
+                PlayTone(440, 0.14, 0.045, "sine", 0.075, 560);
+                break;
 
-        const Pattern = Fallbacks[Name] || [[440, 0, .08, "sine"]];
-        Pattern.forEach(([Frequency, DelayAmount, Duration, Type]) => {
-            PlayTone(Frequency, Duration, 0.08, Type, DelayAmount);
-        });
+            case "join":
+                PlayTone(392, 0.11, 0.045, "sine", 0);
+                PlayTone(523.25, 0.13, 0.05, "sine", 0.08);
+                PlayTone(659.25, 0.16, 0.055, "triangle", 0.16);
+                break;
+
+            case "message":
+                PlayTone(880, 0.07, 0.04, "sine", 0);
+                PlayTone(1174.66, 0.09, 0.028, "sine", 0.055);
+                break;
+
+            case "ready":
+                PlayTone(330, 0.09, 0.045, "triangle", 0);
+                PlayTone(440, 0.1, 0.05, "triangle", 0.07);
+                PlayTone(660, 0.15, 0.055, "sine", 0.14);
+                break;
+
+            case "fail":
+                PlayNoise(0.28, 0.06, 0, 700);
+                PlayTone(130, 0.42, 0.075, "sawtooth", 0, 62);
+                PlayTone(78, 0.54, 0.05, "square", 0.09, 45);
+                break;
+
+            case "life":
+                PlayNoise(0.18, 0.08, 0, 480);
+                PlayTone(92, 0.55, 0.08, "square", 0, 43);
+                PlayTone(61, 0.72, 0.055, "sawtooth", 0.12, 32);
+                break;
+
+            case "success":
+                PlayTone(523.25, 0.18, 0.052, "triangle", 0);
+                PlayTone(659.25, 0.22, 0.052, "triangle", 0.11);
+                PlayTone(783.99, 0.3, 0.058, "sine", 0.22);
+                PlayTone(1046.5, 0.42, 0.038, "sine", 0.32);
+                break;
+
+            default:
+                PlayTone(440, 0.08, 0.04, "sine");
+                break;
+        }
     }
 
     function StopMusic() {
-        if (MusicElement) {
-            MusicElement.pause();
-            MusicElement.removeAttribute("src");
-            MusicElement.load();
-            MusicElement = null;
-        }
-        StopAmbientFallback();
+        PendingMusicName = "";
         CurrentTrack = "";
+        StopAmbient();
     }
 
     return {
