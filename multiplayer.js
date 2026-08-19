@@ -28,7 +28,6 @@ function BindUi() {
     document.getElementById("ReadyButton").addEventListener("click", ToggleReady);
     document.getElementById("StartButton").addEventListener("click", StartRoom);
     document.getElementById("LeaveButton").addEventListener("click", LeaveRoom);
-    document.getElementById("LogoutButton").addEventListener("click", LogoutAccount);
     document.getElementById("ChatForm").addEventListener("submit", SendChat);
 }
 
@@ -46,7 +45,7 @@ function BindSocket() {
     });
     MultiplayerSocket.on("game:started", Payload => {
         StoryAudio.PlaySound("ready");
-        window.location.href = `dialog.html?stage=${encodeURIComponent(Payload.stageId)}&room=${encodeURIComponent(Payload.code)}`;
+        GoStage(Payload.stageId, Payload.code);
     });
 }
 
