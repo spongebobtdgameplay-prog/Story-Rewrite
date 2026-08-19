@@ -18,22 +18,22 @@
         <button class="IconBackButton" type="button" data-story-back="main.html" aria-label="Go back"></button>
         <div>
             <div class="BrandTitle">Tutorial</div>
-            <div class="BrandSub">Learn how to rewrite the page.</div>
+            <div class="BrandSub">Everything you need to play.</div>
         </div>
     </div>
 </header>
 
 <main class="Main">
     <section class="Panel TutorialShell">
-        <div class="Kicker">Tutorial</div>
-        <h1>How the book works</h1>
-        <p class="HomeText">The game is not about deleting every scary sentence. You are trying to create the smallest version of the story where the objective is true and the required characters still survive.</p>
+        <div class="Kicker">How to Play</div>
+        <h1>Rewrite the story without breaking the ending</h1>
+        <p class="HomeText">Each stage gives you a dangerous chain of events. Your job is to cross out the causes that make the story fail while keeping every event the successful ending still needs.</p>
 
         <div class="TutorialSteps">
             <article class="TutorialStep">
                 <div class="Eyebrow">Step 1</div>
                 <h3>Cross out an event</h3>
-                <p>Click a sentence to remove that event from the active story. Click it again to restore it.</p>
+                <p>Click a sentence to remove that event from the active story. Click it again to restore it. Try the sentence below.</p>
                 <div class="TutorialDemo">
                     <div class="DemoSentence" id="DemoSentence">The creature hears the door slam and turns toward the house.</div>
                 </div>
@@ -41,38 +41,49 @@
 
             <article class="TutorialStep">
                 <div class="Eyebrow">Step 2</div>
-                <h3>Read the objective</h3>
-                <p>The objective, threat, and survival rule all matter. A route can look safer while still making the ending impossible.</p>
+                <h3>Read the stage briefing</h3>
+                <p><strong>Objective</strong> tells you what must happen. <strong>Threat</strong> tells you what can ruin it. <strong>Must survive</strong> tells you what the successful version of the story cannot lose.</p>
             </article>
 
             <article class="TutorialStep">
                 <div class="Eyebrow">Step 3</div>
-                <h3>The scene will not solve it</h3>
-                <p>The scene changes only after a failed check. There is no stable/unstable color clue while you are guessing.</p>
+                <h3>Do not delete everything dangerous</h3>
+                <p>Some scary-looking sentences are still required. If you erase a fact the ending depends on, the story fails even if the page looks safer.</p>
             </article>
 
             <article class="TutorialStep">
                 <div class="Eyebrow">Step 4</div>
-                <h3>Failed checks show the aftermath</h3>
-                <p>If the story is wrong, the right-hand page shows the bad thing that happens afterward. Fix your redactions and try again.</p>
+                <h3>Find the cause, not just the consequence</h3>
+                <p>Later stages hide the real mistake several sentences before the disaster. Trace the chain backward and remove the event that causes the bad outcome.</p>
             </article>
 
             <article class="TutorialStep">
                 <div class="Eyebrow">Step 5</div>
-                <h3>Stars reward clean edits</h3>
-                <p>Three stars means you solved the story at par without deleting unnecessary lines.</p>
+                <h3>There are no answer hints while editing</h3>
+                <p>Crossing out a sentence will not turn the interface green or red. The game does not tell you whether an edit is correct until you press <strong>Check Survival</strong>.</p>
             </article>
 
             <article class="TutorialStep">
                 <div class="Eyebrow">Step 6</div>
-                <h3>Worlds unlock through the map</h3>
-                <p>Finish level 10 of a world, watch its chapter animation, then the route opens into the next world.</p>
+                <h3>A failed check costs a life</h3>
+                <p>If your rewrite fails, the aftermath shows what your version caused and you lose one life. Use that outcome as information, repair the page, and try again.</p>
+            </article>
+
+            <article class="TutorialStep">
+                <div class="Eyebrow">Step 7</div>
+                <h3>Clean solutions earn more stars</h3>
+                <p>Any correct rewrite clears the level. Three stars means you solved it at or under par without erasing unnecessary events. Extra removals can reduce the star score.</p>
+            </article>
+
+            <article class="TutorialStep">
+                <div class="Eyebrow">Step 8</div>
+                <h3>Progress through the chapter map</h3>
+                <p>Stages unlock in order. Finish level 10 to complete the chapter, refill your lives, and open the route into the next world.</p>
             </article>
         </div>
 
         <div class="HomeActions">
             <button class="PrimaryButton" id="StartButton" type="button">Start Playing</button>
-            <button class="SecondaryButton" type="button" data-story-go="rules.html">Read Full Rules</button>
         </div>
     </section>
 </main>
