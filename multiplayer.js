@@ -4,8 +4,9 @@ let CurrentProfile = null;
 let LocalReady = false;
 let MultiplayerReadyPromise = null;
 let SocketClientPromise = null;
+let StartingRoom = false;
 
-const SOCKET_CLIENT_URL = "https://cdn.socket.io/4.8.3/socket.io.min.js";
+const SOCKET_CLIENT_URL = "https://story-rewrite-backend.onrender.com/socket.io/socket.io.js";
 
 window.addEventListener("DOMContentLoaded", () => {
     BindUi();
@@ -166,6 +167,7 @@ function BindSocket(Socket) {
     });
 
     Socket.on("game:started", Payload => {
+        if (StartingRoom) return;
         StoryAudio.PlaySound("ready");
         GoStage(Payload.stageId, Payload.code);
     });
@@ -264,6 +266,7 @@ function LeaveRoom() {
     if (MultiplayerSocket?.connected) MultiplayerSocket.emit("room:leave");
     MultiplayerState = null;
     LocalReady = false;
+    StartingRoom = false;
     document.getElementById("ActiveRoom").classList.add("Hidden");
     document.getElementById("RoomActions").classList.remove("Hidden");
     HideRoomStatus();
@@ -282,12 +285,35 @@ function ToggleReady() {
 }
 
 async function StartRoom() {
+    if (StartingRoom) return;
+
+    const Button = document.getElementById("StartButton");
+    StartingRoom = true;
+    Button.disabled = true;
+    Button.textContent = "Starting...";
     StoryAudio.PlaySound("ready");
+    ShowRoomStatus("Starting the story...", true);
 
     try {
+        await EnsureMultiplayerReady();
         const Result = await EmitWithAck("room:start", {});
-        if (!Result?.ok) ShowRoomStatus(Result?.error || "Could not start the game.", false);
+
+        if (!Result?.ok) {
+            throw new Error(Result?.error || "Could not start the game.");
+        }
+
+        const StageId = Result.stageId || MultiplayerState?.stageId;
+        const RoomCode = MultiplayerState?.code || "";
+
+        if (!StageId) {
+            throw new Error("The server started the room without a stage.");
+        }
+
+        GoStage(StageId, RoomCode);
     } catch (Error) {
+        StartingRoom = false;
+        Button.disabled = false;
+        Button.textContent = "Start Story";
         ShowRoomStatus(FriendlyConnectionError(Error), false);
     }
 }
