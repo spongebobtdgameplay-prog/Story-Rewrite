@@ -1,46 +1,33 @@
 # Story Rewrite audio
 
-Story Rewrite now has an original procedural Web Audio soundtrack built into `audio.js`. It runs automatically when a real audio file is not present, so the game already has different ambience for the menu, lobby, Fromville, Neon Exorcists, Blackthorn Manor, Spirit Grove, False City, and danger states.
+Story Rewrite uses its procedural Web Audio ambience for background atmosphere, but gameplay and UI sound effects now prefer real CC0 recordings from Kenney's Interface Sounds pack. The procedural effects remain only as a fallback if a real sound cannot play.
 
-The sound-effect engine also has synthesized fallbacks for clicking, crossing out, restoring, joining, messages, readying up, failure, life loss, and success.
+## Real sound-effect source
 
-## Optional real music files
+- Pack: Kenney — Interface Sounds
+- License: Creative Commons CC0 1.0 Universal
+- Original asset page: https://kenney.nl/assets/interface-sounds
+- Redistributable GitHub mirror used at runtime: https://github.com/Calinou/kenney-interface-sounds
+- Mirror license: `LICENSE.txt` in that repository
 
-The engine automatically prefers these files when they exist:
+The game currently maps these CC0 WAV files:
 
-- `music/menu/menu.mp3`
-- `music/lobby/lobby.mp3`
-- `music/fromville/fromville.mp3`
-- `music/neon-exorcists/neon-exorcists.mp3`
-- `music/blackthorn/blackthorn.mp3`
-- `music/spirit-grove/spirit-grove.mp3`
-- `music/false-city/false-city.mp3`
-- `music/danger/danger.mp3`
+- `click` → `click_001.wav`
+- `cross` → `scratch_003.wav`
+- `restore` → `maximize_007.wav`
+- `join` → `open_001.wav`
+- `message` → `select_007.wav`
+- `ready` → `confirmation_001.wav`
+- `fail` → `error_008.wav`
+- `life` → `error_001.wav`
+- `success` → `confirmation_002.wav`
+- `vote` → `tick_001.wav`
+- `revive` → `maximize_001.wav`
+- `reviveEarned` → `confirmation_003.wav`
+- `heartRefill` → `confirmation_004.wav`
 
-## Optional real sound files
+Kenney's CC0 license permits copying, modification, redistribution, and commercial use without attribution. Attribution is still kept here for source tracking.
 
-- `sounds/ui/click.wav`
-- `sounds/story/cross.wav`
-- `sounds/story/restore.wav`
-- `sounds/story/success.wav`
-- `sounds/multiplayer/join.wav`
-- `sounds/multiplayer/message.wav`
-- `sounds/multiplayer/ready.wav`
-- `sounds/danger/fail.wav`
-- `sounds/danger/life-lost.wav`
+## Procedural ambience
 
-## Vetted places to choose tracks
-
-- Pixabay music: https://pixabay.com/music/
-- Horror / dark ambience: https://pixabay.com/music/search/dark-ambient-horror/
-- Horror ambience search: https://pixabay.com/music/search/horror%20ambience/
-- Candidate: Horror Ambience by AtlasAudio: https://pixabay.com/music/horror-scene-horror-ambience-512255/
-- Pixabay sound effects: https://pixabay.com/sound-effects/
-
-Useful sound-effect searches include `ui click`, `paper scratch`, `pencil cross`, `notification`, `door slam`, `heartbeat`, `horror impact`, `message`, and `ready`.
-
-## Public repository warning
-
-Do not copy a third-party stock audio track into this public repository unless its license explicitly permits redistribution of the original audio file. Pixabay permits use of its content inside creative projects, but its license prohibits distributing content on a standalone basis. Because a public Git repository exposes the original MP3/WAV file directly, the repo currently uses the original procedural soundtrack instead of committing third-party stock tracks.
-
-If external tracks are added later, keep the source page and license information for every file.
+`audio.js` still generates the background ambience for menu, lobby, Fromville, Neon Exorcists, Blackthorn Manor, Spirit Grove, False City, and danger states. It also contains synthesized fallback effects so a temporary failure to load a real WAV does not break gameplay.
