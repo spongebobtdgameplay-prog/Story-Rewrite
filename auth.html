@@ -9,13 +9,14 @@
 <link rel="icon" type="image/png" sizes="16x16" href="favicon_io/favicon-16x16.png?v=1000001">
 <link rel="stylesheet" href="looks.css">
 <link rel="stylesheet" href="multiplayer.css">
+<link rel="stylesheet" href="shell-ui.css">
 </head>
 <body class="AccountPage">
 <main class="AccountShell">
     <section class="AccountCard">
         <div class="AccountBrand">Story Rewrite</div>
         <h1 id="AccountTitle">Create your account</h1>
-        <p class="AccountLead">Your progress, lives, stars, and multiplayer data are stored on the game server.</p>
+        <p class="AccountLead">Create an account or sign in to continue your story.</p>
 
         <div class="AccountTabs">
             <button class="AccountTab Active" id="RegisterTab" type="button">Create Account</button>
@@ -24,8 +25,20 @@
 
         <form id="AccountForm" class="AccountForm">
             <label>Username<input id="UsernameInput" autocomplete="username" maxlength="20" required></label>
-            <label>Password<input id="PasswordInput" type="password" autocomplete="new-password" maxlength="128" required></label>
-            <label id="ConfirmLabel">Confirm Password<input id="ConfirmInput" type="password" autocomplete="new-password" maxlength="128"></label>
+            <label>
+                Password
+                <span class="PasswordInputWrap">
+                    <input id="PasswordInput" type="password" autocomplete="new-password" maxlength="128" required>
+                    <button class="PasswordToggle" type="button" data-password-toggle="PasswordInput" aria-label="Show password"></button>
+                </span>
+            </label>
+            <label id="ConfirmLabel">
+                Confirm Password
+                <span class="PasswordInputWrap">
+                    <input id="ConfirmInput" type="password" autocomplete="new-password" maxlength="128">
+                    <button class="PasswordToggle" type="button" data-password-toggle="ConfirmInput" aria-label="Show password"></button>
+                </span>
+            </label>
             <button class="PrimaryButton AccountSubmit" id="AccountSubmit" type="submit">Create Account</button>
         </form>
 
@@ -40,6 +53,7 @@
 <script src="server-config.js"></script>
 <script src="network.js"></script>
 <script src="app.js"></script>
+<script src="shell-ui.js"></script>
 <script src="auth.js"></script>
 </body>
 </html>
