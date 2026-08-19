@@ -172,13 +172,12 @@ function DatabaseReady() {
 async function GetAccountByUsername(Username) {
     if (!Database) return null;
 
-    const Key = UsernameKey(Username);
     const Result = await Database.query(
         `SELECT username_key, username, password_hash, save_data, created_at
          FROM accounts
          WHERE username_key = $1
          LIMIT 1`,
-        [Key]
+        [UsernameKey(Username)]
     );
 
     if (Result.rowCount === 0) return null;
@@ -211,12 +210,7 @@ async function CreateAccount(Username, Password) {
         `INSERT INTO accounts (username_key, username, password_hash, save_data)
          VALUES ($1, $2, $3, $4::jsonb)
          RETURNING created_at`,
-        [
-            Account.usernameKey,
-            Account.username,
-            Account.passwordHash,
-            JSON.stringify(Account.save)
-        ]
+        [Account.usernameKey, Account.username, Account.passwordHash, JSON.stringify(Account.save)]
     );
 
     Account.createdAt = Result.rows[0].created_at.toISOString();
@@ -286,7 +280,6 @@ function UnlockStage(Save, StageId) {
 function ComputeStars(Stage, RemovedIndexes) {
     const Required = new Set(Stage.requiredRemoved);
     const ExtraRemoved = RemovedIndexes.filter(Index => !Required.has(Index)).length;
-
     if (ExtraRemoved === 0 && RemovedIndexes.length <= Stage.par) return 3;
     if (ExtraRemoved <= 1 && RemovedIndexes.length <= Stage.par + 1) return 2;
     return 1;
@@ -378,12 +371,28 @@ function IsAllowedOrigin(Origin) {
         .map(Value => Value.trim())
         .filter(Boolean);
 
-    return [
-        `http://localhost:${Port}`,
-        `http://127.0.0.1:${Port}`,
-        "https://spongebobtdgameplay-prog.github.io",
-        ...Configured
-    ].includes(Origin);
+    if (Configured.includes(Origin)) return true;
+
+    try {
+        const Parsed = new URL(Origin);
+        const Hostname = Parsed.hostname.toLowerCase();
+
+        if (Parsed.protocol === "https:" && Hostname === "spongebobtdgameplay-prog.github.io") return true;
+        if (Parsed.protocol === "https:" && Hostname === "story-rewrite-backend.onrender.com") return true;
+        if (Parsed.protocol === "http:" && (Hostname === "localhost" || Hostname === "127.0.0.1")) return true;
+    } catch {
+        return false;
+    }
+
+    return false;
+}
+
+function LogRejectedOrigin(Origin, RequestPath = "") {
+    console.warn("CORS rejected origin", {
+        origin: Origin || "<none>",
+        path: RequestPath,
+        configuredOrigins: String(process.env.ALLOWED_ORIGINS || "")
+    });
 }
 
 function SendJson(Response, Status, Payload, Origin = "") {
@@ -391,10 +400,11 @@ function SendJson(Response, Status, Payload, Origin = "") {
         "Content-Type": "application/json; charset=utf-8",
         "Cache-Control": "no-store",
         "Access-Control-Allow-Headers": "Content-Type, Authorization",
-        "Access-Control-Allow-Methods": "GET, POST, OPTIONS"
+        "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+        "Vary": "Origin"
     };
 
-    if (Origin) Headers["Access-Control-Allow-Origin"] = Origin;
+    if (Origin && IsAllowedOrigin(Origin)) Headers["Access-Control-Allow-Origin"] = Origin;
     Response.writeHead(Status, Headers);
     Response.end(JSON.stringify(Payload));
 }
@@ -421,7 +431,11 @@ function ReadJson(Request) {
 }
 
 async function HandleApi(Request, Response, RequestPath, Origin) {
-    if (!IsAllowedOrigin(Origin)) return SendJson(Response, 403, { error: "Origin not allowed." });
+    if (!IsAllowedOrigin(Origin)) {
+        LogRejectedOrigin(Origin, RequestPath);
+        return SendJson(Response, 403, { error: "Origin not allowed.", receivedOrigin: Origin || null });
+    }
+
     if (Request.method === "OPTIONS") return SendJson(Response, 204, {}, Origin);
 
     if (RequestPath === "/api/health" && Request.method === "GET") {
@@ -440,7 +454,7 @@ async function HandleApi(Request, Response, RequestPath, Origin) {
                 ok: true,
                 multiplayer: true,
                 database: true,
-                version: 3
+                version: 4
             }, Origin);
         } catch {
             return SendJson(Response, 503, {
@@ -598,21 +612,8 @@ async function HandleApi(Request, Response, RequestPath, Origin) {
 
     if (RequestPath === "/api/settings" && Request.method === "POST") {
         const Body = await ReadJson(Request).catch(() => ({}));
-
-        Account.save.settings.musicVolume = ClampNumber(
-            Body.musicVolume,
-            0,
-            1,
-            Account.save.settings.musicVolume
-        );
-
-        Account.save.settings.soundVolume = ClampNumber(
-            Body.soundVolume,
-            0,
-            1,
-            Account.save.settings.soundVolume
-        );
-
+        Account.save.settings.musicVolume = ClampNumber(Body.musicVolume, 0, 1, Account.save.settings.musicVolume);
+        Account.save.settings.soundVolume = ClampNumber(Body.soundVolume, 0, 1, Account.save.settings.soundVolume);
         await SaveAccount(Account);
         return SendJson(Response, 200, { settings: Account.save.settings }, Origin);
     }
@@ -654,14 +655,12 @@ const HttpServer = http.createServer(async (Request, Response) => {
         }
 
         const Extension = path.extname(FilePath).toLowerCase();
-
         Response.writeHead(200, {
             "Content-Type": MimeTypes[Extension] || "application/octet-stream",
             "Cache-Control": [".mp3", ".ogg", ".wav"].includes(Extension)
                 ? "public, max-age=3600"
                 : "no-store"
         });
-
         fs.createReadStream(FilePath).pipe(Response);
     });
 });
@@ -669,9 +668,9 @@ const HttpServer = http.createServer(async (Request, Response) => {
 const Io = new SocketServer(HttpServer, {
     cors: {
         origin(Origin, Callback) {
-            IsAllowedOrigin(Origin)
-                ? Callback(null, true)
-                : Callback(new Error("Origin not allowed"));
+            if (IsAllowedOrigin(Origin)) return Callback(null, true);
+            LogRejectedOrigin(Origin, "socket.io");
+            Callback(new Error("Origin not allowed"));
         },
         methods: ["GET", "POST"]
     }
@@ -714,7 +713,6 @@ function GetVoteState(Room) {
 
 function BuildRoomState(Room) {
     const VoteState = GetVoteState(Room);
-
     return {
         code: Room.code,
         hostUsername: Room.hostUsername,
@@ -722,10 +720,7 @@ function BuildRoomState(Room) {
         stageId: Room.stageId,
         lives: Room.lives,
         maxLives: Room.maxLives,
-        players: [...Room.players.values()].map(Player => ({
-            username: Player.username,
-            ready: Player.ready
-        })),
+        players: [...Room.players.values()].map(Player => ({ username: Player.username, ready: Player.ready })),
         messages: Room.messages.slice(-50),
         selectedIndexes: VoteState.selectedIndexes,
         votes: VoteState.votes,
@@ -768,7 +763,6 @@ function LeaveRoom(Socket, Explicit = false) {
 
     if (Room.hostSocketId === Socket.id) {
         Room.hostSocketId = null;
-
         if (Explicit) {
             ReassignHost(Room);
         } else {
@@ -845,31 +839,18 @@ Io.on("connection", Socket => {
 
         if (!Room) return Reply({ ok: false, error: "Game code not found." });
 
-        const ExistingConnected = [...Room.players.values()]
-            .some(Player => Player.username === Socket.data.username);
-
-        if (ExistingConnected) {
-            return Reply({ ok: false, error: "That account is already connected to the room." });
-        }
+        const ExistingConnected = [...Room.players.values()].some(Player => Player.username === Socket.data.username);
+        if (ExistingConnected) return Reply({ ok: false, error: "That account is already connected to the room." });
 
         const ReturningMember = Room.memberNames.has(Socket.data.username);
-        if (Room.status !== "lobby" && !ReturningMember) {
-            return Reply({ ok: false, error: "That game already started." });
-        }
-
-        if (!ReturningMember && Room.memberNames.size >= MaxPlayers) {
-            return Reply({ ok: false, error: "That game is full." });
-        }
+        if (Room.status !== "lobby" && !ReturningMember) return Reply({ ok: false, error: "That game already started." });
+        if (!ReturningMember && Room.memberNames.size >= MaxPlayers) return Reply({ ok: false, error: "That game is full." });
 
         LeaveRoom(Socket, true);
         clearTimeout(Room.cleanupTimer);
         Room.cleanupTimer = null;
         Room.memberNames.add(Socket.data.username);
-        Room.players.set(Socket.id, {
-            username: Socket.data.username,
-            ready: Room.status !== "lobby"
-        });
-
+        Room.players.set(Socket.id, { username: Socket.data.username, ready: Room.status !== "lobby" });
         Socket.join(Code);
         Socket.data.roomCode = Code;
         if (Room.hostUsername === Socket.data.username) Room.hostSocketId = Socket.id;
@@ -894,12 +875,7 @@ Io.on("connection", Socket => {
         const Text = String(Payload?.text || "").trim().slice(0, 300);
         if (!Text) return;
 
-        const Message = {
-            username: Socket.data.username,
-            text: Text,
-            sentAt: Date.now()
-        };
-
+        const Message = { username: Socket.data.username, text: Text, sentAt: Date.now() };
         Room.messages.push(Message);
         Room.messages = Room.messages.slice(-50);
         Io.to(Room.code).emit("room:chat", Message);
@@ -911,7 +887,6 @@ Io.on("connection", Socket => {
             if (!Room) return Reply({ ok: false, error: "Room missing." });
             if (Room.hostSocketId !== Socket.id) return Reply({ ok: false, error: "Only the host can start." });
             if (Room.status !== "lobby") return Reply({ ok: false, error: "Game already started." });
-
             if ([...Room.players.values()].some(Player => !Player.ready && Player.username !== Room.hostUsername)) {
                 return Reply({ ok: false, error: "Everyone else must be ready." });
             }
@@ -948,10 +923,8 @@ Io.on("connection", Socket => {
 
         if (!Room.votes.has(Index)) Room.votes.set(Index, new Set());
         const Votes = Room.votes.get(Index);
-
         if (Votes.has(Socket.data.username)) Votes.delete(Socket.data.username);
         else Votes.add(Socket.data.username);
-
         if (Votes.size === 0) Room.votes.delete(Index);
         EmitRoom(Room);
     });
@@ -991,7 +964,6 @@ Io.on("connection", Socket => {
             }
 
             await SaveAccounts(Accounts);
-
             Room.lastOutcome = {
                 success: true,
                 stars: Result.stars,
@@ -1013,7 +985,6 @@ Io.on("connection", Socket => {
     Socket.on("game:retry", () => {
         const Room = GetRoomForSocket(Socket);
         if (!Room || Room.hostSocketId !== Socket.id || Room.lives <= 0) return;
-
         Room.votes.clear();
         Room.lastOutcome = null;
         Room.status = "playing";
@@ -1076,6 +1047,7 @@ Io.on("connection", Socket => {
 HttpServer.listen(Port, () => {
     console.log(`Story Rewrite server running at http://localhost:${Port}`);
     console.log(Database ? "Neon Postgres configured." : "DATABASE_URL is not configured.");
+    console.log("Allowed built-in origins: https://spongebobtdgameplay-prog.github.io, https://story-rewrite-backend.onrender.com");
 
     if (!process.env.SESSION_SECRET) {
         console.log("SESSION_SECRET is not set. Development sessions will reset when the server restarts.");
