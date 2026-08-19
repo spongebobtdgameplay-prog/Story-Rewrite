@@ -4,12 +4,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     const SoundSlider = document.getElementById("SoundVolumeSlider");
     const MusicValue = document.getElementById("MusicVolumeValue");
     const SoundValue = document.getElementById("SoundVolumeValue");
+    let Profile = null;
 
     try {
         const ProfileResult = await RequireAccount();
         const Data = await LoadStoryData();
         const Save = await LoadSave(Data);
-        const Profile = ProfileResult.profile;
+        Profile = ProfileResult.profile;
 
         document.getElementById("AccountUsername").textContent = Profile.username;
         document.getElementById("AccountLives").textContent = `${Save.lives}/${Save.maxLives}`;
@@ -65,9 +66,32 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         try {
             Status.textContent = "Resetting progress...";
+            Status.classList.remove("Bad", "Good");
             await ResetServerSave();
             window.location.reload();
         } catch (Error) {
+            Status.textContent = Error.message;
+            Status.classList.add("Bad");
+        }
+    });
+
+    document.getElementById("DeleteAccountButton").addEventListener("click", async () => {
+        const Username = Profile?.username || "this account";
+        if (!confirm(`Permanently delete ${Username}? This cannot be undone.`)) return;
+        if (!confirm("Delete the account and all of its progress permanently?")) return;
+
+        const Button = document.getElementById("DeleteAccountButton");
+        Button.disabled = true;
+        Button.textContent = "Deleting...";
+        Status.textContent = "Deleting account...";
+        Status.classList.remove("Bad", "Good");
+
+        try {
+            await DeleteAccount();
+            window.location.replace(BuildStoryUrl("auth.html"));
+        } catch (Error) {
+            Button.disabled = false;
+            Button.textContent = "Delete Account";
             Status.textContent = Error.message;
             Status.classList.add("Bad");
         }
