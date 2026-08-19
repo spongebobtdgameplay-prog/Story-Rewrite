@@ -1,0 +1,139 @@
+.TutorialShell {
+    width: min(1120px, 100%);
+    margin: 0 auto;
+}
+
+.TutorialIntro {
+    max-width: 780px;
+}
+
+.TutorialCategoryTabs {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin: 24px 0 18px;
+    padding: 7px;
+    border: 1px solid rgba(217, 166, 94, .22);
+    border-radius: 16px;
+    background: rgba(24, 13, 8, .68);
+}
+
+.TutorialCategoryButton {
+    min-height: 54px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    padding: 10px 14px;
+    cursor: pointer;
+    color: #c8b393;
+    border: 1px solid transparent;
+    border-radius: 12px;
+    background: transparent;
+    font: 900 12px/1 system-ui, sans-serif;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    transition: background .16s ease, border-color .16s ease, color .16s ease, transform .16s ease;
+}
+
+.TutorialCategoryButton:hover {
+    transform: translateY(-1px);
+    color: #f5dfbd;
+    background: rgba(255,255,255,.035);
+}
+
+.TutorialCategoryButton.Active {
+    color: #29170e;
+    border-color: #e7bd7b;
+    background: linear-gradient(180deg, #efc982, #c98b48);
+    box-shadow: 0 8px 22px rgba(184, 111, 43, .2);
+}
+
+.TutorialCategoryButton svg {
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.9;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.TutorialCategoryPanel[hidden] {
+    display: none;
+}
+
+.TutorialCategoryHeader {
+    margin-bottom: 14px;
+    padding: 18px 20px;
+    border: 1px solid rgba(214, 164, 95, .17);
+    border-radius: 16px;
+    background: linear-gradient(135deg, rgba(69, 42, 25, .74), rgba(31, 18, 12, .9));
+}
+
+.TutorialCategoryHeader h2 {
+    margin: 3px 0 6px;
+    color: #ffe9c3;
+    font-size: clamp(25px, 4vw, 36px);
+}
+
+.TutorialCategoryHeader p {
+    margin: 0;
+    color: #bda98c;
+    line-height: 1.55;
+}
+
+.TutorialSteps {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.TutorialStep {
+    min-width: 0;
+}
+
+.TutorialStep.Wide {
+    grid-column: 1 / -1;
+}
+
+.TutorialDemo {
+    margin-top: 12px;
+}
+
+.TutorialCallout {
+    margin-top: 12px;
+    padding: 12px 14px;
+    color: #d6be98;
+    border: 1px solid rgba(214, 164, 95, .16);
+    border-radius: 11px;
+    background: rgba(15, 9, 6, .32);
+    font: 700 12px/1.5 system-ui, sans-serif;
+}
+
+.TutorialBotTag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    color: #2b170d;
+    border-radius: 999px;
+    background: #e3b66f;
+    font: 900 10px/1 system-ui, sans-serif;
+}
+
+@media (max-width: 760px) {
+    .TutorialSteps {
+        grid-template-columns: 1fr;
+    }
+
+    .TutorialStep.Wide {
+        grid-column: auto;
+    }
+}
+
+@media (max-width: 540px) {
+    .TutorialCategoryTabs {
+        grid-template-columns: 1fr;
+    }
+}
