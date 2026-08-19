@@ -7,9 +7,9 @@
 <link rel="icon" type="image/x-icon" href="favicon_io/favicon.ico?v=1000001">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon_io/favicon-32x32.png?v=1000001">
 <link rel="icon" type="image/png" sizes="16x16" href="favicon_io/favicon-16x16.png?v=1000001">
-<link rel="stylesheet" href="looks.css?v=20260819-11">
-<link rel="stylesheet" href="multiplayer.css?v=20260819-11">
-<link rel="stylesheet" href="shell-ui.css?v=20260819-11">
+<link rel="stylesheet" href="looks.css?v=20260819-12">
+<link rel="stylesheet" href="multiplayer.css?v=20260819-12">
+<link rel="stylesheet" href="shell-ui.css?v=20260819-12">
 </head>
 <body class="MultiplayerPage">
 <div class="MultiplayerShell">
@@ -57,7 +57,7 @@
             <div class="RoomFooterActions">
                 <button class="SecondaryButton" id="ReadyButton" type="button">Ready</button>
                 <button class="PrimaryButton Hidden" id="StartButton" type="button">Start Story</button>
-                <button class="DangerButton" id="LeaveButton" type="button">Leave Room</button>
+                <button class="DangerButton" id="LeaveButton" type="button" onclick="if (!window.confirm('Are you sure you want to leave this room?')) { event.stopImmediatePropagation(); return false; }">Leave Room</button>
             </div>
             <div class="StatusText Hidden" id="RoomStatus" aria-live="polite"></div>
         </div>
@@ -79,11 +79,11 @@
         </div>
     </section>
 </div>
-<script src="server-config.js?v=20260819-11"></script>
-<script src="network.js?v=20260819-11"></script>
-<script src="app.js?v=20260819-11"></script>
-<script src="audio.js?v=20260819-11"></script>
-<script src="shell-ui.js?v=20260819-11"></script>
-<script src="multiplayer.js?v=20260819-11"></script>
+<script src="server-config.js?v=20260819-12"></script>
+<script src="network.js?v=20260819-12"></script>
+<script src="app.js?v=20260819-12"></script>
+<script src="audio.js?v=20260819-12"></script>
+<script src="shell-ui.js?v=20260819-12"></script>
+<script src="multiplayer.js?v=20260819-12"></script>
 </body>
 </html>
