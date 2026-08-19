@@ -1,20 +1,12 @@
-# Story Rewrite audio sources
+# Story Rewrite audio
 
-The client audio engine looks for files under `music/` and `sounds/` and falls back to Web Audio tones until the binary files are uploaded.
+Story Rewrite now has an original procedural Web Audio soundtrack built into `audio.js`. It runs automatically when a real audio file is not present, so the game already has different ambience for the menu, lobby, Fromville, Neon Exorcists, Blackthorn Manor, Spirit Grove, False City, and danger states.
 
-## Music
+The sound-effect engine also has synthesized fallbacks for clicking, crossing out, restoring, joining, messages, readying up, failure, life loss, and success.
 
-- Menu / lobby / general suspense: Pixabay royalty-free music library: https://pixabay.com/music/
-- Fromville / danger ambience candidate: Horror Ambience by AtlasAudio: https://pixabay.com/music/horror-scene-horror-ambience-512255/
-- Dark ambience search for Blackthorn and False City: https://pixabay.com/music/search/dark-ambient-horror/
-- Suspense ambience search for Neon Exorcists and Spirit Grove: https://pixabay.com/music/search/suspense%20ambience/
+## Optional real music files
 
-## Sound effects
-
-- Pixabay royalty-free sound effects library: https://pixabay.com/sound-effects/
-- Search terms to use: `ui click`, `paper scratch`, `pencil cross`, `notification`, `door slam`, `heartbeat`, `horror impact`, `message`, `ready`.
-
-## Expected filenames
+The engine automatically prefers these files when they exist:
 
 - `music/menu/menu.mp3`
 - `music/lobby/lobby.mp3`
@@ -24,6 +16,9 @@ The client audio engine looks for files under `music/` and `sounds/` and falls b
 - `music/spirit-grove/spirit-grove.mp3`
 - `music/false-city/false-city.mp3`
 - `music/danger/danger.mp3`
+
+## Optional real sound files
+
 - `sounds/ui/click.wav`
 - `sounds/story/cross.wav`
 - `sounds/story/restore.wav`
@@ -34,4 +29,18 @@ The client audio engine looks for files under `music/` and `sounds/` and falls b
 - `sounds/danger/fail.wav`
 - `sounds/danger/life-lost.wav`
 
-Pixabay content is subject to the Pixabay Content License. Keep a record of the source page for any downloaded track.
+## Vetted places to choose tracks
+
+- Pixabay music: https://pixabay.com/music/
+- Horror / dark ambience: https://pixabay.com/music/search/dark-ambient-horror/
+- Horror ambience search: https://pixabay.com/music/search/horror%20ambience/
+- Candidate: Horror Ambience by AtlasAudio: https://pixabay.com/music/horror-scene-horror-ambience-512255/
+- Pixabay sound effects: https://pixabay.com/sound-effects/
+
+Useful sound-effect searches include `ui click`, `paper scratch`, `pencil cross`, `notification`, `door slam`, `heartbeat`, `horror impact`, `message`, and `ready`.
+
+## Public repository warning
+
+Do not copy a third-party stock audio track into this public repository unless its license explicitly permits redistribution of the original audio file. Pixabay permits use of its content inside creative projects, but its license prohibits distributing content on a standalone basis. Because a public Git repository exposes the original MP3/WAV file directly, the repo currently uses the original procedural soundtrack instead of committing third-party stock tracks.
+
+If external tracks are added later, keep the source page and license information for every file.
