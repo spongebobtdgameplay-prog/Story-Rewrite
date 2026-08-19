@@ -1,8 +1,41 @@
-const Favicon = document.createElement("link");
-Favicon.rel = "icon";
-Favicon.type = "image/png";
-Favicon.href = "Icon.png?v=1";
-document.head.appendChild(Favicon);
+const HeadLinks = [
+    {
+        rel: "icon",
+        type: "image/x-icon",
+        href: "favicon_io/favicon.ico"
+    },
+    {
+        rel: "icon",
+        type: "image/png",
+        sizes: "32x32",
+        href: "favicon_io/favicon-32x32.png"
+    },
+    {
+        rel: "icon",
+        type: "image/png",
+        sizes: "16x16",
+        href: "favicon_io/favicon-16x16.png"
+    },
+    {
+        rel: "apple-touch-icon",
+        sizes: "180x180",
+        href: "favicon_io/apple-touch-icon.png"
+    },
+    {
+        rel: "manifest",
+        href: "favicon_io/site.webmanifest"
+    }
+];
+
+for (const LinkData of HeadLinks) {
+    const Link = document.createElement("link");
+
+    for (const [Property, Value] of Object.entries(LinkData)) {
+        Link.setAttribute(Property, Value);
+    }
+
+    document.head.appendChild(Link);
+}
 
 const STORY_DATA_URL = "stages.json";
 
@@ -17,6 +50,7 @@ async function LoadStoryData() {
 function DefaultSave(Data) {
     const FirstWorld = Data.worlds[0];
     const FirstStage = FirstWorld.entryStage;
+
     return {
         version: 3,
         unlockedWorlds: [FirstWorld.id],
@@ -29,22 +63,42 @@ function DefaultSave(Data) {
 
 function LoadSave(Data) {
     let Save = null;
+
     try {
         const Raw = localStorage.getItem(Data.saveKey);
-        if (Raw) Save = JSON.parse(Raw);
+
+        if (Raw) {
+            Save = JSON.parse(Raw);
+        }
     } catch {}
 
     if (!Save || typeof Save !== "object") {
         Save = DefaultSave(Data);
     }
 
-    if (!Array.isArray(Save.unlockedWorlds)) Save.unlockedWorlds = [Data.worlds[0].id];
-    if (!Array.isArray(Save.unlockedStages)) Save.unlockedStages = [Data.worlds[0].entryStage];
-    if (!Save.stars || typeof Save.stars !== "object") Save.stars = {};
-    if (!Data.stages[Save.currentStage]) Save.currentStage = Data.worlds[0].entryStage;
+    if (!Array.isArray(Save.unlockedWorlds)) {
+        Save.unlockedWorlds = [Data.worlds[0].id];
+    }
 
-    if (!Save.unlockedWorlds.includes(Data.worlds[0].id)) Save.unlockedWorlds.push(Data.worlds[0].id);
-    if (!Save.unlockedStages.includes(Data.worlds[0].entryStage)) Save.unlockedStages.push(Data.worlds[0].entryStage);
+    if (!Array.isArray(Save.unlockedStages)) {
+        Save.unlockedStages = [Data.worlds[0].entryStage];
+    }
+
+    if (!Save.stars || typeof Save.stars !== "object") {
+        Save.stars = {};
+    }
+
+    if (!Data.stages[Save.currentStage]) {
+        Save.currentStage = Data.worlds[0].entryStage;
+    }
+
+    if (!Save.unlockedWorlds.includes(Data.worlds[0].id)) {
+        Save.unlockedWorlds.push(Data.worlds[0].id);
+    }
+
+    if (!Save.unlockedStages.includes(Data.worlds[0].entryStage)) {
+        Save.unlockedStages.push(Data.worlds[0].entryStage);
+    }
 
     return Save;
 }
@@ -66,13 +120,16 @@ function IsStageUnlocked(Save, StageId) {
 }
 
 function UnlockStage(Data, Save, StageId) {
-    if (!StageId || !Data.stages[StageId]) return;
+    if (!StageId || !Data.stages[StageId]) {
+        return;
+    }
 
     if (!Save.unlockedStages.includes(StageId)) {
         Save.unlockedStages.push(StageId);
     }
 
     const WorldId = Data.stages[StageId].worldId;
+
     if (!Save.unlockedWorlds.includes(WorldId)) {
         Save.unlockedWorlds.push(WorldId);
     }
@@ -80,9 +137,15 @@ function UnlockStage(Data, Save, StageId) {
 
 function CompleteStage(Data, Save, StageId, Stars) {
     const Stage = Data.stages[StageId];
-    if (!Stage) return;
 
-    Save.stars[StageId] = Math.max(Number(Save.stars[StageId] || 0), Stars);
+    if (!Stage) {
+        return;
+    }
+
+    Save.stars[StageId] = Math.max(
+        Number(Save.stars[StageId] || 0),
+        Stars
+    );
 
     if (Stage.nextStage) {
         UnlockStage(Data, Save, Stage.nextStage);
@@ -95,11 +158,16 @@ function CompleteStage(Data, Save, StageId, Stars) {
 }
 
 function TotalStars(Save) {
-    return Object.values(Save.stars).reduce((Total, Stars) => Total + Number(Stars || 0), 0);
+    return Object.values(Save.stars).reduce(
+        (Total, Stars) => Total + Number(Stars || 0),
+        0
+    );
 }
 
 function ClearedStages(Save) {
-    return Object.values(Save.stars).filter(Stars => Number(Stars) > 0).length;
+    return Object.values(Save.stars).filter(
+        Stars => Number(Stars) > 0
+    ).length;
 }
 
 function Roman(NumberValue) {
