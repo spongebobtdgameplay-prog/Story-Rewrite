@@ -7,6 +7,9 @@ window.addEventListener("DOMContentLoaded", async () => {
     try {
         const ProfileResult = await RequireAccount();
         CurrentProfile = ProfileResult.profile;
+        const Save = await FetchServerSave();
+        StoryAudio.Configure(Save.settings);
+        StoryAudio.PlayMusic("lobby");
         MultiplayerSocket = ConnectStorySocket();
         BindSocket();
         BindUi();
@@ -32,16 +35,23 @@ function BindUi() {
 function BindSocket() {
     MultiplayerSocket.on("connect_error", Error => ShowRoomStatus(Error.message === "AUTH_REQUIRED" ? "Your sign-in expired. Sign in again." : Error.message, false));
     MultiplayerSocket.on("room:state", State => {
+        const PreviousCount = MultiplayerState?.players?.length || 0;
         MultiplayerState = State;
+        if (State.players.length > PreviousCount && PreviousCount > 0) StoryAudio.PlaySound("join");
         RenderRoom();
     });
-    MultiplayerSocket.on("room:chat", Message => AppendChat(Message));
+    MultiplayerSocket.on("room:chat", Message => {
+        StoryAudio.PlaySound("message");
+        AppendChat(Message);
+    });
     MultiplayerSocket.on("game:started", Payload => {
+        StoryAudio.PlaySound("ready");
         window.location.href = `dialog.html?stage=${encodeURIComponent(Payload.stageId)}&room=${encodeURIComponent(Payload.code)}`;
     });
 }
 
 function CreateRoom() {
+    StoryAudio.PlaySound("click");
     MultiplayerSocket.emit("room:create", {}, Result => {
         if (!Result?.ok) {
             ShowRoomStatus(Result?.error || "Could not create the game.", false);
@@ -65,6 +75,7 @@ function JoinRoom() {
             ShowRoomStatus(Result?.error || "Could not join the game.", false);
             return;
         }
+        StoryAudio.PlaySound("join");
         MultiplayerState = Result.state;
         LocalReady = false;
         RenderRoom();
@@ -72,6 +83,7 @@ function JoinRoom() {
 }
 
 function LeaveRoom() {
+    StoryAudio.PlaySound("click");
     MultiplayerSocket.emit("room:leave");
     MultiplayerState = null;
     LocalReady = false;
@@ -81,11 +93,13 @@ function LeaveRoom() {
 
 function ToggleReady() {
     LocalReady = !LocalReady;
+    StoryAudio.PlaySound("ready");
     MultiplayerSocket.emit("room:ready", { ready: LocalReady });
     document.getElementById("ReadyButton").textContent = LocalReady ? "Not Ready" : "Ready";
 }
 
 function StartRoom() {
+    StoryAudio.PlaySound("ready");
     MultiplayerSocket.emit("room:start", {}, Result => {
         if (!Result?.ok) ShowRoomStatus(Result?.error || "Could not start the game.", false);
     });
@@ -93,6 +107,7 @@ function StartRoom() {
 
 async function CopyCode() {
     if (!MultiplayerState?.code) return;
+    StoryAudio.PlaySound("click");
     try {
         await navigator.clipboard.writeText(MultiplayerState.code);
         ShowRoomStatus("Game code copied.", true);
