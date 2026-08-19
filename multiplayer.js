@@ -7,7 +7,7 @@ let SocketClientPromise = null;
 let StartingRoom = false;
 
 const SOCKET_CLIENT_URL = "https://story-rewrite-backend.onrender.com/socket.io/socket.io.js";
-const REQUIRED_MULTIPLAYER_SERVER_VERSION = 5;
+const REQUIRED_MULTIPLAYER_SERVER_VERSION = 6;
 
 window.addEventListener("DOMContentLoaded", () => {
     BindUi();
@@ -34,11 +34,11 @@ async function EnsureBackendVersion() {
     const Version = Number(Health?.version || 0);
 
     if (!Health?.ok || !Health?.multiplayer) {
-        throw new Error("The multiplayer backend is not ready.");
+        throw new Error("The multiplayer server is not ready yet.");
     }
 
     if (Version < REQUIRED_MULTIPLAYER_SERVER_VERSION) {
-        throw new Error(`The multiplayer backend is still updating (server v${Version || "?"}; waiting for v${REQUIRED_MULTIPLAYER_SERVER_VERSION}).`);
+        throw new Error("The multiplayer server is updating. Try again in a moment.");
     }
 
     return Health;
@@ -233,13 +233,24 @@ async function CreateRoom() {
 
     try {
         await EnsureMultiplayerReady();
-        const Result = await EmitWithAck("room:create", {});
 
-        if (!Result?.ok) {
-            throw new Error(ResultError(Result, "Could not create the game."));
+        const CreateResult = await ApiRequest("/api/room/create", {
+            method: "POST"
+        });
+
+        if (!CreateResult?.ok || !CreateResult.code) {
+            throw new Error(CreateResult?.error || "Could not create the game.");
         }
 
-        MultiplayerState = Result.state;
+        const JoinResult = await EmitWithAck("room:join", {
+            code: CreateResult.code
+        });
+
+        if (!JoinResult?.ok) {
+            throw new Error(ResultError(JoinResult, "The room was created but could not be opened."));
+        }
+
+        MultiplayerState = JoinResult.state;
         LocalReady = false;
         HideLobbyStatus();
         RenderRoom();
