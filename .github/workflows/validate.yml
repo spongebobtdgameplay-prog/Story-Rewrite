@@ -14,7 +14,9 @@ jobs:
         with:
           node-version: 22
       - run: npm install --package-lock=false
-      - run: node --check server.js
+      - run: node --check server-v8.js
+      - run: node --check server-v9.js
+      - run: node --check server-v10.js
       - run: node --check network.js
       - run: node --check app.js
       - run: node --check audio.js
@@ -22,4 +24,11 @@ jobs:
       - run: node --check main.js
       - run: node --check levels.js
       - run: node --check multiplayer.js
+      - run: node --check multiplayer-connection.js
+      - run: node --check moderation-version.js
+      - run: node --check host-controls.js
+      - run: node --check ai-chat.js
       - run: node --check dialog.js
+      - run: node --check dialog-connection.js
+      - run: node --check mobile-controls.js
+      - run: node --check tutorial.js
