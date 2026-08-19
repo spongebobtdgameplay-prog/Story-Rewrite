@@ -9,6 +9,7 @@
 <link rel="icon" type="image/png" sizes="16x16" href="favicon_io/favicon-16x16.png?v=1000001">
 <link rel="stylesheet" href="looks.css">
 <link rel="stylesheet" href="multiplayer.css">
+<link rel="stylesheet" href="shell-ui.css">
 </head>
 <body>
 <div id="App">
@@ -22,13 +23,13 @@
         </div>
     </div>
     <nav class="TopActions">
-        <span class="AccountBadge" id="AccountBadge">Connecting...</span>
-        <a class="UiButton" href="main.html">Home</a>
-        <a class="UiButton" href="levels.html">Worlds</a>
-        <a class="UiButton" href="multiplayer.html">Multiplayer</a>
-        <a class="UiButton" href="tutorial.html">Tutorial</a>
-        <a class="UiButton" href="rules.html">Rules</a>
-        <button class="UiButton" id="LogoutButton" type="button">Sign Out</button>
+        <button class="UiButton" type="button" data-story-go="levels.html">Worlds</button>
+        <button class="UiButton" type="button" data-story-go="multiplayer.html">Multiplayer</button>
+        <button class="UiButton" type="button" data-story-go="tutorial.html">Tutorial</button>
+        <button class="UiButton" type="button" data-story-go="rules.html">Rules</button>
+        <button class="UiButton AccountNavButton" id="AccountButton" type="button" data-story-go="account.html" data-account-icon>
+            <span id="AccountButtonLabel">Account</span>
+        </button>
     </nav>
 </header>
 
@@ -39,10 +40,10 @@
             <h1 class="HomeTitle">Strike a sentence.<br><span>Change the ending.</span></h1>
             <p class="HomeText">Every level is a dangerous story. Cross out the events that create the wrong future, protect the lines the survivors still need, and survive with the lives you have left.</p>
             <div class="HomeActions">
-                <button class="PrimaryButton" id="ContinueButton">Continue Story</button>
-                <a class="PrimaryButton" href="multiplayer.html">Play Multiplayer</a>
-                <a class="SecondaryButton" href="levels.html">World Select</a>
-                <a class="SecondaryButton" href="tutorial.html">How to Play</a>
+                <button class="PrimaryButton" id="ContinueButton" type="button">Continue Story</button>
+                <button class="PrimaryButton" type="button" data-story-go="multiplayer.html">Play Multiplayer</button>
+                <button class="SecondaryButton" type="button" data-story-go="levels.html">World Select</button>
+                <button class="SecondaryButton" type="button" data-story-go="tutorial.html">How to Play</button>
             </div>
             <div id="LoadError" class="StatusText Bad Hidden"></div>
         </div>
@@ -51,7 +52,6 @@
             <div class="StatCard"><div class="StatNumber" id="LevelCount">50</div><div class="StatLabel">survival puzzles</div></div>
             <div class="StatCard"><div class="StatNumber" id="StarCount">0</div><div class="StatLabel">stars recovered</div></div>
             <div class="StatCard"><div class="StatNumber" id="LivesCount">3</div><div class="StatLabel">lives remaining</div></div>
-            <button class="DangerButton" id="ResetButton">Reset Server Save</button>
         </div>
     </section>
 </main>
@@ -60,6 +60,7 @@
 <script src="network.js"></script>
 <script src="app.js"></script>
 <script src="audio.js"></script>
+<script src="shell-ui.js"></script>
 <script src="main.js"></script>
 </body>
 </html>
