@@ -40,20 +40,11 @@
     <section class="ActiveRoomGrid Hidden" id="ActiveRoom">
         <div class="RoomPanel">
             <div class="RoomCodeDisplay">
-                <div>
-                    <div class="Kicker">Game code</div>
-                    <div class="RoomCodeValue" id="RoomCodeValue">------</div>
-                </div>
+                <div><div class="Kicker">Game code</div><div class="RoomCodeValue" id="RoomCodeValue">------</div></div>
                 <button class="SecondaryButton" id="CopyCodeButton" type="button">Copy</button>
             </div>
-
-            <div class="LivesBar">
-                <div class="LivesLabel">Team lives</div>
-                <div class="LivesHearts" id="LobbyLives"></div>
-            </div>
-
+            <div class="LivesBar"><div class="LivesLabel">Team lives</div><div class="LivesHearts" id="LobbyLives"></div></div>
             <div class="PlayerList" id="PlayerList"></div>
-
             <div class="RoomFooterActions">
                 <button class="SecondaryButton" id="ReadyButton" type="button">Ready</button>
                 <button class="PrimaryButton Hidden" id="StartButton" type="button">Start Story</button>
@@ -74,6 +65,8 @@
 </div>
 <script src="server-config.js"></script>
 <script src="network.js"></script>
+<script src="app.js"></script>
+<script src="audio.js"></script>
 <script src="https://cdn.socket.io/4.8.3/socket.io.min.js" integrity="sha384-kzavj5fiMwLKzzD1f8S7TeoVIEi7uKHvbTA3ueZkrzYq75pNQUiUi6Dy98Q3fxb0" crossorigin="anonymous"></script>
 <script src="multiplayer.js"></script>
 </body>
