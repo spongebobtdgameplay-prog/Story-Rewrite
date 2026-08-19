@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Story Rewrite</title>
 <link rel="stylesheet" href="looks.css">
+<link rel="stylesheet" href="multiplayer.css">
 </head>
 <body>
 <div id="App">
@@ -18,10 +19,13 @@
         </div>
     </div>
     <nav class="TopActions">
+        <span class="AccountBadge" id="AccountBadge">Connecting...</span>
         <a class="UiButton" href="main.html">Home</a>
         <a class="UiButton" href="levels.html">Worlds</a>
+        <a class="UiButton" href="multiplayer.html">Multiplayer</a>
         <a class="UiButton" href="tutorial.html">Tutorial</a>
         <a class="UiButton" href="rules.html">Rules</a>
+        <button class="UiButton" id="LogoutButton" type="button">Sign Out</button>
     </nav>
 </header>
 
@@ -30,9 +34,10 @@
         <div class="HomeCopy">
             <div class="Kicker">A living picture-book anthology</div>
             <h1 class="HomeTitle">Strike a sentence.<br><span>Change the ending.</span></h1>
-            <p class="HomeText">Every level is a page from a dangerous story. Cross out the events that cause the wrong future, keep the lines the successful ending still needs, and then check whether everybody who must survive actually survives.</p>
+            <p class="HomeText">Every level is a dangerous story. Cross out the events that create the wrong future, protect the lines the survivors still need, and survive with the lives you have left.</p>
             <div class="HomeActions">
                 <button class="PrimaryButton" id="ContinueButton">Continue Story</button>
+                <a class="PrimaryButton" href="multiplayer.html">Play Multiplayer</a>
                 <a class="SecondaryButton" href="levels.html">World Select</a>
                 <a class="SecondaryButton" href="tutorial.html">How to Play</a>
             </div>
@@ -42,12 +47,16 @@
             <div class="StatCard"><div class="StatNumber" id="WorldCount">5</div><div class="StatLabel">different story worlds</div></div>
             <div class="StatCard"><div class="StatNumber" id="LevelCount">50</div><div class="StatLabel">survival puzzles</div></div>
             <div class="StatCard"><div class="StatNumber" id="StarCount">0</div><div class="StatLabel">stars recovered</div></div>
-            <button class="DangerButton" id="ResetButton">Reset Save</button>
+            <div class="StatCard"><div class="StatNumber" id="LivesCount">3</div><div class="StatLabel">lives remaining</div></div>
+            <button class="DangerButton" id="ResetButton">Reset Server Save</button>
         </div>
     </section>
 </main>
 </div>
+<script src="server-config.js"></script>
+<script src="network.js"></script>
 <script src="app.js"></script>
+<script src="audio.js"></script>
 <script src="main.js"></script>
 </body>
 </html>
