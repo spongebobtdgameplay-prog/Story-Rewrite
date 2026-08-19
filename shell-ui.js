@@ -22,6 +22,15 @@ const STORY_EYE_CLOSED_ICON = `
     <path d="M9.7 6.8c.7-.2 1.5-.3 2.3-.3 5.8 0 9.5 5.5 9.5 5.5s-.8 1.2-2.2 2.5" />
 </svg>`;
 
+const STORY_WARNING_ICON = `
+<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+    <path d="M12 3.5 21 19H3L12 3.5Z" />
+    <path d="M12 8.5v5.2" />
+    <path d="M12 17.1h.01" />
+</svg>`;
+
+let StoryConfirmCloser = null;
+
 function StoryNavigate(Page) {
     if (typeof Go === "function") {
         Go(Page);
@@ -56,6 +65,132 @@ function StoryGoBack(FallbackPage = "main.html") {
     StoryNavigate(FallbackPage);
 }
 
+function StoryConfirm(Options = {}) {
+    if (StoryConfirmCloser) StoryConfirmCloser(false);
+
+    const Title = String(Options.title || "Are you sure?");
+    const Message = String(Options.message || "This action may change your game.");
+    const ConfirmText = String(Options.confirmText || "Continue");
+    const CancelText = String(Options.cancelText || "Cancel");
+    const Danger = Boolean(Options.danger);
+    const PreviousFocus = document.activeElement;
+
+    return new Promise(Resolve => {
+        const Overlay = document.createElement("div");
+        Overlay.className = "StoryWarningOverlay";
+        Overlay.setAttribute("role", "presentation");
+
+        const Dialog = document.createElement("div");
+        Dialog.className = `StoryWarningDialog${Danger ? " IsDanger" : ""}`;
+        Dialog.setAttribute("role", "alertdialog");
+        Dialog.setAttribute("aria-modal", "true");
+        Dialog.setAttribute("aria-labelledby", "StoryWarningTitle");
+        Dialog.setAttribute("aria-describedby", "StoryWarningMessage");
+
+        const Icon = document.createElement("div");
+        Icon.className = "StoryWarningIcon";
+        Icon.innerHTML = STORY_WARNING_ICON;
+
+        const Copy = document.createElement("div");
+        Copy.className = "StoryWarningCopy";
+
+        const Kicker = document.createElement("div");
+        Kicker.className = "StoryWarningKicker";
+        Kicker.textContent = Danger ? "Permanent action" : "Confirmation";
+
+        const Heading = document.createElement("h2");
+        Heading.id = "StoryWarningTitle";
+        Heading.textContent = Title;
+
+        const Description = document.createElement("p");
+        Description.id = "StoryWarningMessage";
+        Description.textContent = Message;
+
+        const Actions = document.createElement("div");
+        Actions.className = "StoryWarningActions";
+
+        const CancelButton = document.createElement("button");
+        CancelButton.className = "StoryWarningCancel";
+        CancelButton.type = "button";
+        CancelButton.textContent = CancelText;
+
+        const ConfirmButton = document.createElement("button");
+        ConfirmButton.className = Danger ? "StoryWarningConfirm Danger" : "StoryWarningConfirm";
+        ConfirmButton.type = "button";
+        ConfirmButton.textContent = ConfirmText;
+
+        Copy.append(Kicker, Heading, Description);
+        Actions.append(CancelButton, ConfirmButton);
+        Dialog.append(Icon, Copy, Actions);
+        Overlay.appendChild(Dialog);
+        document.body.appendChild(Overlay);
+        document.body.classList.add("StoryWarningOpen");
+
+        let Settled = false;
+
+        const Finish = Result => {
+            if (Settled) return;
+            Settled = true;
+            StoryConfirmCloser = null;
+            document.removeEventListener("keydown", OnKeyDown, true);
+            Overlay.classList.add("IsClosing");
+            document.body.classList.remove("StoryWarningOpen");
+            setTimeout(() => Overlay.remove(), 130);
+
+            if (PreviousFocus && typeof PreviousFocus.focus === "function") {
+                setTimeout(() => PreviousFocus.focus(), 140);
+            }
+
+            Resolve(Result);
+        };
+
+        const OnKeyDown = Event => {
+            if (Event.key === "Escape") {
+                Event.preventDefault();
+                Finish(false);
+                return;
+            }
+
+            if (Event.key === "Enter" && document.activeElement !== CancelButton) {
+                Event.preventDefault();
+                Finish(true);
+            }
+        };
+
+        StoryConfirmCloser = Finish;
+        document.addEventListener("keydown", OnKeyDown, true);
+        CancelButton.addEventListener("click", () => Finish(false));
+        ConfirmButton.addEventListener("click", () => Finish(true));
+        Overlay.addEventListener("click", Event => {
+            if (Event.target === Overlay) Finish(false);
+        });
+
+        requestAnimationFrame(() => Overlay.classList.add("IsOpen"));
+        setTimeout(() => CancelButton.focus(), 40);
+    });
+}
+
+function WireLeaveRoomWarning() {
+    const Button = document.getElementById("LeaveButton");
+    if (!Button || Button.dataset.storyWarningBound === "1") return;
+
+    Button.dataset.storyWarningBound = "1";
+    Button.addEventListener("click", async Event => {
+        Event.preventDefault();
+        Event.stopImmediatePropagation();
+
+        const Confirmed = await StoryConfirm({
+            title: "Leave this room?",
+            message: "You will leave the multiplayer lobby and your ready state will be cleared.",
+            confirmText: "Leave Room",
+            cancelText: "Stay",
+            danger: true
+        });
+
+        if (Confirmed && typeof LeaveRoom === "function") LeaveRoom();
+    }, true);
+}
+
 function WireStoryShell() {
     for (const Button of document.querySelectorAll("[data-story-back]")) {
         Button.innerHTML = STORY_BACK_ICON;
@@ -85,7 +220,11 @@ function WireStoryShell() {
             Toggle.setAttribute("aria-label", Reveal ? "Hide password" : "Show password");
         });
     }
+
+    WireLeaveRoomWarning();
 }
+
+window.StoryConfirm = StoryConfirm;
 
 if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", WireStoryShell, { once: true });
