@@ -45,7 +45,7 @@ for (const LinkData of HeadLinks) {
 const STORY_DATA_URL = "stages.json";
 
 async function LoadStoryData() {
-    const Response = await fetch(STORY_DATA_URL, { cache: "no-store" });
+    const Response = await fetch(STORY_DATA_URL);
 
     if (!Response.ok) {
         throw new Error(`Could not load ${STORY_DATA_URL}: ${Response.status}`);
@@ -174,12 +174,15 @@ function Roman(NumberValue) {
 }
 
 function Go(Page) {
-    window.location.href = Page;
+    window.location.href = typeof BuildStoryUrl === "function"
+        ? BuildStoryUrl(Page)
+        : String(Page || "").replace(/^\/+/, "");
 }
 
 function GoStage(StageId, RoomCode = "") {
     const RoomPart = RoomCode ? `&room=${encodeURIComponent(RoomCode)}` : "";
-    window.location.href = `dialog.html?stage=${encodeURIComponent(StageId)}${RoomPart}`;
+    const Page = `dialog.html?stage=${encodeURIComponent(StageId)}${RoomPart}`;
+    Go(Page);
 }
 
 function Delay(Milliseconds) {
