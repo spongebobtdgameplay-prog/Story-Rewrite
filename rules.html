@@ -8,21 +8,19 @@
 <link rel="icon" type="image/png" sizes="32x32" href="favicon_io/favicon-32x32.png?v=1000001">
 <link rel="icon" type="image/png" sizes="16x16" href="favicon_io/favicon-16x16.png?v=1000001">
 <link rel="stylesheet" href="looks.css">
+<link rel="stylesheet" href="shell-ui.css">
 </head>
 <body>
 <div id="App">
 
-<header class="TopBar">
+<header class="TopBar CompactPageTopBar">
     <div class="Brand">
-        <div class="BrandMark">✦</div>
+        <button class="IconBackButton" type="button" data-story-back="main.html" aria-label="Go back"></button>
         <div>
-            <div class="BrandTitle">Story Rewrite</div>
-            <div class="BrandSub">Cross out the sentence. Rewrite what happens.</div>
+            <div class="BrandTitle">Rules</div>
+            <div class="BrandSub">The actual game rules, nothing else.</div>
         </div>
     </div>
-    <nav class="TopActions">
-        <button class="UiButton" type="button" onclick="if (history.length > 1) history.back(); else location.href='main.html';" aria-label="Go back">← Back</button>
-    </nav>
 </header>
 
 <main class="Main">
@@ -39,12 +37,6 @@
             <article class="RuleCard"><div class="Eyebrow">Rule 5</div><h3>Bad checks have consequences</h3><p>When you check an incorrect page, the aftermath scene shows what your version caused.</p></article>
             <article class="RuleCard"><div class="Eyebrow">Rule 6</div><h3>Three-star par</h3><p>A correct page always clears the level. Clean solutions at or under par earn the maximum three stars.</p></article>
             <article class="RuleCard"><div class="Eyebrow">Rule 7</div><h3>World progression</h3><p>Levels unlock in order. Finishing level 10 unlocks the next world and triggers its world-route animation.</p></article>
-            <article class="RuleCard"><div class="Eyebrow">Rule 8</div><h3>Your account owns your progress</h3><p>Your unlocked stages, stars, lives, and settings are saved to your Story Rewrite account.</p></article>
-        </div>
-
-        <div class="HomeActions">
-            <button class="PrimaryButton" type="button" onclick="location.href='levels.html';">World Select</button>
-            <button class="SecondaryButton" type="button" onclick="location.href='tutorial.html';">Tutorial</button>
         </div>
     </section>
 </main>
@@ -52,5 +44,6 @@
 <script src="server-config.js"></script>
 <script src="network.js"></script>
 <script src="app.js"></script>
+<script src="shell-ui.js"></script>
 </body>
 </html>
