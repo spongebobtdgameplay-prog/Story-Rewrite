@@ -9,26 +9,102 @@ let StartingRoom = false;
 const SOCKET_CLIENT_URL = "https://story-rewrite-backend.onrender.com/socket.io/socket.io.js";
 const REQUIRED_MULTIPLAYER_SERVER_VERSION = 8;
 const CHAT_MAX_LENGTH = 180;
+const CHAT_HISTORY_LIMIT = 30;
 
 window.addEventListener("DOMContentLoaded", () => {
+    EnsureLobbyEnhancements();
     BindUi();
+
     EnsureMultiplayerReady().catch(Error => {
         ShowLobbyStatus(FriendlyConnectionError(Error), false);
     });
 });
 
+function ById(Id) {
+    return document.getElementById(Id);
+}
+
+function On(Id, EventName, Handler) {
+    const Element = ById(Id);
+    if (!Element) return false;
+    Element.addEventListener(EventName, Handler);
+    return true;
+}
+
+function SetText(Id, Text) {
+    const Element = ById(Id);
+    if (Element) Element.textContent = Text;
+}
+
+function EnsureLobbyEnhancements() {
+    const PlayerList = ById("PlayerList");
+
+    if (PlayerList && !ById("PlayerCount")) {
+        const Header = document.createElement("div");
+        Header.className = "LobbyPlayersHeader";
+        Header.innerHTML = '<h2>Players</h2><span id="PlayerCount">0 / 5</span>';
+        PlayerList.before(Header);
+    }
+
+    let ChatPanel = ById("LobbyChatPanel");
+    if (!ChatPanel) {
+        ChatPanel = document.querySelector(".ChatPanel");
+        if (ChatPanel) ChatPanel.id = "LobbyChatPanel";
+    }
+
+    if (ChatPanel && !ById("ToggleLobbyChatButton")) {
+        const ExistingHeading = ChatPanel.querySelector("h2");
+        const Header = document.createElement("div");
+        Header.className = "ChatPanelHeader";
+
+        if (ExistingHeading) Header.appendChild(ExistingHeading);
+        else {
+            const Heading = document.createElement("h2");
+            Heading.textContent = "Group Chat";
+            Header.appendChild(Heading);
+        }
+
+        const Toggle = document.createElement("button");
+        Toggle.className = "ChatToggleButton";
+        Toggle.id = "ToggleLobbyChatButton";
+        Toggle.type = "button";
+        Toggle.setAttribute("aria-label", "Hide chat");
+        Toggle.setAttribute("aria-expanded", "true");
+        Toggle.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5.5h14v10H9l-4 3v-13Z"></path><path d="M8 9h8M8 12h5"></path></svg>';
+        Header.appendChild(Toggle);
+        ChatPanel.prepend(Header);
+
+        const ExistingMessages = ById("ChatMessages");
+        const ExistingForm = ById("ChatForm");
+        if (ExistingMessages && ExistingForm && !ChatPanel.querySelector(".ChatPanelBody")) {
+            const Body = document.createElement("div");
+            Body.className = "ChatPanelBody";
+            ExistingMessages.before(Body);
+            Body.appendChild(ExistingMessages);
+            Body.appendChild(ExistingForm);
+        }
+    }
+
+    const ChatInput = ById("ChatInput");
+    if (ChatInput) ChatInput.maxLength = CHAT_MAX_LENGTH;
+}
+
 function BindUi() {
-    document.getElementById("CreateRoomButton").addEventListener("click", CreateRoom);
-    document.getElementById("JoinRoomButton").addEventListener("click", JoinRoom);
-    document.getElementById("JoinCodeInput").addEventListener("input", Event => {
-        Event.target.value = Event.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6);
+    On("CreateRoomButton", "click", CreateRoom);
+    On("JoinRoomButton", "click", JoinRoom);
+    On("CopyCodeButton", "click", CopyCode);
+    On("ReadyButton", "click", ToggleReady);
+    On("StartButton", "click", StartRoom);
+    On("LeaveButton", "click", LeaveRoom);
+    On("ChatForm", "submit", SendChat);
+    On("ToggleLobbyChatButton", "click", ToggleLobbyChat);
+
+    On("JoinCodeInput", "input", Event => {
+        Event.target.value = Event.target.value
+            .toUpperCase()
+            .replace(/[^A-Z0-9]/g, "")
+            .slice(0, 6);
     });
-    document.getElementById("CopyCodeButton").addEventListener("click", CopyCode);
-    document.getElementById("ReadyButton").addEventListener("click", ToggleReady);
-    document.getElementById("StartButton").addEventListener("click", StartRoom);
-    document.getElementById("LeaveButton").addEventListener("click", LeaveRoom);
-    document.getElementById("ChatForm").addEventListener("submit", SendChat);
-    document.getElementById("ToggleLobbyChatButton").addEventListener("click", ToggleLobbyChat);
 }
 
 async function EnsureBackendVersion() {
@@ -63,15 +139,16 @@ async function EnsureMultiplayerReady() {
 
 async function InitializeMultiplayer() {
     ShowLobbyStatus("Connecting to the game server...", null);
-
     await EnsureBackendVersion();
 
     const ProfileResult = await RequireAccount();
     CurrentProfile = ProfileResult.profile;
 
     const Save = await FetchServerSave();
-    StoryAudio.Configure(Save.settings);
-    StoryAudio.PlayMusic("lobby");
+    if (window.StoryAudio) {
+        StoryAudio.Configure(Save.settings);
+        StoryAudio.PlayMusic("lobby");
+    }
 
     await LoadSocketClient();
 
@@ -92,11 +169,10 @@ function LoadSocketClient() {
     if (SocketClientPromise) return SocketClientPromise;
 
     SocketClientPromise = new Promise((Resolve, Reject) => {
-        const Existing = document.querySelector('script[data-story-socket-client="1"]');
-        if (Existing) Existing.remove();
+        document.querySelectorAll('script[data-story-socket-client="1"]').forEach(Script => Script.remove());
 
         const Script = document.createElement("script");
-        Script.src = SOCKET_CLIENT_URL;
+        Script.src = `${SOCKET_CLIENT_URL}?v=8`;
         Script.async = true;
         Script.crossOrigin = "anonymous";
         Script.dataset.storySocketClient = "1";
@@ -123,31 +199,26 @@ function WaitForSocketConnection(Socket, TimeoutMilliseconds) {
     return new Promise((Resolve, Reject) => {
         let Settled = false;
 
-        const Cleanup = () => {
+        const Finish = (Callback, Value) => {
+            if (Settled) return;
+            Settled = true;
             clearTimeout(Timeout);
             Socket.off("connect", OnConnect);
             Socket.off("connect_error", OnError);
-        };
-
-        const Finish = Callback => Value => {
-            if (Settled) return;
-            Settled = true;
-            Cleanup();
             Callback(Value);
         };
 
-        const OnConnect = Finish(() => Resolve());
+        const OnConnect = () => Finish(Resolve);
         const OnError = Error => {
-            const Message = Error?.message || "Connection failed.";
             ShowLobbyStatus(FriendlyConnectionError(Error), false);
-
+            const Message = String(Error?.message || "");
             if (Message === "AUTH_REQUIRED" || Message === "DATABASE_UNAVAILABLE") {
-                Finish(Reject)(Error);
+                Finish(Reject, Error);
             }
         };
 
         const Timeout = setTimeout(() => {
-            Finish(Reject)(new Error("The multiplayer server did not connect in time."));
+            Finish(Reject, new Error("The multiplayer server did not connect in time."));
         }, TimeoutMilliseconds);
 
         Socket.on("connect", OnConnect);
@@ -161,11 +232,8 @@ function BindSocket(Socket) {
     });
 
     Socket.on("disconnect", () => {
-        if (MultiplayerState) {
-            ShowRoomStatus("Connection lost. Reconnecting...", false);
-        } else {
-            ShowLobbyStatus("Connection lost. Reconnecting...", false);
-        }
+        if (MultiplayerState) ShowRoomStatus("Connection lost. Reconnecting...", false);
+        else ShowLobbyStatus("Connection lost. Reconnecting...", false);
     });
 
     Socket.on("connect_error", Error => {
@@ -177,12 +245,14 @@ function BindSocket(Socket) {
     Socket.on("room:state", State => {
         const PreviousCount = MultiplayerState?.players?.length || 0;
         MultiplayerState = State;
-        if (State.players.length > PreviousCount && PreviousCount > 0) StoryAudio.PlaySound("join");
+        if ((State?.players?.length || 0) > PreviousCount && PreviousCount > 0) {
+            StoryAudio?.PlaySound?.("join");
+        }
         RenderRoom();
     });
 
     Socket.on("room:chat", Message => {
-        StoryAudio.PlaySound("message");
+        StoryAudio?.PlaySound?.("message");
         AppendChat(Message);
     });
 
@@ -192,14 +262,13 @@ function BindSocket(Socket) {
 
     Socket.on("game:started", Payload => {
         if (StartingRoom) return;
-        StoryAudio.PlaySound("ready");
+        StoryAudio?.PlaySound?.("ready");
         GoStage(Payload.stageId, Payload.code);
     });
 }
 
 function FriendlyConnectionError(Error) {
     const Message = String(Error?.message || Error || "");
-
     if (Message === "AUTH_REQUIRED") return "Your sign-in expired. Sign in again.";
     if (Message === "DATABASE_UNAVAILABLE") return "The account database is temporarily unavailable.";
     if (Message.includes("timeout") || Message.includes("did not connect")) return "The multiplayer server is taking too long to respond. Try again.";
@@ -208,8 +277,7 @@ function FriendlyConnectionError(Error) {
 }
 
 function ResultError(Result, Fallback) {
-    const Message = Result?.error || Fallback;
-    return Result?.code ? `${Message} [${Result.code}]` : Message;
+    return Result?.error || Fallback;
 }
 
 function EmitWithAck(EventName, Payload, TimeoutMilliseconds = 12000) {
@@ -224,34 +292,28 @@ function EmitWithAck(EventName, Payload, TimeoutMilliseconds = 12000) {
                 Reject(new Error("The multiplayer server did not answer in time."));
                 return;
             }
-
             Resolve(Result);
         });
     });
 }
 
 async function CreateRoom() {
-    const Button = document.getElementById("CreateRoomButton");
+    const Button = ById("CreateRoomButton");
+    if (!Button) return;
+
     Button.disabled = true;
     Button.textContent = "Creating...";
-    StoryAudio.PlaySound("click");
+    StoryAudio?.PlaySound?.("click");
     ShowLobbyStatus("Creating your room...", null);
 
     try {
         await EnsureMultiplayerReady();
-
-        const CreateResult = await ApiRequest("/api/room/create", {
-            method: "POST"
-        });
-
+        const CreateResult = await ApiRequest("/api/room/create", { method: "POST" });
         if (!CreateResult?.ok || !CreateResult.code) {
             throw new Error(CreateResult?.error || "Could not create the game.");
         }
 
-        const JoinResult = await EmitWithAck("room:join", {
-            code: CreateResult.code
-        });
-
+        const JoinResult = await EmitWithAck("room:join", { code: CreateResult.code });
         if (!JoinResult?.ok) {
             throw new Error(ResultError(JoinResult, "The room was created but could not be opened."));
         }
@@ -269,13 +331,17 @@ async function CreateRoom() {
 }
 
 async function JoinRoom() {
-    const Code = document.getElementById("JoinCodeInput").value.trim().toUpperCase();
+    const Input = ById("JoinCodeInput");
+    const Code = String(Input?.value || "").trim().toUpperCase();
+
     if (Code.length !== 6) {
         ShowLobbyStatus("Enter the full six-character game code.", false);
         return;
     }
 
-    const Button = document.getElementById("JoinRoomButton");
+    const Button = ById("JoinRoomButton");
+    if (!Button) return;
+
     Button.disabled = true;
     Button.textContent = "Joining...";
     ShowLobbyStatus("Connecting to the room...", null);
@@ -283,12 +349,9 @@ async function JoinRoom() {
     try {
         await EnsureMultiplayerReady();
         const Result = await EmitWithAck("room:join", { code: Code });
+        if (!Result?.ok) throw new Error(ResultError(Result, "Could not join the game."));
 
-        if (!Result?.ok) {
-            throw new Error(ResultError(Result, "Could not join the game."));
-        }
-
-        StoryAudio.PlaySound("join");
+        StoryAudio?.PlaySound?.("join");
         MultiplayerState = Result.state;
         LocalReady = false;
         HideLobbyStatus();
@@ -302,13 +365,14 @@ async function JoinRoom() {
 }
 
 function LeaveRoom() {
-    StoryAudio.PlaySound("click");
+    StoryAudio?.PlaySound?.("click");
     if (MultiplayerSocket?.connected) MultiplayerSocket.emit("room:leave");
+
     MultiplayerState = null;
     LocalReady = false;
     StartingRoom = false;
-    document.getElementById("ActiveRoom").classList.add("Hidden");
-    document.getElementById("RoomActions").classList.remove("Hidden");
+    ById("ActiveRoom")?.classList.add("Hidden");
+    ById("RoomActions")?.classList.remove("Hidden");
     HideRoomStatus();
 }
 
@@ -319,35 +383,31 @@ function ToggleReady() {
     }
 
     LocalReady = !LocalReady;
-    StoryAudio.PlaySound("ready");
+    StoryAudio?.PlaySound?.("ready");
     MultiplayerSocket.emit("room:ready", { ready: LocalReady });
-    document.getElementById("ReadyButton").textContent = LocalReady ? "Not Ready" : "Ready";
+    SetText("ReadyButton", LocalReady ? "Not Ready" : "Ready");
 }
 
 async function StartRoom() {
     if (StartingRoom) return;
 
-    const Button = document.getElementById("StartButton");
+    const Button = ById("StartButton");
+    if (!Button) return;
+
     StartingRoom = true;
     Button.disabled = true;
     Button.textContent = "Starting...";
-    StoryAudio.PlaySound("ready");
+    StoryAudio?.PlaySound?.("ready");
     ShowRoomStatus("Starting the story...", true);
 
     try {
         await EnsureMultiplayerReady();
         const Result = await EmitWithAck("room:start", {});
-
-        if (!Result?.ok) {
-            throw new Error(ResultError(Result, "Could not start the game."));
-        }
+        if (!Result?.ok) throw new Error(ResultError(Result, "Could not start the game."));
 
         const StageId = Result.stageId || MultiplayerState?.stageId;
         const RoomCode = MultiplayerState?.code || "";
-
-        if (!StageId) {
-            throw new Error("The server started the room without a stage.");
-        }
+        if (!StageId) throw new Error("The server started the room without a stage.");
 
         GoStage(StageId, RoomCode);
     } catch (Error) {
@@ -360,7 +420,7 @@ async function StartRoom() {
 
 async function CopyCode() {
     if (!MultiplayerState?.code) return;
-    StoryAudio.PlaySound("click");
+    StoryAudio?.PlaySound?.("click");
 
     try {
         await navigator.clipboard.writeText(MultiplayerState.code);
@@ -372,20 +432,25 @@ async function CopyCode() {
 
 function SendChat(Event) {
     Event.preventDefault();
-    const Input = document.getElementById("ChatInput");
-    const Text = Input.value.trim();
+
+    const Input = ById("ChatInput");
+    const Text = String(Input?.value || "").trim();
     if (!Text || !MultiplayerSocket?.connected) return;
+
     if (Text.length > CHAT_MAX_LENGTH) {
         ShowRoomStatus(`Messages are limited to ${CHAT_MAX_LENGTH} characters.`, false);
         return;
     }
+
     MultiplayerSocket.emit("room:chat", { text: Text });
     Input.value = "";
 }
 
 function ToggleLobbyChat() {
-    const Panel = document.getElementById("LobbyChatPanel");
-    const Button = document.getElementById("ToggleLobbyChatButton");
+    const Panel = ById("LobbyChatPanel");
+    const Button = ById("ToggleLobbyChatButton");
+    if (!Panel || !Button) return;
+
     const Collapsed = Panel.classList.toggle("IsCollapsed");
     Button.setAttribute("aria-expanded", String(!Collapsed));
     Button.setAttribute("aria-label", Collapsed ? "Show chat" : "Hide chat");
@@ -394,88 +459,99 @@ function ToggleLobbyChat() {
 function RenderRoom() {
     if (!MultiplayerState || !CurrentProfile) return;
 
-    document.getElementById("RoomActions").classList.add("Hidden");
-    document.getElementById("ActiveRoom").classList.remove("Hidden");
-    document.getElementById("RoomCodeValue").textContent = MultiplayerState.code;
+    ById("RoomActions")?.classList.add("Hidden");
+    ById("ActiveRoom")?.classList.remove("Hidden");
+    SetText("RoomCodeValue", MultiplayerState.code || "------");
     RenderLives(MultiplayerState.lives, MultiplayerState.maxLives);
 
+    const Players = Array.isArray(MultiplayerState.players) ? MultiplayerState.players : [];
     const MaxPlayers = Number(MultiplayerState.maxPlayers || 5);
-    document.getElementById("PlayerCount").textContent = `${MultiplayerState.players.length} / ${MaxPlayers}`;
+    SetText("PlayerCount", `${Players.length} / ${MaxPlayers}`);
 
     const IsHost = MultiplayerState.hostUsername === CurrentProfile.username;
-    document.getElementById("StartButton").classList.toggle("Hidden", !IsHost);
+    ById("StartButton")?.classList.toggle("Hidden", !IsHost);
 
-    const LocalPlayer = MultiplayerState.players.find(Player => Player.username === CurrentProfile.username);
+    const LocalPlayer = Players.find(Player => Player.username === CurrentProfile.username);
     LocalReady = Boolean(LocalPlayer?.ready);
-    document.getElementById("ReadyButton").textContent = LocalReady ? "Not Ready" : "Ready";
+    SetText("ReadyButton", LocalReady ? "Not Ready" : "Ready");
 
-    document.getElementById("PlayerList").innerHTML = MultiplayerState.players.map(Player => `
-        <div class="PlayerRow">
-            <span class="PlayerName">${EscapeText(Player.username)}${Player.username === MultiplayerState.hostUsername ? " · HOST" : ""}</span>
-            <span class="PlayerStatus ${Player.ready ? "Ready" : ""}">${Player.ready ? "READY" : "NOT READY"}</span>
-        </div>
-    `).join("");
+    const PlayerList = ById("PlayerList");
+    if (PlayerList) {
+        PlayerList.innerHTML = Players.map(Player => `
+            <div class="PlayerRow">
+                <span class="PlayerName">${EscapeText(Player.username)}${Player.username === MultiplayerState.hostUsername ? " · HOST" : ""}</span>
+                <span class="PlayerStatus ${Player.ready ? "Ready" : ""}">${Player.ready ? "READY" : "NOT READY"}</span>
+            </div>
+        `).join("");
+    }
 
-    const ChatMessages = document.getElementById("ChatMessages");
-    ChatMessages.innerHTML = "";
-    for (const Message of MultiplayerState.messages || []) AppendChat(Message, false);
-    ChatMessages.scrollTop = ChatMessages.scrollHeight;
+    const ChatMessages = ById("ChatMessages");
+    if (ChatMessages) {
+        ChatMessages.innerHTML = "";
+        for (const Message of MultiplayerState.messages || []) AppendChat(Message, false);
+        ChatMessages.scrollTop = ChatMessages.scrollHeight;
+    }
 }
 
 function AppendChat(Message, Scroll = true) {
-    const Container = document.getElementById("ChatMessages");
+    const Container = ById("ChatMessages");
     if (!Container) return;
 
     const Element = document.createElement("div");
     Element.className = "ChatMessage";
+
     const Name = document.createElement("strong");
-    Name.textContent = `${Message.username}: `;
+    Name.textContent = `${Message?.username || "Player"}: `;
     Element.appendChild(Name);
-    Element.appendChild(document.createTextNode(Message.text));
+    Element.appendChild(document.createTextNode(String(Message?.text || "")));
     Container.appendChild(Element);
 
-    while (Container.childElementCount > 30) {
-        Container.firstElementChild.remove();
+    while (Container.childElementCount > CHAT_HISTORY_LIMIT) {
+        Container.firstElementChild?.remove();
     }
 
     if (Scroll) Container.scrollTop = Container.scrollHeight;
 }
 
 function RenderLives(Lives, Max) {
-    const Container = document.getElementById("LobbyLives");
+    const Container = ById("LobbyLives");
+    if (!Container) return;
+
+    const SafeMax = Math.max(0, Number(Max || 3));
+    const SafeLives = Math.max(0, Number(Lives || 0));
     Container.innerHTML = "";
 
-    for (let Index = 0; Index < Max; Index += 1) {
+    for (let Index = 0; Index < SafeMax; Index += 1) {
         const Heart = document.createElement("span");
-        Heart.className = `LifeHeart ${Index < Lives ? "" : "Empty"}`;
+        Heart.className = `LifeHeart ${Index < SafeLives ? "" : "Empty"}`;
         Heart.textContent = "♥";
         Container.appendChild(Heart);
     }
 }
 
 function ShowLobbyStatus(Text, Good) {
-    const Status = document.getElementById("LobbyStatus");
+    const Status = ById("LobbyStatus");
     if (!Status) return;
     Status.className = Good === null ? "StatusText" : `StatusText ${Good ? "Good" : "Bad"}`;
     Status.textContent = Text;
 }
 
 function HideLobbyStatus() {
-    const Status = document.getElementById("LobbyStatus");
+    const Status = ById("LobbyStatus");
     if (!Status) return;
     Status.className = "StatusText Hidden";
     Status.textContent = "";
 }
 
 function ShowRoomStatus(Text, Good) {
-    const Status = document.getElementById("RoomStatus");
+    const Status = ById("RoomStatus") || ById("LobbyStatus");
     if (!Status) return;
     Status.className = `StatusText ${Good ? "Good" : "Bad"}`;
     Status.textContent = Text;
 }
 
 function HideRoomStatus() {
-    const Status = document.getElementById("RoomStatus");
+    const Status = ById("RoomStatus");
     if (!Status) return;
     Status.className = "StatusText Hidden";
     Status.textContent = "";
