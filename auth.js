@@ -1,12 +1,9 @@
 let AccountMode = "register";
 
-window.addEventListener("DOMContentLoaded", async () => {
+window.addEventListener("DOMContentLoaded", () => {
     if (GetAuthToken()) {
-        try {
-            await GetAccountProfile();
-            window.location.replace("main.html");
-            return;
-        } catch {}
+        window.location.replace(BuildStoryUrl("main.html"));
+        return;
     }
 
     const ServerSetup = document.getElementById("ServerSetup");
@@ -33,7 +30,7 @@ function SetMode(Mode) {
 function SaveServerUrl() {
     const Value = document.getElementById("ServerUrlInput").value;
     SetServerOverride(Value);
-    ShowStatus(GetServerUrl() ? "Server address saved for this browser session." : "Enter the server address first.", Boolean(GetServerUrl()));
+    ShowStatus(GetServerUrl() ? "Server address saved for this tab." : "Enter the server address first.", Boolean(GetServerUrl()));
 }
 
 async function SubmitAccount(Event) {
@@ -54,7 +51,7 @@ async function SubmitAccount(Event) {
     try {
         if (AccountMode === "register") await RegisterAccount(Username, Password);
         else await LoginAccount(Username, Password);
-        window.location.replace("main.html");
+        window.location.replace(BuildStoryUrl("main.html"));
     } catch (Error) {
         ShowStatus(Error.message, false);
     } finally {
