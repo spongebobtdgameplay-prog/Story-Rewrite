@@ -2,16 +2,17 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Story Rewrite — Multiplayer</title>
 <link rel="icon" type="image/x-icon" href="favicon_io/favicon.ico?v=1000001">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon_io/favicon-32x32.png?v=1000001">
 <link rel="icon" type="image/png" sizes="16x16" href="favicon_io/favicon-16x16.png?v=1000001">
-<link rel="stylesheet" href="looks.css?v=20260819-17">
-<link rel="stylesheet" href="multiplayer.css?v=20260819-17">
-<link rel="stylesheet" href="shell-ui.css?v=20260819-17">
-<link rel="stylesheet" href="host-controls.css?v=20260819-17">
-<link rel="stylesheet" href="chat-ai.css?v=20260819-17">
+<link rel="stylesheet" href="looks.css?v=20260819-18">
+<link rel="stylesheet" href="multiplayer.css?v=20260819-18">
+<link rel="stylesheet" href="shell-ui.css?v=20260819-18">
+<link rel="stylesheet" href="host-controls.css?v=20260819-18">
+<link rel="stylesheet" href="chat-ai.css?v=20260819-18">
+<link rel="stylesheet" href="game-enhancements.css?v=20260819-18">
 </head>
 <body class="MultiplayerPage">
 <div class="MultiplayerShell">
@@ -22,7 +23,7 @@
             </div>
             <div class="Kicker">Co-op rewrite</div>
             <h1>Multiplayer</h1>
-            <p>Create a code, invite up to four other players, chat, vote on sentences, and share three team lives.</p>
+            <p>Create a code, invite up to four other players, chat, vote on numbered story options, and share three team lives.</p>
         </div>
         <div class="RoomFooterActions">
             <button class="IconNavButton" type="button" data-story-go="account.html" data-account-icon aria-label="Account"></button>
@@ -39,7 +40,7 @@
             <h2>Join Game</h2>
             <p>Enter the code your friend sent you. If the story already started, the host can approve your request.</p>
             <div class="JoinRow">
-                <input class="JoinCodeInput" id="JoinCodeInput" maxlength="6" placeholder="ABC123">
+                <input class="JoinCodeInput" id="JoinCodeInput" maxlength="6" placeholder="ABC123" autocapitalize="characters" autocomplete="off" spellcheck="false" enterkeyhint="go" inputmode="text">
                 <button class="PrimaryButton" id="JoinRoomButton" type="button">Join</button>
             </div>
         </div>
@@ -74,22 +75,23 @@
             <div class="ChatPanelBody">
                 <div class="ChatMessages" id="ChatMessages"></div>
                 <form class="ChatForm" id="ChatForm">
-                    <input class="ChatInput" id="ChatInput" maxlength="180" placeholder="Message the group or ask @StoryBot..." autocomplete="off">
+                    <input class="ChatInput" id="ChatInput" maxlength="180" placeholder="Message, type a vote number, or ask @StoryBot..." autocomplete="off" autocapitalize="sentences" enterkeyhint="send">
                     <button class="PrimaryButton" type="submit">Send</button>
                 </form>
             </div>
         </div>
     </section>
 </div>
-<script src="server-config.js?v=20260819-17"></script>
-<script src="network.js?v=20260819-17"></script>
-<script src="app.js?v=20260819-17"></script>
-<script src="audio.js?v=20260819-17"></script>
-<script src="shell-ui.js?v=20260819-17"></script>
-<script src="multiplayer.js?v=20260819-17"></script>
-<script src="multiplayer-connection.js?v=20260819-17"></script>
-<script src="moderation-version.js?v=20260819-17"></script>
-<script src="host-controls.js?v=20260819-17"></script>
-<script src="ai-chat.js?v=20260819-17"></script>
+<script src="server-config.js?v=20260819-18"></script>
+<script src="network.js?v=20260819-18"></script>
+<script src="app.js?v=20260819-18"></script>
+<script src="audio.js?v=20260819-18"></script>
+<script src="audio-enhancements.js?v=20260819-18"></script>
+<script src="shell-ui.js?v=20260819-18"></script>
+<script src="multiplayer.js?v=20260819-18"></script>
+<script src="multiplayer-connection.js?v=20260819-18"></script>
+<script src="moderation-version.js?v=20260819-18"></script>
+<script src="host-controls.js?v=20260819-18"></script>
+<script src="ai-chat.js?v=20260819-18"></script>
 </body>
 </html>
