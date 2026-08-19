@@ -8,7 +8,17 @@
 <link rel="icon" type="image/png" sizes="32x32" href="favicon_io/favicon-32x32.png?v=1000001">
 <link rel="icon" type="image/png" sizes="16x16" href="favicon_io/favicon-16x16.png?v=1000001">
 <script>
-const Token = sessionStorage.getItem("StoryRewriteSessionToken");
+const TokenKey = "StoryRewriteSessionToken";
+let Token = localStorage.getItem(TokenKey) || "";
+
+if (!Token) {
+    Token = sessionStorage.getItem(TokenKey) || "";
+    if (Token) {
+        localStorage.setItem(TokenKey, Token);
+        sessionStorage.removeItem(TokenKey);
+    }
+}
+
 window.location.replace(Token ? "main.html" : "auth.html");
 </script>
 </head>
