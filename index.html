@@ -3,6 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>Story Rewrite</title>
 <link rel="icon" type="image/x-icon" href="favicon_io/favicon.ico?v=1000001">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon_io/favicon-32x32.png?v=1000001">
@@ -50,14 +53,41 @@ if (!Token) {
 }
 
 if (!Token) window.location.replace("auth.html");
+
+(async () => {
+    if (!("serviceWorker" in navigator)) return;
+
+    const HadController = Boolean(navigator.serviceWorker.controller);
+    const Registrations = await navigator.serviceWorker.getRegistrations().catch(() => []);
+
+    if (Registrations.length > 0) {
+        await Promise.all(Registrations.map(Registration => Registration.unregister().catch(() => false)));
+    }
+
+    if ("caches" in window) {
+        const CacheNames = await caches.keys().catch(() => []);
+        await Promise.all(CacheNames
+            .filter(CacheName => CacheName.startsWith("story-rewrite-"))
+            .map(CacheName => caches.delete(CacheName).catch(() => false)));
+    }
+
+    const CurrentUrl = new URL(location.href);
+    if (HadController && !CurrentUrl.searchParams.has("worker-clean")) {
+        CurrentUrl.searchParams.set("worker-clean", Date.now().toString(36));
+        location.replace(CurrentUrl.href);
+    }
+})();
 </script>
 </head>
 <body>
 <div id="StoryShellRoot">
     <iframe id="StoryShellFrame" title="Story Rewrite" src="about:blank"></iframe>
 </div>
-<script src="audio.js?v=20260820-36"></script>
-<script src="real-audio.js?v=20260820-36"></script>
-<script src="shell.js?v=20260820-36"></script>
+<script>
+const AssetFreshToken = Date.now().toString(36);
+for (const AssetName of ["audio.js", "real-audio.js", "shell.js"]) {
+    document.write(`<script src="${AssetName}?fresh=${AssetFreshToken}"><\/script>`);
+}
+</script>
 </body>
 </html>
