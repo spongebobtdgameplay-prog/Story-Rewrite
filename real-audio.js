@@ -10,7 +10,7 @@
 
     if (ShellHost && typeof StoryAudio !== "undefined") {
         StoryAudio.Configure = function(Settings = {}) {
-            ShellHost.StoryAudio?.Configure?.(Settings);
+            ShellHost.StoryShell.ConfigureAudio(Settings);
         };
 
         StoryAudio.PlayMusic = function(Name) {
@@ -22,7 +22,7 @@
         };
 
         StoryAudio.PlaySound = function(Name) {
-            ShellHost.StoryAudio?.PlaySound?.(Name);
+            ShellHost.StoryShell.PlaySound(Name);
         };
         StoryAudio.PlaySound.V11Wrapped = true;
 
@@ -30,7 +30,7 @@
         const PlayGenericButtonClick = Event => {
             const Button = Event.target?.closest?.("button,[role='button']");
             if (!Button || Button.disabled || Button.getAttribute("aria-disabled") === "true") return;
-            ShellHost.StoryAudio?.PlaySound?.("click");
+            ShellHost.StoryShell.PlaySound("click");
         };
 
         document.addEventListener("pointerdown", NotifyInteraction, { capture: true, passive: true });
