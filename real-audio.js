@@ -4,6 +4,7 @@ let StoryRealAudioUnlocked = false;
 let StoryRealMusicElement = null;
 let StoryRealMusicName = "";
 let StoryPendingMusicName = "";
+let StoryRealMusicObjectUrl = "";
 
 const StoryRealSoundBases = [
     "https://cdn.jsdelivr.net/gh/Calinou/kenney-interface-sounds@master/addons/kenney_interface_sounds/",
@@ -44,6 +45,7 @@ const StoryRealMusicFiles = {
 const StoryRealSoundCache = new Map();
 const StoryMusicFadeOutSeconds = 3;
 const StoryMusicFadeInSeconds = 1.25;
+const StoryMusicCacheName = "story-rewrite-audio-v1";
 
 function ClampStoryAudioVolume(Value, Fallback) {
     const NumberValue = Number(Value);
@@ -76,6 +78,28 @@ function PreloadStoryRealSounds() {
     }
 }
 
+async function GetStoryMusicBlobUrl(RelativeUrl) {
+    const AbsoluteUrl = new URL(RelativeUrl, window.location.href).href;
+
+    if (!("caches" in window)) {
+        return AbsoluteUrl;
+    }
+
+    const Cache = await caches.open(StoryMusicCacheName);
+    let Response = await Cache.match(AbsoluteUrl);
+
+    if (!Response) {
+        Response = await fetch(AbsoluteUrl, { cache: "no-store" });
+        if (!Response.ok) {
+            throw new Error(`Music request failed with ${Response.status}: ${RelativeUrl}`);
+        }
+        await Cache.put(AbsoluteUrl, Response.clone());
+    }
+
+    const Blob = await Response.blob();
+    return URL.createObjectURL(Blob);
+}
+
 function ApplyStoryMusicFade(AudioElement) {
     if (!AudioElement || !Number.isFinite(AudioElement.duration) || AudioElement.duration <= 0) return;
 
@@ -94,18 +118,27 @@ function ApplyStoryMusicFade(AudioElement) {
     AudioElement.volume = StoryRealMusicVolume * Math.max(0, Math.min(1, Fade));
 }
 
+function ReleaseStoryMusicObjectUrl() {
+    if (!StoryRealMusicObjectUrl) return;
+    URL.revokeObjectURL(StoryRealMusicObjectUrl);
+    StoryRealMusicObjectUrl = "";
+}
+
 function StopStoryRealMusic() {
-    if (!StoryRealMusicElement) return;
-    StoryRealMusicElement.pause();
-    StoryRealMusicElement.removeAttribute("src");
-    StoryRealMusicElement.load();
+    if (StoryRealMusicElement) {
+        StoryRealMusicElement.pause();
+        StoryRealMusicElement.removeAttribute("src");
+        StoryRealMusicElement.load();
+    }
+
     StoryRealMusicElement = null;
     StoryRealMusicName = "";
+    ReleaseStoryMusicObjectUrl();
 }
 
 async function StartStoryRealMusic(Name) {
-    const Url = StoryRealMusicFiles[Name];
-    if (!Url || !StoryRealAudioUnlocked || StoryRealMusicVolume <= 0) return false;
+    const RelativeUrl = StoryRealMusicFiles[Name];
+    if (!RelativeUrl || !StoryRealAudioUnlocked || StoryRealMusicVolume <= 0) return false;
 
     if (StoryRealMusicElement && StoryRealMusicName === Name) {
         ApplyStoryMusicFade(StoryRealMusicElement);
@@ -120,10 +153,27 @@ async function StartStoryRealMusic(Name) {
 
     StopStoryRealMusic();
 
-    const AudioElement = new Audio(Url);
+    let PlaybackUrl;
+    try {
+        PlaybackUrl = await GetStoryMusicBlobUrl(RelativeUrl);
+    } catch (Error) {
+        console.warn(Error);
+        return false;
+    }
+
+    if (StoryPendingMusicName !== Name) {
+        if (PlaybackUrl.startsWith("blob:")) URL.revokeObjectURL(PlaybackUrl);
+        return false;
+    }
+
+    const AudioElement = new Audio(PlaybackUrl);
     AudioElement.preload = "auto";
     AudioElement.loop = false;
     AudioElement.volume = 0;
+
+    if (PlaybackUrl.startsWith("blob:")) {
+        StoryRealMusicObjectUrl = PlaybackUrl;
+    }
 
     AudioElement.addEventListener("timeupdate", () => ApplyStoryMusicFade(AudioElement));
     AudioElement.addEventListener("loadedmetadata", () => ApplyStoryMusicFade(AudioElement));
