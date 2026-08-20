@@ -249,7 +249,7 @@ function RegisterStoryServiceWorker() {
     if (location.protocol !== "https:" && location.hostname !== "localhost") return;
 
     window.addEventListener("load", () => {
-        navigator.serviceWorker.register(BuildStoryUrl("service-worker.js?v=8"), {
+        navigator.serviceWorker.register(BuildStoryUrl("service-worker.js?v=9"), {
             scope: new URL(".", window.location.href).pathname,
             updateViaCache: "none"
         }).then(Registration => {
