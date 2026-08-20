@@ -57,12 +57,8 @@ if (!Token) window.location.replace("auth.html");
 (async () => {
     if (!("serviceWorker" in navigator)) return;
 
-    const HadController = Boolean(navigator.serviceWorker.controller);
     const Registrations = await navigator.serviceWorker.getRegistrations().catch(() => []);
-
-    if (Registrations.length > 0) {
-        await Promise.all(Registrations.map(Registration => Registration.unregister().catch(() => false)));
-    }
+    const HasLegacyWorker = Boolean(navigator.serviceWorker.controller || Registrations.length > 0);
 
     if ("caches" in window) {
         const CacheNames = await caches.keys().catch(() => []);
@@ -71,10 +67,36 @@ if (!Token) window.location.replace("auth.html");
             .map(CacheName => caches.delete(CacheName).catch(() => false)));
     }
 
-    const CurrentUrl = new URL(location.href);
-    if (HadController && !CurrentUrl.searchParams.has("worker-clean")) {
-        CurrentUrl.searchParams.set("worker-clean", Date.now().toString(36));
-        location.replace(CurrentUrl.href);
+    if (!HasLegacyWorker) return;
+
+    try {
+        const KillUrl = new URL(`service-worker.js?kill=${Date.now().toString(36)}`, location.href).href;
+        const Registration = await navigator.serviceWorker.register(KillUrl, {
+            scope: new URL(".", location.href).pathname,
+            updateViaCache: "none"
+        });
+
+        const FinishCleanup = async () => {
+            await Registration.unregister().catch(() => false);
+            if (!("caches" in window)) return;
+            const CacheNames = await caches.keys().catch(() => []);
+            await Promise.all(CacheNames
+                .filter(CacheName => CacheName.startsWith("story-rewrite-"))
+                .map(CacheName => caches.delete(CacheName).catch(() => false)));
+        };
+
+        if (navigator.serviceWorker.controller?.scriptURL === KillUrl) {
+            await FinishCleanup();
+            return;
+        }
+
+        navigator.serviceWorker.addEventListener("controllerchange", () => {
+            FinishCleanup();
+        }, { once: true });
+
+        Registration.update().catch(() => {});
+    } catch (Error) {
+        console.warn("Legacy service worker cleanup failed:", Error);
     }
 })();
 </script>
