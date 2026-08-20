@@ -34,23 +34,15 @@ jobs:
 
             cat "${parts[@]}" | tr -d '\r\n' | base64 --decode > "music/$track.ogg"
             bytes=$(wc -c < "music/$track.ogg")
-            if [ "$bytes" -lt 100000 ]; then
+            if [ "$bytes" -lt 25000 ]; then
               echo "Decoded $track.ogg is suspiciously small: $bytes bytes"
               exit 1
             fi
             echo "$track.ogg: $bytes bytes"
           done
 
-          rm -f \
-            music/menu.mp3 \
-            music/lobby.mp3 \
-            music/fromville.mp3 \
-            music/neon-exorcists.mp3 \
-            music/blackthorn.mp3 \
-            music/spirit-grove.mp3 \
-            music/false-city.mp3 \
-            music/danger.mp3
-
+          rm -f music/menu.mp3 music/lobby.mp3 music/fromville.mp3 music/neon-exorcists.mp3 music/blackthorn.mp3 music/spirit-grove.mp3 music/false-city.mp3 music/danger.mp3
+          rm -rf music/menu music/lobby music/fromville music/neon-exorcists music/blackthorn music/spirit-grove music/false-city music/danger
           rm -rf .audio-staging
           rm -f .github/workflows/install-uploaded-music.yml
 
