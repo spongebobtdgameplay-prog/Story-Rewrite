@@ -51,15 +51,58 @@ if (!Token) {
 
 if (!Token) window.location.replace("auth.html");
 
-if ("serviceWorker" in navigator) {
-    window.addEventListener("load", async () => {
-        const CleanupKey = "StoryRewriteWorkerCleanupV2";
-        const Controller = navigator.serviceWorker.controller;
-        const Registrations = await navigator.serviceWorker.getRegistrations().catch(() => []);
+window.StoryWorkerReady = (async () => {
+    if (!("serviceWorker" in navigator)) return;
+    if (location.protocol !== "https:" && location.hostname !== "localhost") return;
 
-        if (!Controller && Registrations.length === 0) return;
+    const WorkerUrl = new URL("service-worker.js?v=20260820-33", window.location.href).href;
+    const Scope = new URL(".", window.location.href).pathname;
 
-        await Promise.all(Registrations.map(Registration => Registration.unregister().catch(() => false)));
+    try {
+        const Registration = await navigator.serviceWorker.register(WorkerUrl, {
+            scope: Scope,
+            updateViaCache: "none"
+        });
+
+        await Registration.update().catch(() => {});
+
+        const Candidate = Registration.installing || Registration.waiting;
+        if (Candidate && Candidate.state !== "activated") {
+            await new Promise(Resolve => {
+                let Finished = false;
+                const Finish = () => {
+                    if (Finished) return;
+                    if (Candidate.state !== "activated" && Candidate.state !== "redundant") return;
+                    Finished = true;
+                    Candidate.removeEventListener("statechange", Finish);
+                    Resolve();
+                };
+
+                Candidate.addEventListener("statechange", Finish);
+                Finish();
+                setTimeout(() => {
+                    if (Finished) return;
+                    Finished = true;
+                    Candidate.removeEventListener("statechange", Finish);
+                    Resolve();
+                }, 5000);
+            });
+        }
+
+        if (!navigator.serviceWorker.controller || navigator.serviceWorker.controller.scriptURL !== WorkerUrl) {
+            await new Promise(Resolve => {
+                let Finished = false;
+                const Finish = () => {
+                    if (Finished) return;
+                    Finished = true;
+                    navigator.serviceWorker.removeEventListener("controllerchange", Finish);
+                    Resolve();
+                };
+
+                navigator.serviceWorker.addEventListener("controllerchange", Finish);
+                setTimeout(Finish, 5000);
+            });
+        }
 
         if ("caches" in window) {
             const Keys = await caches.keys().catch(() => []);
@@ -67,21 +110,18 @@ if ("serviceWorker" in navigator) {
                 .filter(Key => Key.startsWith("story-rewrite-"))
                 .map(Key => caches.delete(Key).catch(() => false)));
         }
-
-        if (Controller && sessionStorage.getItem(CleanupKey) !== "done") {
-            sessionStorage.setItem(CleanupKey, "done");
-            location.reload();
-        }
-    }, { once: true });
-}
+    } catch (Error) {
+        console.warn("Service worker repair failed:", Error);
+    }
+})();
 </script>
 </head>
 <body>
 <div id="StoryShellRoot">
     <iframe id="StoryShellFrame" title="Story Rewrite" src="about:blank"></iframe>
 </div>
-<script src="audio.js?v=20260820-31"></script>
-<script src="real-audio.js?v=20260820-31"></script>
-<script src="shell.js?v=20260820-31"></script>
+<script src="audio.js?v=20260820-33"></script>
+<script src="real-audio.js?v=20260820-33"></script>
+<script src="shell.js?v=20260820-33"></script>
 </body>
 </html>
