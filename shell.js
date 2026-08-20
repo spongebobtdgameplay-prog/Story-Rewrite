@@ -60,7 +60,7 @@
             const Url = new URL(Route, GetBaseUrl());
             const PageName = Url.pathname.split("/").pop() || "main.html";
 
-            if (PageName === "multiplayer.html") return "lobby";
+            if (PageName === "multiplayer.html") return "menu";
 
             if (PageName === "dialog.html") {
                 const StageId = String(Url.searchParams.get("stage") || "").toLowerCase();
