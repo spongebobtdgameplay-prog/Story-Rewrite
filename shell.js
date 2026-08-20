@@ -90,20 +90,26 @@
         Navigate(Fallback, { replace: true });
     }
 
+    function ConfigureAudio(Settings = {}) {
+        if (typeof StoryAudio !== "undefined") StoryAudio.Configure(Settings);
+    }
+
+    function PlaySound(Name) {
+        if (typeof StoryAudio !== "undefined") StoryAudio.PlaySound(Name);
+    }
+
     function PlayMusic(Name) {
         CurrentMusicName = String(Name || "");
-        if (CurrentMusicName && window.StoryAudio?.PlayMusic) {
-            window.StoryAudio.PlayMusic(CurrentMusicName);
-        }
+        if (CurrentMusicName && typeof StoryAudio !== "undefined") StoryAudio.PlayMusic(CurrentMusicName);
     }
 
     function StopMusic() {
         CurrentMusicName = "";
-        window.StoryAudio?.StopMusic?.();
+        if (typeof StoryAudio !== "undefined") StoryAudio.StopMusic();
     }
 
     function NotifyInteraction() {
-        if (CurrentMusicName) window.StoryAudio?.PlayMusic?.(CurrentMusicName);
+        if (CurrentMusicName && typeof StoryAudio !== "undefined") StoryAudio.PlayMusic(CurrentMusicName);
     }
 
     function RouteFromFrame() {
@@ -150,6 +156,8 @@
         CanHandle: Value => Boolean(NormalizeRoute(Value)),
         Exit,
         Back,
+        ConfigureAudio,
+        PlaySound,
         PlayMusic,
         StopMusic,
         NotifyInteraction,
