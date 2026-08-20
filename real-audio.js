@@ -45,20 +45,21 @@
     let LastSoundName = "";
     let LastSoundAt = 0;
 
+    const MusicBaseUrl = "https://raw.githubusercontent.com/spongebobtdgameplay-prog/Story-Rewrite/main/Music/";
     const MusicFiles = {
-        menu: "Music/menu.mp3",
-        lobby: "Music/lobby.mp3",
-        fromville: "Music/fromville.mp3",
-        anime: "Music/neon-exorcists.mp3",
-        "neon-exorcists": "Music/neon-exorcists.mp3",
-        manor: "Music/blackthorn.mp3",
-        blackthorn: "Music/blackthorn.mp3",
-        forest: "Music/spirit-grove.mp3",
-        spirit: "Music/spirit-grove.mp3",
-        "spirit-grove": "Music/spirit-grove.mp3",
-        city: "Music/false-city.mp3",
-        "false-city": "Music/false-city.mp3",
-        danger: "Music/danger.mp3"
+        menu: `${MusicBaseUrl}menu.mp3`,
+        lobby: `${MusicBaseUrl}lobby.mp3`,
+        fromville: `${MusicBaseUrl}fromville.mp3`,
+        anime: `${MusicBaseUrl}neon-exorcists.mp3`,
+        "neon-exorcists": `${MusicBaseUrl}neon-exorcists.mp3`,
+        manor: `${MusicBaseUrl}blackthorn.mp3`,
+        blackthorn: `${MusicBaseUrl}blackthorn.mp3`,
+        forest: `${MusicBaseUrl}spirit-grove.mp3`,
+        spirit: `${MusicBaseUrl}spirit-grove.mp3`,
+        "spirit-grove": `${MusicBaseUrl}spirit-grove.mp3`,
+        city: `${MusicBaseUrl}false-city.mp3`,
+        "false-city": `${MusicBaseUrl}false-city.mp3`,
+        danger: `${MusicBaseUrl}danger.mp3`
     };
 
     const MusicPositionKey = "StoryRewriteMusicPositionsV2";
