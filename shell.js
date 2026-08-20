@@ -48,6 +48,28 @@
         }
     }
 
+    function MusicForRoute(Route) {
+        try {
+            const Url = new URL(Route, GetBaseUrl());
+            const PageName = Url.pathname.split("/").pop() || "main.html";
+
+            if (PageName === "multiplayer.html") return "lobby";
+
+            if (PageName === "dialog.html") {
+                const StageId = String(Url.searchParams.get("stage") || "").toLowerCase();
+                if (StageId.startsWith("fromville-")) return "fromville";
+                if (StageId.startsWith("neon-exorcists-")) return "neon-exorcists";
+                if (StageId.startsWith("blackthorn-manor-")) return "blackthorn";
+                if (StageId.startsWith("spirit-trail-")) return "spirit-grove";
+                if (StageId.startsWith("false-city-")) return "false-city";
+            }
+
+            return "menu";
+        } catch {
+            return "menu";
+        }
+    }
+
     function SetTopHistory(Route, Replace = false) {
         const Url = new URL(window.location.href);
         Url.hash = RouteHash(Route);
@@ -101,6 +123,13 @@
     function PlayMusic(Name) {
         CurrentMusicName = String(Name || "");
         if (CurrentMusicName && typeof StoryAudio !== "undefined") StoryAudio.PlayMusic(CurrentMusicName);
+    }
+
+    function ApplyRouteMusic(Route) {
+        const DesiredMusic = MusicForRoute(Route);
+        if (!DesiredMusic) return;
+        if (DesiredMusic === CurrentMusicName) return;
+        PlayMusic(DesiredMusic);
     }
 
     function StopMusic() {
@@ -177,6 +206,7 @@
             document.title = "Story Rewrite";
         }
 
+        ApplyRouteMusic(Route);
         WireFrameInteractionBridge();
     });
 
