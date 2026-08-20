@@ -1,0 +1,66 @@
+name: Install Uploaded Story Rewrite Music
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".audio-staging/READY"
+
+permissions:
+  contents: write
+
+jobs:
+  install-music:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Decode uploaded soundtrack
+        shell: bash
+        run: |
+          set -euo pipefail
+          tracks=(menu lobby fromville neon-exorcists blackthorn spirit-grove false-city danger)
+          mkdir -p music
+
+          for track in "${tracks[@]}"; do
+            shopt -s nullglob
+            parts=(.audio-staging/"$track"/*.part)
+            shopt -u nullglob
+            if [ "${#parts[@]}" -eq 0 ]; then
+              echo "Missing staged chunks for $track"
+              exit 1
+            fi
+
+            cat "${parts[@]}" | tr -d '\r\n' | base64 --decode > "music/$track.ogg"
+            bytes=$(wc -c < "music/$track.ogg")
+            if [ "$bytes" -lt 100000 ]; then
+              echo "Decoded $track.ogg is suspiciously small: $bytes bytes"
+              exit 1
+            fi
+            echo "$track.ogg: $bytes bytes"
+          done
+
+          rm -f \
+            music/menu.mp3 \
+            music/lobby.mp3 \
+            music/fromville.mp3 \
+            music/neon-exorcists.mp3 \
+            music/blackthorn.mp3 \
+            music/spirit-grove.mp3 \
+            music/false-city.mp3 \
+            music/danger.mp3
+
+          rm -rf .audio-staging
+          rm -f .github/workflows/install-uploaded-music.yml
+
+      - name: Commit real soundtrack binaries
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet && exit 0
+          git commit -m "Install uploaded Story Rewrite soundtrack binaries"
+          git push
