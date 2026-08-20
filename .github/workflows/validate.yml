@@ -18,11 +18,13 @@ jobs:
       - run: node --check server-v9.js
       - run: node --check server-v10.js
       - run: node --check server-v11.js
+      - run: node --check server-config.js
       - run: node --check network.js
       - run: node --check app.js
       - run: node --check audio.js
       - run: node --check audio-enhancements.js
       - run: node --check real-audio.js
+      - run: node --check shell.js
       - run: node --check auth.js
       - run: node --check main.js
       - run: node --check levels.js
