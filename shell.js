@@ -48,12 +48,53 @@
         }
     }
 
+    function MusicForRoute(Route) {
+        try {
+            const Url = new URL(Route, GetBaseUrl());
+            const PageName = Url.pathname.split("/").pop() || "main.html";
+
+            if (PageName === "multiplayer.html") return "lobby";
+
+            if (PageName === "dialog.html") {
+                const StageId = String(Url.searchParams.get("stage") || "").toLowerCase();
+                if (StageId.startsWith("fromville-")) return "fromville";
+                if (StageId.startsWith("neon-exorcists-")) return "neon-exorcists";
+                if (StageId.startsWith("blackthorn-manor-")) return "blackthorn";
+                if (StageId.startsWith("spirit-trail-")) return "spirit-grove";
+                if (StageId.startsWith("false-city-")) return "false-city";
+            }
+
+            return "menu";
+        } catch {
+            return "menu";
+        }
+    }
+
     function SetTopHistory(Route, Replace = false) {
         const Url = new URL(window.location.href);
         Url.hash = RouteHash(Route);
         const State = { StoryRewriteRoute: Route };
         if (Replace) window.history.replaceState(State, "", Url);
         else window.history.pushState(State, "", Url);
+    }
+
+    function ConfigureAudio(Settings = {}) {
+        if (typeof StoryAudio !== "undefined") StoryAudio.Configure(Settings);
+    }
+
+    function PlaySound(Name) {
+        if (typeof StoryAudio !== "undefined") StoryAudio.PlaySound(Name);
+    }
+
+    function PlayMusic(Name) {
+        CurrentMusicName = String(Name || "");
+        if (CurrentMusicName && typeof StoryAudio !== "undefined") StoryAudio.PlayMusic(CurrentMusicName);
+    }
+
+    function ApplyRouteMusic(Route) {
+        const DesiredMusic = MusicForRoute(Route);
+        if (!DesiredMusic || DesiredMusic === CurrentMusicName) return;
+        PlayMusic(DesiredMusic);
     }
 
     function LoadRoute(Route, Options = {}) {
@@ -64,6 +105,8 @@
         const SkipHistory = Boolean(Options.skipHistory);
         CurrentRoute = Normalized;
         LoadingFromShell = true;
+
+        ApplyRouteMusic(Normalized);
         if (!SkipHistory) SetTopHistory(Normalized, Replace);
         Frame.src = Normalized;
         return true;
@@ -88,19 +131,6 @@
             return;
         }
         Navigate(Fallback, { replace: true });
-    }
-
-    function ConfigureAudio(Settings = {}) {
-        if (typeof StoryAudio !== "undefined") StoryAudio.Configure(Settings);
-    }
-
-    function PlaySound(Name) {
-        if (typeof StoryAudio !== "undefined") StoryAudio.PlaySound(Name);
-    }
-
-    function PlayMusic(Name) {
-        CurrentMusicName = String(Name || "");
-        if (CurrentMusicName && typeof StoryAudio !== "undefined") StoryAudio.PlayMusic(CurrentMusicName);
     }
 
     function StopMusic() {
@@ -185,6 +215,7 @@
             document.title = "Story Rewrite";
         }
 
+        ApplyRouteMusic(Route);
         WireFrameInteractionBridge();
     });
 
@@ -211,6 +242,7 @@
     const InitialRoute = RouteFromLocation();
     CurrentRoute = InitialRoute;
     SetTopHistory(InitialRoute, true);
+    ApplyRouteMusic(InitialRoute);
     LoadingFromShell = true;
     Frame.src = InitialRoute;
 })();
