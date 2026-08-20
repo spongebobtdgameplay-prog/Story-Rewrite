@@ -41,6 +41,7 @@
     let MusicName = "";
     let PendingMusicName = "";
     let AudioContextInstance = null;
+    let AudioUnlocked = false;
     let LastSoundName = "";
     let LastSoundAt = 0;
 
@@ -188,7 +189,7 @@
     }
 
     function TryPlayPreparedMusic() {
-        if (!PendingMusicName || MusicVolume <= 0) return;
+        if (!AudioUnlocked || !PendingMusicName || MusicVolume <= 0) return;
 
         const Element = PrepareMusic(PendingMusicName);
         if (!Element) return;
@@ -208,6 +209,8 @@
     }
 
     function UnlockAudioFromGesture() {
+        AudioUnlocked = true;
+
         const Context = GetContext();
         if (Context?.state === "suspended") {
             const ResumePromise = Context.resume();
