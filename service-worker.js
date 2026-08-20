@@ -9,6 +9,5 @@ self.addEventListener("activate", Event => {
             .filter(CacheName => CacheName.startsWith("story-rewrite-"))
             .map(CacheName => caches.delete(CacheName)));
         await self.clients.claim();
-        await self.registration.unregister();
     })());
 });
