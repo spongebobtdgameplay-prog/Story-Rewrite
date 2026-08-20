@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     paths:
-      - ".audio-quality-v3/READY"
+      - ".audio-quality-v4/READY"
 
 permissions:
   contents: write
@@ -16,7 +16,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Decode quality soundtrack
+      - name: Assemble quality soundtrack
         shell: bash
         run: |
           set -euo pipefail
@@ -24,13 +24,14 @@ jobs:
           mkdir -p music
 
           for track in "${tracks[@]}"; do
-            payload=".audio-quality-v3/$track/payload.b64"
-            if [ ! -f "$payload" ]; then
-              echo "Missing quality soundtrack payload for $track"
+            dir=".audio-quality-v4/$track"
+            count=$(find "$dir" -maxdepth 1 -name 'part-*.bin' -type f | wc -l)
+            if [ "$count" -lt 8 ]; then
+              echo "Missing binary soundtrack fragments for $track"
               exit 1
             fi
 
-            tr -d '\r\n' < "$payload" | base64 --decode > "music/$track.ogg"
+            cat "$dir"/part-*.bin > "music/$track.ogg"
             bytes=$(wc -c < "music/$track.ogg")
             magic=$(head -c 4 "music/$track.ogg")
 
@@ -38,14 +39,14 @@ jobs:
               echo "$track.ogg is not an Ogg stream"
               exit 1
             fi
-            if [ "$bytes" -lt 150000 ]; then
+            if [ "$bytes" -lt 120000 ]; then
               echo "$track.ogg is suspiciously small: $bytes bytes"
               exit 1
             fi
             echo "$track.ogg: $bytes bytes"
           done
 
-          rm -rf .audio-quality-v3
+          rm -rf .audio-quality-v4 .audio-quality-v3
           rm -f .github/workflows/install-quality-music.yml
 
       - name: Commit quality soundtrack binaries
