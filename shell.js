@@ -37,10 +37,8 @@
         }
     }
 
-    function FreshRouteUrl(Route) {
-        const Url = new URL(Route, GetBaseUrl());
-        Url.searchParams.set("__fresh", Date.now().toString(36));
-        return Url.href;
+    function RouteUrl(Route) {
+        return new URL(Route, GetBaseUrl()).href;
     }
 
     function RouteHash(Route) {
@@ -135,7 +133,7 @@
 
         ApplyRouteMusic(Normalized);
         if (!SkipHistory) SetTopHistory(Normalized, Replace);
-        Frame.src = FreshRouteUrl(Normalized);
+        Frame.src = RouteUrl(Normalized);
         return true;
     }
 
@@ -271,5 +269,5 @@
     SetTopHistory(InitialRoute, true);
     ApplyRouteMusic(InitialRoute);
     LoadingFromShell = true;
-    Frame.src = FreshRouteUrl(InitialRoute);
+    Frame.src = RouteUrl(InitialRoute);
 })();
