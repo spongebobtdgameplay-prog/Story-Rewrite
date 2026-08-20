@@ -1,4 +1,4 @@
-const STORY_CACHE = "story-rewrite-frontend-v21";
+const STORY_CACHE = "story-rewrite-frontend-v22";
 const STORY_AUDIO_CACHE = "story-rewrite-audio-v1";
 
 const STORY_STATIC_FILES = [
@@ -69,9 +69,9 @@ self.addEventListener("activate", Event => {
     );
 });
 
-function IsCriticalCodeRequest(Request, Url) {
-    if (Request.mode === "navigate") return true;
-    if (Request.destination === "script" || Request.destination === "style") return true;
+function IsCriticalCodeRequest(FetchRequest, Url) {
+    if (FetchRequest.mode === "navigate") return true;
+    if (FetchRequest.destination === "script" || FetchRequest.destination === "style") return true;
     return Url.pathname.endsWith(".json");
 }
 
@@ -79,9 +79,9 @@ function IsStoryMusicRequest(Url) {
     return /\/music\/[^/]+\.(?:mp3|ogg|wav|m4a)$/i.test(Url.pathname);
 }
 
-function NormalizeNavigationKey(Request) {
-    if (Request.mode !== "navigate") return Request;
-    const Url = new URL(Request.url);
+function NormalizeNavigationKey(FetchRequest) {
+    if (FetchRequest.mode !== "navigate") return FetchRequest;
+    const Url = new URL(FetchRequest.url);
     return new Request(`${Url.origin}${Url.pathname}`);
 }
 
@@ -91,9 +91,9 @@ async function PutSuccessfulResponse(Key, Response, CacheName = STORY_CACHE) {
     await Cache.put(Key, Response.clone());
 }
 
-async function NetworkFirst(Request, CacheKey) {
+async function NetworkFirst(FetchRequest, CacheKey) {
     try {
-        const Response = await fetch(Request, { cache: "no-store" });
+        const Response = await fetch(FetchRequest, { cache: "no-store" });
         await PutSuccessfulResponse(CacheKey, Response);
         return Response;
     } catch (Error) {
@@ -103,28 +103,28 @@ async function NetworkFirst(Request, CacheKey) {
     }
 }
 
-async function CacheFirst(Request) {
-    const Cached = await caches.match(Request);
+async function CacheFirst(FetchRequest) {
+    const Cached = await caches.match(FetchRequest);
     if (Cached) return Cached;
 
-    const Response = await fetch(Request);
-    await PutSuccessfulResponse(Request, Response);
+    const Response = await fetch(FetchRequest);
+    await PutSuccessfulResponse(FetchRequest, Response);
     return Response;
 }
 
-function BuildFullAudioRequest(Request) {
-    const Headers = new Headers(Request.headers);
-    Headers.delete("range");
-    return new Request(Request.url, {
+function BuildFullAudioRequest(AudioRequest) {
+    const AudioHeaders = new Headers(AudioRequest.headers);
+    AudioHeaders.delete("range");
+    return new Request(AudioRequest.url, {
         method: "GET",
-        headers: Headers,
-        mode: Request.mode,
-        credentials: Request.credentials,
+        headers: AudioHeaders,
+        mode: AudioRequest.mode,
+        credentials: AudioRequest.credentials,
         cache: "no-store",
-        redirect: Request.redirect,
-        referrer: Request.referrer,
-        referrerPolicy: Request.referrerPolicy,
-        integrity: Request.integrity
+        redirect: AudioRequest.redirect,
+        referrer: AudioRequest.referrer,
+        referrerPolicy: AudioRequest.referrerPolicy,
+        integrity: AudioRequest.integrity
     });
 }
 
@@ -163,53 +163,53 @@ async function BuildRangeResponse(Response, RangeHeader) {
         });
     }
 
-    const Headers = new Headers(Response.headers);
-    Headers.set("Accept-Ranges", "bytes");
-    Headers.set("Content-Range", `bytes ${Range.Start}-${Range.End}/${Buffer.byteLength}`);
-    Headers.set("Content-Length", String(Range.End - Range.Start + 1));
+    const RangeHeaders = new Headers(Response.headers);
+    RangeHeaders.set("Accept-Ranges", "bytes");
+    RangeHeaders.set("Content-Range", `bytes ${Range.Start}-${Range.End}/${Buffer.byteLength}`);
+    RangeHeaders.set("Content-Length", String(Range.End - Range.Start + 1));
 
     return new Response(Buffer.slice(Range.Start, Range.End + 1), {
         status: 206,
         statusText: "Partial Content",
-        headers: Headers
+        headers: RangeHeaders
     });
 }
 
-async function GetCachedStoryMusic(Request) {
+async function GetCachedStoryMusic(AudioRequest) {
     const Cache = await caches.open(STORY_AUDIO_CACHE);
-    const CacheKey = new Request(Request.url, { method: "GET" });
+    const CacheKey = new Request(AudioRequest.url, { method: "GET" });
     let FullResponse = await Cache.match(CacheKey);
 
     if (!FullResponse) {
-        const NetworkRequest = BuildFullAudioRequest(Request);
+        const NetworkRequest = BuildFullAudioRequest(AudioRequest);
         const NetworkResponse = await fetch(NetworkRequest);
         if (!NetworkResponse.ok) return NetworkResponse;
         await Cache.put(CacheKey, NetworkResponse.clone());
         FullResponse = NetworkResponse;
     }
 
-    const RangeHeader = Request.headers.get("range");
+    const RangeHeader = AudioRequest.headers.get("range");
     if (RangeHeader) return BuildRangeResponse(FullResponse.clone(), RangeHeader);
     return FullResponse;
 }
 
 self.addEventListener("fetch", Event => {
-    const Request = Event.request;
-    if (Request.method !== "GET") return;
+    const FetchRequest = Event.request;
+    if (FetchRequest.method !== "GET") return;
 
-    const Url = new URL(Request.url);
+    const Url = new URL(FetchRequest.url);
     if (Url.origin !== self.location.origin) return;
 
     if (IsStoryMusicRequest(Url)) {
-        Event.respondWith(GetCachedStoryMusic(Request));
+        Event.respondWith(GetCachedStoryMusic(FetchRequest));
         return;
     }
 
-    if (IsCriticalCodeRequest(Request, Url)) {
-        const CacheKey = NormalizeNavigationKey(Request);
-        Event.respondWith(NetworkFirst(Request, CacheKey));
+    if (IsCriticalCodeRequest(FetchRequest, Url)) {
+        const CacheKey = NormalizeNavigationKey(FetchRequest);
+        Event.respondWith(NetworkFirst(FetchRequest, CacheKey));
         return;
     }
 
-    Event.respondWith(CacheFirst(Request));
+    Event.respondWith(CacheFirst(FetchRequest));
 });
