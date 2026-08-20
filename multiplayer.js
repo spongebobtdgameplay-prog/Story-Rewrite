@@ -144,12 +144,6 @@ async function InitializeMultiplayer() {
     const ProfileResult = await RequireAccount();
     CurrentProfile = ProfileResult.profile;
 
-    const Save = await FetchServerSave();
-    if (window.StoryAudio) {
-        StoryAudio.Configure(Save.settings);
-        StoryAudio.PlayMusic("lobby");
-    }
-
     await LoadSocketClient();
 
     if (MultiplayerSocket) {
