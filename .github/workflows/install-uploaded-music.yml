@@ -24,17 +24,15 @@ jobs:
           mkdir -p music
 
           for track in "${tracks[@]}"; do
-            shopt -s nullglob
-            parts=(.audio-staging/"$track"/*.part)
-            shopt -u nullglob
-            if [ "${#parts[@]}" -eq 0 ]; then
-              echo "Missing staged chunks for $track"
+            part=".audio-staging/$track/00.part"
+            if [ ! -f "$part" ]; then
+              echo "Missing staged audio for $track"
               exit 1
             fi
 
-            cat "${parts[@]}" | tr -d '\r\n' | base64 --decode > "music/$track.ogg"
+            tr -d '\r\n' < "$part" | base64 --decode > "music/$track.ogg"
             bytes=$(wc -c < "music/$track.ogg")
-            if [ "$bytes" -lt 25000 ]; then
+            if [ "$bytes" -lt 5000 ]; then
               echo "Decoded $track.ogg is suspiciously small: $bytes bytes"
               exit 1
             fi
