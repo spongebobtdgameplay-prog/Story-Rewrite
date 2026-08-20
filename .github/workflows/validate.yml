@@ -25,6 +25,7 @@ jobs:
       - run: node --check audio-enhancements.js
       - run: node --check real-audio.js
       - run: node --check shell.js
+      - run: node --check service-worker.js
       - run: node --check auth.js
       - run: node --check main.js
       - run: node --check levels.js
