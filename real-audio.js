@@ -27,16 +27,9 @@
         StoryAudio.PlaySound.V11Wrapped = true;
 
         const NotifyInteraction = () => ShellHost.StoryShell.NotifyInteraction();
-        const PlayGenericButtonClick = Event => {
-            const Button = Event.target?.closest?.("button,[role='button']");
-            if (!Button || Button.disabled || Button.getAttribute("aria-disabled") === "true") return;
-            ShellHost.StoryShell.PlaySound("click");
-        };
-
         document.addEventListener("pointerdown", NotifyInteraction, { capture: true, passive: true });
         document.addEventListener("touchstart", NotifyInteraction, { capture: true, passive: true });
         document.addEventListener("keydown", NotifyInteraction, { capture: true });
-        document.addEventListener("click", PlayGenericButtonClick, { capture: true });
         return;
     }
 
@@ -47,7 +40,6 @@
     let MusicElement = null;
     let MusicName = "";
     let PendingMusicName = "";
-    let MusicObjectUrl = "";
     let AudioContextInstance = null;
     let LastSoundName = "";
     let LastSoundAt = 0;
@@ -68,8 +60,7 @@
         danger: "Music/danger.mp3"
     };
 
-    const MusicCacheName = "story-rewrite-music-v1";
-    const MusicPositionKey = "StoryRewriteMusicPositionsV1";
+    const MusicPositionKey = "StoryRewriteMusicPositionsV2";
     const FadeInSeconds = 0.85;
     const FadeOutSeconds = 3;
 
@@ -87,11 +78,15 @@
         }
     }
 
+    function WritePositions(Positions) {
+        try { sessionStorage.setItem(MusicPositionKey, JSON.stringify(Positions)); } catch {}
+    }
+
     function SavePosition(Name = MusicName, Element = MusicElement) {
         if (!Name || !Element || !Number.isFinite(Element.currentTime)) return;
         const Positions = ReadPositions();
         Positions[Name] = Math.max(0, Element.currentTime);
-        try { sessionStorage.setItem(MusicPositionKey, JSON.stringify(Positions)); } catch {}
+        WritePositions(Positions);
     }
 
     function SavedPosition(Name) {
@@ -99,33 +94,24 @@
         return Number.isFinite(Value) && Value >= 0 ? Value : 0;
     }
 
-    async function GetMusicBlobUrl(RelativeUrl) {
-        const AbsoluteUrl = new URL(RelativeUrl, window.location.href).href;
-        if (!("caches" in window)) return AbsoluteUrl;
-
-        const Cache = await caches.open(MusicCacheName);
-        let Response = await Cache.match(AbsoluteUrl);
-        if (!Response) {
-            Response = await fetch(AbsoluteUrl);
-            if (!Response.ok) throw new Error(`Music asset failed with ${Response.status}: ${RelativeUrl}`);
-            await Cache.put(AbsoluteUrl, Response.clone());
-        }
-        return URL.createObjectURL(await Response.blob());
-    }
-
     function ApplyMusicFade(Element) {
-        if (!Element || !Number.isFinite(Element.duration) || Element.duration <= 0) return;
+        if (!Element || !Number.isFinite(Element.duration) || Element.duration <= 0) {
+            if (Element) Element.volume = MusicVolume;
+            return;
+        }
+
         const Remaining = Element.duration - Element.currentTime;
         let Fade = 1;
-        if (Element.currentTime < FadeInSeconds) Fade = Math.min(Fade, Element.currentTime / FadeInSeconds);
-        if (Remaining < FadeOutSeconds) Fade = Math.min(Fade, Math.max(0, Remaining / FadeOutSeconds));
-        Element.volume = MusicVolume * Math.max(0, Math.min(1, Fade));
-    }
 
-    function ReleaseMusicObjectUrl() {
-        if (!MusicObjectUrl) return;
-        URL.revokeObjectURL(MusicObjectUrl);
-        MusicObjectUrl = "";
+        if (Element.currentTime < FadeInSeconds) {
+            Fade = Math.min(Fade, Math.max(0, Element.currentTime / FadeInSeconds));
+        }
+
+        if (Remaining < FadeOutSeconds) {
+            Fade = Math.min(Fade, Math.max(0, Remaining / FadeOutSeconds));
+        }
+
+        Element.volume = MusicVolume * Math.max(0, Math.min(1, Fade));
     }
 
     function StopMusicInternal(Save = true) {
@@ -133,56 +119,42 @@
             if (Save) SavePosition();
             MusicElement.pause();
             MusicElement.removeAttribute("src");
-            MusicElement.load();
+            try { MusicElement.load(); } catch {}
         }
+
         MusicElement = null;
         MusicName = "";
-        ReleaseMusicObjectUrl();
     }
 
-    async function StartMusic(Name) {
+    function PrepareMusic(Name) {
         const RelativeUrl = MusicFiles[Name];
-        if (!RelativeUrl || MusicVolume <= 0) return false;
+        if (!RelativeUrl || MusicVolume <= 0) return null;
 
         if (MusicElement && MusicName === Name) {
             ApplyMusicFade(MusicElement);
-            if (!MusicElement.paused) return true;
-            try {
-                await MusicElement.play();
-                return true;
-            } catch {
-                return false;
-            }
+            return MusicElement;
         }
 
         StopMusicInternal(true);
 
-        let PlaybackUrl;
-        try {
-            PlaybackUrl = await GetMusicBlobUrl(RelativeUrl);
-        } catch (Error) {
-            console.error(Error);
-            return false;
-        }
-
-        if (PendingMusicName !== Name) {
-            if (PlaybackUrl.startsWith("blob:")) URL.revokeObjectURL(PlaybackUrl);
-            return false;
-        }
-
-        const Element = new Audio(PlaybackUrl);
+        const Element = new Audio();
         Element.preload = "auto";
         Element.loop = false;
+        Element.src = new URL(RelativeUrl, window.location.href).href;
         Element.volume = 0;
-        if (PlaybackUrl.startsWith("blob:")) MusicObjectUrl = PlaybackUrl;
 
         Element.addEventListener("loadedmetadata", () => {
             if (!Number.isFinite(Element.duration) || Element.duration <= 0) return;
+
             const Position = SavedPosition(Name);
             const SafePosition = Position >= Element.duration - FadeOutSeconds
                 ? 0
                 : Math.min(Position, Math.max(0, Element.duration - 0.25));
-            if (SafePosition > 0.05) Element.currentTime = SafePosition;
+
+            if (SafePosition > 0.05) {
+                try { Element.currentTime = SafePosition; } catch {}
+            }
+
             ApplyMusicFade(Element);
         }, { once: true });
 
@@ -193,23 +165,36 @@
 
         Element.addEventListener("ended", () => {
             if (MusicElement !== Element || PendingMusicName !== Name) return;
+
             const Positions = ReadPositions();
             Positions[Name] = 0;
-            try { sessionStorage.setItem(MusicPositionKey, JSON.stringify(Positions)); } catch {}
+            WritePositions(Positions);
+
             Element.currentTime = 0;
             Element.volume = 0;
             Element.play().catch(() => {});
         });
 
+        Element.addEventListener("error", () => {
+            console.warn(`Music failed to load: ${RelativeUrl}`);
+        });
+
         MusicElement = Element;
         MusicName = Name;
 
-        try {
-            await Element.play();
-            return true;
-        } catch {
-            return false;
-        }
+        try { Element.load(); } catch {}
+        return Element;
+    }
+
+    function TryPlayPreparedMusic() {
+        if (!PendingMusicName || MusicVolume <= 0) return;
+
+        const Element = PrepareMusic(PendingMusicName);
+        if (!Element) return;
+
+        ApplyMusicFade(Element);
+        const PlayPromise = Element.play();
+        if (PlayPromise?.catch) PlayPromise.catch(() => {});
     }
 
     function GetContext() {
@@ -221,18 +206,31 @@
         return AudioContextInstance;
     }
 
+    function UnlockAudioFromGesture() {
+        const Context = GetContext();
+        if (Context?.state === "suspended") {
+            const ResumePromise = Context.resume();
+            if (ResumePromise?.catch) ResumePromise.catch(() => {});
+        }
+
+        if (PendingMusicName) TryPlayPreparedMusic();
+    }
+
     async function EnsureContextRunning() {
         const Context = GetContext();
         if (!Context) return null;
+
         if (Context.state === "suspended") {
             try { await Context.resume(); } catch {}
         }
+
         return Context.state === "running" ? Context : null;
     }
 
     function Tone(Frequency, Duration, GainAmount = 0.025, Type = "sine", Delay = 0, EndFrequency = null) {
         const Context = AudioContextInstance;
         if (!Context || Context.state !== "running" || SoundVolume <= 0) return;
+
         const Start = Context.currentTime + Math.max(0, Delay);
         const End = Start + Math.max(0.025, Duration);
         const Oscillator = Context.createOscillator();
@@ -241,30 +239,34 @@
 
         Oscillator.type = Type;
         Oscillator.frequency.setValueAtTime(Math.max(20, Frequency), Start);
-        if (Number.isFinite(EndFrequency)) Oscillator.frequency.exponentialRampToValueAtTime(Math.max(20, EndFrequency), End);
+        if (Number.isFinite(EndFrequency)) {
+            Oscillator.frequency.exponentialRampToValueAtTime(Math.max(20, EndFrequency), End);
+        }
 
         Filter.type = "lowpass";
-        Filter.frequency.setValueAtTime(2800, Start);
-        Filter.Q.value = 0.3;
+        Filter.frequency.setValueAtTime(3000, Start);
+        Filter.Q.value = 0.25;
 
         const Peak = Math.max(0.0001, GainAmount * SoundVolume);
         Gain.gain.setValueAtTime(0.0001, Start);
-        Gain.gain.exponentialRampToValueAtTime(Peak, Start + Math.min(0.014, Duration * 0.3));
+        Gain.gain.exponentialRampToValueAtTime(Peak, Start + Math.min(0.012, Duration * 0.28));
         Gain.gain.exponentialRampToValueAtTime(0.0001, End);
 
         Oscillator.connect(Filter);
         Filter.connect(Gain);
         Gain.connect(Context.destination);
         Oscillator.start(Start);
-        Oscillator.stop(End + 0.02);
+        Oscillator.stop(End + 0.025);
     }
 
     function Noise(Duration = 0.08, GainAmount = 0.02, FilterFrequency = 1500, Delay = 0) {
         const Context = AudioContextInstance;
         if (!Context || Context.state !== "running" || SoundVolume <= 0) return;
+
         const Length = Math.max(1, Math.floor(Context.sampleRate * Duration));
         const Buffer = Context.createBuffer(1, Length, Context.sampleRate);
         const Data = Buffer.getChannelData(0);
+
         for (let Index = 0; Index < Length; Index += 1) {
             const Fade = 1 - Index / Length;
             Data[Index] = (Math.random() * 2 - 1) * Fade * Fade;
@@ -274,31 +276,35 @@
         const Filter = Context.createBiquadFilter();
         const Gain = Context.createGain();
         const Start = Context.currentTime + Math.max(0, Delay);
+
         Source.buffer = Buffer;
         Filter.type = "lowpass";
         Filter.frequency.value = FilterFrequency;
-        Filter.Q.value = 0.4;
+        Filter.Q.value = 0.35;
         Gain.gain.setValueAtTime(Math.max(0.0001, GainAmount * SoundVolume), Start);
         Gain.gain.exponentialRampToValueAtTime(0.0001, Start + Duration);
+
         Source.connect(Filter);
         Filter.connect(Gain);
         Gain.connect(Context.destination);
         Source.start(Start);
-        Source.stop(Start + Duration + 0.02);
+        Source.stop(Start + Duration + 0.025);
     }
 
     async function PlayProceduralSound(Name) {
         if (SoundVolume <= 0) return;
+
         const Now = performance.now();
         if (Name === LastSoundName && Now - LastSoundAt < 45) return;
         LastSoundName = Name;
         LastSoundAt = Now;
+
         if (!(await EnsureContextRunning())) return;
 
         switch (Name) {
             case "click":
-                Tone(575, 0.06, 0.024, "sine", 0, 500);
-                Tone(790, 0.045, 0.009, "triangle", 0.008, 680);
+                Tone(560, 0.065, 0.028, "sine", 0, 500);
+                Tone(760, 0.046, 0.011, "triangle", 0.008, 650);
                 break;
             case "cross":
                 Noise(0.09, 0.022, 1200);
@@ -360,13 +366,16 @@
         }
     }
 
-    function ResumeMusicFromInteraction() {
-        if (PendingMusicName) StartMusic(PendingMusicName);
+    function GenericButtonClick(Event) {
+        const Button = Event.target?.closest?.("button,[role='button']");
+        if (!Button || Button.disabled || Button.getAttribute("aria-disabled") === "true") return;
+        PlayProceduralSound("click");
     }
 
-    document.addEventListener("pointerdown", ResumeMusicFromInteraction, { capture: true, passive: true });
-    document.addEventListener("touchstart", ResumeMusicFromInteraction, { capture: true, passive: true });
-    document.addEventListener("keydown", ResumeMusicFromInteraction, { capture: true });
+    document.addEventListener("pointerdown", UnlockAudioFromGesture, { capture: true, passive: true });
+    document.addEventListener("touchstart", UnlockAudioFromGesture, { capture: true, passive: true });
+    document.addEventListener("keydown", UnlockAudioFromGesture, { capture: true });
+    document.addEventListener("click", GenericButtonClick, { capture: true });
     window.addEventListener("pagehide", () => SavePosition());
     window.addEventListener("beforeunload", () => SavePosition());
 
@@ -378,9 +387,11 @@
     };
 
     StoryAudio.PlayMusic = function(Name) {
-        PendingMusicName = Name;
-        if (!MusicFiles[Name]) return;
-        StartMusic(Name);
+        PendingMusicName = String(Name || "");
+        if (!MusicFiles[PendingMusicName]) return;
+
+        PrepareMusic(PendingMusicName);
+        TryPlayPreparedMusic();
     };
 
     StoryAudio.StopMusic = function() {
@@ -392,4 +403,6 @@
         PlayProceduralSound(Name);
     };
     StoryAudio.PlaySound.V11Wrapped = true;
+
+    StoryAudio.UnlockAudio = UnlockAudioFromGesture;
 })();
