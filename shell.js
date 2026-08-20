@@ -12,16 +12,9 @@
         "account.html"
     ]);
 
-    const LobbyMusicElement = new Audio("https://raw.githubusercontent.com/spongebobtdgameplay-prog/Story-Rewrite/main/Music/lobby.mp3");
-    LobbyMusicElement.preload = "auto";
-    LobbyMusicElement.loop = true;
-    LobbyMusicElement.volume = 0.45;
-
     let CurrentRoute = "";
     let CurrentMusicName = "";
     let LoadingFromShell = false;
-    let ShellAudioUnlocked = false;
-    let LobbyMusicVolume = 0.45;
 
     function GetBaseUrl() {
         return new URL(".", window.location.href);
@@ -87,46 +80,15 @@
 
     function ConfigureAudio(Settings = {}) {
         if (typeof StoryAudio !== "undefined") StoryAudio.Configure(Settings);
-
-        const RequestedMusicVolume = Number(Settings.musicVolume);
-        if (Number.isFinite(RequestedMusicVolume)) {
-            LobbyMusicVolume = Math.max(0, Math.min(1, RequestedMusicVolume));
-            LobbyMusicElement.volume = LobbyMusicVolume;
-            if (LobbyMusicVolume <= 0) LobbyMusicElement.pause();
-        }
     }
 
     function PlaySound(Name) {
         if (typeof StoryAudio !== "undefined") StoryAudio.PlaySound(Name);
     }
 
-    function PlayLobbyMusic() {
-        if (!ShellAudioUnlocked || LobbyMusicVolume <= 0) return;
-        LobbyMusicElement.volume = LobbyMusicVolume;
-        const Promise = LobbyMusicElement.play();
-        if (Promise?.catch) Promise.catch(Error => {
-            console.warn("Lobby music failed to play:", Error);
-        });
-    }
-
-    function StopLobbyMusic() {
-        LobbyMusicElement.pause();
-    }
-
     function PlayMusic(Name) {
-        const NextMusicName = String(Name || "");
-        const WasLobby = CurrentMusicName === "lobby";
-        CurrentMusicName = NextMusicName;
-
-        if (WasLobby && NextMusicName !== "lobby") StopLobbyMusic();
-
-        if (NextMusicName === "lobby") {
-            if (typeof StoryAudio !== "undefined") StoryAudio.StopMusic();
-            PlayLobbyMusic();
-            return;
-        }
-
-        if (NextMusicName && typeof StoryAudio !== "undefined") StoryAudio.PlayMusic(NextMusicName);
+        CurrentMusicName = String(Name || "");
+        if (CurrentMusicName && typeof StoryAudio !== "undefined") StoryAudio.PlayMusic(CurrentMusicName);
     }
 
     function ApplyRouteMusic(Route) {
@@ -172,19 +134,11 @@
     }
 
     function StopMusic() {
-        StopLobbyMusic();
         CurrentMusicName = "";
         if (typeof StoryAudio !== "undefined") StoryAudio.StopMusic();
     }
 
     function NotifyInteraction() {
-        ShellAudioUnlocked = true;
-
-        if (CurrentMusicName === "lobby") {
-            PlayLobbyMusic();
-            return;
-        }
-
         if (typeof StoryAudio === "undefined") return;
 
         if (typeof StoryAudio.UnlockAudio === "function") {
