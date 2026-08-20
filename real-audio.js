@@ -1,31 +1,10 @@
-let StoryRealSoundVolume = 0.75;
 let StoryRealMusicVolume = 0.45;
-let StoryRealAudioUnlocked = false;
+let StoryProceduralSoundVolume = 0.75;
 let StoryRealMusicElement = null;
 let StoryRealMusicName = "";
 let StoryPendingMusicName = "";
 let StoryRealMusicObjectUrl = "";
-
-const StoryRealSoundBases = [
-    "https://cdn.jsdelivr.net/gh/Calinou/kenney-interface-sounds@master/addons/kenney_interface_sounds/",
-    "https://raw.githubusercontent.com/Calinou/kenney-interface-sounds/master/addons/kenney_interface_sounds/"
-];
-
-const StoryRealSoundFiles = {
-    click: "click_001.wav",
-    cross: "scratch_003.wav",
-    restore: "maximize_007.wav",
-    join: "open_001.wav",
-    message: "select_007.wav",
-    ready: "confirmation_001.wav",
-    fail: "error_008.wav",
-    life: "error_001.wav",
-    success: "confirmation_002.wav",
-    vote: "tick_001.wav",
-    revive: "maximize_001.wav",
-    reviveEarned: "confirmation_003.wav",
-    heartRefill: "confirmation_004.wav"
-};
+let StoryProceduralContext = null;
 
 const StoryRealMusicFiles = {
     menu: "Music/menu.mp3",
@@ -35,6 +14,7 @@ const StoryRealMusicFiles = {
     "neon-exorcists": "Music/neon-exorcists.mp3",
     manor: "Music/blackthorn.mp3",
     blackthorn: "Music/blackthorn.mp3",
+    forest: "Music/spirit-grove.mp3",
     spirit: "Music/spirit-grove.mp3",
     "spirit-grove": "Music/spirit-grove.mp3",
     city: "Music/false-city.mp3",
@@ -42,9 +22,8 @@ const StoryRealMusicFiles = {
     danger: "Music/danger.mp3"
 };
 
-const StoryRealSoundCache = new Map();
 const StoryMusicFadeOutSeconds = 3;
-const StoryMusicFadeInSeconds = 1.25;
+const StoryMusicFadeInSeconds = 0.85;
 const StoryMusicCacheName = "story-rewrite-music-v1";
 
 function ClampStoryAudioVolume(Value, Fallback) {
@@ -52,35 +31,8 @@ function ClampStoryAudioVolume(Value, Fallback) {
     return Number.isFinite(NumberValue) ? Math.max(0, Math.min(1, NumberValue)) : Fallback;
 }
 
-function GetStoryRealSoundUrls(Name) {
-    const File = StoryRealSoundFiles[Name];
-    if (!File) return [];
-    return StoryRealSoundBases.map(Base => `${Base}${File}`);
-}
-
-function BuildStoryRealSound(Name, SourceIndex = 0) {
-    const Url = GetStoryRealSoundUrls(Name)[SourceIndex];
-    if (!Url) return null;
-    const AudioElement = new Audio();
-    AudioElement.preload = "auto";
-    AudioElement.src = Url;
-    AudioElement.volume = StoryRealSoundVolume;
-    return AudioElement;
-}
-
-function PreloadStoryRealSounds() {
-    for (const Name of Object.keys(StoryRealSoundFiles)) {
-        if (StoryRealSoundCache.has(Name)) continue;
-        const AudioElement = BuildStoryRealSound(Name);
-        if (!AudioElement) continue;
-        StoryRealSoundCache.set(Name, AudioElement);
-        try { AudioElement.load(); } catch {}
-    }
-}
-
 async function GetBundledMusicBlobUrl(RelativeUrl) {
     const AbsoluteUrl = new URL(RelativeUrl, window.location.href).href;
-
     if (!("caches" in window)) return AbsoluteUrl;
 
     const Cache = await caches.open(StoryMusicCacheName);
@@ -129,7 +81,7 @@ function StopStoryRealMusic() {
 
 async function StartStoryRealMusic(Name) {
     const RelativeUrl = StoryRealMusicFiles[Name];
-    if (!RelativeUrl || !StoryRealAudioUnlocked || StoryRealMusicVolume <= 0) return false;
+    if (!RelativeUrl || StoryRealMusicVolume <= 0) return false;
 
     if (StoryRealMusicElement && StoryRealMusicName === Name) {
         ApplyStoryMusicFade(StoryRealMusicElement);
@@ -180,75 +132,186 @@ async function StartStoryRealMusic(Name) {
         await AudioElement.play();
         return true;
     } catch {
-        if (StoryRealMusicElement === AudioElement) StopStoryRealMusic();
+        // Browsers may block audible autoplay. Keep the loaded element alive so
+        // the first normal pointer/key interaction can resume it immediately.
         return false;
     }
 }
 
-function UnlockStoryRealAudio() {
-    if (StoryRealAudioUnlocked) return;
-    StoryRealAudioUnlocked = true;
-    PreloadStoryRealSounds();
-    if (StoryPendingMusicName) StartStoryRealMusic(StoryPendingMusicName);
+function GetStoryProceduralContext() {
+    if (!StoryProceduralContext) {
+        const ContextClass = window.AudioContext || window.webkitAudioContext;
+        if (!ContextClass) return null;
+        StoryProceduralContext = new ContextClass();
+    }
+    return StoryProceduralContext;
 }
 
-async function TryPlayStoryRealSound(Name, SourceIndex) {
-    const Urls = GetStoryRealSoundUrls(Name);
-    if (!Urls[SourceIndex] || StoryRealSoundVolume <= 0) return false;
+function ResumeStoryAudio() {
+    const Context = GetStoryProceduralContext();
+    if (Context?.state === "suspended") Context.resume().catch(() => {});
 
-    const AudioElement = SourceIndex === 0 && StoryRealSoundCache.has(Name)
-        ? StoryRealSoundCache.get(Name).cloneNode(true)
-        : BuildStoryRealSound(Name, SourceIndex);
-
-    if (!AudioElement) return false;
-    AudioElement.volume = StoryRealSoundVolume;
-
-    try {
-        AudioElement.currentTime = 0;
-        await AudioElement.play();
-        return true;
-    } catch {
-        return false;
+    if (StoryPendingMusicName && StoryRealMusicElement?.paused) {
+        StoryRealMusicElement.play().catch(() => {});
+    } else if (StoryPendingMusicName && !StoryRealMusicElement) {
+        StartStoryRealMusic(StoryPendingMusicName);
     }
 }
 
-async function PlayStoryRealSound(Name) {
-    if (!StoryRealAudioUnlocked || StoryRealSoundVolume <= 0 || !StoryRealSoundFiles[Name]) return false;
+function PlaySmoothTone(Frequency, Duration, GainAmount = 0.035, Type = "sine", Delay = 0, EndFrequency = null) {
+    const Context = GetStoryProceduralContext();
+    if (!Context || Context.state !== "running" || StoryProceduralSoundVolume <= 0) return;
 
-    for (let SourceIndex = 0; SourceIndex < StoryRealSoundBases.length; SourceIndex += 1) {
-        if (await TryPlayStoryRealSound(Name, SourceIndex)) return true;
+    const Start = Context.currentTime + Math.max(0, Delay);
+    const End = Start + Math.max(0.025, Duration);
+    const Oscillator = Context.createOscillator();
+    const Gain = Context.createGain();
+    const Filter = Context.createBiquadFilter();
+
+    Oscillator.type = Type;
+    Oscillator.frequency.setValueAtTime(Math.max(20, Frequency), Start);
+    if (Number.isFinite(EndFrequency)) {
+        Oscillator.frequency.exponentialRampToValueAtTime(Math.max(20, EndFrequency), End);
     }
 
-    return false;
+    Filter.type = "lowpass";
+    Filter.frequency.setValueAtTime(3200, Start);
+    Filter.Q.value = 0.35;
+
+    const Peak = Math.max(0.0001, GainAmount * StoryProceduralSoundVolume);
+    Gain.gain.setValueAtTime(0.0001, Start);
+    Gain.gain.exponentialRampToValueAtTime(Peak, Start + Math.min(0.012, Duration * 0.25));
+    Gain.gain.exponentialRampToValueAtTime(0.0001, End);
+
+    Oscillator.connect(Filter);
+    Filter.connect(Gain);
+    Gain.connect(Context.destination);
+    Oscillator.start(Start);
+    Oscillator.stop(End + 0.02);
 }
 
-PreloadStoryRealSounds();
-document.addEventListener("pointerdown", UnlockStoryRealAudio, { capture: true, passive: true });
-document.addEventListener("keydown", UnlockStoryRealAudio, { capture: true });
-document.addEventListener("touchstart", UnlockStoryRealAudio, { capture: true, passive: true });
+function PlaySmoothNoise(Duration = 0.08, GainAmount = 0.02, FilterFrequency = 1500, Delay = 0) {
+    const Context = GetStoryProceduralContext();
+    if (!Context || Context.state !== "running" || StoryProceduralSoundVolume <= 0) return;
+
+    const Length = Math.max(1, Math.floor(Context.sampleRate * Duration));
+    const Buffer = Context.createBuffer(1, Length, Context.sampleRate);
+    const Data = Buffer.getChannelData(0);
+    for (let Index = 0; Index < Length; Index += 1) {
+        const Fade = 1 - Index / Length;
+        Data[Index] = (Math.random() * 2 - 1) * Fade * Fade;
+    }
+
+    const Source = Context.createBufferSource();
+    const Filter = Context.createBiquadFilter();
+    const Gain = Context.createGain();
+    const Start = Context.currentTime + Math.max(0, Delay);
+
+    Source.buffer = Buffer;
+    Filter.type = "lowpass";
+    Filter.frequency.value = FilterFrequency;
+    Filter.Q.value = 0.45;
+    Gain.gain.setValueAtTime(Math.max(0.0001, GainAmount * StoryProceduralSoundVolume), Start);
+    Gain.gain.exponentialRampToValueAtTime(0.0001, Start + Duration);
+
+    Source.connect(Filter);
+    Filter.connect(Gain);
+    Gain.connect(Context.destination);
+    Source.start(Start);
+    Source.stop(Start + Duration + 0.02);
+}
+
+function PlayStoryProceduralSound(Name) {
+    if (StoryProceduralSoundVolume <= 0) return;
+
+    switch (Name) {
+        case "click":
+            PlaySmoothTone(620, 0.052, 0.026, "sine", 0, 520);
+            PlaySmoothTone(930, 0.036, 0.012, "triangle", 0.006, 760);
+            break;
+        case "cross":
+            PlaySmoothNoise(0.095, 0.025, 1250);
+            PlaySmoothTone(330, 0.12, 0.025, "triangle", 0, 180);
+            break;
+        case "restore":
+            PlaySmoothTone(330, 0.09, 0.026, "sine", 0, 430);
+            PlaySmoothTone(510, 0.12, 0.022, "triangle", 0.055, 650);
+            break;
+        case "join":
+            PlaySmoothTone(392, 0.11, 0.024, "sine");
+            PlaySmoothTone(523.25, 0.13, 0.026, "sine", 0.075);
+            PlaySmoothTone(659.25, 0.16, 0.023, "triangle", 0.15);
+            break;
+        case "message":
+            PlaySmoothTone(740, 0.065, 0.022, "sine");
+            PlaySmoothTone(980, 0.08, 0.015, "sine", 0.045);
+            break;
+        case "ready":
+            PlaySmoothTone(350, 0.08, 0.024, "triangle");
+            PlaySmoothTone(470, 0.1, 0.025, "triangle", 0.065);
+            PlaySmoothTone(700, 0.15, 0.022, "sine", 0.13);
+            break;
+        case "vote":
+            PlaySmoothTone(480, 0.055, 0.023, "sine");
+            PlaySmoothTone(640, 0.07, 0.016, "triangle", 0.04);
+            break;
+        case "fail":
+            PlaySmoothNoise(0.2, 0.028, 620);
+            PlaySmoothTone(150, 0.38, 0.04, "triangle", 0, 68);
+            break;
+        case "life":
+            PlaySmoothTone(115, 0.44, 0.043, "sine", 0, 55);
+            PlaySmoothNoise(0.12, 0.02, 480, 0.03);
+            break;
+        case "success":
+            PlaySmoothTone(523.25, 0.15, 0.025, "triangle");
+            PlaySmoothTone(659.25, 0.18, 0.025, "triangle", 0.09);
+            PlaySmoothTone(783.99, 0.24, 0.025, "sine", 0.18);
+            break;
+        case "revive":
+            PlaySmoothTone(220, 0.16, 0.025, "sine", 0, 330);
+            PlaySmoothTone(440, 0.2, 0.028, "triangle", 0.11, 660);
+            PlaySmoothTone(880, 0.28, 0.022, "sine", 0.23, 1040);
+            break;
+        case "reviveEarned":
+            PlaySmoothTone(440, 0.12, 0.022, "sine");
+            PlaySmoothTone(660, 0.16, 0.024, "triangle", 0.09);
+            PlaySmoothTone(880, 0.24, 0.025, "sine", 0.18);
+            break;
+        case "heartRefill":
+            PlaySmoothTone(392, 0.12, 0.023, "sine");
+            PlaySmoothTone(523.25, 0.15, 0.024, "triangle", 0.08);
+            PlaySmoothTone(783.99, 0.22, 0.024, "sine", 0.16);
+            break;
+        default:
+            PlaySmoothTone(560, 0.05, 0.02, "sine", 0, 500);
+            break;
+    }
+}
+
+document.addEventListener("pointerdown", ResumeStoryAudio, { capture: true, passive: true });
+document.addEventListener("keydown", ResumeStoryAudio, { capture: true });
+document.addEventListener("touchstart", ResumeStoryAudio, { capture: true, passive: true });
 
 if (typeof StoryAudio !== "undefined") {
     const BaseConfigure = StoryAudio.Configure.bind(StoryAudio);
-    const BasePlaySound = StoryAudio.PlaySound.bind(StoryAudio);
     const BaseStopMusic = StoryAudio.StopMusic.bind(StoryAudio);
 
     StoryAudio.Configure = function(Settings = {}) {
-        StoryRealSoundVolume = ClampStoryAudioVolume(Settings.soundVolume, StoryRealSoundVolume);
+        StoryProceduralSoundVolume = ClampStoryAudioVolume(Settings.soundVolume, StoryProceduralSoundVolume);
         StoryRealMusicVolume = ClampStoryAudioVolume(Settings.musicVolume, StoryRealMusicVolume);
-
-        for (const AudioElement of StoryRealSoundCache.values()) AudioElement.volume = StoryRealSoundVolume;
         if (StoryRealMusicElement) ApplyStoryMusicFade(StoryRealMusicElement);
         if (StoryRealMusicVolume <= 0) StopStoryRealMusic();
-
         BaseConfigure(Settings);
     };
 
     StoryAudio.PlayMusic = function(Name) {
         StoryPendingMusicName = Name;
-        if (!StoryRealMusicFiles[Name] || !StoryRealAudioUnlocked) return;
-
+        if (!StoryRealMusicFiles[Name]) return;
         StartStoryRealMusic(Name).then(Played => {
-            if (!Played) console.warn(`Real music failed to play: ${Name}`);
+            if (!Played && StoryRealMusicElement) {
+                // Audible autoplay was blocked; first ordinary interaction retries it.
+            }
         });
     };
 
@@ -259,10 +322,6 @@ if (typeof StoryAudio !== "undefined") {
     };
 
     StoryAudio.PlaySound = function(Name) {
-        if (!StoryRealSoundFiles[Name] || !StoryRealAudioUnlocked) return BasePlaySound(Name);
-
-        PlayStoryRealSound(Name).then(Played => {
-            if (!Played) BasePlaySound(Name);
-        });
+        PlayStoryProceduralSound(Name);
     };
 }
