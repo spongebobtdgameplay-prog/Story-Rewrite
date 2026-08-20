@@ -79,6 +79,14 @@
         }
     }
 
+    function PageForRoute(Route) {
+        try {
+            return new URL(Route, GetBaseUrl()).pathname.split("/").pop() || "main.html";
+        } catch {
+            return "main.html";
+        }
+    }
+
     function SetTopHistory(Route, Replace = false) {
         const Url = new URL(window.location.href);
         Url.hash = RouteHash(Route);
@@ -98,6 +106,14 @@
     function PlayMusic(Name) {
         const NextMusicName = String(Name || "");
         if (!NextMusicName || NextMusicName === CurrentMusicName) return;
+
+        const ActiveRoute = CurrentRoute || RouteFromLocation();
+        const RouteMusicName = MusicForRoute(ActiveRoute);
+        const ActivePageName = PageForRoute(ActiveRoute);
+        const IsAllowedDialogOverride = ActivePageName === "dialog.html" && NextMusicName === "danger";
+
+        if (NextMusicName !== RouteMusicName && !IsAllowedDialogOverride) return;
+
         CurrentMusicName = NextMusicName;
         if (typeof StoryAudio !== "undefined") StoryAudio.PlayMusic(CurrentMusicName);
     }
