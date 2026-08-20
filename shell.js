@@ -1,4 +1,8 @@
-(() => {
+(async () => {
+    try {
+        if (window.StoryWorkerReady) await window.StoryWorkerReady;
+    } catch {}
+
     const Frame = document.getElementById("StoryShellFrame");
     if (!Frame) return;
 
