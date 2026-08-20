@@ -54,30 +54,55 @@ if (!Token) {
 
 if (!Token) window.location.replace("auth.html");
 
-(async () => {
-    if (!("serviceWorker" in navigator)) return;
+window.StoryWorkerReplacementReady = (async () => {
+    if (!("serviceWorker" in navigator)) return true;
 
-    const Controller = navigator.serviceWorker.controller;
-    const Registrations = await navigator.serviceWorker.getRegistrations().catch(() => []);
+    const CleanWorkerVersion = "20260820-48";
+    const CleanWorkerUrl = new URL(`service-worker.js?clean=${CleanWorkerVersion}`, location.href).href;
+    const Scope = new URL(".", location.href).pathname;
 
-    await Promise.all(Registrations.map(Registration => Registration.unregister().catch(() => false)));
+    const IsCleanController = () => {
+        const ControllerUrl = navigator.serviceWorker.controller?.scriptURL || "";
+        return ControllerUrl === CleanWorkerUrl;
+    };
 
-    if ("caches" in window) {
-        const CacheNames = await caches.keys().catch(() => []);
-        await Promise.all(CacheNames
-            .filter(CacheName => CacheName.startsWith("story-rewrite-"))
-            .map(CacheName => caches.delete(CacheName).catch(() => false)));
+    try {
+        const Registration = await navigator.serviceWorker.register(CleanWorkerUrl, {
+            scope: Scope,
+            updateViaCache: "none"
+        });
+
+        Registration.update().catch(() => {});
+
+        if (IsCleanController()) return true;
+
+        return await new Promise(Resolve => {
+            let Finished = false;
+
+            const Finish = Value => {
+                if (Finished) return;
+                Finished = true;
+                navigator.serviceWorker.removeEventListener("controllerchange", OnControllerChange);
+                Resolve(Value);
+            };
+
+            const OnControllerChange = () => {
+                if (IsCleanController()) Finish(true);
+            };
+
+            navigator.serviceWorker.addEventListener("controllerchange", OnControllerChange);
+
+            if (IsCleanController()) {
+                Finish(true);
+                return;
+            }
+
+            setTimeout(() => Finish(IsCleanController()), 3000);
+        });
+    } catch (Error) {
+        console.warn("Could not replace legacy service worker:", Error);
+        return false;
     }
-
-    const ReloadKey = "StoryRewriteLegacyWorkerReloaded";
-
-    if (Controller && sessionStorage.getItem(ReloadKey) !== "1") {
-        sessionStorage.setItem(ReloadKey, "1");
-        setTimeout(() => location.reload(), 50);
-        return;
-    }
-
-    if (!Controller) sessionStorage.removeItem(ReloadKey);
 })();
 </script>
 </head>
