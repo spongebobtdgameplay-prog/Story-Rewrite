@@ -30,6 +30,7 @@ const STORY_WARNING_ICON = `
 </svg>`;
 
 let StoryConfirmCloser = null;
+let StoryLinkObserver = null;
 
 function StoryNavigate(Page) {
     if (typeof Go === "function") {
@@ -63,6 +64,63 @@ function StoryGoBack(FallbackPage = "main.html") {
     }
 
     StoryNavigate(FallbackPage);
+}
+
+function MakeStoryAnchorLinkless(Link) {
+    if (!(Link instanceof HTMLAnchorElement) || Link.dataset.storyLinkless === "1") return;
+    const RawHref = Link.getAttribute("href");
+    if (!RawHref || RawHref.startsWith("#") || RawHref.startsWith("javascript:")) return;
+
+    let TargetUrl;
+    try {
+        TargetUrl = new URL(RawHref, window.location.href);
+    } catch {
+        return;
+    }
+
+    Link.dataset.storyLinkless = "1";
+    Link.dataset.storyLinkTarget = TargetUrl.href;
+    Link.removeAttribute("href");
+    Link.removeAttribute("target");
+    Link.setAttribute("role", "button");
+    if (!Link.hasAttribute("tabindex")) Link.tabIndex = 0;
+    Link.draggable = false;
+    Link.style.webkitTouchCallout = "none";
+
+    const Activate = Event => {
+        Event.preventDefault();
+        const Target = Link.dataset.storyLinkTarget;
+        if (!Target) return;
+        window.location.href = Target;
+    };
+
+    Link.addEventListener("click", Activate);
+    Link.addEventListener("keydown", Event => {
+        if (Event.key !== "Enter" && Event.key !== " ") return;
+        Activate(Event);
+    });
+    Link.addEventListener("contextmenu", Event => Event.preventDefault());
+    Link.addEventListener("dragstart", Event => Event.preventDefault());
+}
+
+function WireLinklessAnchors(Root = document) {
+    if (Root instanceof HTMLAnchorElement) MakeStoryAnchorLinkless(Root);
+    Root.querySelectorAll?.("a[href]").forEach(MakeStoryAnchorLinkless);
+}
+
+function WatchForStoryLinks() {
+    WireLinklessAnchors(document);
+    if (StoryLinkObserver || !("MutationObserver" in window)) return;
+
+    StoryLinkObserver = new MutationObserver(Mutations => {
+        for (const Mutation of Mutations) {
+            for (const Node of Mutation.addedNodes) {
+                if (Node.nodeType === Node.ELEMENT_NODE) WireLinklessAnchors(Node);
+            }
+        }
+    });
+
+    StoryLinkObserver.observe(document.documentElement, { childList: true, subtree: true });
 }
 
 function StoryConfirm(Options = {}) {
@@ -195,10 +253,12 @@ function WireStoryShell() {
     for (const Button of document.querySelectorAll("[data-story-back]")) {
         Button.innerHTML = STORY_BACK_ICON;
         Button.addEventListener("click", () => StoryGoBack(Button.dataset.storyBack || "main.html"));
+        Button.addEventListener("contextmenu", Event => Event.preventDefault());
     }
 
     for (const Button of document.querySelectorAll("[data-story-go]")) {
         Button.addEventListener("click", () => StoryNavigate(Button.dataset.storyGo));
+        Button.addEventListener("contextmenu", Event => Event.preventDefault());
     }
 
     for (const Button of document.querySelectorAll("[data-account-icon]")) {
@@ -221,6 +281,7 @@ function WireStoryShell() {
         });
     }
 
+    WatchForStoryLinks();
     WireLeaveRoomWarning();
 }
 
