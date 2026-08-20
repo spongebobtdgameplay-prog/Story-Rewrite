@@ -27,12 +27,23 @@ const StoryRealSoundFiles = {
 };
 
 const StoryRealMusicFiles = {
-    menu: "music/menu.ogg",
-    lobby: "music/lobby.ogg",
-    fromville: "music/fromville.ogg"
+    menu: "music/menu.mp3",
+    lobby: "music/lobby.mp3",
+    fromville: "music/fromville.mp3",
+    anime: "music/neon-exorcists.mp3",
+    "neon-exorcists": "music/neon-exorcists.mp3",
+    manor: "music/blackthorn.mp3",
+    blackthorn: "music/blackthorn.mp3",
+    spirit: "music/spirit-grove.mp3",
+    "spirit-grove": "music/spirit-grove.mp3",
+    city: "music/false-city.mp3",
+    "false-city": "music/false-city.mp3",
+    danger: "music/danger.mp3"
 };
 
 const StoryRealSoundCache = new Map();
+const StoryMusicFadeOutSeconds = 3;
+const StoryMusicFadeInSeconds = 1.25;
 
 function ClampStoryAudioVolume(Value, Fallback) {
     const NumberValue = Number(Value);
@@ -65,10 +76,29 @@ function PreloadStoryRealSounds() {
     }
 }
 
+function ApplyStoryMusicFade(AudioElement) {
+    if (!AudioElement || !Number.isFinite(AudioElement.duration) || AudioElement.duration <= 0) return;
+
+    const Time = AudioElement.currentTime;
+    const Remaining = AudioElement.duration - Time;
+    let Fade = 1;
+
+    if (Time < StoryMusicFadeInSeconds) {
+        Fade = Math.min(Fade, Time / StoryMusicFadeInSeconds);
+    }
+
+    if (Remaining < StoryMusicFadeOutSeconds) {
+        Fade = Math.min(Fade, Math.max(0, Remaining / StoryMusicFadeOutSeconds));
+    }
+
+    AudioElement.volume = StoryRealMusicVolume * Math.max(0, Math.min(1, Fade));
+}
+
 function StopStoryRealMusic() {
     if (!StoryRealMusicElement) return;
     StoryRealMusicElement.pause();
-    StoryRealMusicElement.src = "";
+    StoryRealMusicElement.removeAttribute("src");
+    StoryRealMusicElement.load();
     StoryRealMusicElement = null;
     StoryRealMusicName = "";
 }
@@ -78,7 +108,7 @@ async function StartStoryRealMusic(Name) {
     if (!Url || !StoryRealAudioUnlocked || StoryRealMusicVolume <= 0) return false;
 
     if (StoryRealMusicElement && StoryRealMusicName === Name) {
-        StoryRealMusicElement.volume = StoryRealMusicVolume;
+        ApplyStoryMusicFade(StoryRealMusicElement);
         if (!StoryRealMusicElement.paused) return true;
         try {
             await StoryRealMusicElement.play();
@@ -89,10 +119,21 @@ async function StartStoryRealMusic(Name) {
     }
 
     StopStoryRealMusic();
+
     const AudioElement = new Audio(Url);
     AudioElement.preload = "auto";
-    AudioElement.loop = true;
-    AudioElement.volume = StoryRealMusicVolume;
+    AudioElement.loop = false;
+    AudioElement.volume = 0;
+
+    AudioElement.addEventListener("timeupdate", () => ApplyStoryMusicFade(AudioElement));
+    AudioElement.addEventListener("loadedmetadata", () => ApplyStoryMusicFade(AudioElement));
+    AudioElement.addEventListener("ended", () => {
+        if (StoryRealMusicElement !== AudioElement || StoryPendingMusicName !== Name) return;
+        AudioElement.currentTime = 0;
+        AudioElement.volume = 0;
+        AudioElement.play().catch(() => {});
+    });
+
     StoryRealMusicElement = AudioElement;
     StoryRealMusicName = Name;
 
@@ -121,6 +162,7 @@ async function TryPlayStoryRealSound(Name, SourceIndex) {
 
     if (!AudioElement) return false;
     AudioElement.volume = StoryRealSoundVolume;
+
     try {
         AudioElement.currentTime = 0;
         await AudioElement.play();
@@ -145,23 +187,25 @@ document.addEventListener("touchstart", UnlockStoryRealAudio, { capture: true, p
 
 if (typeof StoryAudio !== "undefined") {
     const BaseConfigure = StoryAudio.Configure.bind(StoryAudio);
-    const BasePlayMusic = StoryAudio.PlayMusic.bind(StoryAudio);
     const BasePlaySound = StoryAudio.PlaySound.bind(StoryAudio);
     const BaseStopMusic = StoryAudio.StopMusic.bind(StoryAudio);
 
     StoryAudio.Configure = function(Settings = {}) {
         StoryRealSoundVolume = ClampStoryAudioVolume(Settings.soundVolume, StoryRealSoundVolume);
         StoryRealMusicVolume = ClampStoryAudioVolume(Settings.musicVolume, StoryRealMusicVolume);
-        for (const AudioElement of StoryRealSoundCache.values()) AudioElement.volume = StoryRealSoundVolume;
-        if (StoryRealMusicElement) StoryRealMusicElement.volume = StoryRealMusicVolume;
+
+        for (const AudioElement of StoryRealSoundCache.values()) {
+            AudioElement.volume = StoryRealSoundVolume;
+        }
+
+        if (StoryRealMusicElement) ApplyStoryMusicFade(StoryRealMusicElement);
         if (StoryRealMusicVolume <= 0) StopStoryRealMusic();
         BaseConfigure(Settings);
     };
 
     StoryAudio.PlayMusic = function(Name) {
-        if (!StoryRealMusicFiles[Name]) return BasePlayMusic(Name);
         StoryPendingMusicName = Name;
-        if (!StoryRealAudioUnlocked) return;
+        if (!StoryRealMusicFiles[Name] || !StoryRealAudioUnlocked) return;
         StartStoryRealMusic(Name).then(Played => {
             if (!Played) console.warn(`Real music failed to play: ${Name}`);
         });
