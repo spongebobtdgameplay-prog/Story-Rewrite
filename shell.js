@@ -134,7 +134,7 @@
             LoadingFromShell = false;
         } else if (Route !== CurrentRoute) {
             CurrentRoute = Route;
-            SetTopHistory(Route, false);
+            SetTopHistory(Route, true);
         }
 
         try {
