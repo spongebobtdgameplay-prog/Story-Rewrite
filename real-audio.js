@@ -47,7 +47,7 @@
 
     const MusicFiles = {
         menu: "Music/menu.mp3",
-        lobby: "https://raw.githubusercontent.com/spongebobtdgameplay-prog/Story-Rewrite/main/Music/lobby.mp3",
+        lobby: "Music/lobby.mp3",
         fromville: "Music/fromville.mp3",
         anime: "Music/neon-exorcists.mp3",
         "neon-exorcists": "Music/neon-exorcists.mp3",
@@ -62,6 +62,7 @@
     };
 
     const MusicPositionKey = "StoryRewriteMusicPositionsV2";
+    const MusicFreshToken = Date.now().toString(36);
     const FadeInSeconds = 0.85;
     const FadeOutSeconds = 3;
 
@@ -183,7 +184,9 @@
 
         MusicName = Name;
         MusicElement.volume = 0;
-        MusicElement.src = new URL(RelativeUrl, window.location.href).href;
+        const MusicUrl = new URL(RelativeUrl, window.location.href);
+        MusicUrl.searchParams.set("fresh", MusicFreshToken);
+        MusicElement.src = MusicUrl.href;
         try { MusicElement.load(); } catch {}
         return MusicElement;
     }
