@@ -1,5 +1,11 @@
 let StoryRealSoundVolume = 0.75;
+let StoryRealMusicVolume = 0.45;
 let StoryRealAudioUnlocked = false;
+let StoryRealMusicName = "";
+let StoryRealMusicElement = null;
+let StoryRealMusicPlayGeneration = 0;
+
+const StoryAudioAssetVersion = "20260819-20";
 
 const StoryRealSoundBases = [
     "https://cdn.jsdelivr.net/gh/Calinou/kenney-interface-sounds@master/addons/kenney_interface_sounds/",
@@ -22,13 +28,28 @@ const StoryRealSoundFiles = {
     heartRefill: "confirmation_004.wav"
 };
 
+const StoryRealMusicFiles = {
+    menu: "menu",
+    lobby: "lobby",
+    fromville: "fromville",
+    anime: "neon-exorcists",
+    "neon-exorcists": "neon-exorcists",
+    manor: "blackthorn",
+    blackthorn: "blackthorn",
+    forest: "spirit-grove",
+    "spirit-grove": "spirit-grove",
+    city: "false-city",
+    "false-city": "false-city",
+    danger: "danger"
+};
+
 const StoryRealSoundCache = new Map();
 
-function ClampStorySoundVolume(Value) {
+function ClampStoryAudioVolume(Value, Fallback) {
     const NumberValue = Number(Value);
     return Number.isFinite(NumberValue)
         ? Math.max(0, Math.min(1, NumberValue))
-        : StoryRealSoundVolume;
+        : Fallback;
 }
 
 function GetStoryRealSoundUrls(Name) {
@@ -37,7 +58,7 @@ function GetStoryRealSoundUrls(Name) {
     return StoryRealSoundBases.map(Base => `${Base}${File}`);
 }
 
-function BuildStoryRealAudio(Name, SourceIndex = 0) {
+function BuildStoryRealSound(Name, SourceIndex = 0) {
     const Urls = GetStoryRealSoundUrls(Name);
     const Url = Urls[SourceIndex];
     if (!Url) return null;
@@ -52,7 +73,7 @@ function BuildStoryRealAudio(Name, SourceIndex = 0) {
 function PreloadStoryRealSounds() {
     for (const Name of Object.keys(StoryRealSoundFiles)) {
         if (StoryRealSoundCache.has(Name)) continue;
-        const AudioElement = BuildStoryRealAudio(Name, 0);
+        const AudioElement = BuildStoryRealSound(Name, 0);
         if (!AudioElement) continue;
         StoryRealSoundCache.set(Name, AudioElement);
         try {
@@ -61,9 +82,94 @@ function PreloadStoryRealSounds() {
     }
 }
 
+function ResolveStoryRealMusicName(Name) {
+    const Key = String(Name || "menu").trim().toLowerCase();
+    return StoryRealMusicFiles[Key] || "menu";
+}
+
+function BuildStoryRealMusic(Name) {
+    const File = ResolveStoryRealMusicName(Name);
+    const AudioElement = new Audio();
+    AudioElement.preload = "auto";
+    AudioElement.loop = true;
+    AudioElement.volume = StoryRealMusicVolume;
+    AudioElement.playsInline = true;
+    AudioElement.dataset.storyMusic = File;
+
+    const OggSource = document.createElement("source");
+    OggSource.src = `music/${File}.ogg?v=${StoryAudioAssetVersion}`;
+    OggSource.type = 'audio/ogg; codecs="opus"';
+
+    const Mp3Source = document.createElement("source");
+    Mp3Source.src = `music/${File}.mp3?v=${StoryAudioAssetVersion}`;
+    Mp3Source.type = "audio/mpeg";
+
+    AudioElement.append(OggSource, Mp3Source);
+    return AudioElement;
+}
+
+function DestroyStoryRealMusicElement() {
+    StoryRealMusicPlayGeneration += 1;
+
+    if (!StoryRealMusicElement) return;
+
+    try {
+        StoryRealMusicElement.pause();
+        StoryRealMusicElement.currentTime = 0;
+        StoryRealMusicElement.removeAttribute("src");
+        StoryRealMusicElement.querySelectorAll("source").forEach(Source => Source.remove());
+        StoryRealMusicElement.load();
+    } catch {}
+
+    StoryRealMusicElement = null;
+}
+
+function PrepareStoryRealMusic(Name) {
+    const File = ResolveStoryRealMusicName(Name);
+    StoryRealMusicName = File;
+
+    if (StoryRealMusicElement?.dataset.storyMusic === File) {
+        StoryRealMusicElement.volume = StoryRealMusicVolume;
+        return StoryRealMusicElement;
+    }
+
+    DestroyStoryRealMusicElement();
+    StoryRealMusicElement = BuildStoryRealMusic(File);
+
+    try {
+        StoryRealMusicElement.load();
+    } catch {}
+
+    return StoryRealMusicElement;
+}
+
+async function StartPreparedStoryRealMusic() {
+    if (!StoryRealAudioUnlocked || StoryRealMusicVolume <= 0 || !StoryRealMusicName) return false;
+
+    const AudioElement = PrepareStoryRealMusic(StoryRealMusicName);
+    if (!AudioElement) return false;
+
+    const Generation = ++StoryRealMusicPlayGeneration;
+    AudioElement.volume = StoryRealMusicVolume;
+
+    try {
+        await AudioElement.play();
+        if (Generation !== StoryRealMusicPlayGeneration) {
+            AudioElement.pause();
+            return false;
+        }
+        return true;
+    } catch {
+        return false;
+    }
+}
+
 function UnlockStoryRealAudio() {
+    const WasLocked = !StoryRealAudioUnlocked;
     StoryRealAudioUnlocked = true;
-    PreloadStoryRealSounds();
+
+    if (WasLocked) PreloadStoryRealSounds();
+    if (StoryRealMusicName && StoryRealMusicVolume > 0) void StartPreparedStoryRealMusic();
 }
 
 async function TryPlayStoryRealSound(Name, SourceIndex) {
@@ -74,7 +180,7 @@ async function TryPlayStoryRealSound(Name, SourceIndex) {
     if (SourceIndex === 0 && StoryRealSoundCache.has(Name)) {
         AudioElement = StoryRealSoundCache.get(Name).cloneNode(true);
     } else {
-        AudioElement = BuildStoryRealAudio(Name, SourceIndex);
+        AudioElement = BuildStoryRealSound(Name, SourceIndex);
     }
 
     if (!AudioElement) return false;
@@ -99,8 +205,6 @@ async function PlayStoryRealSound(Name) {
     return false;
 }
 
-PreloadStoryRealSounds();
-
 document.addEventListener("pointerdown", UnlockStoryRealAudio, { capture: true, passive: true });
 document.addEventListener("keydown", UnlockStoryRealAudio, { capture: true });
 document.addEventListener("touchstart", UnlockStoryRealAudio, { capture: true, passive: true });
@@ -108,15 +212,41 @@ document.addEventListener("touchstart", UnlockStoryRealAudio, { capture: true, p
 if (typeof StoryAudio !== "undefined") {
     const BaseConfigure = StoryAudio.Configure.bind(StoryAudio);
     const BasePlaySound = StoryAudio.PlaySound.bind(StoryAudio);
+    const BaseStopMusic = StoryAudio.StopMusic.bind(StoryAudio);
 
     StoryAudio.Configure = function(Settings = {}) {
-        StoryRealSoundVolume = ClampStorySoundVolume(Settings.soundVolume);
+        StoryRealSoundVolume = ClampStoryAudioVolume(Settings.soundVolume, StoryRealSoundVolume);
+        StoryRealMusicVolume = ClampStoryAudioVolume(Settings.musicVolume, StoryRealMusicVolume);
 
         for (const AudioElement of StoryRealSoundCache.values()) {
             AudioElement.volume = StoryRealSoundVolume;
         }
 
-        return BaseConfigure(Settings);
+        if (StoryRealMusicElement) {
+            StoryRealMusicElement.volume = StoryRealMusicVolume;
+            if (StoryRealMusicVolume <= 0) {
+                StoryRealMusicElement.pause();
+            } else if (StoryRealAudioUnlocked && StoryRealMusicName && StoryRealMusicElement.paused) {
+                void StartPreparedStoryRealMusic();
+            }
+        }
+
+        BaseConfigure(Settings);
+    };
+
+    StoryAudio.PlayMusic = function(Name) {
+        BaseStopMusic();
+        PrepareStoryRealMusic(Name);
+
+        if (StoryRealAudioUnlocked && StoryRealMusicVolume > 0) {
+            void StartPreparedStoryRealMusic();
+        }
+    };
+
+    StoryAudio.StopMusic = function() {
+        StoryRealMusicName = "";
+        DestroyStoryRealMusicElement();
+        BaseStopMusic();
     };
 
     StoryAudio.PlaySound = function(Name) {
