@@ -1,4 +1,5 @@
-const STORY_CACHE = "story-rewrite-frontend-v20";
+const STORY_CACHE = "story-rewrite-frontend-v21";
+const STORY_AUDIO_CACHE = "story-rewrite-audio-v1";
 
 const STORY_STATIC_FILES = [
     "./",
@@ -74,15 +75,19 @@ function IsCriticalCodeRequest(Request, Url) {
     return Url.pathname.endsWith(".json");
 }
 
+function IsStoryMusicRequest(Url) {
+    return /\/music\/[^/]+\.(?:mp3|ogg|wav|m4a)$/i.test(Url.pathname);
+}
+
 function NormalizeNavigationKey(Request) {
     if (Request.mode !== "navigate") return Request;
     const Url = new URL(Request.url);
     return new Request(`${Url.origin}${Url.pathname}`);
 }
 
-async function PutSuccessfulResponse(Key, Response) {
+async function PutSuccessfulResponse(Key, Response, CacheName = STORY_CACHE) {
     if (!Response || !Response.ok) return;
-    const Cache = await caches.open(STORY_CACHE);
+    const Cache = await caches.open(CacheName);
     await Cache.put(Key, Response.clone());
 }
 
@@ -107,12 +112,98 @@ async function CacheFirst(Request) {
     return Response;
 }
 
+function BuildFullAudioRequest(Request) {
+    const Headers = new Headers(Request.headers);
+    Headers.delete("range");
+    return new Request(Request.url, {
+        method: "GET",
+        headers: Headers,
+        mode: Request.mode,
+        credentials: Request.credentials,
+        cache: "no-store",
+        redirect: Request.redirect,
+        referrer: Request.referrer,
+        referrerPolicy: Request.referrerPolicy,
+        integrity: Request.integrity
+    });
+}
+
+function ParseSingleByteRange(RangeHeader, TotalSize) {
+    const Match = /^bytes=(\d*)-(\d*)$/i.exec(String(RangeHeader || "").trim());
+    if (!Match || !TotalSize) return null;
+
+    let Start;
+    let End;
+
+    if (Match[1] === "" && Match[2] !== "") {
+        const SuffixLength = Number(Match[2]);
+        if (!Number.isFinite(SuffixLength) || SuffixLength <= 0) return null;
+        Start = Math.max(0, TotalSize - SuffixLength);
+        End = TotalSize - 1;
+    } else {
+        Start = Number(Match[1]);
+        End = Match[2] === "" ? TotalSize - 1 : Number(Match[2]);
+    }
+
+    if (!Number.isFinite(Start) || !Number.isFinite(End)) return null;
+    Start = Math.max(0, Math.floor(Start));
+    End = Math.min(TotalSize - 1, Math.floor(End));
+    if (Start > End || Start >= TotalSize) return null;
+
+    return { Start, End };
+}
+
+async function BuildRangeResponse(Response, RangeHeader) {
+    const Buffer = await Response.arrayBuffer();
+    const Range = ParseSingleByteRange(RangeHeader, Buffer.byteLength);
+    if (!Range) {
+        return new Response(null, {
+            status: 416,
+            headers: { "Content-Range": `bytes */${Buffer.byteLength}` }
+        });
+    }
+
+    const Headers = new Headers(Response.headers);
+    Headers.set("Accept-Ranges", "bytes");
+    Headers.set("Content-Range", `bytes ${Range.Start}-${Range.End}/${Buffer.byteLength}`);
+    Headers.set("Content-Length", String(Range.End - Range.Start + 1));
+
+    return new Response(Buffer.slice(Range.Start, Range.End + 1), {
+        status: 206,
+        statusText: "Partial Content",
+        headers: Headers
+    });
+}
+
+async function GetCachedStoryMusic(Request) {
+    const Cache = await caches.open(STORY_AUDIO_CACHE);
+    const CacheKey = new Request(Request.url, { method: "GET" });
+    let FullResponse = await Cache.match(CacheKey);
+
+    if (!FullResponse) {
+        const NetworkRequest = BuildFullAudioRequest(Request);
+        const NetworkResponse = await fetch(NetworkRequest);
+        if (!NetworkResponse.ok) return NetworkResponse;
+        await Cache.put(CacheKey, NetworkResponse.clone());
+        FullResponse = NetworkResponse;
+    }
+
+    const RangeHeader = Request.headers.get("range");
+    if (RangeHeader) return BuildRangeResponse(FullResponse.clone(), RangeHeader);
+    return FullResponse;
+}
+
 self.addEventListener("fetch", Event => {
     const Request = Event.request;
     if (Request.method !== "GET") return;
 
     const Url = new URL(Request.url);
     if (Url.origin !== self.location.origin) return;
+
+    if (IsStoryMusicRequest(Url)) {
+        Event.respondWith(GetCachedStoryMusic(Request));
+        return;
+    }
 
     if (IsCriticalCodeRequest(Request, Url)) {
         const CacheKey = NormalizeNavigationKey(Request);
