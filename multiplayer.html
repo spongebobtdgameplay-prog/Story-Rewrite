@@ -3,16 +3,26 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>Story Rewrite — Multiplayer</title>
 <link rel="icon" type="image/x-icon" href="favicon_io/favicon.ico?v=1000001">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon_io/favicon-32x32.png?v=1000001">
 <link rel="icon" type="image/png" sizes="16x16" href="favicon_io/favicon-16x16.png?v=1000001">
-<link rel="stylesheet" href="looks.css?v=20260819-19">
-<link rel="stylesheet" href="multiplayer.css?v=20260819-19">
-<link rel="stylesheet" href="shell-ui.css?v=20260819-19">
-<link rel="stylesheet" href="host-controls.css?v=20260819-19">
-<link rel="stylesheet" href="chat-ai.css?v=20260819-19">
-<link rel="stylesheet" href="game-enhancements.css?v=20260819-19">
+<script>
+const MultiplayerFreshToken = Date.now().toString(36);
+for (const StyleName of [
+    "looks.css",
+    "multiplayer.css",
+    "shell-ui.css",
+    "host-controls.css",
+    "chat-ai.css",
+    "game-enhancements.css"
+]) {
+    document.write(`<link rel="stylesheet" href="${StyleName}?fresh=${MultiplayerFreshToken}">`);
+}
+</script>
 </head>
 <body class="MultiplayerPage">
 <div class="MultiplayerShell">
@@ -82,17 +92,23 @@
         </div>
     </section>
 </div>
-<script src="server-config.js?v=20260820-35"></script>
-<script src="network.js?v=20260820-35"></script>
-<script src="app.js?v=20260820-35"></script>
-<script src="audio.js?v=20260820-35"></script>
-<script src="audio-enhancements.js?v=20260820-35"></script>
-<script src="real-audio.js?v=20260820-35"></script>
-<script src="shell-ui.js?v=20260820-35"></script>
-<script src="multiplayer.js?v=20260820-35"></script>
-<script src="multiplayer-connection.js?v=20260820-35"></script>
-<script src="moderation-version.js?v=20260820-35"></script>
-<script src="host-controls.js?v=20260820-35"></script>
-<script src="ai-chat.js?v=20260820-35"></script>
+<script>
+for (const ScriptName of [
+    "server-config.js",
+    "network.js",
+    "app.js",
+    "audio.js",
+    "audio-enhancements.js",
+    "real-audio.js",
+    "shell-ui.js",
+    "multiplayer.js",
+    "multiplayer-connection.js",
+    "moderation-version.js",
+    "host-controls.js",
+    "ai-chat.js"
+]) {
+    document.write(`<script src="${ScriptName}?fresh=${MultiplayerFreshToken}"><\/script>`);
+}
+</script>
 </body>
 </html>
