@@ -3,13 +3,19 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>Tutorial — Story Rewrite</title>
 <link rel="icon" type="image/x-icon" href="favicon_io/favicon.ico?v=1000001">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon_io/favicon-32x32.png?v=1000001">
 <link rel="icon" type="image/png" sizes="16x16" href="favicon_io/favicon-16x16.png?v=1000001">
-<link rel="stylesheet" href="looks.css?v=20260819-17">
-<link rel="stylesheet" href="shell-ui.css?v=20260819-17">
-<link rel="stylesheet" href="tutorial.css?v=20260819-17">
+<script>
+const TutorialFreshToken = Date.now().toString(36);
+for (const StyleName of ["looks.css", "shell-ui.css", "tutorial.css"]) {
+    document.write(`<link rel="stylesheet" href="${StyleName}?fresh=${TutorialFreshToken}">`);
+}
+</script>
 </head>
 <body>
 <div id="App">
@@ -50,47 +56,14 @@
             </div>
 
             <div class="TutorialSteps">
-                <article class="TutorialStep">
-                    <div class="Eyebrow">Step 1</div>
-                    <h3>Cross out an event</h3>
-                    <p>Click or tap a sentence to remove that event from the active story. Select it again to restore it.</p>
-                    <div class="TutorialDemo"><div class="DemoSentence" id="DemoSentence">The creature hears the door slam and turns toward the house.</div></div>
-                </article>
-                <article class="TutorialStep">
-                    <div class="Eyebrow">Step 2</div>
-                    <h3>Read the briefing</h3>
-                    <p><strong>Objective</strong> is what must happen. <strong>Threat</strong> is the danger. <strong>Must survive</strong> is what your successful rewrite cannot erase.</p>
-                </article>
-                <article class="TutorialStep">
-                    <div class="Eyebrow">Step 3</div>
-                    <h3>Trace causes backward</h3>
-                    <p>The disaster may happen several sentences after the real mistake. Remove the cause, not only the final consequence.</p>
-                </article>
-                <article class="TutorialStep">
-                    <div class="Eyebrow">Step 4</div>
-                    <h3>Do not erase useful facts</h3>
-                    <p>Some dangerous-looking lines are still required. A rewrite can look safer and still fail because the ending lost something it needed.</p>
-                </article>
-                <article class="TutorialStep">
-                    <div class="Eyebrow">Step 5</div>
-                    <h3>Check Survival when ready</h3>
-                    <p>The editor does not reveal correct answers while you work. Press <strong>Check Survival</strong> when you think the route is safe.</p>
-                </article>
-                <article class="TutorialStep">
-                    <div class="Eyebrow">Step 6</div>
-                    <h3>Lives are limited</h3>
-                    <p>A failed check costs one life and shows the aftermath your rewrite caused. Use that information to repair the story.</p>
-                </article>
-                <article class="TutorialStep">
-                    <div class="Eyebrow">Step 7</div>
-                    <h3>Cleaner solutions earn more stars</h3>
-                    <p>A correct solution clears the stage. Three stars means you stayed at or under par without removing unnecessary events.</p>
-                </article>
-                <article class="TutorialStep">
-                    <div class="Eyebrow">Step 8</div>
-                    <h3>Move through the chapter map</h3>
-                    <p>Stages unlock in order. Completing the chapter opens the next route and refills your chapter lives.</p>
-                </article>
+                <article class="TutorialStep"><div class="Eyebrow">Step 1</div><h3>Cross out an event</h3><p>Click or tap a sentence to remove that event from the active story. Select it again to restore it.</p><div class="TutorialDemo"><div class="DemoSentence" id="DemoSentence">The creature hears the door slam and turns toward the house.</div></div></article>
+                <article class="TutorialStep"><div class="Eyebrow">Step 2</div><h3>Read the briefing</h3><p><strong>Objective</strong> is what must happen. <strong>Threat</strong> is the danger. <strong>Must survive</strong> is what your successful rewrite cannot erase.</p></article>
+                <article class="TutorialStep"><div class="Eyebrow">Step 3</div><h3>Trace causes backward</h3><p>The disaster may happen several sentences after the real mistake. Remove the cause, not only the final consequence.</p></article>
+                <article class="TutorialStep"><div class="Eyebrow">Step 4</div><h3>Do not erase useful facts</h3><p>Some dangerous-looking lines are still required. A rewrite can look safer and still fail because the ending lost something it needed.</p></article>
+                <article class="TutorialStep"><div class="Eyebrow">Step 5</div><h3>Check Survival when ready</h3><p>The editor does not reveal correct answers while you work. Press <strong>Check Survival</strong> when you think the route is safe.</p></article>
+                <article class="TutorialStep"><div class="Eyebrow">Step 6</div><h3>Lives are limited</h3><p>A failed check costs one life and shows the aftermath your rewrite caused. Use that information to repair the story.</p></article>
+                <article class="TutorialStep"><div class="Eyebrow">Step 7</div><h3>Cleaner solutions earn more stars</h3><p>A correct solution clears the stage. Three stars means you stayed at or under par without removing unnecessary events.</p></article>
+                <article class="TutorialStep"><div class="Eyebrow">Step 8</div><h3>Move through the chapter map</h3><p>Stages unlock in order. Completing the chapter opens the next route and refills your chapter lives.</p></article>
             </div>
         </section>
 
@@ -102,52 +75,15 @@
             </div>
 
             <div class="TutorialSteps">
-                <article class="TutorialStep">
-                    <div class="Eyebrow">Room codes</div>
-                    <h3>Create or join a private room</h3>
-                    <p>The host creates a six-character code and sends it to the group. Other players enter that code from Multiplayer.</p>
-                </article>
-                <article class="TutorialStep">
-                    <div class="Eyebrow">Lobby</div>
-                    <h3>Ready up before starting</h3>
-                    <p>Players mark themselves Ready. The host starts the story once the group is prepared.</p>
-                </article>
-                <article class="TutorialStep">
-                    <div class="Eyebrow">Voting</div>
-                    <h3>Sentence edits use majority votes</h3>
-                    <p>Tap a sentence to vote for crossing it out. The edit becomes active when it reaches the room's current majority threshold.</p>
-                </article>
-                <article class="TutorialStep">
-                    <div class="Eyebrow">Team survival</div>
-                    <h3>Everyone shares the same lives</h3>
-                    <p>Failed survival checks remove a team life for the whole room. Only the host submits the final survival check.</p>
-                </article>
-                <article class="TutorialStep">
-                    <div class="Eyebrow">Late joins</div>
-                    <h3>Started rooms require host approval</h3>
-                    <p>If a new player enters the code after the game started, the host receives an Allow or Deny request. Returning members can reconnect normally.</p>
-                </article>
-                <article class="TutorialStep">
-                    <div class="Eyebrow">Host controls</div>
-                    <h3>The host moderates the room</h3>
-                    <p>The host can approve late joins, kick players, and disable or restore an individual player's room chat.</p>
-                </article>
-                <article class="TutorialStep">
-                    <div class="Eyebrow">Group chat</div>
-                    <h3>Chat is limited and moderated</h3>
-                    <p>Messages have a length limit and server-side spam protection. Chat can be hidden during gameplay, and filtered messages are handled on the backend.</p>
-                </article>
-                <article class="TutorialStep">
-                    <div class="Eyebrow">AI teammate</div>
-                    <h3>Ask StoryBot from the room</h3>
-                    <p>Mention <span class="TutorialBotTag">@StoryBot</span> followed by your question. StoryBot receives the live stage, room state, votes, and recent chat so it can answer using what is actually happening.</p>
-                    <div class="TutorialCallout">Example: <strong>@StoryBot which event looks like the cause of the current threat?</strong></div>
-                </article>
-                <article class="TutorialStep Wide">
-                    <div class="Eyebrow">Mobile</div>
-                    <h3>Mobile gets dedicated controls</h3>
-                    <p>On touch devices, use the bottom Map, Restore, Check, and Chat controls. Sentence voting still works by tapping the sentence directly.</p>
-                </article>
+                <article class="TutorialStep"><div class="Eyebrow">Room codes</div><h3>Create or join a private room</h3><p>The host creates a six-character code and sends it to the group. Other players enter that code from Multiplayer.</p></article>
+                <article class="TutorialStep"><div class="Eyebrow">Lobby</div><h3>Ready up before starting</h3><p>Players mark themselves Ready. The host starts the story once the group is prepared.</p></article>
+                <article class="TutorialStep"><div class="Eyebrow">Voting</div><h3>Sentence edits use majority votes</h3><p>Tap a sentence to vote for crossing it out. The edit becomes active when it reaches the room's current majority threshold.</p></article>
+                <article class="TutorialStep"><div class="Eyebrow">Team survival</div><h3>Everyone shares the same lives</h3><p>Failed survival checks remove a team life for the whole room. Only the host submits the final survival check.</p></article>
+                <article class="TutorialStep"><div class="Eyebrow">Late joins</div><h3>Started rooms require host approval</h3><p>If a new player enters the code after the game started, the host receives an Allow or Deny request. Returning members can reconnect normally.</p></article>
+                <article class="TutorialStep"><div class="Eyebrow">Host controls</div><h3>The host moderates the room</h3><p>The host can approve late joins, kick players, and disable or restore an individual player's room chat.</p></article>
+                <article class="TutorialStep"><div class="Eyebrow">Group chat</div><h3>Chat is limited and moderated</h3><p>Messages have a length limit and server-side spam protection. Chat can be hidden during gameplay, and filtered messages are handled on the backend.</p></article>
+                <article class="TutorialStep"><div class="Eyebrow">AI teammate</div><h3>Ask StoryBot from the room</h3><p>Mention <span class="TutorialBotTag">@StoryBot</span> followed by your question. StoryBot receives the live stage, room state, votes, and recent chat so it can answer using what is actually happening.</p><div class="TutorialCallout">Example: <strong>@StoryBot which event looks like the cause of the current threat?</strong></div></article>
+                <article class="TutorialStep Wide"><div class="Eyebrow">Mobile</div><h3>Mobile gets dedicated controls</h3><p>On touch devices, use the bottom Map, Restore, Check, and Chat controls. Sentence voting still works by tapping the sentence directly.</p></article>
             </div>
         </section>
 
@@ -158,10 +94,10 @@
     </section>
 </main>
 </div>
-<script src="server-config.js?v=20260819-17"></script>
-<script src="network.js?v=20260819-17"></script>
-<script src="app.js?v=20260819-17"></script>
-<script src="shell-ui.js?v=20260819-17"></script>
-<script src="tutorial.js?v=20260819-17"></script>
+<script>
+for (const ScriptName of ["server-config.js", "network.js", "app.js", "shell-ui.js", "tutorial.js"]) {
+    document.write(`<script src="${ScriptName}?fresh=${TutorialFreshToken}"><\/script>`);
+}
+</script>
 </body>
 </html>
