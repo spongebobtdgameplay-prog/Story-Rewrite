@@ -244,19 +244,4 @@ function ConnectStorySocket() {
     });
 }
 
-function RegisterStoryServiceWorker() {
-    if (!("serviceWorker" in navigator)) return;
-    if (location.protocol !== "https:" && location.hostname !== "localhost") return;
-
-    window.addEventListener("load", () => {
-        navigator.serviceWorker.register(BuildStoryUrl("service-worker.js?v=9"), {
-            scope: new URL(".", window.location.href).pathname,
-            updateViaCache: "none"
-        }).then(Registration => {
-            Registration.update().catch(() => {});
-        }).catch(() => {});
-    }, { once: true });
-}
-
 GuardProtectedPage();
-RegisterStoryServiceWorker();
