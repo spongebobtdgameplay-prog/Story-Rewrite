@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     paths:
-      - ".audio-quality-v2/READY"
+      - ".audio-quality-v3/READY"
 
 permissions:
   contents: write
@@ -24,10 +24,10 @@ jobs:
           mkdir -p music
 
           for track in "${tracks[@]}"; do
-            dir=".audio-quality-v2/$track"
+            dir=".audio-quality-v3/$track"
             count=$(find "$dir" -maxdepth 1 -name 'part-*.b64' -type f | wc -l)
-            if [ "$count" -lt 3 ]; then
-              echo "Missing quality soundtrack chunks for $track"
+            if [ "$count" -ne 2 ]; then
+              echo "Expected exactly 2 quality chunks for $track, got $count"
               exit 1
             fi
 
@@ -39,18 +39,14 @@ jobs:
               echo "$track.ogg is not an Ogg stream"
               exit 1
             fi
-            if [ "$bytes" -lt 300000 ]; then
+            if [ "$bytes" -lt 150000 ]; then
               echo "$track.ogg is suspiciously small: $bytes bytes"
               exit 1
             fi
             echo "$track.ogg: $bytes bytes"
           done
 
-          # Force browsers and the service worker away from the destroyed low-bitrate copies.
-          sed -i 's/const StoryAudioAssetVersion = "20260820-21";/const StoryAudioAssetVersion = "20260820-22";/' real-audio.js
-          sed -i 's/const STORY_CACHE = "story-rewrite-frontend-v19";/const STORY_CACHE = "story-rewrite-frontend-v20";/' service-worker.js
-
-          rm -rf .audio-quality-v2
+          rm -rf .audio-quality-v3
           rm -f .github/workflows/install-quality-music.yml
 
       - name: Commit quality soundtrack binaries
