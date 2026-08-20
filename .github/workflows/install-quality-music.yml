@@ -24,14 +24,13 @@ jobs:
           mkdir -p music
 
           for track in "${tracks[@]}"; do
-            dir=".audio-quality-v3/$track"
-            count=$(find "$dir" -maxdepth 1 -name 'part-*.b64' -type f | wc -l)
-            if [ "$count" -ne 2 ]; then
-              echo "Expected exactly 2 quality chunks for $track, got $count"
+            payload=".audio-quality-v3/$track/payload.b64"
+            if [ ! -f "$payload" ]; then
+              echo "Missing quality soundtrack payload for $track"
               exit 1
             fi
 
-            cat "$dir"/part-*.b64 | tr -d '\r\n' | base64 --decode > "music/$track.ogg"
+            tr -d '\r\n' < "$payload" | base64 --decode > "music/$track.ogg"
             bytes=$(wc -c < "music/$track.ogg")
             magic=$(head -c 4 "music/$track.ogg")
 
