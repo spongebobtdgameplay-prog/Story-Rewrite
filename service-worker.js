@@ -1,5 +1,4 @@
-const STORY_CACHE = "story-rewrite-frontend-v27";
-const STORY_AUDIO_CACHE = "story-rewrite-music-v1";
+const STORY_CACHE = "story-rewrite-frontend-v28";
 
 const STORY_STATIC_FILES = [
     "./",
@@ -63,7 +62,9 @@ self.addEventListener("activate", Event => {
     Event.waitUntil(
         caches.keys()
             .then(Keys => Promise.all(Keys
-                .filter(Key => Key.startsWith("story-rewrite-frontend-") && Key !== STORY_CACHE)
+                .filter(Key => (
+                    Key.startsWith("story-rewrite-frontend-") && Key !== STORY_CACHE
+                ) || Key.startsWith("story-rewrite-music-"))
                 .map(Key => caches.delete(Key))))
             .then(() => self.clients.claim())
     );
@@ -85,9 +86,9 @@ function NormalizeNavigationKey(FetchRequest) {
     return new Request(`${Url.origin}${Url.pathname}`);
 }
 
-async function PutSuccessfulResponse(Key, Response, CacheName = STORY_CACHE) {
-    if (!Response || !Response.ok) return;
-    const Cache = await caches.open(CacheName);
+async function PutSuccessfulResponse(Key, Response) {
+    if (!Response || !Response.ok || Response.status !== 200) return;
+    const Cache = await caches.open(STORY_CACHE);
     await Cache.put(Key, Response.clone());
 }
 
@@ -103,49 +104,16 @@ async function NetworkFirst(FetchRequest, CacheKey) {
     }
 }
 
-async function CacheFirst(FetchRequest, CacheName = STORY_CACHE) {
-    const Cache = await caches.open(CacheName);
+async function CacheFirst(FetchRequest) {
+    const Cache = await caches.open(STORY_CACHE);
     const Cached = await Cache.match(FetchRequest);
     if (Cached) return Cached;
 
     const Response = await fetch(FetchRequest);
-    if (Response && Response.ok) await Cache.put(FetchRequest, Response.clone());
-    return Response;
-}
-
-async function PrepareMusicResponse(FetchRequest) {
-    const Cache = await caches.open(STORY_AUDIO_CACHE);
-    const CacheKey = new Request(FetchRequest.url, { method: "GET" });
-    const Cached = await Cache.match(CacheKey);
-
-    if (Cached) {
-        return {
-            response: Cached,
-            cacheTask: Promise.resolve()
-        };
-    }
-
-    const Response = await fetch(FetchRequest);
-    let CacheTask = Promise.resolve();
-
     if (Response && Response.ok && Response.status === 200) {
-        CacheTask = Cache.put(CacheKey, Response.clone());
-    } else if (Response && Response.status === 206) {
-        const FullRequest = new Request(FetchRequest.url, {
-            method: "GET",
-            credentials: FetchRequest.credentials,
-            mode: "same-origin",
-            cache: "reload"
-        });
-
-        CacheTask = fetch(FullRequest)
-            .then(FullResponse => {
-                if (!FullResponse || !FullResponse.ok || FullResponse.status !== 200) return;
-                return Cache.put(CacheKey, FullResponse.clone());
-            });
+        await Cache.put(FetchRequest, Response.clone());
     }
-
-    return { response: Response, cacheTask: CacheTask };
+    return Response;
 }
 
 self.addEventListener("fetch", Event => {
@@ -156,9 +124,7 @@ self.addEventListener("fetch", Event => {
     if (Url.origin !== self.location.origin) return;
 
     if (IsBundledMusicRequest(Url)) {
-        const Prepared = PrepareMusicResponse(FetchRequest);
-        Event.respondWith(Prepared.then(Result => Result.response));
-        Event.waitUntil(Prepared.then(Result => Result.cacheTask).catch(() => {}));
+        Event.respondWith(fetch(FetchRequest));
         return;
     }
 
