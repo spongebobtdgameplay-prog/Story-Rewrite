@@ -96,8 +96,10 @@
     }
 
     function PlayMusic(Name) {
-        CurrentMusicName = String(Name || "");
-        if (CurrentMusicName && typeof StoryAudio !== "undefined") StoryAudio.PlayMusic(CurrentMusicName);
+        const NextMusicName = String(Name || "");
+        if (!NextMusicName || NextMusicName === CurrentMusicName) return;
+        CurrentMusicName = NextMusicName;
+        if (typeof StoryAudio !== "undefined") StoryAudio.PlayMusic(CurrentMusicName);
     }
 
     function ApplyRouteMusic(Route) {
