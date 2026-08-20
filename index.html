@@ -51,14 +51,27 @@ if (!Token) {
 
 if (!Token) window.location.replace("auth.html");
 
-if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {
-    window.addEventListener("load", () => {
-        navigator.serviceWorker.register(new URL("service-worker.js?v=9", window.location.href), {
-            scope: new URL(".", window.location.href).pathname,
-            updateViaCache: "none"
-        }).then(Registration => {
-            Registration.update().catch(() => {});
-        }).catch(() => {});
+if ("serviceWorker" in navigator) {
+    window.addEventListener("load", async () => {
+        const CleanupKey = "StoryRewriteWorkerCleanupV2";
+        const Controller = navigator.serviceWorker.controller;
+        const Registrations = await navigator.serviceWorker.getRegistrations().catch(() => []);
+
+        if (!Controller && Registrations.length === 0) return;
+
+        await Promise.all(Registrations.map(Registration => Registration.unregister().catch(() => false)));
+
+        if ("caches" in window) {
+            const Keys = await caches.keys().catch(() => []);
+            await Promise.all(Keys
+                .filter(Key => Key.startsWith("story-rewrite-"))
+                .map(Key => caches.delete(Key).catch(() => false)));
+        }
+
+        if (Controller && sessionStorage.getItem(CleanupKey) !== "done") {
+            sessionStorage.setItem(CleanupKey, "done");
+            location.reload();
+        }
     }, { once: true });
 }
 </script>
@@ -67,8 +80,8 @@ if ("serviceWorker" in navigator && (location.protocol === "https:" || location.
 <div id="StoryShellRoot">
     <iframe id="StoryShellFrame" title="Story Rewrite" src="about:blank"></iframe>
 </div>
-<script src="audio.js?v=20260820-27"></script>
-<script src="real-audio.js?v=20260820-28"></script>
-<script src="shell.js?v=20260820-27"></script>
+<script src="audio.js?v=20260820-31"></script>
+<script src="real-audio.js?v=20260820-31"></script>
+<script src="shell.js?v=20260820-31"></script>
 </body>
 </html>
