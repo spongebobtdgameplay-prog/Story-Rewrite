@@ -47,7 +47,7 @@
 
     const MusicFiles = {
         menu: "Music/menu.mp3",
-        lobby: "Music/lobby.mp3",
+        lobby: "https://raw.githubusercontent.com/spongebobtdgameplay-prog/Story-Rewrite/main/Music/lobby.mp3",
         fromville: "Music/fromville.mp3",
         anime: "Music/neon-exorcists.mp3",
         "neon-exorcists": "Music/neon-exorcists.mp3",
