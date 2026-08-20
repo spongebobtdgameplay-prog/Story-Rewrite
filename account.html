@@ -3,12 +3,19 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>Story Rewrite — Account</title>
 <link rel="icon" type="image/x-icon" href="favicon_io/favicon.ico?v=1000001">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon_io/favicon-32x32.png?v=1000001">
 <link rel="icon" type="image/png" sizes="16x16" href="favicon_io/favicon-16x16.png?v=1000001">
-<link rel="stylesheet" href="looks.css?v=20260819-13">
-<link rel="stylesheet" href="shell-ui.css?v=20260819-13">
+<script>
+const AccountFreshToken = Date.now().toString(36);
+for (const StyleName of ["looks.css", "shell-ui.css"]) {
+    document.write(`<link rel="stylesheet" href="${StyleName}?fresh=${AccountFreshToken}">`);
+}
+</script>
 </head>
 <body class="AccountSettingsPage">
 <main class="AccountSettingsShell">
@@ -63,11 +70,10 @@
         </div>
     </section>
 </main>
-<script src="server-config.js?v=20260819-13"></script>
-<script src="network.js?v=20260819-13"></script>
-<script src="app.js?v=20260819-13"></script>
-<script src="audio.js?v=20260819-13"></script>
-<script src="shell-ui.js?v=20260819-13"></script>
-<script src="account.js?v=20260819-13"></script>
+<script>
+for (const ScriptName of ["server-config.js", "network.js", "app.js", "audio.js", "real-audio.js", "shell-ui.js", "account.js"]) {
+    document.write(`<script src="${ScriptName}?fresh=${AccountFreshToken}"><\/script>`);
+}
+</script>
 </body>
 </html>
