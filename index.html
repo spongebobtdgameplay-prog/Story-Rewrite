@@ -54,57 +54,27 @@ if (!Token) {
 
 if (!Token) window.location.replace("auth.html");
 
-window.StoryAudioNetworkReady = (async () => {
-    if (!("serviceWorker" in navigator)) return;
+window.StoryStartupReady = (async () => {
+    if (!("serviceWorker" in navigator)) return true;
 
-    const DeleteStoryCaches = async () => {
-        if (!("caches" in window)) return;
+    const Controller = navigator.serviceWorker.controller;
+    const Registrations = await navigator.serviceWorker.getRegistrations().catch(() => []);
+
+    await Promise.all(Registrations.map(Registration => Registration.unregister().catch(() => false)));
+
+    if ("caches" in window) {
         const CacheNames = await caches.keys().catch(() => []);
         await Promise.all(CacheNames
             .filter(CacheName => CacheName.startsWith("story-rewrite-"))
             .map(CacheName => caches.delete(CacheName).catch(() => false)));
-    };
-
-    await DeleteStoryCaches();
-
-    const ExistingController = navigator.serviceWorker.controller;
-    const ExistingRegistrations = await navigator.serviceWorker.getRegistrations().catch(() => []);
-
-    if (!ExistingController) {
-        await Promise.all(ExistingRegistrations.map(Registration => Registration.unregister().catch(() => false)));
-        await DeleteStoryCaches();
-        return;
     }
 
-    try {
-        const RepairUrl = new URL(`service-worker.js?repair=${Date.now().toString(36)}`, location.href).href;
-        const Registration = await navigator.serviceWorker.register(RepairUrl, {
-            scope: new URL(".", location.href).pathname,
-            updateViaCache: "none"
-        });
+    if (!Controller) return true;
 
-        if (navigator.serviceWorker.controller?.scriptURL !== RepairUrl) {
-            await new Promise(Resolve => {
-                const OnControllerChange = () => {
-                    navigator.serviceWorker.removeEventListener("controllerchange", OnControllerChange);
-                    Resolve();
-                };
-
-                navigator.serviceWorker.addEventListener("controllerchange", OnControllerChange);
-
-                if (navigator.serviceWorker.controller?.scriptURL === RepairUrl) {
-                    OnControllerChange();
-                }
-            });
-        }
-
-        await DeleteStoryCaches();
-        setTimeout(() => {
-            Registration.unregister().catch(() => false);
-        }, 1000);
-    } catch (Error) {
-        console.warn("Legacy service worker repair failed:", Error);
-    }
+    const CleanUrl = new URL(location.href);
+    CleanUrl.searchParams.set("sw-reset", Date.now().toString(36));
+    location.replace(CleanUrl.href);
+    return false;
 })();
 </script>
 </head>
@@ -113,10 +83,26 @@ window.StoryAudioNetworkReady = (async () => {
     <iframe id="StoryShellFrame" title="Story Rewrite" src="about:blank"></iframe>
 </div>
 <script>
-const AssetFreshToken = Date.now().toString(36);
-for (const AssetName of ["audio.js", "real-audio.js", "shell.js"]) {
-    document.write(`<script src="${AssetName}?fresh=${AssetFreshToken}"><\/script>`);
-}
+(async () => {
+    if (!(await window.StoryStartupReady)) return;
+
+    const CleanUrl = new URL(location.href);
+    if (CleanUrl.searchParams.has("sw-reset")) {
+        CleanUrl.searchParams.delete("sw-reset");
+        history.replaceState(history.state, "", CleanUrl.href);
+    }
+
+    const AssetFreshToken = Date.now().toString(36);
+    for (const AssetName of ["audio.js", "real-audio.js", "shell.js"]) {
+        await new Promise((Resolve, Reject) => {
+            const Script = document.createElement("script");
+            Script.src = `${AssetName}?fresh=${AssetFreshToken}`;
+            Script.onload = Resolve;
+            Script.onerror = () => Reject(new Error(`Failed to load ${AssetName}`));
+            document.body.appendChild(Script);
+        });
+    }
+})().catch(Error => console.error("Story startup failed:", Error));
 </script>
 </body>
 </html>
