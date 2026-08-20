@@ -37,7 +37,7 @@
 
     let MusicVolume = 0.45;
     let SoundVolume = 0.75;
-    let MusicElement = null;
+    const MusicElement = new Audio();
     let MusicName = "";
     let PendingMusicName = "";
     let AudioContextInstance = null;
@@ -64,6 +64,10 @@
     const FadeInSeconds = 0.85;
     const FadeOutSeconds = 3;
 
+    MusicElement.preload = "auto";
+    MusicElement.loop = false;
+    MusicElement.volume = 0;
+
     function Clamp(Value, Fallback) {
         const NumberValue = Number(Value);
         return Number.isFinite(NumberValue) ? Math.max(0, Math.min(1, NumberValue)) : Fallback;
@@ -82,10 +86,10 @@
         try { sessionStorage.setItem(MusicPositionKey, JSON.stringify(Positions)); } catch {}
     }
 
-    function SavePosition(Name = MusicName, Element = MusicElement) {
-        if (!Name || !Element || !Number.isFinite(Element.currentTime)) return;
+    function SavePosition(Name = MusicName) {
+        if (!Name || !Number.isFinite(MusicElement.currentTime)) return;
         const Positions = ReadPositions();
-        Positions[Name] = Math.max(0, Element.currentTime);
+        Positions[Name] = Math.max(0, MusicElement.currentTime);
         WritePositions(Positions);
     }
 
@@ -94,35 +98,73 @@
         return Number.isFinite(Value) && Value >= 0 ? Value : 0;
     }
 
-    function ApplyMusicFade(Element) {
-        if (!Element || !Number.isFinite(Element.duration) || Element.duration <= 0) {
-            if (Element) Element.volume = MusicVolume;
+    function ApplyMusicFade() {
+        if (!Number.isFinite(MusicElement.duration) || MusicElement.duration <= 0) {
+            MusicElement.volume = MusicVolume;
             return;
         }
 
-        const Remaining = Element.duration - Element.currentTime;
+        const Remaining = MusicElement.duration - MusicElement.currentTime;
         let Fade = 1;
 
-        if (Element.currentTime < FadeInSeconds) {
-            Fade = Math.min(Fade, Math.max(0, Element.currentTime / FadeInSeconds));
+        if (MusicElement.currentTime < FadeInSeconds) {
+            Fade = Math.min(Fade, Math.max(0, MusicElement.currentTime / FadeInSeconds));
         }
 
         if (Remaining < FadeOutSeconds) {
             Fade = Math.min(Fade, Math.max(0, Remaining / FadeOutSeconds));
         }
 
-        Element.volume = MusicVolume * Math.max(0, Math.min(1, Fade));
+        MusicElement.volume = MusicVolume * Math.max(0, Math.min(1, Fade));
     }
 
-    function StopMusicInternal(Save = true) {
-        if (MusicElement) {
-            if (Save) SavePosition();
-            MusicElement.pause();
+    function RestoreCurrentTrackPosition() {
+        if (!MusicName || !Number.isFinite(MusicElement.duration) || MusicElement.duration <= 0) return;
+
+        const Position = SavedPosition(MusicName);
+        const SafePosition = Position >= MusicElement.duration - FadeOutSeconds
+            ? 0
+            : Math.min(Position, Math.max(0, MusicElement.duration - 0.25));
+
+        if (SafePosition > 0.05) {
+            try { MusicElement.currentTime = SafePosition; } catch {}
+        }
+
+        ApplyMusicFade();
+    }
+
+    MusicElement.addEventListener("loadedmetadata", RestoreCurrentTrackPosition);
+    MusicElement.addEventListener("timeupdate", () => {
+        ApplyMusicFade();
+        SavePosition();
+    });
+
+    MusicElement.addEventListener("ended", () => {
+        if (!MusicName || PendingMusicName !== MusicName) return;
+
+        const Positions = ReadPositions();
+        Positions[MusicName] = 0;
+        WritePositions(Positions);
+
+        MusicElement.currentTime = 0;
+        MusicElement.volume = 0;
+        MusicElement.play().catch(() => {});
+    });
+
+    MusicElement.addEventListener("error", () => {
+        if (!MusicName) return;
+        console.warn(`Music failed to load: ${MusicFiles[MusicName] || MusicName}`);
+    });
+
+    function StopMusicInternal(Save = true, ClearSource = true) {
+        if (Save && MusicName) SavePosition();
+        MusicElement.pause();
+
+        if (ClearSource) {
             MusicElement.removeAttribute("src");
             try { MusicElement.load(); } catch {}
         }
 
-        MusicElement = null;
         MusicName = "";
     }
 
@@ -130,60 +172,19 @@
         const RelativeUrl = MusicFiles[Name];
         if (!RelativeUrl || MusicVolume <= 0) return null;
 
-        if (MusicElement && MusicName === Name) {
-            ApplyMusicFade(MusicElement);
+        if (MusicName === Name && MusicElement.src) {
+            ApplyMusicFade();
             return MusicElement;
         }
 
-        StopMusicInternal(true);
+        if (MusicName) SavePosition();
+        MusicElement.pause();
 
-        const Element = new Audio();
-        Element.preload = "auto";
-        Element.loop = false;
-        Element.src = new URL(RelativeUrl, window.location.href).href;
-        Element.volume = 0;
-
-        Element.addEventListener("loadedmetadata", () => {
-            if (!Number.isFinite(Element.duration) || Element.duration <= 0) return;
-
-            const Position = SavedPosition(Name);
-            const SafePosition = Position >= Element.duration - FadeOutSeconds
-                ? 0
-                : Math.min(Position, Math.max(0, Element.duration - 0.25));
-
-            if (SafePosition > 0.05) {
-                try { Element.currentTime = SafePosition; } catch {}
-            }
-
-            ApplyMusicFade(Element);
-        }, { once: true });
-
-        Element.addEventListener("timeupdate", () => {
-            ApplyMusicFade(Element);
-            SavePosition(Name, Element);
-        });
-
-        Element.addEventListener("ended", () => {
-            if (MusicElement !== Element || PendingMusicName !== Name) return;
-
-            const Positions = ReadPositions();
-            Positions[Name] = 0;
-            WritePositions(Positions);
-
-            Element.currentTime = 0;
-            Element.volume = 0;
-            Element.play().catch(() => {});
-        });
-
-        Element.addEventListener("error", () => {
-            console.warn(`Music failed to load: ${RelativeUrl}`);
-        });
-
-        MusicElement = Element;
         MusicName = Name;
-
-        try { Element.load(); } catch {}
-        return Element;
+        MusicElement.volume = 0;
+        MusicElement.src = new URL(RelativeUrl, window.location.href).href;
+        try { MusicElement.load(); } catch {}
+        return MusicElement;
     }
 
     function TryPlayPreparedMusic() {
@@ -192,7 +193,7 @@
         const Element = PrepareMusic(PendingMusicName);
         if (!Element) return;
 
-        ApplyMusicFade(Element);
+        ApplyMusicFade();
         const PlayPromise = Element.play();
         if (PlayPromise?.catch) PlayPromise.catch(() => {});
     }
@@ -382,8 +383,8 @@
     StoryAudio.Configure = function(Settings = {}) {
         SoundVolume = Clamp(Settings.soundVolume, SoundVolume);
         MusicVolume = Clamp(Settings.musicVolume, MusicVolume);
-        if (MusicElement) ApplyMusicFade(MusicElement);
-        if (MusicVolume <= 0) StopMusicInternal(true);
+        ApplyMusicFade();
+        if (MusicVolume <= 0) StopMusicInternal(true, false);
     };
 
     StoryAudio.PlayMusic = function(Name) {
@@ -396,7 +397,7 @@
 
     StoryAudio.StopMusic = function() {
         PendingMusicName = "";
-        StopMusicInternal(true);
+        StopMusicInternal(true, false);
     };
 
     StoryAudio.PlaySound = function(Name) {
