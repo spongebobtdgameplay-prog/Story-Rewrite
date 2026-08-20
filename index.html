@@ -54,49 +54,56 @@ if (!Token) {
 
 if (!Token) window.location.replace("auth.html");
 
-(async () => {
+window.StoryAudioNetworkReady = (async () => {
     if (!("serviceWorker" in navigator)) return;
 
-    const Registrations = await navigator.serviceWorker.getRegistrations().catch(() => []);
-    const HasLegacyWorker = Boolean(navigator.serviceWorker.controller || Registrations.length > 0);
-
-    if ("caches" in window) {
+    const DeleteStoryCaches = async () => {
+        if (!("caches" in window)) return;
         const CacheNames = await caches.keys().catch(() => []);
         await Promise.all(CacheNames
             .filter(CacheName => CacheName.startsWith("story-rewrite-"))
             .map(CacheName => caches.delete(CacheName).catch(() => false)));
+    };
+
+    await DeleteStoryCaches();
+
+    const ExistingController = navigator.serviceWorker.controller;
+    const ExistingRegistrations = await navigator.serviceWorker.getRegistrations().catch(() => []);
+
+    if (!ExistingController) {
+        await Promise.all(ExistingRegistrations.map(Registration => Registration.unregister().catch(() => false)));
+        await DeleteStoryCaches();
+        return;
     }
 
-    if (!HasLegacyWorker) return;
-
     try {
-        const KillUrl = new URL(`service-worker.js?kill=${Date.now().toString(36)}`, location.href).href;
-        const Registration = await navigator.serviceWorker.register(KillUrl, {
+        const RepairUrl = new URL(`service-worker.js?repair=${Date.now().toString(36)}`, location.href).href;
+        const Registration = await navigator.serviceWorker.register(RepairUrl, {
             scope: new URL(".", location.href).pathname,
             updateViaCache: "none"
         });
 
-        const FinishCleanup = async () => {
-            await Registration.unregister().catch(() => false);
-            if (!("caches" in window)) return;
-            const CacheNames = await caches.keys().catch(() => []);
-            await Promise.all(CacheNames
-                .filter(CacheName => CacheName.startsWith("story-rewrite-"))
-                .map(CacheName => caches.delete(CacheName).catch(() => false)));
-        };
+        if (navigator.serviceWorker.controller?.scriptURL !== RepairUrl) {
+            await new Promise(Resolve => {
+                const OnControllerChange = () => {
+                    navigator.serviceWorker.removeEventListener("controllerchange", OnControllerChange);
+                    Resolve();
+                };
 
-        if (navigator.serviceWorker.controller?.scriptURL === KillUrl) {
-            await FinishCleanup();
-            return;
+                navigator.serviceWorker.addEventListener("controllerchange", OnControllerChange);
+
+                if (navigator.serviceWorker.controller?.scriptURL === RepairUrl) {
+                    OnControllerChange();
+                }
+            });
         }
 
-        navigator.serviceWorker.addEventListener("controllerchange", () => {
-            FinishCleanup();
-        }, { once: true });
-
-        Registration.update().catch(() => {});
+        await DeleteStoryCaches();
+        setTimeout(() => {
+            Registration.unregister().catch(() => false);
+        }, 1000);
     } catch (Error) {
-        console.warn("Legacy service worker cleanup failed:", Error);
+        console.warn("Legacy service worker repair failed:", Error);
     }
 })();
 </script>
