@@ -54,72 +54,20 @@ if (!Token) {
 
 if (!Token) window.location.replace("auth.html");
 
-window.StoryWorkerReplacementReady = (async () => {
-    if (!("serviceWorker" in navigator)) return true;
-
+if ("serviceWorker" in navigator) {
     const CleanWorkerVersion = "20260820-49";
     const CleanWorkerUrl = new URL(`service-worker.js?clean=${CleanWorkerVersion}`, location.href).href;
     const Scope = new URL(".", location.href).pathname;
-    const InitialControllerUrl = navigator.serviceWorker.controller?.scriptURL || "";
-    const HadLegacyController = Boolean(InitialControllerUrl && InitialControllerUrl !== CleanWorkerUrl);
 
-    const IsCleanController = () => {
-        const ControllerUrl = navigator.serviceWorker.controller?.scriptURL || "";
-        return ControllerUrl === CleanWorkerUrl;
-    };
-
-    const ReloadAfterReplacement = () => {
-        if (!HadLegacyController) return;
-        const ReloadKey = `StoryRewriteWorkerMigrated-${CleanWorkerVersion}`;
-        if (sessionStorage.getItem(ReloadKey) === "1") return;
-        sessionStorage.setItem(ReloadKey, "1");
-        setTimeout(() => location.reload(), 0);
-    };
-
-    try {
-        const Registration = await navigator.serviceWorker.register(CleanWorkerUrl, {
-            scope: Scope,
-            updateViaCache: "none"
-        });
-
+    navigator.serviceWorker.register(CleanWorkerUrl, {
+        scope: Scope,
+        updateViaCache: "none"
+    }).then(Registration => {
         Registration.update().catch(() => {});
-
-        if (IsCleanController()) {
-            ReloadAfterReplacement();
-            return true;
-        }
-
-        const Replaced = await new Promise(Resolve => {
-            let Finished = false;
-
-            const Finish = Value => {
-                if (Finished) return;
-                Finished = true;
-                navigator.serviceWorker.removeEventListener("controllerchange", OnControllerChange);
-                Resolve(Value);
-            };
-
-            const OnControllerChange = () => {
-                if (IsCleanController()) Finish(true);
-            };
-
-            navigator.serviceWorker.addEventListener("controllerchange", OnControllerChange);
-
-            if (IsCleanController()) {
-                Finish(true);
-                return;
-            }
-
-            setTimeout(() => Finish(IsCleanController()), 5000);
-        });
-
-        if (Replaced) ReloadAfterReplacement();
-        return Replaced;
-    } catch (Error) {
-        console.warn("Could not replace legacy service worker:", Error);
-        return false;
-    }
-})();
+    }).catch(Error => {
+        console.warn("Could not install clean service worker:", Error);
+    });
+}
 </script>
 </head>
 <body>
