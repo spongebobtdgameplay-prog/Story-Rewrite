@@ -2,7 +2,7 @@ let AccountMode = "register";
 
 window.addEventListener("DOMContentLoaded", () => {
     if (GetAuthToken()) {
-        window.location.replace(BuildStoryUrl("main.html"));
+        window.location.replace(BuildStoryUrl("index.html"));
         return;
     }
 
@@ -51,7 +51,7 @@ async function SubmitAccount(Event) {
     try {
         if (AccountMode === "register") await RegisterAccount(Username, Password);
         else await LoginAccount(Username, Password);
-        window.location.replace(BuildStoryUrl("main.html"));
+        window.location.replace(BuildStoryUrl("index.html"));
     } catch (Error) {
         ShowStatus(Error.message, false);
     } finally {
