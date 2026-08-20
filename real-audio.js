@@ -5,7 +5,7 @@ let StoryRealMusicName = "";
 let StoryRealMusicElement = null;
 let StoryRealMusicPlayGeneration = 0;
 
-const StoryAudioAssetVersion = "20260819-20";
+const StoryAudioAssetVersion = "20260819-21";
 
 const StoryRealSoundBases = [
     "https://cdn.jsdelivr.net/gh/Calinou/kenney-interface-sounds@master/addons/kenney_interface_sounds/",
@@ -95,16 +95,7 @@ function BuildStoryRealMusic(Name) {
     AudioElement.volume = StoryRealMusicVolume;
     AudioElement.playsInline = true;
     AudioElement.dataset.storyMusic = File;
-
-    const OggSource = document.createElement("source");
-    OggSource.src = `music/${File}.ogg?v=${StoryAudioAssetVersion}`;
-    OggSource.type = 'audio/ogg; codecs="opus"';
-
-    const Mp3Source = document.createElement("source");
-    Mp3Source.src = `music/${File}.mp3?v=${StoryAudioAssetVersion}`;
-    Mp3Source.type = "audio/mpeg";
-
-    AudioElement.append(OggSource, Mp3Source);
+    AudioElement.src = `music/${File}.ogg?v=${StoryAudioAssetVersion}`;
     return AudioElement;
 }
 
@@ -117,7 +108,6 @@ function DestroyStoryRealMusicElement() {
         StoryRealMusicElement.pause();
         StoryRealMusicElement.currentTime = 0;
         StoryRealMusicElement.removeAttribute("src");
-        StoryRealMusicElement.querySelectorAll("source").forEach(Source => Source.remove());
         StoryRealMusicElement.load();
     } catch {}
 
