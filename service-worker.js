@@ -1,4 +1,4 @@
-const STORY_CACHE = "story-rewrite-frontend-v18";
+const STORY_CACHE = "story-rewrite-frontend-v19";
 
 const STORY_STATIC_FILES = [
     "./",
