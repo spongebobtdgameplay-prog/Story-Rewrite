@@ -28,10 +28,19 @@
 
             const PageName = Url.pathname.slice(Base.pathname.length) || "main.html";
             if (!ManagedPages.has(PageName)) return "";
-            return `${PageName}${Url.search}${Url.hash}`;
+
+            Url.searchParams.delete("__fresh");
+            const Search = Url.searchParams.toString();
+            return `${PageName}${Search ? `?${Search}` : ""}${Url.hash}`;
         } catch {
             return "";
         }
+    }
+
+    function FreshRouteUrl(Route) {
+        const Url = new URL(Route, GetBaseUrl());
+        Url.searchParams.set("__fresh", Date.now().toString(36));
+        return Url.href;
     }
 
     function RouteHash(Route) {
@@ -108,7 +117,7 @@
 
         ApplyRouteMusic(Normalized);
         if (!SkipHistory) SetTopHistory(Normalized, Replace);
-        Frame.src = Normalized;
+        Frame.src = FreshRouteUrl(Normalized);
         return true;
     }
 
@@ -244,5 +253,5 @@
     SetTopHistory(InitialRoute, true);
     ApplyRouteMusic(InitialRoute);
     LoadingFromShell = true;
-    Frame.src = InitialRoute;
+    Frame.src = FreshRouteUrl(InitialRoute);
 })();
