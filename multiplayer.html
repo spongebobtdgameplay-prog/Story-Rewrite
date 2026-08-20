@@ -4,6 +4,38 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Story Rewrite — Multiplayer</title>
+<script>
+(async () => {
+    if (!("serviceWorker" in navigator)) return;
+
+    const CleanupKey = "StoryRewriteMultiplayerWorkerCleanupV1";
+    const Controller = navigator.serviceWorker.controller;
+    const Registrations = await navigator.serviceWorker.getRegistrations().catch(() => []);
+    const HasWorker = Boolean(Controller || Registrations.length);
+
+    if (!HasWorker || sessionStorage.getItem(CleanupKey) === "done") return;
+
+    sessionStorage.setItem(CleanupKey, "done");
+
+    await Promise.all(Registrations.map(Registration => Registration.unregister().catch(() => false)));
+
+    if ("caches" in window) {
+        const Keys = await caches.keys().catch(() => []);
+        await Promise.all(Keys
+            .filter(Key => Key.startsWith("story-rewrite-"))
+            .map(Key => caches.delete(Key).catch(() => false)));
+    }
+
+    try {
+        if (window.top && window.top !== window) {
+            window.top.location.reload();
+            return;
+        }
+    } catch {}
+
+    location.reload();
+})();
+</script>
 <link rel="icon" type="image/x-icon" href="favicon_io/favicon.ico?v=1000001">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon_io/favicon-32x32.png?v=1000001">
 <link rel="icon" type="image/png" sizes="16x16" href="favicon_io/favicon-16x16.png?v=1000001">
@@ -82,17 +114,17 @@
         </div>
     </section>
 </div>
-<script src="server-config.js?v=20260819-19"></script>
-<script src="network.js?v=20260819-19"></script>
-<script src="app.js?v=20260819-19"></script>
-<script src="audio.js?v=20260819-19"></script>
-<script src="audio-enhancements.js?v=20260819-19"></script>
-<script src="real-audio.js?v=20260820-23"></script>
-<script src="shell-ui.js?v=20260819-19"></script>
-<script src="multiplayer.js?v=20260819-19"></script>
-<script src="multiplayer-connection.js?v=20260819-19"></script>
-<script src="moderation-version.js?v=20260819-19"></script>
-<script src="host-controls.js?v=20260819-19"></script>
-<script src="ai-chat.js?v=20260819-19"></script>
+<script src="server-config.js?v=20260820-30"></script>
+<script src="network.js?v=20260820-30"></script>
+<script src="app.js?v=20260820-30"></script>
+<script src="audio.js?v=20260820-30"></script>
+<script src="audio-enhancements.js?v=20260820-30"></script>
+<script src="real-audio.js?v=20260820-30"></script>
+<script src="shell-ui.js?v=20260820-30"></script>
+<script src="multiplayer.js?v=20260820-30"></script>
+<script src="multiplayer-connection.js?v=20260820-30"></script>
+<script src="moderation-version.js?v=20260820-30"></script>
+<script src="host-controls.js?v=20260820-30"></script>
+<script src="ai-chat.js?v=20260820-30"></script>
 </body>
 </html>
