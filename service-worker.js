@@ -1,4 +1,4 @@
-const STORY_CACHE = "story-rewrite-frontend-v26";
+const STORY_CACHE = "story-rewrite-frontend-v27";
 const STORY_AUDIO_CACHE = "story-rewrite-music-v1";
 
 const STORY_STATIC_FILES = [
@@ -113,92 +113,39 @@ async function CacheFirst(FetchRequest, CacheName = STORY_CACHE) {
     return Response;
 }
 
-function BuildMusicCacheKey(FetchRequest) {
-    return new Request(FetchRequest.url, { method: "GET" });
-}
-
-async function GetFullMusicResponse(FetchRequest) {
+async function PrepareMusicResponse(FetchRequest) {
     const Cache = await caches.open(STORY_AUDIO_CACHE);
-    const CacheKey = BuildMusicCacheKey(FetchRequest);
+    const CacheKey = new Request(FetchRequest.url, { method: "GET" });
     const Cached = await Cache.match(CacheKey);
-    if (Cached) return Cached;
 
-    const NetworkRequest = new Request(FetchRequest.url, {
-        method: "GET",
-        credentials: FetchRequest.credentials,
-        cache: "no-store"
-    });
+    if (Cached) {
+        return {
+            response: Cached,
+            cacheTask: Promise.resolve()
+        };
+    }
 
-    const Response = await fetch(NetworkRequest);
+    const Response = await fetch(FetchRequest);
+    let CacheTask = Promise.resolve();
+
     if (Response && Response.ok && Response.status === 200) {
-        try { await Cache.put(CacheKey, Response.clone()); } catch {}
-    }
-    return Response;
-}
-
-function ParseByteRange(RangeHeader, Size) {
-    const Match = /^bytes=(\d*)-(\d*)$/i.exec(String(RangeHeader || "").trim());
-    if (!Match || Size <= 0) return null;
-
-    const StartText = Match[1];
-    const EndText = Match[2];
-    let Start;
-    let End;
-
-    if (!StartText && !EndText) return null;
-
-    if (!StartText) {
-        const SuffixLength = Number(EndText);
-        if (!Number.isFinite(SuffixLength) || SuffixLength <= 0) return null;
-        Start = Math.max(0, Size - Math.floor(SuffixLength));
-        End = Size - 1;
-    } else {
-        Start = Number(StartText);
-        End = EndText ? Number(EndText) : Size - 1;
-    }
-
-    if (!Number.isFinite(Start) || !Number.isFinite(End)) return null;
-    Start = Math.max(0, Math.floor(Start));
-    End = Math.min(Size - 1, Math.floor(End));
-    if (Start > End || Start >= Size) return null;
-
-    return { Start, End };
-}
-
-async function MusicCacheFirst(FetchRequest) {
-    const FullResponse = await GetFullMusicResponse(FetchRequest);
-    if (!FullResponse) return FullResponse;
-
-    const RangeHeader = FetchRequest.headers.get("Range");
-    if (!RangeHeader || FullResponse.status !== 200) return FullResponse;
-
-    const FullBlob = await FullResponse.clone().blob();
-    const Range = ParseByteRange(RangeHeader, FullBlob.size);
-
-    if (!Range) {
-        return new Response(null, {
-            status: 416,
-            statusText: "Range Not Satisfiable",
-            headers: {
-                "Accept-Ranges": "bytes",
-                "Content-Range": `bytes */${FullBlob.size}`
-            }
+        CacheTask = Cache.put(CacheKey, Response.clone());
+    } else if (Response && Response.status === 206) {
+        const FullRequest = new Request(FetchRequest.url, {
+            method: "GET",
+            credentials: FetchRequest.credentials,
+            mode: "same-origin",
+            cache: "reload"
         });
+
+        CacheTask = fetch(FullRequest)
+            .then(FullResponse => {
+                if (!FullResponse || !FullResponse.ok || FullResponse.status !== 200) return;
+                return Cache.put(CacheKey, FullResponse.clone());
+            });
     }
 
-    const Slice = FullBlob.slice(Range.Start, Range.End + 1, FullBlob.type || "audio/mpeg");
-    const HeadersValue = new Headers(FullResponse.headers);
-    HeadersValue.delete("Content-Encoding");
-    HeadersValue.set("Accept-Ranges", "bytes");
-    HeadersValue.set("Content-Range", `bytes ${Range.Start}-${Range.End}/${FullBlob.size}`);
-    HeadersValue.set("Content-Length", String(Range.End - Range.Start + 1));
-    if (!HeadersValue.get("Content-Type")) HeadersValue.set("Content-Type", "audio/mpeg");
-
-    return new Response(Slice, {
-        status: 206,
-        statusText: "Partial Content",
-        headers: HeadersValue
-    });
+    return { response: Response, cacheTask: CacheTask };
 }
 
 self.addEventListener("fetch", Event => {
@@ -209,7 +156,9 @@ self.addEventListener("fetch", Event => {
     if (Url.origin !== self.location.origin) return;
 
     if (IsBundledMusicRequest(Url)) {
-        Event.respondWith(MusicCacheFirst(FetchRequest));
+        const Prepared = PrepareMusicResponse(FetchRequest);
+        Event.respondWith(Prepared.then(Result => Result.response));
+        Event.waitUntil(Prepared.then(Result => Result.cacheTask).catch(() => {}));
         return;
     }
 
