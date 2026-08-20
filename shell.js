@@ -109,7 +109,40 @@
     }
 
     function NotifyInteraction() {
-        if (CurrentMusicName && typeof StoryAudio !== "undefined") StoryAudio.PlayMusic(CurrentMusicName);
+        if (typeof StoryAudio === "undefined") return;
+
+        if (typeof StoryAudio.UnlockAudio === "function") {
+            StoryAudio.UnlockAudio();
+            return;
+        }
+
+        if (CurrentMusicName) StoryAudio.PlayMusic(CurrentMusicName);
+    }
+
+    function IsClickableButton(Target) {
+        const Button = Target?.closest?.("button,[role='button']");
+        if (!Button || Button.disabled || Button.getAttribute("aria-disabled") === "true") return null;
+        return Button;
+    }
+
+    function WireFrameInteractionBridge() {
+        let ChildDocument;
+        try {
+            ChildDocument = Frame.contentDocument;
+        } catch {
+            ChildDocument = null;
+        }
+
+        if (!ChildDocument) return;
+
+        ChildDocument.addEventListener("pointerdown", NotifyInteraction, { capture: true, passive: true });
+        ChildDocument.addEventListener("touchstart", NotifyInteraction, { capture: true, passive: true });
+        ChildDocument.addEventListener("keydown", NotifyInteraction, { capture: true });
+
+        ChildDocument.addEventListener("click", Event => {
+            if (!IsClickableButton(Event.target)) return;
+            PlaySound("click");
+        }, { capture: true });
     }
 
     function RouteFromFrame() {
@@ -143,6 +176,8 @@
         } catch {
             document.title = "Story Rewrite";
         }
+
+        WireFrameInteractionBridge();
     });
 
     window.addEventListener("popstate", Event => {
