@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     paths:
-      - ".audio-staging/READY"
+      - ".audio-staging-v2/READY"
 
 permissions:
   contents: write
@@ -24,16 +24,18 @@ jobs:
           mkdir -p music
 
           for track in "${tracks[@]}"; do
-            part=".audio-staging/$track/00.part"
-            if [ ! -f "$part" ]; then
+            shopt -s nullglob
+            parts=(.audio-staging-v2/"$track"/*.part)
+            if [ "${#parts[@]}" -eq 0 ]; then
               echo "Missing staged audio for $track"
               exit 1
             fi
 
-            tr -d '\r\n' < "$part" | base64 --decode > "music/$track.ogg"
+            cat "${parts[@]}" | tr -d '\r\n' | base64 --decode > "music/$track.ogg"
             bytes=$(wc -c < "music/$track.ogg")
-            if [ "$bytes" -lt 5000 ]; then
-              echo "Decoded $track.ogg is suspiciously small: $bytes bytes"
+            magic=$(head -c 4 "music/$track.ogg")
+            if [ "$bytes" -lt 5000 ] || [ "$magic" != "OggS" ]; then
+              echo "Decoded $track.ogg failed validation: bytes=$bytes magic=$magic"
               exit 1
             fi
             echo "$track.ogg: $bytes bytes"
@@ -41,7 +43,7 @@ jobs:
 
           rm -f music/menu.mp3 music/lobby.mp3 music/fromville.mp3 music/neon-exorcists.mp3 music/blackthorn.mp3 music/spirit-grove.mp3 music/false-city.mp3 music/danger.mp3
           rm -rf music/menu music/lobby music/fromville music/neon-exorcists music/blackthorn music/spirit-grove music/false-city music/danger
-          rm -rf .audio-staging
+          rm -rf .audio-staging .audio-staging-v2
           rm -f .github/workflows/install-uploaded-music.yml
 
       - name: Commit real soundtrack binaries
