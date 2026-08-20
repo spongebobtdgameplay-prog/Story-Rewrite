@@ -9,11 +9,7 @@
     const ShellHost = GetPersistentShellHost();
 
     if (ShellHost && typeof StoryAudio !== "undefined") {
-        const LocalConfigure = StoryAudio.Configure.bind(StoryAudio);
-        const LocalPlaySound = StoryAudio.PlaySound.bind(StoryAudio);
-
         StoryAudio.Configure = function(Settings = {}) {
-            LocalConfigure(Settings);
             ShellHost.StoryShell.ConfigureAudio(Settings);
         };
 
@@ -26,7 +22,7 @@
         };
 
         StoryAudio.PlaySound = function(Name) {
-            LocalPlaySound(Name);
+            ShellHost.StoryShell.PlaySound(Name);
         };
         StoryAudio.PlaySound.V11Wrapped = true;
 
@@ -34,11 +30,6 @@
         document.addEventListener("pointerdown", NotifyInteraction, { capture: true, passive: true });
         document.addEventListener("touchstart", NotifyInteraction, { capture: true, passive: true });
         document.addEventListener("keydown", NotifyInteraction, { capture: true });
-        document.addEventListener("click", Event => {
-            const Button = Event.target?.closest?.("button,[role='button']");
-            if (!Button || Button.disabled || Button.getAttribute("aria-disabled") === "true") return;
-            LocalPlaySound("click");
-        }, { capture: true });
         return;
     }
 
@@ -46,14 +37,14 @@
 
     let MusicVolume = 0.45;
     let SoundVolume = 0.75;
-    let AudioUnlocked = false;
-    let AudioContextInstance = null;
+    const MusicElement = new Audio();
     let MusicName = "";
     let PendingMusicName = "";
+    let AudioContextInstance = null;
+    let AudioUnlocked = false;
     let LastSoundName = "";
     let LastSoundAt = 0;
 
-    const MusicElement = new Audio();
     const MusicFiles = {
         menu: "Music/menu.mp3",
         lobby: "Music/lobby.mp3",
@@ -130,6 +121,7 @@
 
     function RestoreCurrentTrackPosition() {
         if (!MusicName || !Number.isFinite(MusicElement.duration) || MusicElement.duration <= 0) return;
+
         const Position = SavedPosition(MusicName);
         const SafePosition = Position >= MusicElement.duration - FadeOutSeconds
             ? 0
@@ -142,24 +134,39 @@
         ApplyMusicFade();
     }
 
-    function GetContext() {
-        if (!AudioContextInstance) {
-            const ContextClass = window.AudioContext || window.webkitAudioContext;
-            if (!ContextClass) return null;
-            AudioContextInstance = new ContextClass();
+    MusicElement.addEventListener("loadedmetadata", RestoreCurrentTrackPosition);
+    MusicElement.addEventListener("timeupdate", () => {
+        ApplyMusicFade();
+        SavePosition();
+    });
+
+    MusicElement.addEventListener("ended", () => {
+        if (!MusicName || PendingMusicName !== MusicName) return;
+
+        const Positions = ReadPositions();
+        Positions[MusicName] = 0;
+        WritePositions(Positions);
+
+        MusicElement.currentTime = 0;
+        MusicElement.volume = 0;
+        MusicElement.play().catch(() => {});
+    });
+
+    MusicElement.addEventListener("error", () => {
+        if (!MusicName) return;
+        console.warn(`Music failed to load: ${MusicFiles[MusicName] || MusicName}`);
+    });
+
+    function StopMusicInternal(Save = true, ClearSource = true) {
+        if (Save && MusicName) SavePosition();
+        MusicElement.pause();
+
+        if (ClearSource) {
+            MusicElement.removeAttribute("src");
+            try { MusicElement.load(); } catch {}
         }
-        return AudioContextInstance;
-    }
 
-    async function EnsureContextRunning() {
-        const Context = GetContext();
-        if (!Context) return null;
-
-        if (Context.state === "suspended") {
-            try { await Context.resume(); } catch {}
-        }
-
-        return Context.state === "running" ? Context : null;
+        MusicName = "";
     }
 
     function PrepareMusic(Name) {
@@ -173,6 +180,7 @@
 
         if (MusicName) SavePosition();
         MusicElement.pause();
+
         MusicName = Name;
         MusicElement.volume = 0;
         MusicElement.src = new URL(RelativeUrl, window.location.href).href;
@@ -182,25 +190,45 @@
 
     function TryPlayPreparedMusic() {
         if (!AudioUnlocked || !PendingMusicName || MusicVolume <= 0) return;
+
         const Element = PrepareMusic(PendingMusicName);
         if (!Element) return;
+
         ApplyMusicFade();
         const PlayPromise = Element.play();
         if (PlayPromise?.catch) PlayPromise.catch(() => {});
     }
 
+    function GetContext() {
+        if (!AudioContextInstance) {
+            const ContextClass = window.AudioContext || window.webkitAudioContext;
+            if (!ContextClass) return null;
+            AudioContextInstance = new ContextClass();
+        }
+        return AudioContextInstance;
+    }
+
     function UnlockAudioFromGesture() {
         AudioUnlocked = true;
-        const Context = GetContext();
 
+        const Context = GetContext();
         if (Context?.state === "suspended") {
             const ResumePromise = Context.resume();
-            if (ResumePromise?.then) {
-                ResumePromise.then(() => TryPlayPreparedMusic()).catch(() => {});
-            }
-        } else {
-            TryPlayPreparedMusic();
+            if (ResumePromise?.catch) ResumePromise.catch(() => {});
         }
+
+        if (PendingMusicName) TryPlayPreparedMusic();
+    }
+
+    async function EnsureContextRunning() {
+        const Context = GetContext();
+        if (!Context) return null;
+
+        if (Context.state === "suspended") {
+            try { await Context.resume(); } catch {}
+        }
+
+        return Context.state === "running" ? Context : null;
     }
 
     function Tone(Frequency, Duration, GainAmount = 0.025, Type = "sine", Delay = 0, EndFrequency = null) {
@@ -274,7 +302,6 @@
         if (Name === LastSoundName && Now - LastSoundAt < 45) return;
         LastSoundName = Name;
         LastSoundAt = Now;
-        AudioUnlocked = true;
 
         if (!(await EnsureContextRunning())) return;
 
@@ -343,47 +370,16 @@
         }
     }
 
-    function StopMusicInternal(Save = true, ClearSource = true) {
-        if (Save && MusicName) SavePosition();
-        MusicElement.pause();
-
-        if (ClearSource) {
-            MusicElement.removeAttribute("src");
-            try { MusicElement.load(); } catch {}
-        }
-
-        MusicName = "";
+    function GenericButtonClick(Event) {
+        const Button = Event.target?.closest?.("button,[role='button']");
+        if (!Button || Button.disabled || Button.getAttribute("aria-disabled") === "true") return;
+        PlayProceduralSound("click");
     }
-
-    MusicElement.addEventListener("loadedmetadata", RestoreCurrentTrackPosition);
-    MusicElement.addEventListener("timeupdate", () => {
-        ApplyMusicFade();
-        SavePosition();
-    });
-
-    MusicElement.addEventListener("ended", () => {
-        if (!MusicName || PendingMusicName !== MusicName) return;
-        const Positions = ReadPositions();
-        Positions[MusicName] = 0;
-        WritePositions(Positions);
-        MusicElement.currentTime = 0;
-        MusicElement.volume = 0;
-        MusicElement.play().catch(() => {});
-    });
-
-    MusicElement.addEventListener("error", () => {
-        if (!MusicName) return;
-        console.warn(`Music failed to load: ${MusicFiles[MusicName] || MusicName}`);
-    });
 
     document.addEventListener("pointerdown", UnlockAudioFromGesture, { capture: true, passive: true });
     document.addEventListener("touchstart", UnlockAudioFromGesture, { capture: true, passive: true });
     document.addEventListener("keydown", UnlockAudioFromGesture, { capture: true });
-    document.addEventListener("click", Event => {
-        const Button = Event.target?.closest?.("button,[role='button']");
-        if (!Button || Button.disabled || Button.getAttribute("aria-disabled") === "true") return;
-        PlayProceduralSound("click");
-    }, { capture: true });
+    document.addEventListener("click", GenericButtonClick, { capture: true });
     window.addEventListener("pagehide", () => SavePosition());
     window.addEventListener("beforeunload", () => SavePosition());
 
@@ -397,6 +393,7 @@
     StoryAudio.PlayMusic = function(Name) {
         PendingMusicName = String(Name || "");
         if (!MusicFiles[PendingMusicName]) return;
+
         PrepareMusic(PendingMusicName);
         TryPlayPreparedMusic();
     };
@@ -410,5 +407,6 @@
         PlayProceduralSound(Name);
     };
     StoryAudio.PlaySound.V11Wrapped = true;
+
     StoryAudio.UnlockAudio = UnlockAudioFromGesture;
 })();
