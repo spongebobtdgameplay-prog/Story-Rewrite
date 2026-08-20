@@ -45,25 +45,23 @@
     let LastSoundName = "";
     let LastSoundAt = 0;
 
-    const MusicBaseUrl = "https://raw.githubusercontent.com/spongebobtdgameplay-prog/Story-Rewrite/main/Music/";
     const MusicFiles = {
-        menu: `${MusicBaseUrl}menu.mp3`,
-        lobby: `${MusicBaseUrl}lobby.mp3`,
-        fromville: `${MusicBaseUrl}fromville.mp3`,
-        anime: `${MusicBaseUrl}neon-exorcists.mp3`,
-        "neon-exorcists": `${MusicBaseUrl}neon-exorcists.mp3`,
-        manor: `${MusicBaseUrl}blackthorn.mp3`,
-        blackthorn: `${MusicBaseUrl}blackthorn.mp3`,
-        forest: `${MusicBaseUrl}spirit-grove.mp3`,
-        spirit: `${MusicBaseUrl}spirit-grove.mp3`,
-        "spirit-grove": `${MusicBaseUrl}spirit-grove.mp3`,
-        city: `${MusicBaseUrl}false-city.mp3`,
-        "false-city": `${MusicBaseUrl}false-city.mp3`,
-        danger: `${MusicBaseUrl}danger.mp3`
+        menu: "Music/menu.mp3",
+        lobby: "Music/lobby.mp3",
+        fromville: "Music/fromville.mp3",
+        anime: "Music/neon-exorcists.mp3",
+        "neon-exorcists": "Music/neon-exorcists.mp3",
+        manor: "Music/blackthorn.mp3",
+        blackthorn: "Music/blackthorn.mp3",
+        forest: "Music/spirit-grove.mp3",
+        spirit: "Music/spirit-grove.mp3",
+        "spirit-grove": "Music/spirit-grove.mp3",
+        city: "Music/false-city.mp3",
+        "false-city": "Music/false-city.mp3",
+        danger: "Music/danger.mp3"
     };
 
     const MusicPositionKey = "StoryRewriteMusicPositionsV2";
-    const MusicFreshToken = Date.now().toString(36);
     const FadeInSeconds = 0.85;
     const FadeOutSeconds = 3;
 
@@ -74,6 +72,18 @@
     function Clamp(Value, Fallback) {
         const NumberValue = Number(Value);
         return Number.isFinite(NumberValue) ? Math.max(0, Math.min(1, NumberValue)) : Fallback;
+    }
+
+    async function WaitForAudioNetwork() {
+        if (!window.StoryAudioNetworkReady) return true;
+
+        try {
+            await window.StoryAudioNetworkReady;
+            return true;
+        } catch (Error) {
+            console.warn("Audio network repair failed:", Error);
+            return false;
+        }
     }
 
     function ReadPositions() {
@@ -185,18 +195,18 @@
 
         MusicName = Name;
         MusicElement.volume = 0;
-        const MusicUrl = new URL(RelativeUrl, window.location.href);
-        MusicUrl.searchParams.set("fresh", MusicFreshToken);
-        MusicElement.src = MusicUrl.href;
+        MusicElement.src = new URL(RelativeUrl, window.location.href).href;
         try { MusicElement.load(); } catch {}
         return MusicElement;
     }
 
-    function TryPlayPreparedMusic() {
+    async function TryPlayPreparedMusic() {
         if (!AudioUnlocked || !PendingMusicName || MusicVolume <= 0) return;
+        if (!(await WaitForAudioNetwork())) return;
 
-        const Element = PrepareMusic(PendingMusicName);
-        if (!Element) return;
+        const RequestedMusicName = PendingMusicName;
+        const Element = PrepareMusic(RequestedMusicName);
+        if (!Element || PendingMusicName !== RequestedMusicName) return;
 
         ApplyMusicFade();
         const PlayPromise = Element.play();
@@ -397,8 +407,6 @@
     StoryAudio.PlayMusic = function(Name) {
         PendingMusicName = String(Name || "");
         if (!MusicFiles[PendingMusicName]) return;
-
-        PrepareMusic(PendingMusicName);
         TryPlayPreparedMusic();
     };
 
