@@ -1,5 +1,4 @@
-const STORY_CACHE = "story-rewrite-frontend-v22";
-const STORY_AUDIO_CACHE = "story-rewrite-audio-v1";
+const STORY_CACHE = "story-rewrite-frontend-v23";
 
 const STORY_STATIC_FILES = [
     "./",
@@ -85,9 +84,9 @@ function NormalizeNavigationKey(FetchRequest) {
     return new Request(`${Url.origin}${Url.pathname}`);
 }
 
-async function PutSuccessfulResponse(Key, Response, CacheName = STORY_CACHE) {
+async function PutSuccessfulResponse(Key, Response) {
     if (!Response || !Response.ok) return;
-    const Cache = await caches.open(CacheName);
+    const Cache = await caches.open(STORY_CACHE);
     await Cache.put(Key, Response.clone());
 }
 
@@ -106,91 +105,9 @@ async function NetworkFirst(FetchRequest, CacheKey) {
 async function CacheFirst(FetchRequest) {
     const Cached = await caches.match(FetchRequest);
     if (Cached) return Cached;
-
     const Response = await fetch(FetchRequest);
     await PutSuccessfulResponse(FetchRequest, Response);
     return Response;
-}
-
-function BuildFullAudioRequest(AudioRequest) {
-    const AudioHeaders = new Headers(AudioRequest.headers);
-    AudioHeaders.delete("range");
-    return new Request(AudioRequest.url, {
-        method: "GET",
-        headers: AudioHeaders,
-        mode: AudioRequest.mode,
-        credentials: AudioRequest.credentials,
-        cache: "no-store",
-        redirect: AudioRequest.redirect,
-        referrer: AudioRequest.referrer,
-        referrerPolicy: AudioRequest.referrerPolicy,
-        integrity: AudioRequest.integrity
-    });
-}
-
-function ParseSingleByteRange(RangeHeader, TotalSize) {
-    const Match = /^bytes=(\d*)-(\d*)$/i.exec(String(RangeHeader || "").trim());
-    if (!Match || !TotalSize) return null;
-
-    let Start;
-    let End;
-
-    if (Match[1] === "" && Match[2] !== "") {
-        const SuffixLength = Number(Match[2]);
-        if (!Number.isFinite(SuffixLength) || SuffixLength <= 0) return null;
-        Start = Math.max(0, TotalSize - SuffixLength);
-        End = TotalSize - 1;
-    } else {
-        Start = Number(Match[1]);
-        End = Match[2] === "" ? TotalSize - 1 : Number(Match[2]);
-    }
-
-    if (!Number.isFinite(Start) || !Number.isFinite(End)) return null;
-    Start = Math.max(0, Math.floor(Start));
-    End = Math.min(TotalSize - 1, Math.floor(End));
-    if (Start > End || Start >= TotalSize) return null;
-
-    return { Start, End };
-}
-
-async function BuildRangeResponse(Response, RangeHeader) {
-    const Buffer = await Response.arrayBuffer();
-    const Range = ParseSingleByteRange(RangeHeader, Buffer.byteLength);
-    if (!Range) {
-        return new Response(null, {
-            status: 416,
-            headers: { "Content-Range": `bytes */${Buffer.byteLength}` }
-        });
-    }
-
-    const RangeHeaders = new Headers(Response.headers);
-    RangeHeaders.set("Accept-Ranges", "bytes");
-    RangeHeaders.set("Content-Range", `bytes ${Range.Start}-${Range.End}/${Buffer.byteLength}`);
-    RangeHeaders.set("Content-Length", String(Range.End - Range.Start + 1));
-
-    return new Response(Buffer.slice(Range.Start, Range.End + 1), {
-        status: 206,
-        statusText: "Partial Content",
-        headers: RangeHeaders
-    });
-}
-
-async function GetCachedStoryMusic(AudioRequest) {
-    const Cache = await caches.open(STORY_AUDIO_CACHE);
-    const CacheKey = new Request(AudioRequest.url, { method: "GET" });
-    let FullResponse = await Cache.match(CacheKey);
-
-    if (!FullResponse) {
-        const NetworkRequest = BuildFullAudioRequest(AudioRequest);
-        const NetworkResponse = await fetch(NetworkRequest);
-        if (!NetworkResponse.ok) return NetworkResponse;
-        await Cache.put(CacheKey, NetworkResponse.clone());
-        FullResponse = NetworkResponse;
-    }
-
-    const RangeHeader = AudioRequest.headers.get("range");
-    if (RangeHeader) return BuildRangeResponse(FullResponse.clone(), RangeHeader);
-    return FullResponse;
 }
 
 self.addEventListener("fetch", Event => {
@@ -200,8 +117,14 @@ self.addEventListener("fetch", Event => {
     const Url = new URL(FetchRequest.url);
     if (Url.origin !== self.location.origin) return;
 
+    // Soundtrack audio is installed by the user into IndexedDB and played from
+    // local Blob URLs. Never go to the network for legacy /music/* requests.
     if (IsStoryMusicRequest(Url)) {
-        Event.respondWith(GetCachedStoryMusic(FetchRequest));
+        Event.respondWith(Promise.resolve(new Response("Local soundtrack only", {
+            status: 404,
+            statusText: "Local Soundtrack Only",
+            headers: { "Content-Type": "text/plain; charset=utf-8" }
+        })));
         return;
     }
 
