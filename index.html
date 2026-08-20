@@ -54,8 +54,8 @@ if (!Token) {
 
 if (!Token) window.location.replace("auth.html");
 
-window.StoryStartupReady = (async () => {
-    if (!("serviceWorker" in navigator)) return true;
+(async () => {
+    if (!("serviceWorker" in navigator)) return;
 
     const Controller = navigator.serviceWorker.controller;
     const Registrations = await navigator.serviceWorker.getRegistrations().catch(() => []);
@@ -69,40 +69,27 @@ window.StoryStartupReady = (async () => {
             .map(CacheName => caches.delete(CacheName).catch(() => false)));
     }
 
-    if (!Controller) return true;
+    const ReloadKey = "StoryRewriteLegacyWorkerReloaded";
 
-    const CleanUrl = new URL(location.href);
-    CleanUrl.searchParams.set("sw-reset", Date.now().toString(36));
-    location.replace(CleanUrl.href);
-    return false;
+    if (Controller && sessionStorage.getItem(ReloadKey) !== "1") {
+        sessionStorage.setItem(ReloadKey, "1");
+        setTimeout(() => location.reload(), 50);
+        return;
+    }
+
+    if (!Controller) sessionStorage.removeItem(ReloadKey);
 })();
 </script>
 </head>
 <body>
 <div id="StoryShellRoot">
-    <iframe id="StoryShellFrame" title="Story Rewrite" src="about:blank"></iframe>
+    <iframe id="StoryShellFrame" title="Story Rewrite" src="main.html"></iframe>
 </div>
 <script>
-(async () => {
-    if (!(await window.StoryStartupReady)) return;
-
-    const CleanUrl = new URL(location.href);
-    if (CleanUrl.searchParams.has("sw-reset")) {
-        CleanUrl.searchParams.delete("sw-reset");
-        history.replaceState(history.state, "", CleanUrl.href);
-    }
-
-    const AssetFreshToken = Date.now().toString(36);
-    for (const AssetName of ["audio.js", "real-audio.js", "shell.js"]) {
-        await new Promise((Resolve, Reject) => {
-            const Script = document.createElement("script");
-            Script.src = `${AssetName}?fresh=${AssetFreshToken}`;
-            Script.onload = Resolve;
-            Script.onerror = () => Reject(new Error(`Failed to load ${AssetName}`));
-            document.body.appendChild(Script);
-        });
-    }
-})().catch(Error => console.error("Story startup failed:", Error));
+const AssetFreshToken = Date.now().toString(36);
+document.write(`<script src="audio.js?fresh=${AssetFreshToken}"><\/script>`);
+document.write(`<script src="real-audio.js?fresh=${AssetFreshToken}"><\/script>`);
+document.write(`<script src="shell.js?fresh=${AssetFreshToken}"><\/script>`);
 </script>
 </body>
 </html>
