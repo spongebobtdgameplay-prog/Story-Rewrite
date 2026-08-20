@@ -1,4 +1,5 @@
-const STORY_CACHE = "story-rewrite-frontend-v23";
+const STORY_CACHE = "story-rewrite-frontend-v24";
+const STORY_AUDIO_CACHE = "story-rewrite-music-v1";
 
 const STORY_STATIC_FILES = [
     "./",
@@ -74,8 +75,8 @@ function IsCriticalCodeRequest(FetchRequest, Url) {
     return Url.pathname.endsWith(".json");
 }
 
-function IsStoryMusicRequest(Url) {
-    return /\/music\/[^/]+\.(?:mp3|ogg|wav|m4a)$/i.test(Url.pathname);
+function IsBundledMusicRequest(Url) {
+    return /\/Music\/[^/]+\.mp3$/i.test(Url.pathname);
 }
 
 function NormalizeNavigationKey(FetchRequest) {
@@ -84,9 +85,9 @@ function NormalizeNavigationKey(FetchRequest) {
     return new Request(`${Url.origin}${Url.pathname}`);
 }
 
-async function PutSuccessfulResponse(Key, Response) {
+async function PutSuccessfulResponse(Key, Response, CacheName = STORY_CACHE) {
     if (!Response || !Response.ok) return;
-    const Cache = await caches.open(STORY_CACHE);
+    const Cache = await caches.open(CacheName);
     await Cache.put(Key, Response.clone());
 }
 
@@ -102,11 +103,13 @@ async function NetworkFirst(FetchRequest, CacheKey) {
     }
 }
 
-async function CacheFirst(FetchRequest) {
-    const Cached = await caches.match(FetchRequest);
+async function CacheFirst(FetchRequest, CacheName = STORY_CACHE) {
+    const Cache = await caches.open(CacheName);
+    const Cached = await Cache.match(FetchRequest);
     if (Cached) return Cached;
+
     const Response = await fetch(FetchRequest);
-    await PutSuccessfulResponse(FetchRequest, Response);
+    if (Response && Response.ok) await Cache.put(FetchRequest, Response.clone());
     return Response;
 }
 
@@ -117,14 +120,8 @@ self.addEventListener("fetch", Event => {
     const Url = new URL(FetchRequest.url);
     if (Url.origin !== self.location.origin) return;
 
-    // Soundtrack audio is installed by the user into IndexedDB and played from
-    // local Blob URLs. Never go to the network for legacy /music/* requests.
-    if (IsStoryMusicRequest(Url)) {
-        Event.respondWith(Promise.resolve(new Response("Local soundtrack only", {
-            status: 404,
-            statusText: "Local Soundtrack Only",
-            headers: { "Content-Type": "text/plain; charset=utf-8" }
-        })));
+    if (IsBundledMusicRequest(Url)) {
+        Event.respondWith(CacheFirst(FetchRequest, STORY_AUDIO_CACHE));
         return;
     }
 
