@@ -2,11 +2,39 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Story Rewrite</title>
 <link rel="icon" type="image/x-icon" href="favicon_io/favicon.ico?v=1000001">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon_io/favicon-32x32.png?v=1000001">
 <link rel="icon" type="image/png" sizes="16x16" href="favicon_io/favicon-16x16.png?v=1000001">
+<style>
+html,
+body,
+#StoryShellRoot,
+#StoryShellFrame {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+html,
+body {
+    overflow: hidden;
+    background: #0b0d10;
+}
+
+#StoryShellRoot {
+    position: fixed;
+    inset: 0;
+}
+
+#StoryShellFrame {
+    display: block;
+    border: 0;
+    background: #0b0d10;
+}
+</style>
 <script>
 const AuthKey = "StoryRewriteAuthToken";
 const LegacyKey = "StoryRewriteSessionToken";
@@ -21,8 +49,15 @@ if (!Token) {
     }
 }
 
-window.location.replace(Token ? "main.html" : "auth.html");
+if (!Token) window.location.replace("auth.html");
 </script>
 </head>
-<body></body>
+<body>
+<div id="StoryShellRoot">
+    <iframe id="StoryShellFrame" title="Story Rewrite" src="about:blank" allow="autoplay"></iframe>
+</div>
+<script src="audio.js?v=20260820-25"></script>
+<script src="real-audio.js?v=20260820-25"></script>
+<script src="shell.js?v=20260820-25"></script>
+</body>
 </html>
