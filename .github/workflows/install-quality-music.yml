@@ -1,0 +1,65 @@
+name: Install Quality Story Rewrite Music
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".audio-quality-v2/READY"
+
+permissions:
+  contents: write
+
+jobs:
+  install-quality-music:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Decode quality soundtrack
+        shell: bash
+        run: |
+          set -euo pipefail
+          tracks=(menu lobby fromville neon-exorcists blackthorn spirit-grove false-city danger)
+          mkdir -p music
+
+          for track in "${tracks[@]}"; do
+            dir=".audio-quality-v2/$track"
+            count=$(find "$dir" -maxdepth 1 -name 'part-*.b64' -type f | wc -l)
+            if [ "$count" -lt 3 ]; then
+              echo "Missing quality soundtrack chunks for $track"
+              exit 1
+            fi
+
+            cat "$dir"/part-*.b64 | tr -d '\r\n' | base64 --decode > "music/$track.ogg"
+            bytes=$(wc -c < "music/$track.ogg")
+            magic=$(head -c 4 "music/$track.ogg")
+
+            if [ "$magic" != "OggS" ]; then
+              echo "$track.ogg is not an Ogg stream"
+              exit 1
+            fi
+            if [ "$bytes" -lt 300000 ]; then
+              echo "$track.ogg is suspiciously small: $bytes bytes"
+              exit 1
+            fi
+            echo "$track.ogg: $bytes bytes"
+          done
+
+          # Force browsers and the service worker away from the destroyed low-bitrate copies.
+          sed -i 's/const StoryAudioAssetVersion = "20260820-21";/const StoryAudioAssetVersion = "20260820-22";/' real-audio.js
+          sed -i 's/const STORY_CACHE = "story-rewrite-frontend-v19";/const STORY_CACHE = "story-rewrite-frontend-v20";/' service-worker.js
+
+          rm -rf .audio-quality-v2
+          rm -f .github/workflows/install-quality-music.yml
+
+      - name: Commit quality soundtrack binaries
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet && exit 0
+          git commit -m "Replace low-bitrate soundtrack with quality loops"
+          git push
