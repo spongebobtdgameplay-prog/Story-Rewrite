@@ -57,13 +57,23 @@ if (!Token) window.location.replace("auth.html");
 window.StoryWorkerReplacementReady = (async () => {
     if (!("serviceWorker" in navigator)) return true;
 
-    const CleanWorkerVersion = "20260820-48";
+    const CleanWorkerVersion = "20260820-49";
     const CleanWorkerUrl = new URL(`service-worker.js?clean=${CleanWorkerVersion}`, location.href).href;
     const Scope = new URL(".", location.href).pathname;
+    const InitialControllerUrl = navigator.serviceWorker.controller?.scriptURL || "";
+    const HadLegacyController = Boolean(InitialControllerUrl && InitialControllerUrl !== CleanWorkerUrl);
 
     const IsCleanController = () => {
         const ControllerUrl = navigator.serviceWorker.controller?.scriptURL || "";
         return ControllerUrl === CleanWorkerUrl;
+    };
+
+    const ReloadAfterReplacement = () => {
+        if (!HadLegacyController) return;
+        const ReloadKey = `StoryRewriteWorkerMigrated-${CleanWorkerVersion}`;
+        if (sessionStorage.getItem(ReloadKey) === "1") return;
+        sessionStorage.setItem(ReloadKey, "1");
+        setTimeout(() => location.reload(), 0);
     };
 
     try {
@@ -74,9 +84,12 @@ window.StoryWorkerReplacementReady = (async () => {
 
         Registration.update().catch(() => {});
 
-        if (IsCleanController()) return true;
+        if (IsCleanController()) {
+            ReloadAfterReplacement();
+            return true;
+        }
 
-        return await new Promise(Resolve => {
+        const Replaced = await new Promise(Resolve => {
             let Finished = false;
 
             const Finish = Value => {
@@ -97,8 +110,11 @@ window.StoryWorkerReplacementReady = (async () => {
                 return;
             }
 
-            setTimeout(() => Finish(IsCleanController()), 3000);
+            setTimeout(() => Finish(IsCleanController()), 5000);
         });
+
+        if (Replaced) ReloadAfterReplacement();
+        return Replaced;
     } catch (Error) {
         console.warn("Could not replace legacy service worker:", Error);
         return false;
