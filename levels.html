@@ -3,14 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>Story Rewrite | Chapter Map</title>
     <link rel="icon" type="image/x-icon" href="favicon_io/favicon.ico?v=1000001">
     <link rel="icon" type="image/png" sizes="32x32" href="favicon_io/favicon-32x32.png?v=1000001">
     <link rel="icon" type="image/png" sizes="16x16" href="favicon_io/favicon-16x16.png?v=1000001">
-    <link rel="stylesheet" href="looks.css">
-    <link rel="stylesheet" href="game-ui.css">
-    <link rel="stylesheet" href="multiplayer.css">
-    <link rel="stylesheet" href="shell-ui.css">
+    <script>
+    const LevelsFreshToken = Date.now().toString(36);
+    for (const StyleName of ["looks.css", "game-ui.css", "multiplayer.css", "shell-ui.css"]) {
+        document.write(`<link rel="stylesheet" href="${StyleName}?fresh=${LevelsFreshToken}">`);
+    }
+    </script>
     <style>
         .StageNodeDifficulty {
             min-height: 18px;
@@ -48,12 +53,18 @@
         <main id="SelectedWorld"></main>
         <div class="page-error" id="PageError" hidden></div>
     </div>
-<script src="server-config.js"></script>
-<script src="network.js"></script>
-<script src="app.js"></script>
-<script src="audio.js"></script>
-<script src="real-audio.js?v=20260820-23"></script>
-<script src="shell-ui.js"></script>
-<script src="levels.js"></script>
+<script>
+for (const ScriptName of [
+    "server-config.js",
+    "network.js",
+    "app.js",
+    "audio.js",
+    "real-audio.js",
+    "shell-ui.js",
+    "levels.js"
+]) {
+    document.write(`<script src="${ScriptName}?fresh=${LevelsFreshToken}"><\/script>`);
+}
+</script>
 </body>
 </html>
