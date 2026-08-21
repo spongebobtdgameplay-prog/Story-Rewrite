@@ -3,6 +3,8 @@ const STORY_LEGACY_AUTH_TOKEN_KEY = "StoryRewriteSessionToken";
 const STORY_SERVER_OVERRIDE_KEY = "StoryRewriteServerOverride";
 const STORY_AUTH_VALIDATED_AT_KEY = "StoryRewriteAuthValidatedAt";
 const STORY_AUTH_VALIDATION_WINDOW = 1000 * 60 * 10;
+const STORY_PROFILE_CACHE_KEY = "StoryRewriteProfileCacheV1";
+const STORY_SAVE_CACHE_KEY = "StoryRewriteSaveCacheV1";
 const STORY_PROTECTED_PAGES = new Set([
     "main.html",
     "levels.html",
@@ -12,6 +14,45 @@ const STORY_PROTECTED_PAGES = new Set([
     "rules.html",
     "account.html"
 ]);
+
+function ReadStorySessionJson(Key) {
+    try {
+        const Value = JSON.parse(sessionStorage.getItem(Key) || "null");
+        return Value && typeof Value === "object" ? Value : null;
+    } catch {
+        return null;
+    }
+}
+
+function WriteStorySessionJson(Key, Value) {
+    try {
+        if (Value === null || Value === undefined) sessionStorage.removeItem(Key);
+        else sessionStorage.setItem(Key, JSON.stringify(Value));
+    } catch {}
+}
+
+function ClearStorySessionCache() {
+    sessionStorage.removeItem(STORY_PROFILE_CACHE_KEY);
+    sessionStorage.removeItem(STORY_SAVE_CACHE_KEY);
+}
+
+function GetCachedProfileResult() {
+    return ReadStorySessionJson(STORY_PROFILE_CACHE_KEY);
+}
+
+function CacheProfileResult(Result) {
+    if (Result?.profile) WriteStorySessionJson(STORY_PROFILE_CACHE_KEY, Result);
+    return Result;
+}
+
+function GetCachedServerSave() {
+    return ReadStorySessionJson(STORY_SAVE_CACHE_KEY);
+}
+
+function CacheServerSave(Save) {
+    if (Save && typeof Save === "object") WriteStorySessionJson(STORY_SAVE_CACHE_KEY, Save);
+    return Save;
+}
 
 function BuildStoryUrl(Page = "") {
     const CleanPage = String(Page || "").replace(/^\/+/, "");
@@ -59,13 +100,17 @@ function GetAuthToken() {
 }
 
 function SetAuthToken(Token) {
+    const PreviousToken = localStorage.getItem(STORY_AUTH_TOKEN_KEY) || "";
+
     if (Token) {
+        if (PreviousToken !== Token) ClearStorySessionCache();
         localStorage.setItem(STORY_AUTH_TOKEN_KEY, Token);
         localStorage.removeItem(STORY_LEGACY_AUTH_TOKEN_KEY);
         sessionStorage.removeItem(STORY_LEGACY_AUTH_TOKEN_KEY);
         return;
     }
 
+    ClearStorySessionCache();
     localStorage.removeItem(STORY_AUTH_TOKEN_KEY);
     localStorage.removeItem(STORY_LEGACY_AUTH_TOKEN_KEY);
     sessionStorage.removeItem(STORY_LEGACY_AUTH_TOKEN_KEY);
@@ -103,7 +148,7 @@ async function GuardProtectedPage() {
     if (WasAuthRecentlyValidated()) return;
 
     try {
-        await GetAccountProfile();
+        await GetAccountProfile(true);
         MarkAuthValidated();
     } catch (Error) {
         if (Error?.status === 401) {
@@ -148,27 +193,39 @@ async function ApiRequest(Path, Options = {}) {
 }
 
 async function RegisterAccount(Username, Password) {
+    ClearStorySessionCache();
     const Result = await ApiRequest("/api/register", {
         method: "POST",
         body: JSON.stringify({ username: Username, password: Password })
     });
     SetAuthToken(Result.token);
+    CacheProfileResult(Result);
+    if (Result?.save) CacheServerSave(Result.save);
     MarkAuthValidated();
     return Result;
 }
 
 async function LoginAccount(Username, Password) {
+    ClearStorySessionCache();
     const Result = await ApiRequest("/api/login", {
         method: "POST",
         body: JSON.stringify({ username: Username, password: Password })
     });
     SetAuthToken(Result.token);
+    CacheProfileResult(Result);
+    if (Result?.save) CacheServerSave(Result.save);
     MarkAuthValidated();
     return Result;
 }
 
-async function GetAccountProfile() {
-    return ApiRequest("/api/me");
+async function GetAccountProfile(ForceRefresh = false) {
+    if (!ForceRefresh) {
+        const Cached = GetCachedProfileResult();
+        if (Cached?.profile) return Cached;
+    }
+
+    const Result = await ApiRequest("/api/me");
+    return CacheProfileResult(Result);
 }
 
 async function RequireAccount() {
@@ -187,9 +244,14 @@ async function RequireAccount() {
     }
 }
 
-async function FetchServerSave() {
+async function FetchServerSave(ForceRefresh = false) {
+    if (!ForceRefresh) {
+        const Cached = GetCachedServerSave();
+        if (Cached) return Cached;
+    }
+
     const Result = await ApiRequest("/api/save");
-    return Result.save;
+    return CacheServerSave(Result.save);
 }
 
 async function EnterServerStage(StageId) {
@@ -197,14 +259,16 @@ async function EnterServerStage(StageId) {
         method: "POST",
         body: JSON.stringify({ stageId: StageId })
     });
-    return Result.save;
+    return CacheServerSave(Result.save);
 }
 
 async function CheckServerStage(StageId, RemovedIndexes) {
-    return ApiRequest("/api/stage/check", {
+    const Result = await ApiRequest("/api/stage/check", {
         method: "POST",
         body: JSON.stringify({ stageId: StageId, removedIndexes: RemovedIndexes })
     });
+    if (Result?.save) CacheServerSave(Result.save);
+    return Result;
 }
 
 async function RestartServerChapter(WorldId) {
@@ -212,12 +276,12 @@ async function RestartServerChapter(WorldId) {
         method: "POST",
         body: JSON.stringify({ worldId: WorldId })
     });
-    return Result.save;
+    return CacheServerSave(Result.save);
 }
 
 async function ResetServerSave() {
     const Result = await ApiRequest("/api/account/reset", { method: "POST" });
-    return Result.save;
+    return CacheServerSave(Result.save);
 }
 
 async function DeleteAccount() {
@@ -227,10 +291,26 @@ async function DeleteAccount() {
 }
 
 async function SaveAudioSettings(MusicVolume, SoundVolume) {
-    return ApiRequest("/api/settings", {
+    const Result = await ApiRequest("/api/settings", {
         method: "POST",
         body: JSON.stringify({ musicVolume: MusicVolume, soundVolume: SoundVolume })
     });
+
+    if (Result?.save) {
+        CacheServerSave(Result.save);
+    } else {
+        const Cached = GetCachedServerSave();
+        if (Cached) {
+            Cached.settings = {
+                ...(Cached.settings || {}),
+                musicVolume: MusicVolume,
+                soundVolume: SoundVolume
+            };
+            CacheServerSave(Cached);
+        }
+    }
+
+    return Result;
 }
 
 function ConnectStorySocket() {
