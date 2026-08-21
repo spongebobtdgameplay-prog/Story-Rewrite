@@ -270,17 +270,28 @@
             return;
         }
 
+        const PreviousRoute = Frame.dataset.storyRoute || "";
+        const FrameNavigatedItself = Boolean(PreviousRoute && ActualRoute !== PreviousRoute);
+
+        if (FrameNavigatedItself && (Frame === ActiveFrame || Frame === PendingFrame)) {
+            Frame.dataset.storyLoaded = "0";
+            if (PendingFrame === Frame) PendingFrame = null;
+            LoadRoute(ActualRoute, { replace: true });
+            return;
+        }
+
         Frame.dataset.storyLoaded = "1";
         WireFrameInteractionBridge(Frame);
 
-        const PreviousRoute = Frame.dataset.storyRoute || "";
         if (ActualRoute !== PreviousRoute) {
             if (PreviousRoute && PersistentFrames.get(PreviousRoute) === Frame) {
                 PersistentFrames.delete(PreviousRoute);
             }
 
             Frame.dataset.storyRoute = ActualRoute;
-            if (IsPersistentRoute(ActualRoute)) PersistentFrames.set(ActualRoute, Frame);
+            if (Frame !== TransientFrame && IsPersistentRoute(ActualRoute)) {
+                PersistentFrames.set(ActualRoute, Frame);
+            }
         }
 
         if (Frame === PendingFrame && ActualRoute === CurrentRoute) {
