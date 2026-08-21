@@ -258,11 +258,9 @@
     }
 
     function HandleFrameLoad(Frame) {
-        Frame.dataset.storyLoaded = "1";
-        WireFrameInteractionBridge(Frame);
-
         const ActualRoute = RouteFromFrame(Frame);
         if (!ActualRoute) {
+            Frame.dataset.storyLoaded = "0";
             try {
                 const PageName = Frame.contentWindow.location.pathname.split("/").pop();
                 if (PageName === "auth.html" && (Frame === ActiveFrame || Frame === PendingFrame)) {
@@ -271,6 +269,9 @@
             } catch {}
             return;
         }
+
+        Frame.dataset.storyLoaded = "1";
+        WireFrameInteractionBridge(Frame);
 
         const PreviousRoute = Frame.dataset.storyRoute || "";
         if (ActualRoute !== PreviousRoute) {
@@ -296,6 +297,7 @@
     function PrepareFrame(Frame, Route, KeepVisible = false) {
         Frame.classList.add("StoryShellFrame");
         Frame.dataset.storyRoute = Route;
+        Frame.dataset.storyLoaded = "0";
         Frame.title = "Story Rewrite";
 
         if (!KeepVisible) {
@@ -313,9 +315,9 @@
 
     function CreateFrame(Route) {
         const Frame = document.createElement("iframe");
+        Frame.src = RouteUrl(Route);
         PrepareFrame(Frame, Route);
         Root.appendChild(Frame);
-        Frame.src = RouteUrl(Route);
         return Frame;
     }
 
@@ -429,7 +431,6 @@
     try {
         const ReadyState = InitialFrame.contentDocument?.readyState;
         if (ReadyState === "interactive" || ReadyState === "complete") {
-            InitialFrame.dataset.storyLoaded = "1";
             setTimeout(() => HandleFrameLoad(InitialFrame), 0);
         }
     } catch {}
