@@ -1,6 +1,7 @@
 (() => {
-    const Frame = document.getElementById("StoryShellFrame");
-    if (!Frame) return;
+    const Root = document.getElementById("StoryShellRoot");
+    const InitialFrame = document.getElementById("StoryShellFrame");
+    if (!Root || !InitialFrame) return;
 
     const ManagedPages = new Set([
         "main.html",
@@ -12,9 +13,20 @@
         "account.html"
     ]);
 
+    const PersistentPages = new Set([
+        "main.html",
+        "levels.html",
+        "multiplayer.html",
+        "tutorial.html",
+        "rules.html",
+        "account.html"
+    ]);
+
+    const PersistentFrames = new Map();
+    let TransientFrame = null;
+    let ActiveFrame = null;
     let CurrentRoute = "";
     let CurrentMusicName = "";
-    let LoadingFromShell = false;
 
     function GetBaseUrl() {
         return new URL(".", window.location.href);
@@ -55,6 +67,18 @@
         }
     }
 
+    function PageForRoute(Route) {
+        try {
+            return new URL(Route, GetBaseUrl()).pathname.split("/").pop() || "main.html";
+        } catch {
+            return "main.html";
+        }
+    }
+
+    function IsPersistentRoute(Route) {
+        return PersistentPages.has(PageForRoute(Route));
+    }
+
     function MusicForRoute(Route) {
         try {
             const Url = new URL(Route, GetBaseUrl());
@@ -74,14 +98,6 @@
             return "menu";
         } catch {
             return "menu";
-        }
-    }
-
-    function PageForRoute(Route) {
-        try {
-            return new URL(Route, GetBaseUrl()).pathname.split("/").pop() || "main.html";
-        } catch {
-            return "main.html";
         }
     }
 
@@ -122,42 +138,6 @@
         PlayMusic(DesiredMusic);
     }
 
-    function LoadRoute(Route, Options = {}) {
-        const Normalized = NormalizeRoute(Route);
-        if (!Normalized) return false;
-
-        const Replace = Boolean(Options.replace);
-        const SkipHistory = Boolean(Options.skipHistory);
-        CurrentRoute = Normalized;
-        LoadingFromShell = true;
-
-        ApplyRouteMusic(Normalized);
-        if (!SkipHistory) SetTopHistory(Normalized, Replace);
-        Frame.src = RouteUrl(Normalized);
-        return true;
-    }
-
-    function Navigate(Value, Options = {}) {
-        const Normalized = NormalizeRoute(Value);
-        if (!Normalized) return false;
-        if (Normalized === CurrentRoute && Frame.contentWindow) return true;
-        return LoadRoute(Normalized, Options);
-    }
-
-    function Exit(Value, Replace = false) {
-        const Url = new URL(String(Value || "auth.html"), GetBaseUrl()).href;
-        if (Replace) window.location.replace(Url);
-        else window.location.href = Url;
-    }
-
-    function Back(Fallback = "main.html") {
-        if (window.history.length > 1) {
-            window.history.back();
-            return;
-        }
-        Navigate(Fallback, { replace: true });
-    }
-
     function StopMusic() {
         CurrentMusicName = "";
         if (typeof StoryAudio !== "undefined") StoryAudio.StopMusic();
@@ -180,7 +160,7 @@
         return Button;
     }
 
-    function WireFrameInteractionBridge() {
+    function WireFrameInteractionBridge(Frame) {
         let ChildDocument;
         try {
             ChildDocument = Frame.contentDocument;
@@ -188,7 +168,8 @@
             ChildDocument = null;
         }
 
-        if (!ChildDocument) return;
+        if (!ChildDocument || ChildDocument.documentElement?.dataset.storyShellBridge === "1") return;
+        if (ChildDocument.documentElement) ChildDocument.documentElement.dataset.storyShellBridge = "1";
 
         ChildDocument.addEventListener("pointerdown", Event => {
             NotifyInteraction();
@@ -208,7 +189,7 @@
         }, { capture: true });
     }
 
-    function RouteFromFrame() {
+    function RouteFromFrame(Frame) {
         try {
             return NormalizeRoute(Frame.contentWindow.location.href);
         } catch {
@@ -216,33 +197,162 @@
         }
     }
 
-    Frame.addEventListener("load", () => {
-        const Route = RouteFromFrame();
-        if (!Route) {
-            try {
-                const PageName = Frame.contentWindow.location.pathname.split("/").pop();
-                if (PageName === "auth.html") Exit("auth.html", true);
-            } catch {}
-            return;
-        }
-
-        if (LoadingFromShell) {
-            LoadingFromShell = false;
-        } else if (Route !== CurrentRoute) {
-            CurrentRoute = Route;
-            SetTopHistory(Route, true);
-        }
-
+    function UpdateTitle(Frame) {
         try {
             const ChildTitle = Frame.contentDocument?.title;
             document.title = ChildTitle || "Story Rewrite";
         } catch {
             document.title = "Story Rewrite";
         }
+    }
 
-        ApplyRouteMusic(Route);
-        WireFrameInteractionBridge();
-    });
+    function DispatchActivation(Frame, Route) {
+        if (Frame.dataset.storyLoaded !== "1") return;
+        try {
+            const ChildWindow = Frame.contentWindow;
+            ChildWindow.dispatchEvent(new ChildWindow.CustomEvent("StoryShellActivate", {
+                detail: { route: Route }
+            }));
+        } catch {}
+    }
+
+    function HideFrame(Frame) {
+        Frame.style.display = "none";
+        Frame.style.pointerEvents = "none";
+        Frame.setAttribute("aria-hidden", "true");
+    }
+
+    function ShowFrame(Frame) {
+        for (const Child of Root.querySelectorAll("iframe.StoryShellFrame")) HideFrame(Child);
+        Frame.style.display = "block";
+        Frame.style.pointerEvents = "auto";
+        Frame.removeAttribute("aria-hidden");
+        ActiveFrame = Frame;
+    }
+
+    function HandleFrameLoad(Frame) {
+        Frame.dataset.storyLoaded = "1";
+        WireFrameInteractionBridge(Frame);
+
+        const ActualRoute = RouteFromFrame(Frame);
+        if (!ActualRoute) {
+            try {
+                const PageName = Frame.contentWindow.location.pathname.split("/").pop();
+                if (PageName === "auth.html" && Frame === ActiveFrame) Exit("auth.html", true);
+            } catch {}
+            return;
+        }
+
+        const PreviousRoute = Frame.dataset.storyRoute || "";
+        if (ActualRoute !== PreviousRoute) {
+            if (PreviousRoute && PersistentFrames.get(PreviousRoute) === Frame) PersistentFrames.delete(PreviousRoute);
+            Frame.dataset.storyRoute = ActualRoute;
+            if (IsPersistentRoute(ActualRoute) && !PersistentFrames.has(ActualRoute)) PersistentFrames.set(ActualRoute, Frame);
+        }
+
+        if (Frame !== ActiveFrame) return;
+
+        if (ActualRoute !== CurrentRoute) {
+            CurrentRoute = ActualRoute;
+            SetTopHistory(ActualRoute, true);
+            ApplyRouteMusic(ActualRoute);
+        }
+
+        UpdateTitle(Frame);
+        DispatchActivation(Frame, CurrentRoute);
+    }
+
+    function PrepareFrame(Frame, Route) {
+        Frame.classList.add("StoryShellFrame");
+        Frame.dataset.storyRoute = Route;
+        Frame.title = "Story Rewrite";
+        Frame.style.display = "none";
+        Frame.style.pointerEvents = "none";
+        Frame.addEventListener("load", () => HandleFrameLoad(Frame));
+    }
+
+    function CreateFrame(Route) {
+        const Frame = document.createElement("iframe");
+        PrepareFrame(Frame, Route);
+        Root.appendChild(Frame);
+        Frame.src = RouteUrl(Route);
+        return Frame;
+    }
+
+    function GetPersistentFrame(Route) {
+        const Existing = PersistentFrames.get(Route);
+        if (Existing) return Existing;
+
+        const Frame = CreateFrame(Route);
+        PersistentFrames.set(Route, Frame);
+        return Frame;
+    }
+
+    function GetTransientFrame(Route) {
+        if (!TransientFrame) {
+            TransientFrame = CreateFrame(Route);
+            return TransientFrame;
+        }
+
+        const ExistingRoute = TransientFrame.dataset.storyRoute || "";
+        if (ExistingRoute !== Route) {
+            TransientFrame.dataset.storyLoaded = "0";
+            TransientFrame.dataset.storyRoute = Route;
+            TransientFrame.src = RouteUrl(Route);
+        }
+
+        return TransientFrame;
+    }
+
+    function GetFrameForRoute(Route) {
+        return IsPersistentRoute(Route)
+            ? GetPersistentFrame(Route)
+            : GetTransientFrame(Route);
+    }
+
+    function LoadRoute(Route, Options = {}) {
+        const Normalized = NormalizeRoute(Route);
+        if (!Normalized) return false;
+
+        const Replace = Boolean(Options.replace);
+        const SkipHistory = Boolean(Options.skipHistory);
+        const Frame = GetFrameForRoute(Normalized);
+
+        CurrentRoute = Normalized;
+        ApplyRouteMusic(Normalized);
+        ShowFrame(Frame);
+
+        if (!SkipHistory) SetTopHistory(Normalized, Replace);
+        UpdateTitle(Frame);
+        DispatchActivation(Frame, Normalized);
+        return true;
+    }
+
+    function Navigate(Value, Options = {}) {
+        const Normalized = NormalizeRoute(Value);
+        if (!Normalized) return false;
+
+        if (Normalized === CurrentRoute && ActiveFrame) {
+            DispatchActivation(ActiveFrame, Normalized);
+            return true;
+        }
+
+        return LoadRoute(Normalized, Options);
+    }
+
+    function Exit(Value, Replace = false) {
+        const Url = new URL(String(Value || "auth.html"), GetBaseUrl()).href;
+        if (Replace) window.location.replace(Url);
+        else window.location.href = Url;
+    }
+
+    function Back(Fallback = "main.html") {
+        if (window.history.length > 1) {
+            window.history.back();
+            return;
+        }
+        Navigate(Fallback, { replace: true });
+    }
 
     window.addEventListener("popstate", Event => {
         const Route = NormalizeRoute(Event.state?.StoryRewriteRoute) || RouteFromLocation();
@@ -264,10 +374,19 @@
         GetCurrentMusic: () => CurrentMusicName
     });
 
+    PrepareFrame(InitialFrame, "main.html");
+    PersistentFrames.set("main.html", InitialFrame);
+
+    try {
+        const ReadyState = InitialFrame.contentDocument?.readyState;
+        if (ReadyState === "interactive" || ReadyState === "complete") {
+            setTimeout(() => HandleFrameLoad(InitialFrame), 0);
+        }
+    } catch {}
+
     const InitialRoute = RouteFromLocation();
     CurrentRoute = InitialRoute;
     SetTopHistory(InitialRoute, true);
     ApplyRouteMusic(InitialRoute);
-    LoadingFromShell = true;
-    Frame.src = RouteUrl(InitialRoute);
+    ShowFrame(GetFrameForRoute(InitialRoute));
 })();
