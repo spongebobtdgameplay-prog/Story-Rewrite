@@ -5,9 +5,7 @@ self.addEventListener("install", Event => {
 self.addEventListener("activate", Event => {
     Event.waitUntil((async () => {
         const CacheNames = await caches.keys();
-        await Promise.all(CacheNames
-            .filter(CacheName => CacheName.startsWith("story-rewrite-"))
-            .map(CacheName => caches.delete(CacheName)));
+        await Promise.all(CacheNames.map(CacheName => caches.delete(CacheName)));
         await self.clients.claim();
     })());
 });
