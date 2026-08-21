@@ -5,6 +5,13 @@ const STORY_AUTH_VALIDATED_AT_KEY = "StoryRewriteAuthValidatedAt";
 const STORY_AUTH_VALIDATION_WINDOW = 1000 * 60 * 10;
 const STORY_LAST_PROFILE_KEY = "StoryRewriteLastProfileV1";
 const STORY_LAST_SAVE_KEY = "StoryRewriteLastSaveV1";
+const STORY_SAVE_GENERATION_KEY = "StoryRewriteSaveGenerationV1";
+const STORY_CLIENT_SNAPSHOT_KEYS = [
+    STORY_LAST_PROFILE_KEY,
+    STORY_LAST_SAVE_KEY,
+    "StoryRewriteMainPlayerSnapshotV2",
+    "StoryRewriteAccountSnapshotV1"
+];
 const STORY_PROTECTED_PAGES = new Set([
     "main.html",
     "levels.html",
@@ -47,14 +54,24 @@ function StoreLastKnownProfileResult(Result) {
     return Result;
 }
 
-function StoreLastKnownServerSave(Save) {
+function ReadSaveGeneration() {
+    return localStorage.getItem(STORY_SAVE_GENERATION_KEY) || "0";
+}
+
+function BeginSaveMutation() {
+    const Generation = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    localStorage.setItem(STORY_SAVE_GENERATION_KEY, Generation);
+    return Generation;
+}
+
+function StoreLastKnownServerSave(Save, ExpectedGeneration = null) {
+    if (ExpectedGeneration !== null && ReadSaveGeneration() !== ExpectedGeneration) return Save;
     if (Save && typeof Save === "object") WriteStoryLocalJson(STORY_LAST_SAVE_KEY, Save);
     return Save;
 }
 
 function ClearLastKnownStoryState() {
-    localStorage.removeItem(STORY_LAST_PROFILE_KEY);
-    localStorage.removeItem(STORY_LAST_SAVE_KEY);
+    for (const Key of STORY_CLIENT_SNAPSHOT_KEYS) localStorage.removeItem(Key);
 }
 
 function BuildStoryUrl(Page = "") {
@@ -259,11 +276,14 @@ async function RequireAccount() {
 
 async function FetchServerSave() {
     if (!ServerSaveRequestPromise) {
-        ServerSaveRequestPromise = ApiRequest("/api/save")
-            .then(Result => StoreLastKnownServerSave(Result.save))
+        const ExpectedGeneration = ReadSaveGeneration();
+        const Request = ApiRequest("/api/save")
+            .then(Result => StoreLastKnownServerSave(Result.save, ExpectedGeneration))
             .finally(() => {
-                ServerSaveRequestPromise = null;
+                if (ServerSaveRequestPromise === Request) ServerSaveRequestPromise = null;
             });
+
+        ServerSaveRequestPromise = Request;
     }
 
     return ServerSaveRequestPromise;
@@ -295,8 +315,12 @@ async function RestartServerChapter(WorldId) {
 }
 
 async function ResetServerSave() {
+    const Generation = BeginSaveMutation();
+    ClearLastKnownStoryState();
+    ServerSaveRequestPromise = null;
+
     const Result = await ApiRequest("/api/account/reset", { method: "POST" });
-    return StoreLastKnownServerSave(Result.save);
+    return StoreLastKnownServerSave(Result.save, Generation);
 }
 
 async function DeleteAccount() {
