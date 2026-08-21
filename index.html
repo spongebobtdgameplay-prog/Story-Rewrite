@@ -14,7 +14,7 @@
 html,
 body,
 #StoryShellRoot,
-#StoryShellFrame {
+.StoryShellFrame {
     width: 100%;
     height: 100%;
     margin: 0;
@@ -32,7 +32,9 @@ body {
     inset: 0;
 }
 
-#StoryShellFrame {
+.StoryShellFrame {
+    position: absolute;
+    inset: 0;
     display: block;
     border: 0;
     background: #0b0d10;
@@ -72,7 +74,7 @@ if ("serviceWorker" in navigator) {
 </head>
 <body>
 <div id="StoryShellRoot">
-    <iframe id="StoryShellFrame" title="Story Rewrite" src="main.html"></iframe>
+    <iframe id="StoryShellFrame" class="StoryShellFrame" title="Story Rewrite" src="main.html"></iframe>
 </div>
 <script>
 const AssetFreshToken = Date.now().toString(36);
