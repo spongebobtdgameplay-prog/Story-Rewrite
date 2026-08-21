@@ -1,8 +1,7 @@
-const MainPlayerSnapshotKey = "StoryRewriteMainPlayerSnapshotV1";
+const MainPlayerSnapshotKey = "StoryRewriteMainPlayerSnapshotV2";
 let MainProfileResult = null;
 let MainData = null;
 let MainSave = null;
-let MainRefreshPromise = null;
 let MainInitialized = false;
 
 function GetMainAuthMarker() {
@@ -13,7 +12,7 @@ function GetMainAuthMarker() {
 
 function ReadMainPlayerSnapshot() {
     try {
-        const Snapshot = JSON.parse(sessionStorage.getItem(MainPlayerSnapshotKey) || "null");
+        const Snapshot = JSON.parse(localStorage.getItem(MainPlayerSnapshotKey) || "null");
         if (!Snapshot || Snapshot.authMarker !== GetMainAuthMarker()) return null;
         return Snapshot;
     } catch {
@@ -22,6 +21,8 @@ function ReadMainPlayerSnapshot() {
 }
 
 function WriteMainPlayerSnapshot(ProfileResult, Data, Save) {
+    if (!ProfileResult || !Data || !Save) return;
+
     const Snapshot = {
         authMarker: GetMainAuthMarker(),
         username: String(ProfileResult?.profile?.username || ""),
@@ -32,7 +33,7 @@ function WriteMainPlayerSnapshot(ProfileResult, Data, Save) {
         maxLives: Number(Save?.maxLives || 0)
     };
 
-    try { sessionStorage.setItem(MainPlayerSnapshotKey, JSON.stringify(Snapshot)); } catch {}
+    try { localStorage.setItem(MainPlayerSnapshotKey, JSON.stringify(Snapshot)); } catch {}
 }
 
 function RenderMainPlayerSnapshot() {
@@ -46,6 +47,14 @@ function RenderMainPlayerSnapshot() {
     document.getElementById("LivesCount").textContent = `${Snapshot.lives}/${Snapshot.maxLives}`;
 }
 
+function CloneMainSave(Save) {
+    try {
+        return JSON.parse(JSON.stringify(Save));
+    } catch {
+        return Save;
+    }
+}
+
 function RenderMainPlayerState() {
     if (!MainProfileResult || !MainData || !MainSave) return;
 
@@ -57,38 +66,44 @@ function RenderMainPlayerState() {
     WriteMainPlayerSnapshot(MainProfileResult, MainData, MainSave);
 }
 
-async function RefreshMainPlayerState() {
-    if (MainRefreshPromise) return MainRefreshPromise;
+function SyncMainFromLastKnownState() {
+    if (!MainInitialized || !MainData) return;
 
-    MainRefreshPromise = (async () => {
-        const ProfileResult = await RequireAccount();
-        const Data = MainData || await LoadStoryData();
-        const Save = await LoadSave(Data);
+    const LastProfile = typeof GetLastKnownProfileResult === "function"
+        ? GetLastKnownProfileResult()
+        : null;
+    const LastSave = typeof GetLastKnownServerSave === "function"
+        ? GetLastKnownServerSave()
+        : null;
 
-        MainProfileResult = ProfileResult;
-        MainData = Data;
-        MainSave = Save;
-        RenderMainPlayerState();
-        StoryAudio.Configure(Save.settings);
-    })();
+    if (LastProfile?.profile) MainProfileResult = LastProfile;
+    if (LastSave) MainSave = NormalizeSave(MainData, CloneMainSave(LastSave));
 
-    try {
-        await MainRefreshPromise;
-    } finally {
-        MainRefreshPromise = null;
-    }
+    RenderMainPlayerState();
+}
+
+async function LoadMainPlayerState() {
+    const ProfileResult = await RequireAccount();
+    const Data = await LoadStoryData();
+    const Save = await LoadSave(Data);
+
+    MainProfileResult = ProfileResult;
+    MainData = Data;
+    MainSave = Save;
+    RenderMainPlayerState();
+    StoryAudio.Configure(Save.settings);
 }
 
 RenderMainPlayerSnapshot();
 
-window.addEventListener("StoryShellActivate", () => {
-    if (!MainInitialized) return;
-    RefreshMainPlayerState().catch(() => {});
+window.addEventListener("StoryShellActivate", SyncMainFromLastKnownState);
+window.addEventListener("pagehide", () => {
+    if (MainInitialized) RenderMainPlayerState();
 });
 
 document.addEventListener("DOMContentLoaded", async () => {
     try {
-        await RefreshMainPlayerState();
+        await LoadMainPlayerState();
         MainInitialized = true;
         StoryAudio.PlayMusic("menu");
 
