@@ -52,15 +52,37 @@ if (!document.head.querySelector('link[data-story-scene-fix="1"]')) {
 }
 
 const STORY_DATA_URL = "stages.json";
+const STORY_DATA_CACHE_KEY = "StoryRewriteStoryDataCacheV1";
 
-async function LoadStoryData() {
+function GetCachedStoryData() {
+    try {
+        const Data = JSON.parse(sessionStorage.getItem(STORY_DATA_CACHE_KEY) || "null");
+        if (!Data || !Array.isArray(Data.worlds) || !Data.stages || typeof Data.stages !== "object") return null;
+        return Data;
+    } catch {
+        return null;
+    }
+}
+
+function CacheStoryData(Data) {
+    if (!Data || !Array.isArray(Data.worlds) || !Data.stages || typeof Data.stages !== "object") return Data;
+    try { sessionStorage.setItem(STORY_DATA_CACHE_KEY, JSON.stringify(Data)); } catch {}
+    return Data;
+}
+
+async function LoadStoryData(ForceRefresh = false) {
+    if (!ForceRefresh) {
+        const Cached = GetCachedStoryData();
+        if (Cached) return Cached;
+    }
+
     const Response = await fetch(STORY_DATA_URL);
 
     if (!Response.ok) {
         throw new Error(`Could not load ${STORY_DATA_URL}: ${Response.status}`);
     }
 
-    return Response.json();
+    return CacheStoryData(await Response.json());
 }
 
 function DefaultSave(Data) {
