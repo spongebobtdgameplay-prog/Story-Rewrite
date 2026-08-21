@@ -47,6 +47,13 @@ function StoryNavigate(Page) {
 }
 
 function StoryGoBack(FallbackPage = "main.html") {
+    try {
+        if (window.parent !== window && window.parent.StoryShell?.IsPersistentShell) {
+            window.parent.StoryShell.Back(FallbackPage);
+            return;
+        }
+    } catch {}
+
     let CanUseHistory = false;
 
     try {
@@ -91,7 +98,7 @@ function MakeStoryAnchorLinkless(Link) {
         Event.preventDefault();
         const Target = Link.dataset.storyLinkTarget;
         if (!Target) return;
-        window.location.href = Target;
+        StoryNavigate(Target);
     };
 
     Link.addEventListener("click", Activate);
