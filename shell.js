@@ -24,9 +24,11 @@
 
     const PersistentFrames = new Map();
     let TransientFrame = null;
-    let ActiveFrame = null;
-    let CurrentRoute = "";
+    let ActiveFrame = InitialFrame;
+    let PendingFrame = null;
+    let CurrentRoute = "main.html";
     let CurrentMusicName = "";
+    let CurrentHistoryDepth = 0;
 
     function GetBaseUrl() {
         return new URL(".", window.location.href);
@@ -104,9 +106,22 @@
     function SetTopHistory(Route, Replace = false) {
         const Url = new URL(window.location.href);
         Url.hash = RouteHash(Route);
-        const State = { StoryRewriteRoute: Route };
-        if (Replace) window.history.replaceState(State, "", Url);
-        else window.history.pushState(State, "", Url);
+
+        if (Replace) {
+            const State = {
+                StoryRewriteRoute: Route,
+                StoryRewriteDepth: CurrentHistoryDepth
+            };
+            window.history.replaceState(State, "", Url);
+            return;
+        }
+
+        CurrentHistoryDepth += 1;
+        const State = {
+            StoryRewriteRoute: Route,
+            StoryRewriteDepth: CurrentHistoryDepth
+        };
+        window.history.pushState(State, "", Url);
     }
 
     function ConfigureAudio(Settings = {}) {
@@ -206,11 +221,11 @@
         }
     }
 
-    function DispatchActivation(Frame, Route) {
-        if (Frame.dataset.storyLoaded !== "1") return;
+    function DispatchFrameEvent(Frame, EventName, Route) {
+        if (!Frame || Frame.dataset.storyLoaded !== "1") return;
         try {
             const ChildWindow = Frame.contentWindow;
-            ChildWindow.dispatchEvent(new ChildWindow.CustomEvent("StoryShellActivate", {
+            ChildWindow.dispatchEvent(new ChildWindow.CustomEvent(EventName, {
                 detail: { route: Route }
             }));
         } catch {}
@@ -222,12 +237,24 @@
         Frame.setAttribute("aria-hidden", "true");
     }
 
-    function ShowFrame(Frame) {
+    function ActivateFrame(Frame, Route) {
+        if (!Frame || Frame.dataset.storyLoaded !== "1") return false;
+
+        if (ActiveFrame && ActiveFrame !== Frame) {
+            DispatchFrameEvent(ActiveFrame, "StoryShellDeactivate", ActiveFrame.dataset.storyRoute || "");
+        }
+
         for (const Child of Root.querySelectorAll("iframe.StoryShellFrame")) HideFrame(Child);
+
         Frame.style.display = "block";
         Frame.style.pointerEvents = "auto";
         Frame.removeAttribute("aria-hidden");
         ActiveFrame = Frame;
+        if (PendingFrame === Frame) PendingFrame = null;
+
+        UpdateTitle(Frame);
+        DispatchFrameEvent(Frame, "StoryShellActivate", Route);
+        return true;
     }
 
     function HandleFrameLoad(Frame) {
@@ -238,36 +265,49 @@
         if (!ActualRoute) {
             try {
                 const PageName = Frame.contentWindow.location.pathname.split("/").pop();
-                if (PageName === "auth.html" && Frame === ActiveFrame) Exit("auth.html", true);
+                if (PageName === "auth.html" && (Frame === ActiveFrame || Frame === PendingFrame)) {
+                    Exit("auth.html", true);
+                }
             } catch {}
             return;
         }
 
         const PreviousRoute = Frame.dataset.storyRoute || "";
         if (ActualRoute !== PreviousRoute) {
-            if (PreviousRoute && PersistentFrames.get(PreviousRoute) === Frame) PersistentFrames.delete(PreviousRoute);
+            if (PreviousRoute && PersistentFrames.get(PreviousRoute) === Frame) {
+                PersistentFrames.delete(PreviousRoute);
+            }
+
             Frame.dataset.storyRoute = ActualRoute;
-            if (IsPersistentRoute(ActualRoute) && !PersistentFrames.has(ActualRoute)) PersistentFrames.set(ActualRoute, Frame);
+            if (IsPersistentRoute(ActualRoute)) PersistentFrames.set(ActualRoute, Frame);
         }
 
-        if (Frame !== ActiveFrame) return;
-
-        if (ActualRoute !== CurrentRoute) {
-            CurrentRoute = ActualRoute;
-            SetTopHistory(ActualRoute, true);
-            ApplyRouteMusic(ActualRoute);
+        if (Frame === PendingFrame && ActualRoute === CurrentRoute) {
+            ActivateFrame(Frame, CurrentRoute);
+            return;
         }
 
-        UpdateTitle(Frame);
-        DispatchActivation(Frame, CurrentRoute);
+        if (Frame === ActiveFrame && ActualRoute === CurrentRoute) {
+            UpdateTitle(Frame);
+            DispatchFrameEvent(Frame, "StoryShellActivate", CurrentRoute);
+        }
     }
 
-    function PrepareFrame(Frame, Route) {
+    function PrepareFrame(Frame, Route, KeepVisible = false) {
         Frame.classList.add("StoryShellFrame");
         Frame.dataset.storyRoute = Route;
         Frame.title = "Story Rewrite";
-        Frame.style.display = "none";
-        Frame.style.pointerEvents = "none";
+
+        if (!KeepVisible) {
+            Frame.style.display = "none";
+            Frame.style.pointerEvents = "none";
+            Frame.setAttribute("aria-hidden", "true");
+        } else {
+            Frame.style.display = "block";
+            Frame.style.pointerEvents = "auto";
+            Frame.removeAttribute("aria-hidden");
+        }
+
         Frame.addEventListener("load", () => HandleFrameLoad(Frame));
     }
 
@@ -320,11 +360,16 @@
 
         CurrentRoute = Normalized;
         ApplyRouteMusic(Normalized);
-        ShowFrame(Frame);
 
         if (!SkipHistory) SetTopHistory(Normalized, Replace);
-        UpdateTitle(Frame);
-        DispatchActivation(Frame, Normalized);
+
+        if (Frame.dataset.storyLoaded === "1") {
+            PendingFrame = null;
+            ActivateFrame(Frame, Normalized);
+        } else {
+            PendingFrame = Frame;
+        }
+
         return true;
     }
 
@@ -332,8 +377,8 @@
         const Normalized = NormalizeRoute(Value);
         if (!Normalized) return false;
 
-        if (Normalized === CurrentRoute && ActiveFrame) {
-            DispatchActivation(ActiveFrame, Normalized);
+        if (Normalized === CurrentRoute && ActiveFrame?.dataset.storyRoute === Normalized) {
+            DispatchFrameEvent(ActiveFrame, "StoryShellActivate", Normalized);
             return true;
         }
 
@@ -347,14 +392,17 @@
     }
 
     function Back(Fallback = "main.html") {
-        if (window.history.length > 1) {
+        if (CurrentHistoryDepth > 0) {
             window.history.back();
             return;
         }
-        Navigate(Fallback, { replace: true });
+
+        const NormalizedFallback = NormalizeRoute(Fallback) || "main.html";
+        LoadRoute(NormalizedFallback, { replace: true });
     }
 
     window.addEventListener("popstate", Event => {
+        CurrentHistoryDepth = Math.max(0, Number(Event.state?.StoryRewriteDepth || 0));
         const Route = NormalizeRoute(Event.state?.StoryRewriteRoute) || RouteFromLocation();
         LoadRoute(Route, { skipHistory: true });
     });
@@ -374,19 +422,32 @@
         GetCurrentMusic: () => CurrentMusicName
     });
 
-    PrepareFrame(InitialFrame, "main.html");
+    PrepareFrame(InitialFrame, "main.html", true);
     PersistentFrames.set("main.html", InitialFrame);
+    ActiveFrame = InitialFrame;
 
     try {
         const ReadyState = InitialFrame.contentDocument?.readyState;
         if (ReadyState === "interactive" || ReadyState === "complete") {
+            InitialFrame.dataset.storyLoaded = "1";
             setTimeout(() => HandleFrameLoad(InitialFrame), 0);
         }
     } catch {}
 
     const InitialRoute = RouteFromLocation();
     CurrentRoute = InitialRoute;
+    CurrentHistoryDepth = 0;
     SetTopHistory(InitialRoute, true);
     ApplyRouteMusic(InitialRoute);
-    ShowFrame(GetFrameForRoute(InitialRoute));
+
+    if (InitialRoute === "main.html") {
+        if (InitialFrame.dataset.storyLoaded === "1") ActivateFrame(InitialFrame, InitialRoute);
+    } else {
+        const TargetFrame = GetFrameForRoute(InitialRoute);
+        if (TargetFrame.dataset.storyLoaded === "1") {
+            ActivateFrame(TargetFrame, InitialRoute);
+        } else {
+            PendingFrame = TargetFrame;
+        }
+    }
 })();
