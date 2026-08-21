@@ -10,18 +10,15 @@
 <link rel="icon" type="image/x-icon" href="favicon_io/favicon.ico?v=1000001">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon_io/favicon-32x32.png?v=1000001">
 <link rel="icon" type="image/png" sizes="16x16" href="favicon_io/favicon-16x16.png?v=1000001">
+<link rel="stylesheet" href="looks.css">
+<link rel="stylesheet" href="multiplayer.css">
+<link rel="stylesheet" href="shell-ui.css">
+<link rel="stylesheet" href="host-controls.css">
+<link rel="stylesheet" href="chat-ai.css">
+<link rel="stylesheet" href="game-enhancements.css">
+<link rel="stylesheet" href="scene-fix.css" data-story-scene-fix="1">
 <script>
 const MultiplayerFreshToken = Date.now().toString(36);
-for (const StyleName of [
-    "looks.css",
-    "multiplayer.css",
-    "shell-ui.css",
-    "host-controls.css",
-    "chat-ai.css",
-    "game-enhancements.css"
-]) {
-    document.write(`<link rel="stylesheet" href="${StyleName}?fresh=${MultiplayerFreshToken}">`);
-}
 </script>
 </head>
 <body class="MultiplayerPage">
