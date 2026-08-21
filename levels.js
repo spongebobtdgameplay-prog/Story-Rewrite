@@ -202,7 +202,7 @@ function BuildStageBriefing(Stage) {
             <div class="BriefingBadges">
                 <span class="BriefingBadge Gold">${EscapeText(Stage.difficulty)}</span>
                 <span class="BriefingBadge">${Status}</span>
-                <span class="BriefingBadge">3★ Par ${Stage.par}</span>
+                <span class="BriefingBadge">3★ Per ${Stage.par}</span>
             </div>
         </div>
         <div class="BriefingSection"><span class="BriefingLabel">Objective</span><p>${EscapeText(Stage.objective)}</p></div>
