@@ -1,4 +1,9 @@
 const MainPlayerSnapshotKey = "StoryRewriteMainPlayerSnapshotV1";
+let MainProfileResult = null;
+let MainData = null;
+let MainSave = null;
+let MainRefreshPromise = null;
+let MainInitialized = false;
 
 function GetMainAuthMarker() {
     const Token = typeof GetAuthToken === "function" ? String(GetAuthToken() || "") : "";
@@ -41,30 +46,61 @@ function RenderMainPlayerSnapshot() {
     document.getElementById("LivesCount").textContent = `${Snapshot.lives}/${Snapshot.maxLives}`;
 }
 
+function RenderMainPlayerState() {
+    if (!MainProfileResult || !MainData || !MainSave) return;
+
+    document.getElementById("AccountButtonLabel").textContent = MainProfileResult.profile.username;
+    document.getElementById("WorldCount").textContent = MainData.worlds.length;
+    document.getElementById("LevelCount").textContent = Object.keys(MainData.stages).length;
+    document.getElementById("StarCount").textContent = TotalStars(MainSave);
+    document.getElementById("LivesCount").textContent = `${MainSave.lives}/${MainSave.maxLives}`;
+    WriteMainPlayerSnapshot(MainProfileResult, MainData, MainSave);
+}
+
+async function RefreshMainPlayerState() {
+    if (MainRefreshPromise) return MainRefreshPromise;
+
+    MainRefreshPromise = (async () => {
+        const ProfileResult = await RequireAccount();
+        const Data = MainData || await LoadStoryData();
+        const Save = await LoadSave(Data);
+
+        MainProfileResult = ProfileResult;
+        MainData = Data;
+        MainSave = Save;
+        RenderMainPlayerState();
+        StoryAudio.Configure(Save.settings);
+    })();
+
+    try {
+        await MainRefreshPromise;
+    } finally {
+        MainRefreshPromise = null;
+    }
+}
+
 RenderMainPlayerSnapshot();
+
+window.addEventListener("StoryShellActivate", () => {
+    if (!MainInitialized) return;
+    RefreshMainPlayerState().catch(() => {});
+});
 
 document.addEventListener("DOMContentLoaded", async () => {
     try {
-        const ProfileResult = await RequireAccount();
-        const Data = await LoadStoryData();
-        const Save = await LoadSave(Data);
-
-        document.getElementById("AccountButtonLabel").textContent = ProfileResult.profile.username;
-        document.getElementById("WorldCount").textContent = Data.worlds.length;
-        document.getElementById("LevelCount").textContent = Object.keys(Data.stages).length;
-        document.getElementById("StarCount").textContent = TotalStars(Save);
-        document.getElementById("LivesCount").textContent = `${Save.lives}/${Save.maxLives}`;
-
-        WriteMainPlayerSnapshot(ProfileResult, Data, Save);
-
-        StoryAudio.Configure(Save.settings);
+        await RefreshMainPlayerState();
+        MainInitialized = true;
         StoryAudio.PlayMusic("menu");
 
         document.getElementById("ContinueButton").addEventListener("click", async () => {
-            const StageId = IsStageUnlocked(Save, Save.currentStage)
-                ? Save.currentStage
-                : Data.worlds[0].entryStage;
-            await EnterServerStage(StageId);
+            if (!MainSave || !MainData) return;
+
+            const StageId = IsStageUnlocked(MainSave, MainSave.currentStage)
+                ? MainSave.currentStage
+                : MainData.worlds[0].entryStage;
+
+            MainSave = await EnterServerStage(StageId);
+            RenderMainPlayerState();
             StoryAudio.PlaySound("click");
             GoStage(StageId);
         });
