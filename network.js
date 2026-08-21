@@ -3,6 +3,8 @@ const STORY_LEGACY_AUTH_TOKEN_KEY = "StoryRewriteSessionToken";
 const STORY_SERVER_OVERRIDE_KEY = "StoryRewriteServerOverride";
 const STORY_AUTH_VALIDATED_AT_KEY = "StoryRewriteAuthValidatedAt";
 const STORY_AUTH_VALIDATION_WINDOW = 1000 * 60 * 10;
+const STORY_LAST_PROFILE_KEY = "StoryRewriteLastProfileV1";
+const STORY_LAST_SAVE_KEY = "StoryRewriteLastSaveV1";
 const STORY_PROTECTED_PAGES = new Set([
     "main.html",
     "levels.html",
@@ -12,6 +14,48 @@ const STORY_PROTECTED_PAGES = new Set([
     "rules.html",
     "account.html"
 ]);
+
+let AccountProfileRequestPromise = null;
+let ServerSaveRequestPromise = null;
+
+function ReadStoryLocalJson(Key) {
+    try {
+        const Value = JSON.parse(localStorage.getItem(Key) || "null");
+        return Value && typeof Value === "object" ? Value : null;
+    } catch {
+        return null;
+    }
+}
+
+function WriteStoryLocalJson(Key, Value) {
+    try {
+        if (Value === null || Value === undefined) localStorage.removeItem(Key);
+        else localStorage.setItem(Key, JSON.stringify(Value));
+    } catch {}
+}
+
+function GetLastKnownProfileResult() {
+    return ReadStoryLocalJson(STORY_LAST_PROFILE_KEY);
+}
+
+function GetLastKnownServerSave() {
+    return ReadStoryLocalJson(STORY_LAST_SAVE_KEY);
+}
+
+function StoreLastKnownProfileResult(Result) {
+    if (Result?.profile) WriteStoryLocalJson(STORY_LAST_PROFILE_KEY, Result);
+    return Result;
+}
+
+function StoreLastKnownServerSave(Save) {
+    if (Save && typeof Save === "object") WriteStoryLocalJson(STORY_LAST_SAVE_KEY, Save);
+    return Save;
+}
+
+function ClearLastKnownStoryState() {
+    localStorage.removeItem(STORY_LAST_PROFILE_KEY);
+    localStorage.removeItem(STORY_LAST_SAVE_KEY);
+}
 
 function BuildStoryUrl(Page = "") {
     const CleanPage = String(Page || "").replace(/^\/+/, "");
@@ -59,13 +103,17 @@ function GetAuthToken() {
 }
 
 function SetAuthToken(Token) {
+    const PreviousToken = localStorage.getItem(STORY_AUTH_TOKEN_KEY) || "";
+
     if (Token) {
+        if (PreviousToken && PreviousToken !== Token) ClearLastKnownStoryState();
         localStorage.setItem(STORY_AUTH_TOKEN_KEY, Token);
         localStorage.removeItem(STORY_LEGACY_AUTH_TOKEN_KEY);
         sessionStorage.removeItem(STORY_LEGACY_AUTH_TOKEN_KEY);
         return;
     }
 
+    ClearLastKnownStoryState();
     localStorage.removeItem(STORY_AUTH_TOKEN_KEY);
     localStorage.removeItem(STORY_LEGACY_AUTH_TOKEN_KEY);
     sessionStorage.removeItem(STORY_LEGACY_AUTH_TOKEN_KEY);
@@ -83,6 +131,14 @@ function WasAuthRecentlyValidated() {
 
 function LogoutAccount() {
     SetAuthToken("");
+
+    try {
+        if (window.parent !== window && window.parent.StoryShell?.IsPersistentShell) {
+            window.parent.StoryShell.Exit("auth.html", true);
+            return;
+        }
+    } catch {}
+
     window.location.replace(BuildStoryUrl("auth.html"));
 }
 
@@ -148,27 +204,41 @@ async function ApiRequest(Path, Options = {}) {
 }
 
 async function RegisterAccount(Username, Password) {
+    ClearLastKnownStoryState();
     const Result = await ApiRequest("/api/register", {
         method: "POST",
         body: JSON.stringify({ username: Username, password: Password })
     });
     SetAuthToken(Result.token);
+    StoreLastKnownProfileResult(Result);
+    if (Result?.save) StoreLastKnownServerSave(Result.save);
     MarkAuthValidated();
     return Result;
 }
 
 async function LoginAccount(Username, Password) {
+    ClearLastKnownStoryState();
     const Result = await ApiRequest("/api/login", {
         method: "POST",
         body: JSON.stringify({ username: Username, password: Password })
     });
     SetAuthToken(Result.token);
+    StoreLastKnownProfileResult(Result);
+    if (Result?.save) StoreLastKnownServerSave(Result.save);
     MarkAuthValidated();
     return Result;
 }
 
 async function GetAccountProfile() {
-    return ApiRequest("/api/me");
+    if (!AccountProfileRequestPromise) {
+        AccountProfileRequestPromise = ApiRequest("/api/me")
+            .then(StoreLastKnownProfileResult)
+            .finally(() => {
+                AccountProfileRequestPromise = null;
+            });
+    }
+
+    return AccountProfileRequestPromise;
 }
 
 async function RequireAccount() {
@@ -188,8 +258,15 @@ async function RequireAccount() {
 }
 
 async function FetchServerSave() {
-    const Result = await ApiRequest("/api/save");
-    return Result.save;
+    if (!ServerSaveRequestPromise) {
+        ServerSaveRequestPromise = ApiRequest("/api/save")
+            .then(Result => StoreLastKnownServerSave(Result.save))
+            .finally(() => {
+                ServerSaveRequestPromise = null;
+            });
+    }
+
+    return ServerSaveRequestPromise;
 }
 
 async function EnterServerStage(StageId) {
@@ -197,14 +274,16 @@ async function EnterServerStage(StageId) {
         method: "POST",
         body: JSON.stringify({ stageId: StageId })
     });
-    return Result.save;
+    return StoreLastKnownServerSave(Result.save);
 }
 
 async function CheckServerStage(StageId, RemovedIndexes) {
-    return ApiRequest("/api/stage/check", {
+    const Result = await ApiRequest("/api/stage/check", {
         method: "POST",
         body: JSON.stringify({ stageId: StageId, removedIndexes: RemovedIndexes })
     });
+    if (Result?.save) StoreLastKnownServerSave(Result.save);
+    return Result;
 }
 
 async function RestartServerChapter(WorldId) {
@@ -212,12 +291,12 @@ async function RestartServerChapter(WorldId) {
         method: "POST",
         body: JSON.stringify({ worldId: WorldId })
     });
-    return Result.save;
+    return StoreLastKnownServerSave(Result.save);
 }
 
 async function ResetServerSave() {
     const Result = await ApiRequest("/api/account/reset", { method: "POST" });
-    return Result.save;
+    return StoreLastKnownServerSave(Result.save);
 }
 
 async function DeleteAccount() {
@@ -227,10 +306,26 @@ async function DeleteAccount() {
 }
 
 async function SaveAudioSettings(MusicVolume, SoundVolume) {
-    return ApiRequest("/api/settings", {
+    const Result = await ApiRequest("/api/settings", {
         method: "POST",
         body: JSON.stringify({ musicVolume: MusicVolume, soundVolume: SoundVolume })
     });
+
+    if (Result?.save) {
+        StoreLastKnownServerSave(Result.save);
+    } else {
+        const LastSave = GetLastKnownServerSave();
+        if (LastSave) {
+            LastSave.settings = {
+                ...(LastSave.settings || {}),
+                musicVolume: MusicVolume,
+                soundVolume: SoundVolume
+            };
+            StoreLastKnownServerSave(LastSave);
+        }
+    }
+
+    return Result;
 }
 
 function ConnectStorySocket() {
