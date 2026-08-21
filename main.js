@@ -1,25 +1,47 @@
-function RenderCachedMainPlayerState() {
-    const ProfileResult = typeof GetCachedProfileResult === "function" ? GetCachedProfileResult() : null;
-    const Save = typeof GetCachedServerSave === "function" ? GetCachedServerSave() : null;
+const MainPlayerSnapshotKey = "StoryRewriteMainPlayerSnapshotV1";
 
-    if (ProfileResult?.profile?.username) {
-        document.getElementById("AccountButtonLabel").textContent = ProfileResult.profile.username;
-    }
-
-    if (!Save) return;
-
-    const Stars = Object.values(Save.stars || {}).reduce(
-        (Total, Count) => Total + Number(Count || 0),
-        0
-    );
-
-    document.getElementById("StarCount").textContent = Stars;
-    document.getElementById("LivesCount").textContent = `${Save.lives}/${Save.maxLives}`;
-
-    if (Save.settings) StoryAudio.Configure(Save.settings);
+function GetMainAuthMarker() {
+    const Token = typeof GetAuthToken === "function" ? String(GetAuthToken() || "") : "";
+    if (!Token) return "";
+    return `${Token.length}:${Token.slice(-8)}`;
 }
 
-RenderCachedMainPlayerState();
+function ReadMainPlayerSnapshot() {
+    try {
+        const Snapshot = JSON.parse(sessionStorage.getItem(MainPlayerSnapshotKey) || "null");
+        if (!Snapshot || Snapshot.authMarker !== GetMainAuthMarker()) return null;
+        return Snapshot;
+    } catch {
+        return null;
+    }
+}
+
+function WriteMainPlayerSnapshot(ProfileResult, Data, Save) {
+    const Snapshot = {
+        authMarker: GetMainAuthMarker(),
+        username: String(ProfileResult?.profile?.username || ""),
+        worldCount: Number(Data?.worlds?.length || 0),
+        levelCount: Number(Object.keys(Data?.stages || {}).length),
+        starCount: TotalStars(Save),
+        lives: Number(Save?.lives || 0),
+        maxLives: Number(Save?.maxLives || 0)
+    };
+
+    try { sessionStorage.setItem(MainPlayerSnapshotKey, JSON.stringify(Snapshot)); } catch {}
+}
+
+function RenderMainPlayerSnapshot() {
+    const Snapshot = ReadMainPlayerSnapshot();
+    if (!Snapshot) return;
+
+    if (Snapshot.username) document.getElementById("AccountButtonLabel").textContent = Snapshot.username;
+    document.getElementById("WorldCount").textContent = Snapshot.worldCount;
+    document.getElementById("LevelCount").textContent = Snapshot.levelCount;
+    document.getElementById("StarCount").textContent = Snapshot.starCount;
+    document.getElementById("LivesCount").textContent = `${Snapshot.lives}/${Snapshot.maxLives}`;
+}
+
+RenderMainPlayerSnapshot();
 
 document.addEventListener("DOMContentLoaded", async () => {
     try {
@@ -32,6 +54,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         document.getElementById("LevelCount").textContent = Object.keys(Data.stages).length;
         document.getElementById("StarCount").textContent = TotalStars(Save);
         document.getElementById("LivesCount").textContent = `${Save.lives}/${Save.maxLives}`;
+
+        WriteMainPlayerSnapshot(ProfileResult, Data, Save);
 
         StoryAudio.Configure(Save.settings);
         StoryAudio.PlayMusic("menu");
