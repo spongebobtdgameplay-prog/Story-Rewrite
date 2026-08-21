@@ -1,65 +1,179 @@
-document.addEventListener("DOMContentLoaded", async () => {
-    const Status = document.getElementById("AccountStatus");
+const AccountSnapshotKey = "StoryRewriteAccountSnapshotV1";
+let AccountProfileResult = null;
+let AccountData = null;
+let AccountSave = null;
+let AccountInitialized = false;
+let AccountStatus = null;
+let AccountMusicSlider = null;
+let AccountSoundSlider = null;
+let AccountMusicValue = null;
+let AccountSoundValue = null;
+
+function GetAccountAuthMarker() {
+    const Token = typeof GetAuthToken === "function" ? String(GetAuthToken() || "") : "";
+    if (!Token) return "";
+    return `${Token.length}:${Token.slice(-8)}`;
+}
+
+function CloneAccountSave(Save) {
+    try {
+        return JSON.parse(JSON.stringify(Save));
+    } catch {
+        return Save;
+    }
+}
+
+function ReadAccountSnapshot() {
+    try {
+        const Snapshot = JSON.parse(localStorage.getItem(AccountSnapshotKey) || "null");
+        if (!Snapshot || Snapshot.authMarker !== GetAccountAuthMarker()) return null;
+        return Snapshot;
+    } catch {
+        return null;
+    }
+}
+
+function WriteAccountSnapshot() {
+    if (!AccountProfileResult || !AccountData || !AccountSave) return;
+
+    const Snapshot = {
+        authMarker: GetAccountAuthMarker(),
+        username: String(AccountProfileResult?.profile?.username || ""),
+        lives: Number(AccountSave.lives || 0),
+        maxLives: Number(AccountSave.maxLives || 0),
+        stars: TotalStars(AccountSave),
+        cleared: ClearedStages(AccountSave),
+        totalStages: Object.keys(AccountData.stages || {}).length,
+        deaths: Number(AccountSave.deaths || 0),
+        musicVolume: Number(AccountSave.settings?.musicVolume ?? 0.45),
+        soundVolume: Number(AccountSave.settings?.soundVolume ?? 0.75)
+    };
+
+    try { localStorage.setItem(AccountSnapshotKey, JSON.stringify(Snapshot)); } catch {}
+}
+
+function RenderAccountSnapshot() {
+    const Snapshot = ReadAccountSnapshot();
+    if (!Snapshot) return;
+
+    document.getElementById("AccountUsername").textContent = Snapshot.username || "Account";
+    document.getElementById("AccountLives").textContent = `${Snapshot.lives}/${Snapshot.maxLives}`;
+    document.getElementById("AccountStars").textContent = Snapshot.stars;
+    document.getElementById("AccountCleared").textContent = `${Snapshot.cleared}/${Snapshot.totalStages}`;
+    document.getElementById("AccountDeaths").textContent = Snapshot.deaths;
+
+    const MusicPercent = Math.round(Snapshot.musicVolume * 100);
+    const SoundPercent = Math.round(Snapshot.soundVolume * 100);
     const MusicSlider = document.getElementById("MusicVolumeSlider");
     const SoundSlider = document.getElementById("SoundVolumeSlider");
     const MusicValue = document.getElementById("MusicVolumeValue");
     const SoundValue = document.getElementById("SoundVolumeValue");
-    let Profile = null;
+
+    if (MusicSlider) MusicSlider.value = MusicPercent;
+    if (SoundSlider) SoundSlider.value = SoundPercent;
+    if (MusicValue) MusicValue.textContent = `${MusicPercent}%`;
+    if (SoundValue) SoundValue.textContent = `${SoundPercent}%`;
+}
+
+function RenderAccountState() {
+    if (!AccountProfileResult || !AccountData || !AccountSave) return;
+
+    document.getElementById("AccountUsername").textContent = AccountProfileResult.profile.username;
+    document.getElementById("AccountLives").textContent = `${AccountSave.lives}/${AccountSave.maxLives}`;
+    document.getElementById("AccountStars").textContent = TotalStars(AccountSave);
+    document.getElementById("AccountCleared").textContent = `${ClearedStages(AccountSave)}/${Object.keys(AccountData.stages).length}`;
+    document.getElementById("AccountDeaths").textContent = AccountSave.deaths;
+
+    const MusicPercent = Math.round(Number(AccountSave.settings?.musicVolume ?? 0.45) * 100);
+    const SoundPercent = Math.round(Number(AccountSave.settings?.soundVolume ?? 0.75) * 100);
+
+    if (AccountMusicSlider) AccountMusicSlider.value = MusicPercent;
+    if (AccountSoundSlider) AccountSoundSlider.value = SoundPercent;
+    if (AccountMusicValue) AccountMusicValue.textContent = `${MusicPercent}%`;
+    if (AccountSoundValue) AccountSoundValue.textContent = `${SoundPercent}%`;
+
+    WriteAccountSnapshot();
+}
+
+function SyncAccountFromLastKnownState() {
+    if (!AccountInitialized || !AccountData) return;
+
+    const LastProfile = typeof GetLastKnownProfileResult === "function"
+        ? GetLastKnownProfileResult()
+        : null;
+    const LastSave = typeof GetLastKnownServerSave === "function"
+        ? GetLastKnownServerSave()
+        : null;
+
+    if (LastProfile?.profile) AccountProfileResult = LastProfile;
+    if (LastSave) AccountSave = NormalizeSave(AccountData, CloneAccountSave(LastSave));
+
+    RenderAccountState();
+}
+
+RenderAccountSnapshot();
+window.addEventListener("StoryShellActivate", SyncAccountFromLastKnownState);
+window.addEventListener("pagehide", () => {
+    if (AccountInitialized) WriteAccountSnapshot();
+});
+
+document.addEventListener("DOMContentLoaded", async () => {
+    AccountStatus = document.getElementById("AccountStatus");
+    AccountMusicSlider = document.getElementById("MusicVolumeSlider");
+    AccountSoundSlider = document.getElementById("SoundVolumeSlider");
+    AccountMusicValue = document.getElementById("MusicVolumeValue");
+    AccountSoundValue = document.getElementById("SoundVolumeValue");
 
     try {
-        const ProfileResult = await RequireAccount();
-        const Data = await LoadStoryData();
-        const Save = await LoadSave(Data);
-        Profile = ProfileResult.profile;
+        AccountProfileResult = await RequireAccount();
+        AccountData = await LoadStoryData();
+        AccountSave = await LoadSave(AccountData);
+        AccountInitialized = true;
 
-        document.getElementById("AccountUsername").textContent = Profile.username;
-        document.getElementById("AccountLives").textContent = `${Save.lives}/${Save.maxLives}`;
-        document.getElementById("AccountStars").textContent = TotalStars(Save);
-        document.getElementById("AccountCleared").textContent = `${ClearedStages(Save)}/${Object.keys(Data.stages).length}`;
-        document.getElementById("AccountDeaths").textContent = Save.deaths;
-
-        const MusicPercent = Math.round(Number(Save.settings?.musicVolume ?? 0.45) * 100);
-        const SoundPercent = Math.round(Number(Save.settings?.soundVolume ?? 0.75) * 100);
-        MusicSlider.value = MusicPercent;
-        SoundSlider.value = SoundPercent;
-        MusicValue.textContent = `${MusicPercent}%`;
-        SoundValue.textContent = `${SoundPercent}%`;
-
-        StoryAudio.Configure(Save.settings);
+        RenderAccountState();
+        StoryAudio.Configure(AccountSave.settings);
         StoryAudio.PlayMusic("menu");
     } catch (Error) {
-        Status.textContent = Error.message;
-        Status.classList.add("Bad");
+        AccountStatus.textContent = Error.message;
+        AccountStatus.classList.add("Bad");
         return;
     }
 
     function UpdateVolumeLabels() {
-        MusicValue.textContent = `${MusicSlider.value}%`;
-        SoundValue.textContent = `${SoundSlider.value}%`;
+        AccountMusicValue.textContent = `${AccountMusicSlider.value}%`;
+        AccountSoundValue.textContent = `${AccountSoundSlider.value}%`;
     }
 
     async function SaveVolumes() {
         UpdateVolumeLabels();
-        Status.textContent = "Saving settings...";
-        Status.classList.remove("Bad", "Good");
+        AccountStatus.textContent = "Saving settings...";
+        AccountStatus.classList.remove("Bad", "Good");
 
         try {
-            const Music = Number(MusicSlider.value) / 100;
-            const Sound = Number(SoundSlider.value) / 100;
+            const Music = Number(AccountMusicSlider.value) / 100;
+            const Sound = Number(AccountSoundSlider.value) / 100;
             await SaveAudioSettings(Music, Sound);
+
+            AccountSave.settings = {
+                ...(AccountSave.settings || {}),
+                musicVolume: Music,
+                soundVolume: Sound
+            };
+
+            RenderAccountState();
             StoryAudio.Configure({ musicVolume: Music, soundVolume: Sound });
-            Status.textContent = "Settings saved.";
-            Status.classList.add("Good");
+            AccountStatus.textContent = "Settings saved.";
+            AccountStatus.classList.add("Good");
         } catch (Error) {
-            Status.textContent = Error.message;
-            Status.classList.add("Bad");
+            AccountStatus.textContent = Error.message;
+            AccountStatus.classList.add("Bad");
         }
     }
 
-    MusicSlider.addEventListener("input", UpdateVolumeLabels);
-    SoundSlider.addEventListener("input", UpdateVolumeLabels);
-    MusicSlider.addEventListener("change", SaveVolumes);
-    SoundSlider.addEventListener("change", SaveVolumes);
+    AccountMusicSlider.addEventListener("input", UpdateVolumeLabels);
+    AccountSoundSlider.addEventListener("input", UpdateVolumeLabels);
+    AccountMusicSlider.addEventListener("change", SaveVolumes);
+    AccountSoundSlider.addEventListener("change", SaveVolumes);
 
     document.getElementById("ResetProgressButton").addEventListener("click", async () => {
         const Confirmed = await StoryConfirm({
@@ -73,18 +187,22 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (!Confirmed) return;
 
         try {
-            Status.textContent = "Resetting progress...";
-            Status.classList.remove("Bad", "Good");
-            await ResetServerSave();
-            window.location.reload();
+            AccountStatus.textContent = "Resetting progress...";
+            AccountStatus.classList.remove("Bad", "Good");
+            AccountSave = await ResetServerSave();
+            AccountSave = NormalizeSave(AccountData, CloneAccountSave(AccountSave));
+            RenderAccountState();
+            StoryAudio.Configure(AccountSave.settings);
+            AccountStatus.textContent = "Progress reset.";
+            AccountStatus.classList.add("Good");
         } catch (Error) {
-            Status.textContent = Error.message;
-            Status.classList.add("Bad");
+            AccountStatus.textContent = Error.message;
+            AccountStatus.classList.add("Bad");
         }
     });
 
     document.getElementById("DeleteAccountButton").addEventListener("click", async () => {
-        const Username = Profile?.username || "this account";
+        const Username = AccountProfileResult?.profile?.username || "this account";
         const Confirmed = await StoryConfirm({
             title: `Delete ${Username}?`,
             message: "This permanently deletes the account and all Story Rewrite progress. This cannot be undone.",
@@ -98,19 +216,31 @@ document.addEventListener("DOMContentLoaded", async () => {
         const Button = document.getElementById("DeleteAccountButton");
         Button.disabled = true;
         Button.textContent = "Deleting...";
-        Status.textContent = "Deleting account...";
-        Status.classList.remove("Bad", "Good");
+        AccountStatus.textContent = "Deleting account...";
+        AccountStatus.classList.remove("Bad", "Good");
 
         try {
             await DeleteAccount();
+            localStorage.removeItem(AccountSnapshotKey);
+
+            try {
+                if (window.parent !== window && window.parent.StoryShell?.IsPersistentShell) {
+                    window.parent.StoryShell.Exit("auth.html", true);
+                    return;
+                }
+            } catch {}
+
             window.location.replace(BuildStoryUrl("auth.html"));
         } catch (Error) {
             Button.disabled = false;
             Button.textContent = "Delete Account";
-            Status.textContent = Error.message;
-            Status.classList.add("Bad");
+            AccountStatus.textContent = Error.message;
+            AccountStatus.classList.add("Bad");
         }
     });
 
-    document.getElementById("SignOutButton").addEventListener("click", LogoutAccount);
+    document.getElementById("SignOutButton").addEventListener("click", () => {
+        localStorage.removeItem(AccountSnapshotKey);
+        LogoutAccount();
+    });
 });
