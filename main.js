@@ -1,3 +1,26 @@
+function RenderCachedMainPlayerState() {
+    const ProfileResult = typeof GetCachedProfileResult === "function" ? GetCachedProfileResult() : null;
+    const Save = typeof GetCachedServerSave === "function" ? GetCachedServerSave() : null;
+
+    if (ProfileResult?.profile?.username) {
+        document.getElementById("AccountButtonLabel").textContent = ProfileResult.profile.username;
+    }
+
+    if (!Save) return;
+
+    const Stars = Object.values(Save.stars || {}).reduce(
+        (Total, Count) => Total + Number(Count || 0),
+        0
+    );
+
+    document.getElementById("StarCount").textContent = Stars;
+    document.getElementById("LivesCount").textContent = `${Save.lives}/${Save.maxLives}`;
+
+    if (Save.settings) StoryAudio.Configure(Save.settings);
+}
+
+RenderCachedMainPlayerState();
+
 document.addEventListener("DOMContentLoaded", async () => {
     try {
         const ProfileResult = await RequireAccount();
