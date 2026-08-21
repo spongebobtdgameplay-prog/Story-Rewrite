@@ -182,7 +182,20 @@ function Roman(NumberValue) {
     return Result || "I";
 }
 
+function GetPersistentStoryShell() {
+    try {
+        if (window.parent !== window && window.parent.StoryShell?.IsPersistentShell) return window.parent.StoryShell;
+    } catch {}
+    return null;
+}
+
 function Go(Page) {
+    const Shell = GetPersistentStoryShell();
+    if (Shell?.CanHandle(Page)) {
+        Shell.Navigate(Page);
+        return;
+    }
+
     window.location.href = typeof BuildStoryUrl === "function"
         ? BuildStoryUrl(Page)
         : String(Page || "").replace(/^\/+/, "");
