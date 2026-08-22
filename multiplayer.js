@@ -5,6 +5,8 @@ let LocalReady = false;
 let MultiplayerReadyPromise = null;
 let SocketClientPromise = null;
 let StartingRoom = false;
+let RoomNoticeFadeTimer = 0;
+let RoomNoticeHideTimer = 0;
 
 const SOCKET_CLIENT_URL = "https://story-rewrite-backend.onrender.com/socket.io/socket.io.js";
 const REQUIRED_MULTIPLAYER_SERVER_VERSION = 8;
@@ -386,7 +388,7 @@ async function StartRoom() {
     if (StartingRoom) return;
 
     if ((MultiplayerState?.players?.length || 0) < 2) {
-        ShowRoomStatus("Invite at least one other player before starting.", false);
+        ShowPlayerRequiredNotice();
         return;
     }
 
@@ -548,9 +550,33 @@ function HideLobbyStatus() {
     Status.textContent = "";
 }
 
+function ClearRoomNoticeTimers() {
+    clearTimeout(RoomNoticeFadeTimer);
+    clearTimeout(RoomNoticeHideTimer);
+    RoomNoticeFadeTimer = 0;
+    RoomNoticeHideTimer = 0;
+}
+
+function ShowPlayerRequiredNotice() {
+    const Status = ById("RoomStatus") || ById("LobbyStatus");
+    if (!Status) return;
+
+    ClearRoomNoticeTimers();
+    Status.className = "StatusText PlayerRequiredNotice";
+    Status.innerHTML = `<span class="PlayerRequiredIcon" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"></circle><path d="M3.8 19c.5-4 2.2-6 5.2-6s4.7 2 5.2 6"></path><circle cx="17.2" cy="9" r="2.2"></circle><path d="M15.2 14.2c.7-.5 1.5-.7 2.3-.7 2.1 0 3.3 1.5 3.7 4.5"></path></svg>
+    </span><span><strong>Another player is required</strong><small>Share the room code and wait for one teammate before starting.</small></span>`;
+
+    RoomNoticeFadeTimer = setTimeout(() => {
+        Status.classList.add("IsFading");
+        RoomNoticeHideTimer = setTimeout(() => HideRoomStatus(), 280);
+    }, 3200);
+}
+
 function ShowRoomStatus(Text, Good) {
     const Status = ById("RoomStatus") || ById("LobbyStatus");
     if (!Status) return;
+    ClearRoomNoticeTimers();
     Status.className = `StatusText ${Good ? "Good" : "Bad"}`;
     Status.textContent = Text;
 }
@@ -558,6 +584,7 @@ function ShowRoomStatus(Text, Good) {
 function HideRoomStatus() {
     const Status = ById("RoomStatus");
     if (!Status) return;
+    ClearRoomNoticeTimers();
     Status.className = "StatusText Hidden";
     Status.textContent = "";
 }

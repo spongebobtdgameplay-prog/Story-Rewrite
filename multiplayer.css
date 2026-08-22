@@ -521,3 +521,71 @@
         height: 260px;
     }
 }
+
+
+.PlayerRequiredNotice {
+    min-height: 64px;
+    margin-top: 14px;
+    padding: 11px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #f7dfb7;
+    border: 1px solid #9e6938;
+    border-left: 4px solid #dfa24e;
+    border-radius: 13px;
+    background: linear-gradient(135deg, #452719, #2a160f);
+    box-shadow: 0 10px 24px rgba(18, 8, 4, .22), inset 0 1px rgba(255, 231, 188, .06);
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity .28s ease, transform .28s ease;
+}
+
+.PlayerRequiredNotice.IsFading {
+    opacity: 0;
+    transform: translateY(-5px);
+}
+
+.PlayerRequiredIcon {
+    width: 38px;
+    height: 38px;
+    flex: 0 0 38px;
+    display: grid;
+    place-items: center;
+    color: #f1be70;
+    border: 1px solid rgba(239, 184, 100, .34);
+    border-radius: 11px;
+    background: rgba(237, 172, 77, .09);
+}
+
+.PlayerRequiredIcon svg {
+    width: 24px;
+    height: 24px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.PlayerRequiredNotice strong,
+.PlayerRequiredNotice small {
+    display: block;
+}
+
+.PlayerRequiredNotice strong {
+    color: #ffe9c1;
+    font: 800 15px/1.15 Georgia, "Times New Roman", serif;
+}
+
+.PlayerRequiredNotice small {
+    margin-top: 4px;
+    color: #cda978;
+    font: 700 12px/1.35 system-ui, sans-serif;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .PlayerRequiredNotice {
+        transition: none;
+    }
+}
