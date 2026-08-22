@@ -1,4 +1,5 @@
 (() => {
+    const FrontendVersion = "20260822.5";
     const Root = document.getElementById("StoryShellRoot");
     const InitialFrame = document.getElementById("StoryShellFrame");
     if (!Root || !InitialFrame) return;
@@ -45,6 +46,7 @@
             if (!ManagedPages.has(PageName)) return "";
 
             Url.searchParams.delete("__fresh");
+            Url.searchParams.delete("__build");
             const Search = Url.searchParams.toString();
             return `${PageName}${Search ? `?${Search}` : ""}${Url.hash}`;
         } catch {
@@ -53,7 +55,9 @@
     }
 
     function RouteUrl(Route) {
-        return new URL(Route, GetBaseUrl()).href;
+        const Url = new URL(Route, GetBaseUrl());
+        Url.searchParams.set("__build", FrontendVersion);
+        return Url.href;
     }
 
     function RouteHash(Route) {
@@ -462,6 +466,7 @@
 
     window.StoryShell = Object.freeze({
         IsPersistentShell: true,
+        FrontendVersion,
         Navigate,
         CanHandle: Value => Boolean(NormalizeRoute(Value)),
         Exit,

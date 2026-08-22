@@ -1,3 +1,4 @@
+const STORY_FRONTEND_VERSION = "20260822.5";
 const STORY_BACK_ICON = `
 <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
     <path d="M14.5 5 7.5 12l7 7" />
@@ -256,7 +257,27 @@ function WireLeaveRoomWarning() {
     }, true);
 }
 
+function AddStoryVersionBadge() {
+    if (document.querySelector(".StoryBuildVersion")) return;
+
+    const Badge = document.createElement("span");
+    Badge.className = "StoryBuildVersion";
+    Badge.textContent = `Build ${STORY_FRONTEND_VERSION}`;
+    Badge.title = "Loaded frontend version";
+
+    const AccountHost = document.querySelector(".AccountSettingsHeader > div:last-child");
+    if (AccountHost) {
+        AccountHost.appendChild(Badge);
+        return;
+    }
+
+    const TopActions = document.querySelector(".TopBar .TopActions");
+    if (TopActions) TopActions.prepend(Badge);
+}
+
 function WireStoryShell() {
+    AddStoryVersionBadge();
+
     for (const Button of document.querySelectorAll("[data-story-back]")) {
         Button.innerHTML = STORY_BACK_ICON;
         Button.addEventListener("click", () => StoryGoBack(Button.dataset.storyBack || "main.html"));

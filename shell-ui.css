@@ -792,3 +792,32 @@ body.StoryWarningOpen {
         grid-template-columns: 1fr;
     }
 }
+
+
+.StoryBuildVersion {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 28px;
+    padding: 5px 9px;
+    color: #f0cf9d;
+    border: 1px solid rgba(235, 190, 126, .34);
+    border-radius: 9px;
+    background: rgba(30, 14, 9, .58);
+    font: 900 11px/1 system-ui, sans-serif;
+    letter-spacing: .035em;
+    white-space: nowrap;
+}
+
+.AccountSettingsHeader > div:last-child {
+    display: flex;
+    justify-content: flex-end;
+}
+
+@media (max-width: 760px) {
+    .StoryBuildVersion {
+        min-height: 24px;
+        padding: 4px 6px;
+        font-size: 9px;
+    }
+}
