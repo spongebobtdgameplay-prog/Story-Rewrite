@@ -141,6 +141,7 @@ const StoryAudio = (() => {
     }
 
     function UnlockAudioFromGesture() {
+        if (window.StoryRealAudioActive) return Promise.resolve(null);
         if (!AudioUnlocked) AudioUnlocked = true;
 
         return ResumeContextFromGesture().then(Context => {
@@ -442,6 +443,18 @@ const StoryAudio = (() => {
         StopAmbient();
     }
 
+    function ShutdownLegacyAudio() {
+        AudioUnlocked = false;
+        PendingMusicName = "";
+        CurrentTrack = "";
+        StopAmbient();
+
+        if (AudioContextInstance?.state === "running") {
+            const SuspendPromise = AudioContextInstance.suspend();
+            if (SuspendPromise?.catch) SuspendPromise.catch(() => {});
+        }
+    }
+
     PlaySound.V11Wrapped = true;
 
     return {
@@ -449,6 +462,7 @@ const StoryAudio = (() => {
         PlayMusic,
         PlaySound,
         StopMusic,
-        UnlockAudio: UnlockAudioFromGesture
+        UnlockAudio: UnlockAudioFromGesture,
+        ShutdownLegacyAudio
     };
 })();
