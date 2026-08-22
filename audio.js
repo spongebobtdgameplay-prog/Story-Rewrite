@@ -3,7 +3,6 @@ const StoryAudio = (() => {
     let AudioUnlocked = false;
     let SoundVolume = 0.8;
     let LastClickAt = 0;
-    let LastGestureClickAt = 0;
 
     function Clamp(Value, Fallback) {
         const NumberValue = Number(Value);
@@ -76,19 +75,11 @@ const StoryAudio = (() => {
         return true;
     }
 
-    function PlayClick(FromGesture = false) {
+    function PlayClick() {
         if (SoundVolume <= 0) return Promise.resolve(false);
 
         const CurrentTime = Date.now();
-
-        if (FromGesture) {
-            if (CurrentTime - LastGestureClickAt < 40) return Promise.resolve(false);
-            LastGestureClickAt = CurrentTime;
-        } else if (CurrentTime - LastGestureClickAt < 180) {
-            return Promise.resolve(false);
-        }
-
-        if (CurrentTime - LastClickAt < 40) return Promise.resolve(false);
+        if (CurrentTime - LastClickAt < 120) return Promise.resolve(false);
         LastClickAt = CurrentTime;
 
         return ResumeAudio().then(Context => DrawClick(Context));
@@ -108,27 +99,13 @@ const StoryAudio = (() => {
         return Clickable;
     }
 
-    function PlayClickFromGesture(Event) {
+    function PlayClickFromCompletedClick(Event) {
         if (!ClickableTarget(Event.target)) return;
         AudioUnlocked = true;
-        PlayClick(true);
+        PlayClick();
     }
 
-    function PlayClickFromKeyboard(Event) {
-        if (Event.repeat || (Event.key !== "Enter" && Event.key !== " ")) return;
-        PlayClickFromGesture(Event);
-    }
-
-    function PlayClickFromAccessibleClick(Event) {
-        if (Event.detail !== 0 || !ClickableTarget(Event.target)) return;
-        AudioUnlocked = true;
-        PlayClick(true);
-    }
-
-    document.addEventListener("pointerdown", PlayClickFromGesture, { capture: true, passive: true });
-    document.addEventListener("touchstart", PlayClickFromGesture, { capture: true, passive: true });
-    document.addEventListener("keydown", PlayClickFromKeyboard, { capture: true });
-    document.addEventListener("click", PlayClickFromAccessibleClick, { capture: true });
+    document.addEventListener("click", PlayClickFromCompletedClick, { capture: true });
 
     function Configure(Settings = {}) {
         SoundVolume = Clamp(Settings.soundVolume, SoundVolume);
@@ -140,7 +117,7 @@ const StoryAudio = (() => {
     }
 
     function PlaySound() {
-        return PlayClick(false);
+        return PlayClick();
     }
 
     function ShutdownLegacyAudio() {
