@@ -61,11 +61,17 @@ for (const StyleName of ["looks.css", "shell-ui.css"]) {
                 <h3>Game settings</h3>
                 <div class="AccountSettingRow">
                     <label for="MusicVolumeSlider">Music</label>
-                    <div><input id="MusicVolumeSlider" type="range" min="0" max="100" step="1"><span id="MusicVolumeValue">—</span></div>
+                    <div class="AccountVolumeControl">
+                        <input class="AccountVolumeSlider" id="MusicVolumeSlider" type="range" min="0" max="100" step="1" aria-describedby="MusicVolumeValue">
+                        <output class="AccountVolumeValue" id="MusicVolumeValue" for="MusicVolumeSlider">—</output>
+                    </div>
                 </div>
                 <div class="AccountSettingRow">
                     <label for="SoundVolumeSlider">Sounds</label>
-                    <div><input id="SoundVolumeSlider" type="range" min="0" max="100" step="1"><span id="SoundVolumeValue">—</span></div>
+                    <div class="AccountVolumeControl">
+                        <input class="AccountVolumeSlider" id="SoundVolumeSlider" type="range" min="0" max="100" step="1" aria-describedby="SoundVolumeValue">
+                        <output class="AccountVolumeValue" id="SoundVolumeValue" for="SoundVolumeSlider">—</output>
+                    </div>
                 </div>
                 <div class="AccountDangerZone">
                     <button class="DangerButton" id="ResetProgressButton" type="button">Reset Progress</button>
