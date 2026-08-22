@@ -19,7 +19,7 @@ function BuildSmilerArt() {
                 <ellipse class="ThreatEye" cx="62" cy="72" rx="5" ry="7"></ellipse>
                 <ellipse class="ThreatEye" cx="98" cy="72" rx="5" ry="7"></ellipse>
                 <path class="ThreatSmile" d="M50 93c18 22 42 22 60 0-5 32-55 32-60 0Z"></path>
-                <path class="ThreatTeeth" d="M58 102h44M66 108v8M80 110v9M94 108v8"></path>
+                <path class="ThreatFang" d="M58 100 64 111 70 100ZM74 102 80 114 86 101ZM90 101 96 112 102 99Z"></path>
             </svg>
         </div>
     `;

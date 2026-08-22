@@ -1,6 +1,6 @@
 {
   "name": "story-rewrite",
-  "version": "2.7.2",
+  "version": "2.8.0",
   "private": true,
   "description": "Story Rewrite multiplayer story puzzle game",
   "scripts": {

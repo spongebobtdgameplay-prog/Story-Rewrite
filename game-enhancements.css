@@ -87,11 +87,11 @@
     fill: #2a1712;
 }
 
-.SceneThreatArtSmiler .ThreatTeeth {
-    fill: none;
-    stroke: #e9dfce;
-    stroke-width: 3;
-    stroke-linecap: round;
+.SceneThreatArtSmiler .ThreatFang {
+    fill: #e9dfce;
+    stroke: rgba(70, 45, 34, .4);
+    stroke-width: 1;
+    stroke-linejoin: round;
 }
 
 .SceneThreatArtYellow {

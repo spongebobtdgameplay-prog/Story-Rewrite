@@ -287,6 +287,8 @@ async function RejoinMultiplayerRoom(Socket) {
 }
 
 BindSocket = function(Socket) {
+    if (typeof BindChatModerationSocket === "function") BindChatModerationSocket(Socket);
+
     Socket.on("connect", () => {
         MultiplayerReconnectAttempts = 0;
         if (MultiplayerReconnectTimer) {

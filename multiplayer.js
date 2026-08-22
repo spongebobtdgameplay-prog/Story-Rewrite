@@ -223,6 +223,8 @@ function WaitForSocketConnection(Socket, TimeoutMilliseconds) {
 }
 
 function BindSocket(Socket) {
+    if (typeof BindChatModerationSocket === "function") BindChatModerationSocket(Socket);
+
     Socket.on("connect", () => {
         if (!MultiplayerState) HideLobbyStatus();
     });
@@ -360,16 +362,43 @@ async function JoinRoom() {
     }
 }
 
-function LeaveRoom() {
-    StoryAudio?.PlaySound?.("click");
-    if (MultiplayerSocket?.connected) MultiplayerSocket.emit("room:leave");
+let LeavingRoom = false;
 
-    MultiplayerState = null;
-    LocalReady = false;
-    StartingRoom = false;
-    ById("ActiveRoom")?.classList.add("Hidden");
-    ById("RoomActions")?.classList.remove("Hidden");
-    HideRoomStatus();
+async function LeaveRoom() {
+    if (LeavingRoom) return;
+    LeavingRoom = true;
+
+    const Button = ById("LeaveButton");
+    if (Button) {
+        Button.disabled = true;
+        Button.textContent = "Leaving...";
+    }
+
+    try {
+        if (MultiplayerSocket?.connected && MultiplayerState?.code) {
+            const Result = await EmitWithAck("room:leave", {});
+            if (!Result?.ok) throw new Error(ResultError(Result, "Could not leave the room."));
+        }
+    } catch (Error) {
+        MultiplayerSocket?.disconnect();
+        MultiplayerSocket = null;
+        MultiplayerReadyPromise = null;
+        ShowLobbyStatus(FriendlyConnectionError(Error), false);
+    } finally {
+        MultiplayerState = null;
+        LocalReady = false;
+        StartingRoom = false;
+        ById("ActiveRoom")?.classList.add("Hidden");
+        ById("RoomActions")?.classList.remove("Hidden");
+        HideRoomStatus();
+
+        if (Button) {
+            Button.disabled = false;
+            Button.textContent = "Leave Room";
+        }
+
+        LeavingRoom = false;
+    }
 }
 
 function ToggleReady() {

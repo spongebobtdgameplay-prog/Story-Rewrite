@@ -279,8 +279,23 @@ function WireStoryShell() {
     AddStoryVersionBadge();
 
     for (const Button of document.querySelectorAll("[data-story-back]")) {
-        Button.innerHTML = STORY_BACK_ICON;
-        Button.addEventListener("click", () => StoryGoBack(Button.dataset.storyBack || "main.html"));
+        const IsMultiplayerStory = document.body.classList.contains("GamePage")
+            && new URLSearchParams(window.location.search).has("room");
+
+        if (IsMultiplayerStory) {
+            Button.id = "MultiplayerStoryLeaveButton";
+            Button.className = "SecondaryButton MultiplayerLeaveTopButton";
+            Button.removeAttribute("data-story-back");
+            Button.setAttribute("aria-label", "Leave to multiplayer lobby");
+            Button.textContent = "Leave to Lobby";
+            Button.addEventListener("click", () => {
+                if (typeof LeaveMultiplayerStoryToLobby === "function") LeaveMultiplayerStoryToLobby();
+            });
+        } else {
+            Button.innerHTML = STORY_BACK_ICON;
+            Button.addEventListener("click", () => StoryGoBack(Button.dataset.storyBack || "main.html"));
+        }
+
         Button.addEventListener("contextmenu", Event => Event.preventDefault());
     }
 

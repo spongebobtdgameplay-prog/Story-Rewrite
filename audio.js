@@ -103,6 +103,8 @@ const StoryAudio = (() => {
             return null;
         }
 
+        if (Clickable.closest("#ChatForm, #GameChatForm")) return null;
+
         return Clickable;
     }
 

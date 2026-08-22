@@ -11,6 +11,7 @@ let MultiplayerState = null;
 let RoomCode = "";
 let GameChatUnreadCount = 0;
 let NextStageOverride = "";
+let MultiplayerLeaveBusy = false;
 
 window.addEventListener("DOMContentLoaded", async () => {
     try {
@@ -50,10 +51,57 @@ window.addEventListener("DOMContentLoaded", async () => {
     }
 });
 
+async function LeaveMultiplayerStoryToLobby() {
+    if (MultiplayerLeaveBusy) return;
+
+    const Confirmed = typeof StoryConfirm === "function"
+        ? await StoryConfirm({
+            title: "Leave the story?",
+            message: "You will leave this multiplayer room and return to the multiplayer lobby.",
+            confirmText: "Leave to Lobby",
+            cancelText: "Stay",
+            danger: true
+        })
+        : window.confirm("Leave this multiplayer room?");
+
+    if (!Confirmed) return;
+    MultiplayerLeaveBusy = true;
+
+    const TopButton = document.getElementById("MultiplayerStoryLeaveButton");
+    if (TopButton) {
+        TopButton.disabled = true;
+        TopButton.textContent = "Leaving...";
+    }
+
+    try {
+        if (MultiplayerSocket?.connected) {
+            await new Promise(Resolve => {
+                let Finished = false;
+                const Finish = () => {
+                    if (Finished) return;
+                    Finished = true;
+                    Resolve();
+                };
+                const Timeout = setTimeout(Finish, 5000);
+                MultiplayerSocket.emit("room:leave", {}, () => {
+                    clearTimeout(Timeout);
+                    Finish();
+                });
+            });
+        }
+    } finally {
+        MultiplayerSocket?.disconnect();
+        window.location.href = "multiplayer.html";
+    }
+}
+
 function BindActions() {
     document.getElementById("CheckButton").addEventListener("click", CheckStage);
     document.getElementById("RestoreButton").addEventListener("click", RestoreStage);
-    document.getElementById("BackButton").addEventListener("click", () => window.location.href = RoomCode ? "multiplayer.html" : "levels.html");
+    document.getElementById("BackButton").addEventListener("click", () => {
+        if (RoomCode) LeaveMultiplayerStoryToLobby();
+        else window.location.href = "levels.html";
+    });
     document.getElementById("NextButton").addEventListener("click", NextStage);
     document.getElementById("ReplayButton").addEventListener("click", ReplayStage);
     document.getElementById("CompleteSelectButton").addEventListener("click", ReturnToSelectWithTrail);

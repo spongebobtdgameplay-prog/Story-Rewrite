@@ -55,7 +55,35 @@ def LoadModel():
     )
 
 
+def GenerateModerationDecision(Model, Context):
+    ContextText = json.dumps(Context, ensure_ascii=False, separators=(",", ":"))
+    if len(ContextText) > 5200:
+        ContextText = ContextText[-5200:]
+    Result = Model.create_chat_completion(
+        messages=[
+            {
+                "role": "system",
+                "content": (
+                    "Classify multiplayer chat abuse. Return exactly ABUSE or SAFE. "
+                    "Direct insults, harassment, threats, unprovoked name-calling, and calling a player "
+                    "stupid, dumb, an idiot, worthless, or similar are ABUSE. "
+                    "Normal disagreement or criticism of the game and story is SAFE."
+                ),
+            },
+            {"role": "user", "content": ContextText},
+        ],
+        temperature=0.0,
+        top_p=1.0,
+        max_tokens=4,
+        repeat_penalty=1.0,
+    )
+    Reply = str(Result["choices"][0]["message"]["content"] or "").strip().upper()
+    return "ABUSE" if Reply.startswith("ABUSE") else "SAFE"
+
+
 def GenerateReply(Model, Context):
+    if isinstance(Context, dict) and isinstance(Context.get("moderationReview"), dict):
+        return GenerateModerationDecision(Model, Context["moderationReview"])
     Result = Model.create_chat_completion(
         messages=[
             {

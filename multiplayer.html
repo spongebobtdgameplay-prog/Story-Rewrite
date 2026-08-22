@@ -26,9 +26,6 @@ const MultiplayerFreshToken = Date.now().toString(36);
 <div class="MultiplayerShell">
     <header class="MultiplayerHero">
         <div>
-            <div class="CompactTopActions" style="margin-bottom:14px;">
-                <button class="IconBackButton" type="button" data-story-back="main.html" aria-label="Go back"></button>
-            </div>
             <div class="Kicker">Co-op rewrite</div>
             <h1>Multiplayer</h1>
             <p>Create a code, invite up to four other players, chat, vote on numbered story options, and share three team lives.</p>
@@ -102,7 +99,8 @@ for (const ScriptName of [
     "multiplayer-connection.js",
     "moderation-version.js",
     "host-controls.js",
-    "ai-chat.js"
+    "ai-chat.js",
+    "reporting.js"
 ]) {
     document.write(`<script src="${ScriptName}?fresh=${MultiplayerFreshToken}"><\/script>`);
 }

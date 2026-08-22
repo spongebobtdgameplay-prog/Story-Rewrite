@@ -23,6 +23,7 @@ StartMultiplayer = function() {
     if (RoomLabel) RoomLabel.textContent = `Room ${RoomCode}`;
 
     MultiplayerSocket = ConnectStorySocket();
+    if (typeof BindChatModerationSocket === "function") BindChatModerationSocket(MultiplayerSocket);
 
     const JoinCurrentRoom = () => {
         if (!MultiplayerSocket?.connected) return;
