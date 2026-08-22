@@ -13,6 +13,7 @@ window.addEventListener("DOMContentLoaded", () => {
     document.getElementById("LoginTab").addEventListener("click", () => SetMode("login"));
     document.getElementById("AccountForm").addEventListener("submit", SubmitAccount);
     document.getElementById("SaveServerButton").addEventListener("click", SaveServerUrl);
+    RenderSavedAccounts();
 });
 
 function SetMode(Mode) {
@@ -25,6 +26,54 @@ function SetMode(Mode) {
     document.getElementById("AccountSubmit").textContent = Register ? "Create Account" : "Sign In";
     document.getElementById("PasswordInput").autocomplete = Register ? "new-password" : "current-password";
     HideStatus();
+}
+
+function RenderSavedAccounts() {
+    const Section = document.getElementById("SavedAccountsSection");
+    const List = document.getElementById("SavedAccountsList");
+    if (!Section || !List || typeof GetSavedAccountSessions !== "function") return;
+
+    const Accounts = GetSavedAccountSessions();
+    Section.classList.toggle("Hidden", Accounts.length === 0);
+    List.innerHTML = "";
+
+    for (const Account of Accounts) {
+        const Row = document.createElement("div");
+        Row.className = "SavedAccountRow";
+
+        const SwitchButton = document.createElement("button");
+        SwitchButton.className = "SecondaryButton SavedAccountButton";
+        SwitchButton.type = "button";
+        SwitchButton.textContent = Account.username;
+        SwitchButton.addEventListener("click", async () => {
+            SwitchButton.disabled = true;
+            ShowStatus(`Switching to ${Account.username}...`, true);
+
+            try {
+                await SwitchSavedAccount(Account.username);
+                window.location.replace(BuildStoryUrl("index.html"));
+            } catch (Error) {
+                ShowStatus(Error.message, false);
+                RenderSavedAccounts();
+            } finally {
+                SwitchButton.disabled = false;
+            }
+        });
+
+        const ForgetButton = document.createElement("button");
+        ForgetButton.className = "PasswordToggle SavedAccountForget";
+        ForgetButton.type = "button";
+        ForgetButton.setAttribute("aria-label", `Forget ${Account.username}`);
+        ForgetButton.textContent = "×";
+        ForgetButton.addEventListener("click", () => {
+            ForgetSavedAccount(Account.username);
+            RenderSavedAccounts();
+        });
+
+        Row.appendChild(SwitchButton);
+        Row.appendChild(ForgetButton);
+        List.appendChild(Row);
+    }
 }
 
 function SaveServerUrl() {
