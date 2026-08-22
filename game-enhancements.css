@@ -277,38 +277,62 @@
 .PowerButtons,
 .BranchChoices {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 8px;
     margin-top: 10px;
 }
 
-.StoryPowerButton,
-.BranchChoice {
-    min-height: 40px;
-    padding: 8px;
-    border: 1px solid rgba(103, 62, 35, .34);
-    border-radius: 10px;
-    background: rgba(255, 252, 243, .82);
-    color: #674126;
-    font: 900 11px/1.1 system-ui, sans-serif;
-    cursor: pointer;
-}
-
-.StoryPowerButton:hover:not(:disabled),
-.BranchChoice:hover:not(:disabled),
-.BranchChoice.Selected {
-    border-color: #9a5a32;
-    background: #f1d69c;
-}
-
-.StoryPowerButton:disabled,
-.BranchChoice:disabled {
-    cursor: default;
-    opacity: .48;
+.PowerButtons {
+    grid-template-columns: 1fr;
 }
 
 .BranchChoices {
     grid-template-columns: 1fr;
+}
+
+.PowerButton,
+.BranchChoice {
+    min-height: 42px;
+    padding: 9px 10px;
+    border: 1px solid #85572f;
+    border-radius: 9px;
+    background: linear-gradient(180deg, #fff1ce, #e3c38c);
+    color: #402212;
+    font-family: Georgia, "Times New Roman", serif;
+    font-weight: 900;
+    cursor: pointer;
+}
+
+.PowerButton {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+    text-align: left;
+    text-shadow: 0 1px rgba(255, 250, 234, .58);
+}
+
+.PowerButton span {
+    font-size: 14px;
+    line-height: 1;
+}
+
+.PowerButton small {
+    color: #744122;
+    font: 800 10px/1.1 system-ui, sans-serif;
+    text-align: right;
+}
+
+.PowerButton:hover:not(:disabled),
+.BranchChoice:hover:not(:disabled),
+.BranchChoice.Selected {
+    border-color: #5f341c;
+    background: linear-gradient(180deg, #ffe8ad, #dba75b);
+}
+
+.PowerButton:disabled,
+.BranchChoice:disabled {
+    cursor: default;
+    opacity: .52;
 }
 
 .BranchChoice {
