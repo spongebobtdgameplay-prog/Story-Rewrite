@@ -33,7 +33,13 @@
         "fromville-08",
         "fromville-09",
         "fromville-10"
-      ]
+      ],
+      "cosmetic": {
+        "id": "fromville-bookmark",
+        "name": "Talisman Bookmark",
+        "description": "A red cloth bookmark held by a silver talisman.",
+        "emblem": "◇"
+      }
     },
     {
       "id": "neon-exorcists",
@@ -57,7 +63,13 @@
         "neon-exorcists-08",
         "neon-exorcists-09",
         "neon-exorcists-10"
-      ]
+      ],
+      "cosmetic": {
+        "id": "neon-bookmark",
+        "name": "Neon Seal Bookmark",
+        "description": "A bright paper seal tucked into the binding.",
+        "emblem": "✦"
+      }
     },
     {
       "id": "blackthorn-manor",
@@ -81,7 +93,13 @@
         "blackthorn-manor-08",
         "blackthorn-manor-09",
         "blackthorn-manor-10"
-      ]
+      ],
+      "cosmetic": {
+        "id": "blackthorn-bookmark",
+        "name": "Raven Ribbon",
+        "description": "A midnight ribbon with a pale raven mark.",
+        "emblem": "♜"
+      }
     },
     {
       "id": "spirit-trail",
@@ -105,7 +123,13 @@
         "spirit-trail-08",
         "spirit-trail-09",
         "spirit-trail-10"
-      ]
+      ],
+      "cosmetic": {
+        "id": "spirit-bookmark",
+        "name": "Foxfire Bookmark",
+        "description": "A green foxfire cord that glows along the page.",
+        "emblem": "◈"
+      }
     },
     {
       "id": "false-city",
@@ -129,7 +153,13 @@
         "false-city-08",
         "false-city-09",
         "false-city-10"
-      ]
+      ],
+      "cosmetic": {
+        "id": "city-bookmark",
+        "name": "Terminal Pass",
+        "description": "A blue terminal pass fixed to the book cover.",
+        "emblem": "▣"
+      }
     }
   ],
   "stages": {
@@ -240,7 +270,21 @@
       "previousStage": "fromville-02",
       "nextStage": "fromville-04",
       "isChapterEnd": false,
-      "theme": "fromville"
+      "theme": "fromville",
+      "branches": [
+        {
+          "id": "bell-route",
+          "label": "Follow the bell",
+          "description": "Take the faster route before dark.",
+          "nextStage": "fromville-04"
+        },
+        {
+          "id": "bus-route",
+          "label": "Follow the bus lights",
+          "description": "Cut through the abandoned bus lane.",
+          "nextStage": "fromville-05"
+        }
+      ]
     },
     "fromville-04": {
       "id": "fromville-04",
@@ -650,7 +694,21 @@
       "previousStage": "neon-exorcists-02",
       "nextStage": "neon-exorcists-04",
       "isChapterEnd": false,
-      "theme": "anime"
+      "theme": "anime",
+      "branches": [
+        {
+          "id": "bell-code",
+          "label": "Trace the bell code",
+          "description": "Follow the shrine bell pattern into the next tunnel.",
+          "nextStage": "neon-exorcists-04"
+        },
+        {
+          "id": "rens-marker",
+          "label": "Trust Ren's marker",
+          "description": "Use the hidden marker to bypass the first tunnel.",
+          "nextStage": "neon-exorcists-05"
+        }
+      ]
     },
     "neon-exorcists-04": {
       "id": "neon-exorcists-04",
@@ -1060,7 +1118,21 @@
       "previousStage": "blackthorn-manor-02",
       "nextStage": "blackthorn-manor-04",
       "isChapterEnd": false,
-      "theme": "manor"
+      "theme": "manor",
+      "branches": [
+        {
+          "id": "hallway-route",
+          "label": "Search the hallway",
+          "description": "Follow the radio echo through the long hall.",
+          "nextStage": "blackthorn-manor-04"
+        },
+        {
+          "id": "balcony-route",
+          "label": "Cross the balcony",
+          "description": "Take the exposed balcony route around the hall.",
+          "nextStage": "blackthorn-manor-05"
+        }
+      ]
     },
     "blackthorn-manor-04": {
       "id": "blackthorn-manor-04",
@@ -1470,7 +1542,21 @@
       "previousStage": "spirit-trail-02",
       "nextStage": "spirit-trail-04",
       "isChapterEnd": false,
-      "theme": "forest"
+      "theme": "forest",
+      "branches": [
+        {
+          "id": "charm-route",
+          "label": "Follow the charm trail",
+          "description": "Stay on the bottle-charm path.",
+          "nextStage": "spirit-trail-04"
+        },
+        {
+          "id": "foxfire-route",
+          "label": "Follow the foxfire",
+          "description": "Let the foxfire lead through a shorter path.",
+          "nextStage": "spirit-trail-05"
+        }
+      ]
     },
     "spirit-trail-04": {
       "id": "spirit-trail-04",
@@ -1880,7 +1966,21 @@
       "previousStage": "false-city-02",
       "nextStage": "false-city-04",
       "isChapterEnd": false,
-      "theme": "city"
+      "theme": "city",
+      "branches": [
+        {
+          "id": "signal-route",
+          "label": "Follow the emergency signal",
+          "description": "Use the flare key at the signal tower.",
+          "nextStage": "false-city-04"
+        },
+        {
+          "id": "apartment-route",
+          "label": "Take the apartment route",
+          "description": "Slip through the false apartment block.",
+          "nextStage": "false-city-05"
+        }
+      ]
     },
     "false-city-04": {
       "id": "false-city-04",

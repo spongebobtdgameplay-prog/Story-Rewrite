@@ -15,6 +15,7 @@ async function InitLevelsPage() {
         await RequireAccount();
         LevelPageState.Data = await LoadStoryData();
         LevelPageState.Save = await LoadSave(LevelPageState.Data);
+        ApplyStoryCosmetic(LevelPageState.Save);
         StoryAudio.Configure(LevelPageState.Save.settings);
         StoryAudio.PlayMusic("menu");
 

@@ -342,3 +342,442 @@ if (document.readyState === "loading") {
 } else {
     InitializeV11GameEnhancements();
 }
+
+
+const StoryPowerNamesV12 = ["reveal", "undo", "seal"];
+let StoryPowerChargesV12 = { reveal: 1, undo: 1, seal: 1 };
+let StoryPowerHistoryV12 = [];
+let StoryPowerSealedV12 = new Set();
+let StoryPowerRevealedV12 = new Set();
+let StoryBranchIdV12 = "";
+let StorySingleDangerEndV12 = 0;
+let StorySingleDangerStageIdV12 = "";
+let StoryDangerTimerV12 = null;
+let StoryDangerExpiredV12 = false;
+
+function GetStoryDangerSecondsV12(StageData = Stage) {
+    const Configured = Number(StageData?.dangerSeconds);
+    if (Number.isFinite(Configured) && Configured > 0) return Configured;
+
+    const Difficulty = String(StageData?.difficulty || "").toLowerCase();
+    if (/nightmare|extreme|brutal|insane/.test(Difficulty)) return 42;
+    if (/hard/.test(Difficulty)) return 55;
+    if (/normal|medium/.test(Difficulty)) return 70;
+    return 85;
+}
+
+function GetStoryPowerChargesV12() {
+    if (RoomCode) {
+        const Powers = MultiplayerState?.powers || {};
+        return {
+            reveal: Number(Powers.reveal || 0),
+            undo: Number(Powers.undo || 0),
+            seal: Number(Powers.seal || 0)
+        };
+    }
+
+    return StoryPowerChargesV12;
+}
+
+function IsStoryPowerHostV12() {
+    return !RoomCode || MultiplayerState?.hostUsername === Profile?.username;
+}
+
+function SetStoryStatusV12(Text, Tone = "") {
+    const Status = document.getElementById("StatusText");
+    if (!Status) return;
+    Status.className = Tone ? `StatusText ${Tone}` : "StatusText";
+    Status.textContent = Text;
+}
+
+function EnsureStoryFeatureUiV12() {
+    const Panel = document.getElementById("PowerPanel");
+    if (Panel && !Panel.dataset.bound) {
+        Panel.dataset.bound = "1";
+        Panel.querySelectorAll("[data-story-power]").forEach(Button => {
+            Button.addEventListener("click", () => UseStoryPowerV12(Button.dataset.storyPower));
+        });
+    }
+}
+
+function GetSelectedBranchIdV12() {
+    const Branches = Array.isArray(Stage?.branches) ? Stage.branches : [];
+    if (RoomCode) {
+        const Selected = String(MultiplayerState?.branchId || "");
+        return Branches.some(Branch => Branch.id === Selected) ? Selected : String(Branches[0]?.id || "");
+    }
+
+    if (!Branches.some(Branch => Branch.id === StoryBranchIdV12)) {
+        StoryBranchIdV12 = String(Branches[0]?.id || "");
+    }
+
+    return StoryBranchIdV12;
+}
+
+function RenderStoryBranchUiV12() {
+    const Panel = document.getElementById("BranchPanel");
+    const Choices = document.getElementById("BranchChoices");
+    const Branches = Array.isArray(Stage?.branches) ? Stage.branches : [];
+
+    if (!Panel || !Choices) return;
+    Panel.classList.toggle("Hidden", Branches.length < 2);
+    if (Branches.length < 2) return;
+
+    const Selected = GetSelectedBranchIdV12();
+    const IsHost = IsStoryPowerHostV12();
+
+    Choices.innerHTML = "";
+    for (const Branch of Branches) {
+        const Button = document.createElement("button");
+        Button.type = "button";
+        Button.className = `BranchChoice ${Branch.id === Selected ? "Selected" : ""}`;
+        Button.disabled = RoomCode && !IsHost;
+        Button.innerHTML = `<strong></strong><span></span>`;
+        Button.querySelector("strong").textContent = String(Branch.label || "Route");
+        Button.querySelector("span").textContent = String(Branch.description || "");
+        Button.addEventListener("click", () => SelectStoryBranchV12(Branch.id));
+        Choices.appendChild(Button);
+    }
+}
+
+function SelectStoryBranchV12(BranchId) {
+    const Branches = Array.isArray(Stage?.branches) ? Stage.branches : [];
+    if (!Branches.some(Branch => Branch.id === BranchId)) return;
+
+    if (RoomCode) {
+        if (!IsStoryPowerHostV12()) {
+            SetStoryStatusV12(`Only ${MultiplayerState?.hostUsername || "the host"} can choose the route.`);
+            return;
+        }
+
+        MultiplayerSocket?.timeout(10000).emit("game:branch", { branchId: BranchId }, (Error, Result) => {
+            if (Error) return SetStoryStatusV12("The server did not save the route in time.", "Bad");
+            if (!Result?.ok) return SetStoryStatusV12(Result?.error || "Could not choose that route.", "Bad");
+        });
+        return;
+    }
+
+    StoryBranchIdV12 = BranchId;
+    RenderStoryBranchUiV12();
+    const Selected = Branches.find(Branch => Branch.id === BranchId);
+    SetStoryStatusV12(`${Selected?.label || "Route"} selected. Survive this page to follow it.`);
+}
+
+function RenderTeamClueV12() {
+    const Card = document.getElementById("TeamClueCard");
+    const Text = document.getElementById("TeamClueText");
+    if (!Card || !Text) return;
+
+    const Clue = String(MultiplayerState?.personalClue || "");
+    Card.classList.toggle("Hidden", !RoomCode || !Clue);
+    if (Clue) Text.textContent = Clue;
+}
+
+function GetStoryPowerSetsV12() {
+    if (RoomCode) {
+        return {
+            revealed: new Set(MultiplayerState?.revealedIndexes || []),
+            sealed: new Set(MultiplayerState?.sealedIndexes || [])
+        };
+    }
+
+    return {
+        revealed: StoryPowerRevealedV12,
+        sealed: StoryPowerSealedV12
+    };
+}
+
+function RenderStoryPowerUiV12() {
+    const Charges = GetStoryPowerChargesV12();
+    const Sets = GetStoryPowerSetsV12();
+    const IsHost = IsStoryPowerHostV12();
+
+    document.querySelectorAll("[data-story-power]").forEach(Button => {
+        const Name = Button.dataset.storyPower;
+        const Charge = Number(Charges[Name] || 0);
+        const HasSoloUndo = StoryPowerHistoryV12.length > 0;
+        const HasSoloSeal = [...RemovedSentences].some(Index => !Sets.sealed.has(Index));
+        const ExtraDisabled = !RoomCode && (Name === "undo" ? !HasSoloUndo : Name === "seal" ? !HasSoloSeal : false);
+
+        Button.disabled = Charge <= 0 || !IsHost || ExtraDisabled;
+        Button.dataset.charge = String(Charge);
+        const Label = Button.querySelector("span");
+        if (Label) Label.textContent = `${Name[0].toUpperCase()}${Name.slice(1)} · ${Charge}`;
+    });
+
+    const SentenceList = document.getElementById("SentenceList");
+    if (SentenceList) {
+        SentenceList.querySelectorAll(".Sentence[data-option]").forEach(Button => {
+            const Index = Number(Button.dataset.option) - 1;
+            Button.classList.toggle("IsRevealed", Sets.revealed.has(Index));
+            Button.classList.toggle("IsSealed", Sets.sealed.has(Index));
+            Button.setAttribute("aria-label", `Sentence ${Index + 1}${Sets.revealed.has(Index) ? ", revealed danger" : ""}${Sets.sealed.has(Index) ? ", sealed" : ""}`);
+        });
+    }
+}
+
+async function UseStoryPowerV12(Name) {
+    if (!StoryPowerNamesV12.includes(Name) || !Stage) return;
+
+    if (RoomCode) {
+        if (!IsStoryPowerHostV12()) {
+            SetStoryStatusV12(`Only ${MultiplayerState?.hostUsername || "the host"} can use the shared page powers.`);
+            return;
+        }
+
+        MultiplayerSocket?.timeout(12000).emit("game:power", { name: Name }, (Error, Result) => {
+            if (Error) return SetStoryStatusV12("The server did not answer in time.", "Bad");
+            if (!Result?.ok) return SetStoryStatusV12(Result?.error || "That power cannot be used now.", "Bad");
+            StoryAudio?.PlaySound?.(Name === "reveal" ? "ready" : Name === "undo" ? "restore" : "success");
+        });
+        return;
+    }
+
+    if (Number(StoryPowerChargesV12[Name] || 0) <= 0) return;
+
+    if (Name === "reveal") {
+        const Index = (Stage.requiredRemoved || []).find(Value => !StoryPowerRevealedV12.has(Value));
+        if (!Number.isInteger(Index)) {
+            SetStoryStatusV12("Every direct danger on this page has already been revealed.");
+            return;
+        }
+
+        StoryPowerRevealedV12.add(Index);
+        SetStoryStatusV12(`Reveal marked sentence ${Index + 1}. It creates a direct danger.`);
+        StoryAudio?.PlaySound?.("ready");
+    }
+
+    if (Name === "undo") {
+        const Action = StoryPowerHistoryV12.pop();
+        if (!Action) {
+            SetStoryStatusV12("There is no edit to undo yet.");
+            return;
+        }
+
+        if (Action.wasRemoved) RemovedSentences.add(Action.index);
+        else RemovedSentences.delete(Action.index);
+
+        SetStoryStatusV12(`Undo restored your previous edit on sentence ${Action.index + 1}.`);
+        StoryAudio?.PlaySound?.("restore");
+    }
+
+    if (Name === "seal") {
+        const Index = [...StoryPowerHistoryV12]
+            .reverse()
+            .map(Action => Action.index)
+            .find(Value => RemovedSentences.has(Value) && !StoryPowerSealedV12.has(Value));
+
+        if (!Number.isInteger(Index)) {
+            SetStoryStatusV12("Cross out a sentence first, then seal it.");
+            return;
+        }
+
+        StoryPowerSealedV12.add(Index);
+        SetStoryStatusV12(`Sentence ${Index + 1} is sealed and cannot be restored this attempt.`);
+        StoryAudio?.PlaySound?.("success");
+    }
+
+    StoryPowerChargesV12[Name] -= 1;
+    RenderSentences();
+    RenderStoryPowerUiV12();
+}
+
+function ClearStoryDangerTimerV12() {
+    if (StoryDangerTimerV12) {
+        clearInterval(StoryDangerTimerV12);
+        StoryDangerTimerV12 = null;
+    }
+
+    StorySingleDangerEndV12 = 0;
+    document.getElementById("Book")?.classList.remove("StoryDangerActive", "StoryDangerCritical");
+    document.getElementById("Illustration")?.classList.remove("StoryDangerActive", "StoryDangerCritical");
+}
+
+function GetStoryDangerEndV12() {
+    if (RoomCode) return Number(MultiplayerState?.dangerEndsAt || 0);
+    return StorySingleDangerEndV12;
+}
+
+function RefreshStoryDangerUiV12() {
+    if (!Stage) return;
+
+    const Value = document.getElementById("DangerTimerValue");
+    const Fill = document.getElementById("DangerTimerFill");
+    const End = GetStoryDangerEndV12();
+    const Total = GetStoryDangerSecondsV12();
+
+    if (!End) {
+        if (Value) Value.textContent = "--:--";
+        if (Fill) Fill.style.width = "0%";
+        document.getElementById("Book")?.classList.remove("StoryDangerActive", "StoryDangerCritical");
+        document.getElementById("Illustration")?.classList.remove("StoryDangerActive", "StoryDangerCritical");
+        return;
+    }
+
+    const Remaining = Math.max(0, End - Date.now());
+    const Seconds = Math.ceil(Remaining / 1000);
+    const Critical = Remaining > 0 && Remaining <= Math.min(15000, Total * 250);
+
+    if (Value) Value.textContent = `${Math.floor(Seconds / 60)}:${String(Seconds % 60).padStart(2, "0")}`;
+    if (Fill) Fill.style.width = `${Math.max(0, Math.min(100, Remaining / (Total * 10)))}%`;
+
+    document.getElementById("Book")?.classList.toggle("StoryDangerActive", Remaining > 0);
+    document.getElementById("Illustration")?.classList.toggle("StoryDangerActive", Remaining > 0);
+    document.getElementById("Book")?.classList.toggle("StoryDangerCritical", Critical);
+    document.getElementById("Illustration")?.classList.toggle("StoryDangerCritical", Critical);
+
+    if (!RoomCode && End > 0 && Remaining <= 0 && !StoryDangerExpiredV12) {
+        ExpireSingleStoryDangerV12();
+    }
+}
+
+function EnsureStoryDangerLoopV12() {
+    if (StoryDangerTimerV12) return;
+    StoryDangerTimerV12 = setInterval(RefreshStoryDangerUiV12, 250);
+}
+
+function StartSingleStoryDangerV12(Force = false) {
+    if (RoomCode || !Stage) return;
+    if (!Force && StorySingleDangerStageIdV12 === Stage.id && StorySingleDangerEndV12 > Date.now()) return;
+
+    ClearStoryDangerTimerV12();
+    StorySingleDangerStageIdV12 = Stage.id;
+    StorySingleDangerEndV12 = Date.now() + GetStoryDangerSecondsV12() * 1000;
+    StoryDangerExpiredV12 = false;
+    RefreshStoryDangerUiV12();
+    EnsureStoryDangerLoopV12();
+}
+
+async function ExpireSingleStoryDangerV12() {
+    if (StoryDangerExpiredV12 || !Stage) return;
+
+    StoryDangerExpiredV12 = true;
+    ClearStoryDangerTimerV12();
+    SetStoryStatusV12("The threat reached the page before the rewrite was checked.", "Bad");
+
+    try {
+        const Result = await ApiRequest("/api/stage/timeout", {
+            method: "POST",
+            body: JSON.stringify({ stageId: Stage.id })
+        });
+
+        Save = NormalizeSave(Data, Result.save);
+        ApplyFailureOutcome(Result);
+    } catch (Error) {
+        SetStoryStatusV12(Error.message, "Bad");
+    }
+}
+
+if (typeof ToggleSentence === "function" && !ToggleSentence.V12Wrapped) {
+    const BaseToggleSentenceV12 = ToggleSentence;
+    const WrappedToggleSentenceV12 = function(Index) {
+        const Sets = GetStoryPowerSetsV12();
+        if (Sets.sealed.has(Index)) {
+            SetStoryStatusV12(`Sentence ${Index + 1} is sealed for this attempt.`);
+            return;
+        }
+
+        if (!RoomCode) {
+            const WasRemoved = RemovedSentences.has(Index);
+            const Result = BaseToggleSentenceV12(Index);
+            if (RemovedSentences.has(Index) !== WasRemoved) StoryPowerHistoryV12.push({ index: Index, wasRemoved: WasRemoved });
+            RenderStoryPowerUiV12();
+            return Result;
+        }
+
+        return BaseToggleSentenceV12(Index);
+    };
+    WrappedToggleSentenceV12.V12Wrapped = true;
+    ToggleSentence = WrappedToggleSentenceV12;
+}
+
+if (typeof RenderSentences === "function" && !RenderSentences.V12Wrapped) {
+    const BaseRenderSentencesV12 = RenderSentences;
+    const WrappedRenderSentencesV12 = function(...Arguments) {
+        const Result = BaseRenderSentencesV12(...Arguments);
+        RenderStoryPowerUiV12();
+        return Result;
+    };
+    WrappedRenderSentencesV12.V12Wrapped = true;
+    RenderSentences = WrappedRenderSentencesV12;
+}
+
+if (typeof RenderStage === "function" && !RenderStage.V12Wrapped) {
+    const BaseRenderStageV12 = RenderStage;
+    const WrappedRenderStageV12 = function(...Arguments) {
+        const Result = BaseRenderStageV12(...Arguments);
+        EnsureStoryFeatureUiV12();
+        RenderStoryBranchUiV12();
+        RenderTeamClueV12();
+        RenderStoryPowerUiV12();
+
+        if (RoomCode) {
+            RefreshStoryDangerUiV12();
+            EnsureStoryDangerLoopV12();
+        } else StartSingleStoryDangerV12();
+
+        return Result;
+    };
+    WrappedRenderStageV12.V12Wrapped = true;
+    RenderStage = WrappedRenderStageV12;
+}
+
+if (typeof ApplyRoomState === "function" && !ApplyRoomState.V12Wrapped) {
+    const BaseApplyRoomStateV12 = ApplyRoomState;
+    const WrappedApplyRoomStateV12 = function(State) {
+        const Result = BaseApplyRoomStateV12(State);
+        RenderStoryBranchUiV12();
+        RenderTeamClueV12();
+        RenderStoryPowerUiV12();
+        RefreshStoryDangerUiV12();
+        EnsureStoryDangerLoopV12();
+        return Result;
+    };
+    WrappedApplyRoomStateV12.V12Wrapped = true;
+    ApplyRoomState = WrappedApplyRoomStateV12;
+}
+
+if (typeof CheckServerStage === "function" && !CheckServerStage.V12Wrapped) {
+    const BaseCheckServerStageV12 = CheckServerStage;
+    const WrappedCheckServerStageV12 = async function(StageId, RemovedIndexes, BranchId = GetSelectedBranchIdV12()) {
+        const Result = await BaseCheckServerStageV12(StageId, RemovedIndexes, BranchId);
+
+        if (Result?.success) ClearStoryDangerTimerV12();
+        else if (!StoryDangerExpiredV12 && !Result?.gameOver) StartSingleStoryDangerV12(true);
+
+        return Result;
+    };
+    WrappedCheckServerStageV12.V12Wrapped = true;
+    CheckServerStage = WrappedCheckServerStageV12;
+}
+
+if (typeof HandleMultiplayerOutcome === "function" && !HandleMultiplayerOutcome.V12Wrapped) {
+    const BaseHandleMultiplayerOutcomeV12 = HandleMultiplayerOutcome;
+    const WrappedHandleMultiplayerOutcomeV12 = function(Result) {
+        if (Result?.success) ClearStoryDangerTimerV12();
+        if (Result?.success && Result?.cosmeticUnlocked?.name) {
+            SetStoryStatusV12(`${Result.cosmeticUnlocked.name} was added to every survivor's account.`, "Good");
+        }
+
+        return BaseHandleMultiplayerOutcomeV12(Result);
+    };
+    WrappedHandleMultiplayerOutcomeV12.V12Wrapped = true;
+    HandleMultiplayerOutcome = WrappedHandleMultiplayerOutcomeV12;
+}
+
+function InitializeV12GameEnhancements() {
+    EnsureStoryFeatureUiV12();
+    RenderStoryBranchUiV12();
+    RenderTeamClueV12();
+    RenderStoryPowerUiV12();
+    if (Stage) {
+        if (RoomCode) RefreshStoryDangerUiV12();
+        else StartSingleStoryDangerV12();
+    }
+}
+
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", InitializeV12GameEnhancements, { once: true });
+} else {
+    InitializeV12GameEnhancements();
+}

@@ -132,20 +132,24 @@ const StoryAudio = (() => {
 
     function ResumeContextFromGesture() {
         const Context = CreateContext();
-        if (!Context) return;
+        if (!Context) return Promise.resolve(null);
+        if (Context.state === "running") return Promise.resolve(Context);
 
-        if (Context.state === "suspended") {
-            Context.resume().catch(() => {});
-        }
+        return Context.resume()
+            .then(() => Context.state === "running" ? Context : null)
+            .catch(() => null);
     }
 
     function UnlockAudioFromGesture() {
         if (!AudioUnlocked) AudioUnlocked = true;
-        ResumeContextFromGesture();
 
-        if (PendingMusicName && MusicVolume > 0) {
-            StartAmbient(PendingMusicName);
-        }
+        return ResumeContextFromGesture().then(Context => {
+            if (Context && PendingMusicName && MusicVolume > 0) {
+                StartAmbient(PendingMusicName);
+            }
+
+            return Context;
+        });
     }
 
     document.addEventListener("pointerdown", UnlockAudioFromGesture, { capture: true, passive: true });
@@ -338,9 +342,7 @@ const StoryAudio = (() => {
         StartAmbient(SelectedName);
     }
 
-    function PlaySound(Name) {
-        if (!AudioUnlocked || SoundVolume <= 0) return;
-
+    function PlaySoundNow(Name) {
         switch (Name) {
             case "click":
                 PlayTone(560, 0.055, 0.045, "square", 0, 440);
@@ -392,10 +394,46 @@ const StoryAudio = (() => {
                 PlayTone(1046.5, 0.42, 0.038, "sine", 0.32);
                 break;
 
+            case "vote":
+                PlayTone(480, 0.055, 0.038, "sine", 0, 610);
+                PlayTone(680, 0.08, 0.025, "triangle", 0.04, 780);
+                break;
+
+            case "revive":
+                PlayTone(220, 0.16, 0.05, "sine", 0, 330);
+                PlayTone(440, 0.2, 0.052, "triangle", 0.11, 660);
+                PlayTone(880, 0.28, 0.042, "sine", 0.23, 1040);
+                break;
+
+            case "reviveEarned":
+            case "heartRefill":
+                PlayTone(392, 0.12, 0.045, "sine");
+                PlayTone(523.25, 0.15, 0.048, "triangle", 0.08);
+                PlayTone(783.99, 0.22, 0.048, "sine", 0.16);
+                break;
+
             default:
                 PlayTone(440, 0.08, 0.04, "sine");
                 break;
         }
+    }
+
+    function PlaySound(Name) {
+        if (!AudioUnlocked || SoundVolume <= 0) return;
+
+        const Context = CreateContext();
+        if (!Context) return;
+
+        if (Context.state !== "running") {
+            Context.resume()
+                .then(() => {
+                    if (Context.state === "running") PlaySoundNow(Name);
+                })
+                .catch(() => {});
+            return;
+        }
+
+        PlaySoundNow(Name);
     }
 
     function StopMusic() {
@@ -404,10 +442,13 @@ const StoryAudio = (() => {
         StopAmbient();
     }
 
+    PlaySound.V11Wrapped = true;
+
     return {
         Configure,
         PlayMusic,
         PlaySound,
-        StopMusic
+        StopMusic,
+        UnlockAudio: UnlockAudioFromGesture
     };
 })();

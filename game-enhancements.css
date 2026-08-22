@@ -225,3 +225,143 @@
         width: 110px;
     }
 }
+
+
+.DangerTimerCard,
+.PowerPanel,
+.BranchPanel,
+.TeamClueCard {
+    margin: 12px 0;
+    padding: 13px;
+    border: 1px solid rgba(123, 77, 43, .28);
+    border-radius: 13px;
+    background: linear-gradient(145deg, rgba(255, 247, 231, .82), rgba(225, 202, 170, .34));
+    box-shadow: 0 8px 20px rgba(78, 43, 19, .08);
+}
+
+.DangerTimerTop,
+.PowerPanelHeading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    color: #6a422a;
+    font: 900 11px/1 system-ui, sans-serif;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.DangerTimerTop strong {
+    color: #9a302c;
+    font-size: 15px;
+    letter-spacing: .03em;
+}
+
+.DangerTimerTrack {
+    height: 7px;
+    margin-top: 10px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: rgba(78, 40, 27, .13);
+}
+
+.DangerTimerTrack span {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #c99a43, #b53b31);
+    transition: width .5s linear, background .25s ease;
+}
+
+.PowerButtons,
+.BranchChoices {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.StoryPowerButton,
+.BranchChoice {
+    min-height: 40px;
+    padding: 8px;
+    border: 1px solid rgba(103, 62, 35, .34);
+    border-radius: 10px;
+    background: rgba(255, 252, 243, .82);
+    color: #674126;
+    font: 900 11px/1.1 system-ui, sans-serif;
+    cursor: pointer;
+}
+
+.StoryPowerButton:hover:not(:disabled),
+.BranchChoice:hover:not(:disabled),
+.BranchChoice.Selected {
+    border-color: #9a5a32;
+    background: #f1d69c;
+}
+
+.StoryPowerButton:disabled,
+.BranchChoice:disabled {
+    cursor: default;
+    opacity: .48;
+}
+
+.BranchChoices {
+    grid-template-columns: 1fr;
+}
+
+.BranchChoice {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    text-align: left;
+}
+
+.TeamClueCard {
+    border-color: rgba(54, 91, 109, .34);
+    background: linear-gradient(145deg, rgba(231, 247, 247, .92), rgba(163, 207, 205, .36));
+}
+
+.TeamClueCard p {
+    margin: 7px 0 0;
+    color: #275260;
+    font: 700 13px/1.4 system-ui, sans-serif;
+}
+
+.NumberedSentence.IsRevealed {
+    box-shadow: inset 4px 0 0 #d5a233;
+    background: rgba(255, 230, 153, .22);
+}
+
+.NumberedSentence.IsSealed {
+    box-shadow: inset 4px 0 0 #447e72;
+    background: rgba(184, 226, 208, .24);
+}
+
+.NumberedSentence.IsSealed .SentenceOptionNumber::after {
+    content: "⌁";
+    margin-left: 4px;
+    color: #2f7163;
+}
+
+.Book.StoryDangerActive .SceneThreatArt {
+    animation: storyThreatPulse 1.5s ease-in-out infinite;
+}
+
+.Book.StoryDangerCritical .DangerTimerTrack span {
+    background: #a62129;
+}
+
+.Book.StoryDangerCritical .SceneThreatArt {
+    animation-duration: .65s;
+    opacity: 1;
+}
+
+@keyframes storyThreatPulse {
+    50% { transform: scale(1.045) translateY(-4px); filter: drop-shadow(0 10px 24px rgba(146, 35, 28, .56)); }
+}
+
+@media (max-width: 700px) {
+    .PowerButtons { grid-template-columns: 1fr; }
+}

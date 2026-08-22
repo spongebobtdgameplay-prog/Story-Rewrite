@@ -10,6 +10,7 @@ let MultiplayerSocket = null;
 let MultiplayerState = null;
 let RoomCode = "";
 let GameChatUnreadCount = 0;
+let NextStageOverride = "";
 
 window.addEventListener("DOMContentLoaded", async () => {
     try {
@@ -17,6 +18,7 @@ window.addEventListener("DOMContentLoaded", async () => {
         Profile = ProfileResult.profile;
         Data = await LoadStoryData();
         Save = await LoadSave(Data);
+        ApplyStoryCosmetic(Save);
 
         const Params = new URLSearchParams(window.location.search);
         const StageId = Params.get("stage") || Save.currentStage;
@@ -228,7 +230,9 @@ async function CheckStage() {
         }
 
         const Result = await CheckServerStage(Stage.id, [...RemovedSentences]);
+        NextStageOverride = Result.nextStage || "";
         Save = NormalizeSave(Data, Result.save);
+        ApplyStoryCosmetic(Save);
         RenderLives();
 
         if (!Result.success) {
@@ -301,7 +305,8 @@ function ShowComplete(Stars) {
     document.getElementById("CompleteDifficulty").textContent = Stage.difficulty;
     document.getElementById("CompleteText").textContent = `${World.name} · ${Stage.name}`;
     document.getElementById("StarRow").textContent = `${"★".repeat(Stars)}${"☆".repeat(3 - Stars)}`;
-    document.getElementById("NextButton").textContent = Stage.isChapterEnd ? (Stage.nextStage ? "Finish Chapter" : "Finish Final Chapter") : "Next Level";
+    const NextStageId = NextStageOverride || Stage.nextStage;
+    document.getElementById("NextButton").textContent = Stage.isChapterEnd ? (NextStageId ? "Finish Chapter" : "Finish Final Chapter") : "Next Level";
     document.getElementById("CompleteOverlay").classList.add("Show");
 }
 
@@ -352,26 +357,27 @@ async function NextStage() {
     }
 
     document.getElementById("CompleteOverlay").classList.remove("Show");
+    const NextStageId = NextStageOverride || Stage.nextStage;
 
     if (Stage.isChapterEnd) {
         await ShowChapterComplete();
-        if (!Stage.nextStage) {
+        if (!NextStageId) {
             document.getElementById("TbcOverlay").classList.add("Show");
             return;
         }
-        const Next = Data.stages[Stage.nextStage];
-        await ShowTrail(Stage.nextStage, false);
-        window.location.href = `levels.html?unlock=${encodeURIComponent(Next.worldId)}&autostart=${encodeURIComponent(Stage.nextStage)}`;
+        const Next = Data.stages[NextStageId];
+        await ShowTrail(NextStageId, false);
+        window.location.href = `levels.html?unlock=${encodeURIComponent(Next.worldId)}&autostart=${encodeURIComponent(NextStageId)}`;
         return;
     }
 
-    if (!Stage.nextStage) {
+    if (!NextStageId) {
         document.getElementById("TbcOverlay").classList.add("Show");
         return;
     }
 
-    const Traveled = await ShowTrail(Stage.nextStage, false);
-    if (Traveled) GoStage(Stage.nextStage);
+    const Traveled = await ShowTrail(NextStageId, false);
+    if (Traveled) GoStage(NextStageId);
 }
 
 async function ReturnToSelectWithTrail() {
@@ -410,6 +416,7 @@ async function RestartChapter() {
     }
 
     Save = await RestartServerChapter(World.id);
+    ApplyStoryCosmetic(Save);
     document.getElementById("GameOverOverlay").classList.remove("Show");
     GoStage(GetWorld(Data, World.id).entryStage);
 }
@@ -485,6 +492,7 @@ function HandleMultiplayerOutcome(Result) {
     }
 
     LastCheckFailed = false;
+    NextStageOverride = Result.nextStage || "";
     StoryAudio.PlaySound("success");
     document.getElementById("StatusText").className = "StatusText Good";
     document.getElementById("StatusText").textContent = "The team rewrite survived.";

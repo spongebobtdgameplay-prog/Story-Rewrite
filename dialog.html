@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script src="cache-guard.js?v=20260821-60"></script>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -62,6 +63,27 @@ for (const StyleName of [
         <aside class="Sidebar">
             <div class="SidebarTop"><div class="DifficultyBadge" id="GameDifficulty"></div><h3 id="SidebarTitle"></h3><div class="SidebarWorld" id="WorldName"></div></div>
             <div class="LivesBar"><div class="LivesLabel" id="LivesLabel">Lives</div><div class="LivesHearts" id="LivesHearts"></div></div>
+            <section class="DangerTimerCard" id="DangerTimerCard" aria-live="polite">
+                <div class="DangerTimerTop"><span>Threat closing in</span><strong id="DangerTimerValue">--:--</strong></div>
+                <div class="DangerTimerTrack"><span id="DangerTimerFill"></span></div>
+            </section>
+            <section class="PowerPanel" id="PowerPanel">
+                <div class="PowerPanelHeading"><span>Page powers</span><strong>1 each</strong></div>
+                <div class="PowerButtons">
+                    <button class="PowerButton" type="button" data-story-power="reveal"><span>Reveal</span><small>Show one danger</small></button>
+                    <button class="PowerButton" type="button" data-story-power="undo"><span>Undo</span><small>Undo last edit</small></button>
+                    <button class="PowerButton" type="button" data-story-power="seal"><span>Seal</span><small>Lock a safe cut</small></button>
+                </div>
+            </section>
+            <section class="BranchPanel Hidden" id="BranchPanel">
+                <div class="InfoLabel">Choose the route</div>
+                <p>Pick a path before checking the story.</p>
+                <div class="BranchChoices" id="BranchChoices"></div>
+            </section>
+            <section class="InfoBox TeamClueCard Hidden" id="TeamClueCard">
+                <span class="InfoLabel">Your private team clue</span>
+                <p id="TeamClueText"></p>
+            </section>
             <div class="InfoBox"><span class="InfoLabel">Objective</span><p id="ObjectiveText"></p></div>
             <div class="InfoBox"><span class="InfoLabel">Threat</span><p id="ThreatText"></p></div>
             <div class="InfoBox"><span class="InfoLabel">Must survive</span><p id="SurvivalText"></p></div>

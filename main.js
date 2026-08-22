@@ -63,6 +63,7 @@ function RenderMainPlayerState() {
     document.getElementById("LevelCount").textContent = Object.keys(MainData.stages).length;
     document.getElementById("StarCount").textContent = TotalStars(MainSave);
     document.getElementById("LivesCount").textContent = `${MainSave.lives}/${MainSave.maxLives}`;
+    ApplyStoryCosmetic(MainSave);
     WriteMainPlayerSnapshot(MainProfileResult, MainData, MainSave);
 }
 

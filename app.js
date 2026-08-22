@@ -76,6 +76,10 @@ function DefaultSave(Data) {
         lives: 3,
         maxLives: 3,
         deaths: 0,
+        cosmetics: {
+            unlocked: [],
+            equipped: "classic"
+        },
         settings: {
             musicVolume: 0.45,
             soundVolume: 0.75
@@ -94,6 +98,9 @@ function NormalizeSave(Data, Save) {
     if (!Number.isInteger(Result.lives)) Result.lives = Base.lives;
     if (!Number.isInteger(Result.maxLives)) Result.maxLives = Base.maxLives;
     if (!Number.isInteger(Result.deaths)) Result.deaths = 0;
+    if (!Result.cosmetics || typeof Result.cosmetics !== "object") Result.cosmetics = { ...Base.cosmetics };
+    if (!Array.isArray(Result.cosmetics.unlocked)) Result.cosmetics.unlocked = [];
+    if (typeof Result.cosmetics.equipped !== "string") Result.cosmetics.equipped = "classic";
     if (!Result.settings || typeof Result.settings !== "object") Result.settings = { ...Base.settings };
 
     if (!Result.unlockedWorlds.includes(Data.worlds[0].id)) Result.unlockedWorlds.push(Data.worlds[0].id);
@@ -213,6 +220,14 @@ function Delay(Milliseconds) {
 
 async function ResetSave() {
     return ResetServerSave();
+}
+
+function ApplyStoryCosmetic(Save) {
+    const Equipped = String(Save?.cosmetics?.equipped || "classic");
+    const Allowed = new Set(["classic", ...(Array.isArray(Save?.cosmetics?.unlocked) ? Save.cosmetics.unlocked : [])]);
+    const CosmeticId = Allowed.has(Equipped) ? Equipped : "classic";
+    document.documentElement.dataset.storyCosmetic = CosmeticId;
+    if (document.body) document.body.dataset.storyCosmetic = CosmeticId;
 }
 
 function EscapeText(Value) {
