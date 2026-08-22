@@ -35,16 +35,18 @@ body.MultiplayerPage > * {
 .StatusText {
     opacity: 1;
     transform: translateY(0);
-    transition: opacity .28s ease, transform .28s ease;
+    visibility: visible;
+    transition: opacity .65s ease, transform .65s ease, visibility 0s linear .65s;
 }
 
 .StatusText.IsFading {
     opacity: 0;
-    transform: translateY(-5px);
+    transform: translateY(-8px);
+    visibility: hidden;
 }
 
 @media (prefers-reduced-motion: reduce) {
     .StatusText {
-        transition: none;
+        transition: opacity .2s linear, visibility 0s linear .2s;
     }
 }
