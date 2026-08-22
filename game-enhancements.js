@@ -605,7 +605,16 @@ function RefreshStoryDangerUiV12() {
     const Fill = document.getElementById("DangerTimerFill");
     const End = GetStoryDangerEndV12();
     const Total = GetStoryDangerSecondsV12();
-    const Remaining = End > 0 ? Math.max(0, End - Date.now()) : Total * 1000;
+
+    if (!End) {
+        if (Value) Value.textContent = "--:--";
+        if (Fill) Fill.style.width = "0%";
+        document.getElementById("Book")?.classList.remove("StoryDangerActive", "StoryDangerCritical");
+        document.getElementById("Illustration")?.classList.remove("StoryDangerActive", "StoryDangerCritical");
+        return;
+    }
+
+    const Remaining = Math.max(0, End - Date.now());
     const Seconds = Math.ceil(Remaining / 1000);
     const Critical = Remaining > 0 && Remaining <= Math.min(15000, Total * 250);
 
