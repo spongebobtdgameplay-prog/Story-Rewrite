@@ -24,12 +24,15 @@ body,
 html,
 body {
     overflow: hidden;
+    overscroll-behavior: none;
     background: #0b0d10;
 }
 
 #StoryShellRoot {
     position: fixed;
     inset: 0;
+    overflow: hidden;
+    overscroll-behavior: none;
 }
 
 .StoryShellFrame {
@@ -63,7 +66,7 @@ if (!Token) window.location.replace("auth.html");
 <div id="StoryShellRoot">
     <iframe id="StoryShellFrame" class="StoryShellFrame" title="Story Rewrite"></iframe>
 </div>
-<script src="cache-guard.js?v=20260822-64"></script>
+<script src="cache-guard.js?v=20260822-70"></script>
 <script>
 const AssetFreshToken = Date.now().toString(36);
 document.write(`<script src="shell.js?fresh=${AssetFreshToken}"><\/script>`);
