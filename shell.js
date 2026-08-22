@@ -1,8 +1,6 @@
 (() => {
     const Root = document.getElementById("StoryShellRoot");
     const InitialFrame = document.getElementById("StoryShellFrame");
-    const AudioGate = document.getElementById("StoryAudioGate");
-    const AudioGateStatus = document.getElementById("StoryAudioGateStatus");
     if (!Root || !InitialFrame) return;
 
     const ManagedPages = new Set([
@@ -30,6 +28,7 @@
     let PendingFrame = null;
     let CurrentRoute = "main.html";
     let CurrentMusicName = "";
+    let CurrentAudioSettings = {};
     let CurrentHistoryDepth = 0;
 
     function GetBaseUrl() {
@@ -126,55 +125,54 @@
         window.history.pushState(State, "", Url);
     }
 
+    function GetAudioHost() {
+        try {
+            return InitialFrame.contentWindow?.StoryAudioBridge || null;
+        } catch {
+            return null;
+        }
+    }
+
     function GetAudioState() {
-        if (typeof StoryAudio === "undefined" || typeof StoryAudio.GetPlaybackState !== "function") {
+        const Host = GetAudioHost();
+        if (!Host || typeof Host.GetPlaybackState !== "function") {
             return {
                 contextState: "closed",
                 musicPlaying: false,
-                musicVolume: 0,
-                soundVolume: 0
+                musicVolume: Number(CurrentAudioSettings.musicVolume || 0),
+                soundVolume: Number(CurrentAudioSettings.soundVolume || 0)
             };
         }
 
-        return StoryAudio.GetPlaybackState();
+        return Host.GetPlaybackState();
     }
 
-    function RefreshAudioGate() {
-        if (!AudioGate) return;
+    function FlushAudioHost() {
+        const Host = GetAudioHost();
+        if (!Host) return false;
 
-        const State = GetAudioState();
-        const MusicBlocked = State.musicVolume > 0 && CurrentMusicName && !State.musicPlaying;
-        const SoundBlocked = State.soundVolume > 0 && State.contextState !== "running";
-        const NeedsUnlock = Boolean(MusicBlocked || SoundBlocked);
-
-        AudioGate.hidden = !NeedsUnlock;
-        AudioGate.disabled = false;
-
-        if (AudioGateStatus) {
-            AudioGateStatus.textContent = State.lastError
-                ? "Firefox blocked audio. Click here to allow it."
-                : "One click enables music and sound effects.";
+        if (typeof Host.Configure === "function") Host.Configure(CurrentAudioSettings);
+        if (CurrentMusicName && typeof Host.PlayMusic === "function") {
+            Host.PlayMusic(CurrentMusicName);
         }
-    }
 
-    function ScheduleAudioGateRefresh(Delay = 350) {
-        window.clearTimeout(ScheduleAudioGateRefresh.Timer);
-        ScheduleAudioGateRefresh.Timer = window.setTimeout(RefreshAudioGate, Delay);
+        return true;
     }
 
     function ConfigureAudio(Settings = {}) {
-        if (typeof StoryAudio !== "undefined") StoryAudio.Configure(Settings);
-        ScheduleAudioGateRefresh();
+        CurrentAudioSettings = { ...CurrentAudioSettings, ...Settings };
+        const Host = GetAudioHost();
+        if (Host && typeof Host.Configure === "function") Host.Configure(CurrentAudioSettings);
     }
 
     function PlaySound(Name) {
-        if (typeof StoryAudio !== "undefined") StoryAudio.PlaySound(Name);
-        ScheduleAudioGateRefresh();
+        const Host = GetAudioHost();
+        if (Host && typeof Host.PlaySound === "function") Host.PlaySound(Name);
     }
 
     function PlayMusic(Name) {
         const NextMusicName = String(Name || "");
-        if (!NextMusicName || NextMusicName === CurrentMusicName) return;
+        if (!NextMusicName) return;
 
         const ActiveRoute = CurrentRoute || RouteFromLocation();
         const RouteMusicName = MusicForRoute(ActiveRoute);
@@ -184,41 +182,34 @@
         if (NextMusicName !== RouteMusicName && !IsAllowedDialogOverride) return;
 
         CurrentMusicName = NextMusicName;
-        if (typeof StoryAudio !== "undefined") StoryAudio.PlayMusic(CurrentMusicName);
-        ScheduleAudioGateRefresh();
+        const Host = GetAudioHost();
+        if (Host && typeof Host.PlayMusic === "function") Host.PlayMusic(CurrentMusicName);
     }
 
     function ApplyRouteMusic(Route) {
+        if (PageForRoute(Route) === "account.html" && CurrentMusicName) return;
+
         const DesiredMusic = MusicForRoute(Route);
-        if (!DesiredMusic || DesiredMusic === CurrentMusicName) return;
+        if (!DesiredMusic) return;
         PlayMusic(DesiredMusic);
     }
 
     function StopMusic() {
         CurrentMusicName = "";
-        if (typeof StoryAudio !== "undefined") StoryAudio.StopMusic();
-        ScheduleAudioGateRefresh();
+        const Host = GetAudioHost();
+        if (Host && typeof Host.StopMusic === "function") Host.StopMusic();
     }
 
     function NotifyInteraction() {
-        if (typeof StoryAudio === "undefined") return Promise.resolve(null);
+        const Host = GetAudioHost();
+        if (!Host) return Promise.resolve(null);
 
-        let Result = null;
-
-        if (typeof StoryAudio.UnlockAudio === "function") {
-            Result = StoryAudio.UnlockAudio();
-        } else if (CurrentMusicName) {
-            Result = StoryAudio.PlayMusic(CurrentMusicName);
+        if (typeof Host.UnlockAudio === "function") return Host.UnlockAudio();
+        if (CurrentMusicName && typeof Host.PlayMusic === "function") {
+            return Host.PlayMusic(CurrentMusicName);
         }
 
-        Promise.resolve(Result).finally(() => ScheduleAudioGateRefresh(60));
-        return Result;
-    }
-
-    function IsClickableButton(Target) {
-        const Button = Target?.closest?.("button,[role='button']");
-        if (!Button || Button.disabled || Button.getAttribute("aria-disabled") === "true") return null;
-        return Button;
+        return Promise.resolve(null);
     }
 
     function WireFrameInteractionBridge(Frame) {
@@ -232,24 +223,11 @@
         if (!ChildDocument || ChildDocument.documentElement?.dataset.storyShellBridge === "1") return;
         if (ChildDocument.documentElement) ChildDocument.documentElement.dataset.storyShellBridge = "1";
 
-        ChildDocument.addEventListener("pointerdown", Event => {
-            NotifyInteraction();
-            if (IsClickableButton(Event.target)) PlaySound("click");
-        }, { capture: true, passive: true });
-
-        ChildDocument.addEventListener("touchstart", Event => {
-            NotifyInteraction();
-            if (IsClickableButton(Event.target)) PlaySound("click");
-        }, { capture: true, passive: true });
-
-        ChildDocument.addEventListener("keydown", Event => {
-            NotifyInteraction();
-            if ((Event.key === "Enter" || Event.key === " ") && IsClickableButton(Event.target)) {
-                PlaySound("click");
-            }
-        }, { capture: true });
-
-        ChildDocument.addEventListener("click", NotifyInteraction, { capture: true });
+        const ResumePersistentMusic = () => NotifyInteraction();
+        ChildDocument.addEventListener("pointerdown", ResumePersistentMusic, { capture: true, passive: true });
+        ChildDocument.addEventListener("touchstart", ResumePersistentMusic, { capture: true, passive: true });
+        ChildDocument.addEventListener("keydown", ResumePersistentMusic, { capture: true });
+        ChildDocument.addEventListener("click", ResumePersistentMusic, { capture: true });
     }
 
     function RouteFromFrame(Frame) {
@@ -330,6 +308,7 @@
 
         Frame.dataset.storyLoaded = "1";
         WireFrameInteractionBridge(Frame);
+        if (Frame === InitialFrame) FlushAudioHost();
 
         if (ActualRoute !== PreviousRoute) {
             if (PreviousRoute && PersistentFrames.get(PreviousRoute) === Frame) {
@@ -468,23 +447,6 @@
         LoadRoute(Route, { skipHistory: true });
     });
 
-    if (AudioGate) {
-        AudioGate.addEventListener("click", () => {
-            AudioGate.disabled = true;
-            if (AudioGateStatus) AudioGateStatus.textContent = "Enabling audio...";
-
-            Promise.resolve(NotifyInteraction())
-                .then(() => {
-                    if (typeof StoryAudio !== "undefined" && CurrentMusicName) {
-                        StoryAudio.PlayMusic(CurrentMusicName);
-                    }
-                })
-                .finally(() => ScheduleAudioGateRefresh(80));
-        });
-    }
-
-    window.addEventListener("StoryAudioStateChange", () => ScheduleAudioGateRefresh(80));
-
     window.StoryShell = Object.freeze({
         IsPersistentShell: true,
         Navigate,
@@ -522,7 +484,6 @@
     CurrentHistoryDepth = 0;
     SetTopHistory(InitialRoute, true);
     ApplyRouteMusic(InitialRoute);
-    ScheduleAudioGateRefresh(500);
 
     if (InitialRoute === "main.html") {
         if (InitialFrame.dataset.storyLoaded === "1") ActivateFrame(InitialFrame, InitialRoute);
