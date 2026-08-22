@@ -1,6 +1,8 @@
 html,
 body {
     min-height: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
     background: #4d301f;
     overscroll-behavior-y: none;
 }
@@ -16,7 +18,9 @@ body {
 }
 
 #App {
+    width: 100%;
     min-height: 100vh;
+    overflow-x: clip;
 }
 
 .HomeActions {
