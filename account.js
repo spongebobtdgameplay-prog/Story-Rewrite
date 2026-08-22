@@ -87,9 +87,21 @@ function GetCosmeticCatalog() {
         id: "classic",
         name: "Classic Cover",
         description: "The original Story Rewrite book cover.",
-        emblem: "◌",
         worldName: "Always available"
     }, ...WorldCosmetics];
+}
+
+function GetCosmeticVector(CosmeticId) {
+    const Vectors = {
+        classic: `<svg viewBox="0 0 24 24" role="presentation"><path d="M5 4.5h10.5A3.5 3.5 0 0 1 19 8v11.5H8.5A3.5 3.5 0 0 0 5 23Z"></path><path d="M8.5 4.5v15A3.5 3.5 0 0 0 5 23"></path><path d="M11 8h5M11 11h5"></path></svg>`,
+        "fromville-bookmark": `<svg viewBox="0 0 24 24" role="presentation"><path d="M12 2.5v4"></path><path d="M8 6.5h8l2.5 5.5L12 21l-6.5-9Z"></path><path d="m9 12 3 3 3-3M12 15v3"></path></svg>`,
+        "neon-bookmark": `<svg viewBox="0 0 24 24" role="presentation"><path d="M7 3h10v18l-5-3-5 3Z"></path><path d="m13 6-3 6h4l-3 6"></path></svg>`,
+        "blackthorn-bookmark": `<svg viewBox="0 0 24 24" role="presentation"><path d="M19 4.5C12.5 3.5 7 7.5 6 14.5c-.4 2.7.7 4.8 2 6.5 1.5-4.8 4.4-8.9 9.5-12.5"></path><path d="M8 17c2.8-.2 5.1-1.5 7-3.8M11 12.5l-2.5-1M14.5 9.5 13 7.5"></path></svg>`,
+        "spirit-bookmark": `<svg viewBox="0 0 24 24" role="presentation"><path d="M12.5 2.5c1.2 4-2.3 5.3-.8 8.2 1-1.5 2.3-2.1 3.7-3.2 2.8 3 3.7 6.2 2.1 9.2-1.3 2.5-3.5 4-6.2 4-3.7 0-6.5-2.8-6.5-6.4 0-3.2 2-5.4 4.8-7.4-.2 2.3.3 3.8 1.3 4.7"></path><path d="M12 19c-1.8-.8-2.6-2.2-2.1-3.8.4-1.2 1.3-2.1 2.6-3 .2 1.5 1.8 2.2 1.8 3.8 0 1.2-.8 2.4-2.3 3Z"></path></svg>`,
+        "city-bookmark": `<svg viewBox="0 0 24 24" role="presentation"><rect x="3.5" y="5" width="17" height="14" rx="2"></rect><path d="M7 9h4M7 12h7M7 15h5M17 9v6"></path></svg>`
+    };
+
+    return Vectors[CosmeticId] || Vectors.classic;
 }
 
 function RenderCosmetics() {
@@ -103,7 +115,7 @@ function RenderCosmetics() {
         const Available = Cosmetic.id === "classic" || Unlocked.has(Cosmetic.id);
         const Selected = Available && Cosmetic.id === Equipped;
         return `<button class="CosmeticCard ${Selected ? "Selected" : ""} ${Available ? "" : "Locked"}" type="button" data-cosmetic-id="${EscapeText(Cosmetic.id)}" ${Available ? "" : "disabled"}>
-            <span class="CosmeticEmblem" aria-hidden="true">${EscapeText(Cosmetic.emblem || "◇")}</span>
+            <span class="CosmeticEmblem" aria-hidden="true">${GetCosmeticVector(Cosmetic.id)}</span>
             <span class="CosmeticCopy"><strong>${EscapeText(Cosmetic.name)}</strong><small>${Available ? EscapeText(Cosmetic.description) : "Earn 3 stars on " + EscapeText(Cosmetic.worldName) + "."}</small></span>
             <span class="CosmeticState">${Selected ? "Equipped" : Available ? "Equip" : "Locked"}</span>
         </button>`;
