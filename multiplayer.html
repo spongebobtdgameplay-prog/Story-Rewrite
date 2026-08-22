@@ -18,6 +18,69 @@
 <link rel="stylesheet" href="chat-ai.css">
 <link rel="stylesheet" href="game-enhancements.css">
 <link rel="stylesheet" href="scene-fix.css" data-story-scene-fix="1">
+<style>
+.MultiplayerSessionConflict {
+    position: fixed;
+    inset: 0;
+    z-index: 5000;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    background: rgba(16, 9, 6, .88);
+    backdrop-filter: blur(10px);
+}
+.MultiplayerSessionConflict.Hidden {
+    display: none;
+}
+.MultiplayerSessionConflictCard {
+    width: min(520px, 100%);
+    padding: 30px;
+    border: 1px solid #91613d;
+    border-radius: 20px;
+    background: linear-gradient(180deg, #3d2518, #20120c);
+    box-shadow: 0 28px 90px rgba(0, 0, 0, .58), inset 0 1px rgba(255, 235, 196, .08);
+    text-align: center;
+}
+.MultiplayerSessionConflictIcon {
+    width: 58px;
+    height: 58px;
+    margin: 0 auto 16px;
+    display: grid;
+    place-items: center;
+    border: 1px solid #a46b42;
+    border-radius: 18px;
+    color: #ffd394;
+    background: #2a170e;
+    font: 900 26px/1 system-ui, sans-serif;
+}
+.MultiplayerSessionConflictCard h2 {
+    margin: 0;
+    color: #ffebc8;
+    font-size: 30px;
+}
+.MultiplayerSessionConflictCard p {
+    margin: 12px auto 0;
+    max-width: 430px;
+    color: #cbb18d;
+    line-height: 1.55;
+}
+.MultiplayerSessionConflictActions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 9px;
+    margin-top: 22px;
+}
+.MultiplayerHeroNavigation {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+@media (max-width: 560px) {
+    .MultiplayerSessionConflictActions {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
 <script>
 const MultiplayerFreshToken = Date.now().toString(36);
 </script>
@@ -30,7 +93,8 @@ const MultiplayerFreshToken = Date.now().toString(36);
             <h1>Multiplayer</h1>
             <p>Create a code, invite up to four other players, chat, vote on numbered story options, and share three team lives.</p>
         </div>
-        <div class="RoomFooterActions">
+        <div class="RoomFooterActions MultiplayerHeroNavigation">
+            <button class="IconBackButton" type="button" data-story-back="main.html" aria-label="Back to main"></button>
             <button class="IconNavButton" type="button" data-story-go="account.html" data-account-icon aria-label="Account"></button>
         </div>
     </header>
@@ -87,6 +151,21 @@ const MultiplayerFreshToken = Date.now().toString(36);
         </div>
     </section>
 </div>
+
+<div class="MultiplayerSessionConflict Hidden" id="MultiplayerSessionConflict" role="alertdialog" aria-modal="true" aria-labelledby="MultiplayerSessionConflictTitle">
+    <section class="MultiplayerSessionConflictCard">
+        <div class="MultiplayerSessionConflictIcon" aria-hidden="true">!</div>
+        <div class="Kicker">Multiplayer session blocked</div>
+        <h2 id="MultiplayerSessionConflictTitle">Other Session found</h2>
+        <p id="MultiplayerSessionConflictDetail">Another multiplayer session is already active for this account or device.</p>
+        <p>Close the other multiplayer tab or browser first. This tab will not join the room while another session is active.</p>
+        <div class="MultiplayerSessionConflictActions">
+            <button class="SecondaryButton" id="MultiplayerSessionReturnButton" type="button">Return to Main</button>
+            <button class="PrimaryButton" id="MultiplayerSessionRetryButton" type="button">Try Again</button>
+        </div>
+    </section>
+</div>
+
 <script>
 for (const ScriptName of [
     "server-config.js",
@@ -96,6 +175,7 @@ for (const ScriptName of [
     "real-audio.js",
     "shell-ui.js",
     "multiplayer.js",
+    "multiplayer-session-ui.js",
     "multiplayer-connection.js",
     "moderation-version.js",
     "host-controls.js",
