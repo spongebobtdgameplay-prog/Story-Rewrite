@@ -1,6 +1,8 @@
 (() => {
     const Root = document.getElementById("StoryShellRoot");
     const InitialFrame = document.getElementById("StoryShellFrame");
+    const AudioGate = document.getElementById("StoryAudioGate");
+    const AudioGateStatus = document.getElementById("StoryAudioGateStatus");
     if (!Root || !InitialFrame) return;
 
     const ManagedPages = new Set([
@@ -124,12 +126,50 @@
         window.history.pushState(State, "", Url);
     }
 
+    function GetAudioState() {
+        if (typeof StoryAudio === "undefined" || typeof StoryAudio.GetPlaybackState !== "function") {
+            return {
+                contextState: "closed",
+                musicPlaying: false,
+                musicVolume: 0,
+                soundVolume: 0
+            };
+        }
+
+        return StoryAudio.GetPlaybackState();
+    }
+
+    function RefreshAudioGate() {
+        if (!AudioGate) return;
+
+        const State = GetAudioState();
+        const MusicBlocked = State.musicVolume > 0 && CurrentMusicName && !State.musicPlaying;
+        const SoundBlocked = State.soundVolume > 0 && State.contextState !== "running";
+        const NeedsUnlock = Boolean(MusicBlocked || SoundBlocked);
+
+        AudioGate.hidden = !NeedsUnlock;
+        AudioGate.disabled = false;
+
+        if (AudioGateStatus) {
+            AudioGateStatus.textContent = State.lastError
+                ? "Firefox blocked audio. Click here to allow it."
+                : "One click enables music and sound effects.";
+        }
+    }
+
+    function ScheduleAudioGateRefresh(Delay = 350) {
+        window.clearTimeout(ScheduleAudioGateRefresh.Timer);
+        ScheduleAudioGateRefresh.Timer = window.setTimeout(RefreshAudioGate, Delay);
+    }
+
     function ConfigureAudio(Settings = {}) {
         if (typeof StoryAudio !== "undefined") StoryAudio.Configure(Settings);
+        ScheduleAudioGateRefresh();
     }
 
     function PlaySound(Name) {
         if (typeof StoryAudio !== "undefined") StoryAudio.PlaySound(Name);
+        ScheduleAudioGateRefresh();
     }
 
     function PlayMusic(Name) {
@@ -145,6 +185,7 @@
 
         CurrentMusicName = NextMusicName;
         if (typeof StoryAudio !== "undefined") StoryAudio.PlayMusic(CurrentMusicName);
+        ScheduleAudioGateRefresh();
     }
 
     function ApplyRouteMusic(Route) {
@@ -156,17 +197,22 @@
     function StopMusic() {
         CurrentMusicName = "";
         if (typeof StoryAudio !== "undefined") StoryAudio.StopMusic();
+        ScheduleAudioGateRefresh();
     }
 
     function NotifyInteraction() {
-        if (typeof StoryAudio === "undefined") return;
+        if (typeof StoryAudio === "undefined") return Promise.resolve(null);
+
+        let Result = null;
 
         if (typeof StoryAudio.UnlockAudio === "function") {
-            StoryAudio.UnlockAudio();
-            return;
+            Result = StoryAudio.UnlockAudio();
+        } else if (CurrentMusicName) {
+            Result = StoryAudio.PlayMusic(CurrentMusicName);
         }
 
-        if (CurrentMusicName) StoryAudio.PlayMusic(CurrentMusicName);
+        Promise.resolve(Result).finally(() => ScheduleAudioGateRefresh(60));
+        return Result;
     }
 
     function IsClickableButton(Target) {
@@ -422,6 +468,23 @@
         LoadRoute(Route, { skipHistory: true });
     });
 
+    if (AudioGate) {
+        AudioGate.addEventListener("click", () => {
+            AudioGate.disabled = true;
+            if (AudioGateStatus) AudioGateStatus.textContent = "Enabling audio...";
+
+            Promise.resolve(NotifyInteraction())
+                .then(() => {
+                    if (typeof StoryAudio !== "undefined" && CurrentMusicName) {
+                        StoryAudio.PlayMusic(CurrentMusicName);
+                    }
+                })
+                .finally(() => ScheduleAudioGateRefresh(80));
+        });
+    }
+
+    window.addEventListener("StoryAudioStateChange", () => ScheduleAudioGateRefresh(80));
+
     window.StoryShell = Object.freeze({
         IsPersistentShell: true,
         Navigate,
@@ -433,26 +496,33 @@
         PlayMusic,
         StopMusic,
         NotifyInteraction,
+        GetAudioState,
         GetCurrentRoute: () => CurrentRoute,
         GetCurrentMusic: () => CurrentMusicName
     });
 
+    const InitialFrameHadSource = Boolean(InitialFrame.getAttribute("src"));
     PrepareFrame(InitialFrame, "main.html", true);
     PersistentFrames.set("main.html", InitialFrame);
     ActiveFrame = InitialFrame;
 
-    try {
-        const ReadyState = InitialFrame.contentDocument?.readyState;
-        if (ReadyState === "interactive" || ReadyState === "complete") {
-            setTimeout(() => HandleFrameLoad(InitialFrame), 0);
-        }
-    } catch {}
+    if (InitialFrameHadSource) {
+        try {
+            const ReadyState = InitialFrame.contentDocument?.readyState;
+            if (ReadyState === "interactive" || ReadyState === "complete") {
+                setTimeout(() => HandleFrameLoad(InitialFrame), 0);
+            }
+        } catch {}
+    } else {
+        InitialFrame.src = RouteUrl("main.html");
+    }
 
     const InitialRoute = RouteFromLocation();
     CurrentRoute = InitialRoute;
     CurrentHistoryDepth = 0;
     SetTopHistory(InitialRoute, true);
     ApplyRouteMusic(InitialRoute);
+    ScheduleAudioGateRefresh(500);
 
     if (InitialRoute === "main.html") {
         if (InitialFrame.dataset.storyLoaded === "1") ActivateFrame(InitialFrame, InitialRoute);
