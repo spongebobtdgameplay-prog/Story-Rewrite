@@ -1606,3 +1606,63 @@ body.paper-body {
         width: 100%;
     }
 }
+
+
+.CosmeticGrid {
+    display: grid;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.CosmeticCard {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 38px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 11px;
+    padding: 11px;
+    border: 1px solid rgba(116, 79, 52, .22);
+    border-radius: 13px;
+    background: rgba(255, 250, 238, .72);
+    color: #4b3324;
+    text-align: left;
+    cursor: pointer;
+}
+
+.CosmeticCard:hover:not(:disabled),
+.CosmeticCard.Selected {
+    border-color: var(--StoryCosmeticAccent, #a46a39);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--StoryCosmeticAccent, #a46a39) 20%, transparent);
+}
+
+.CosmeticCard.Locked {
+    opacity: .58;
+    cursor: default;
+}
+
+.CosmeticEmblem {
+    width: 36px;
+    height: 36px;
+    display: grid;
+    place-items: center;
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--StoryCosmeticAccent, #a46a39) 15%, #fff7e9);
+    color: var(--StoryCosmeticAccent, #a46a39);
+    font: 900 20px/1 Georgia, serif;
+}
+
+.CosmeticCopy { display: grid; gap: 3px; min-width: 0; }
+.CosmeticCopy strong { font: 800 13px/1.15 system-ui, sans-serif; }
+.CosmeticCopy small { color: #826b58; font: 600 11px/1.25 system-ui, sans-serif; }
+.CosmeticState { color: var(--StoryCosmeticAccent, #a46a39); font: 900 10px/1 system-ui, sans-serif; text-transform: uppercase; letter-spacing: .07em; }
+
+html[data-story-cosmetic="fromville-bookmark"] { --StoryCosmeticAccent: #9c3331; }
+html[data-story-cosmetic="neon-bookmark"] { --StoryCosmeticAccent: #ab3fb4; }
+html[data-story-cosmetic="blackthorn-bookmark"] { --StoryCosmeticAccent: #43415d; }
+html[data-story-cosmetic="spirit-bookmark"] { --StoryCosmeticAccent: #368661; }
+html[data-story-cosmetic="city-bookmark"] { --StoryCosmeticAccent: #277b9e; }
+
+html[data-story-cosmetic]:not([data-story-cosmetic="classic"]) .TopBar,
+html[data-story-cosmetic]:not([data-story-cosmetic="classic"]) .AccountSettingsHeader {
+    border-color: color-mix(in srgb, var(--StoryCosmeticAccent) 45%, transparent);
+}
