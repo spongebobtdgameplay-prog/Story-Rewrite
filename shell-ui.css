@@ -483,3 +483,136 @@ body.StoryWarningOpen {
         grid-template-columns: 1fr 1fr;
     }
 }
+
+
+.AccountSettingRow {
+    grid-template-columns: minmax(92px, auto) minmax(0, 1fr);
+}
+
+.AccountVolumeControl {
+    width: min(360px, 48vw);
+    display: grid;
+    grid-template-columns: minmax(180px, 1fr) 72px;
+    align-items: center;
+    gap: 14px;
+}
+
+.AccountSettingRow input.AccountVolumeSlider[type='range'] {
+    --VolumePercent: 50%;
+    width: 100%;
+    height: 12px;
+    margin: 0;
+    padding: 0;
+    appearance: none;
+    -webkit-appearance: none;
+    border: 1px solid #765035;
+    border-radius: 999px;
+    outline: none;
+    cursor: pointer;
+    background: linear-gradient(90deg, #dfa24e 0 var(--VolumePercent), #6f513b var(--VolumePercent) 100%);
+    box-shadow: inset 0 2px 4px rgba(35, 16, 8, .34), 0 1px rgba(255, 236, 199, .18);
+}
+
+.AccountVolumeSlider:hover {
+    background: linear-gradient(90deg, #edb45f 0 var(--VolumePercent), #806048 var(--VolumePercent) 100%);
+    filter: none;
+}
+
+.AccountVolumeSlider:focus-visible {
+    outline: 3px solid #f2c77f;
+    outline-offset: 4px;
+}
+
+.AccountVolumeSlider::-webkit-slider-runnable-track {
+    height: 10px;
+    border-radius: 999px;
+    background: transparent;
+}
+
+.AccountVolumeSlider::-webkit-slider-thumb {
+    width: 24px;
+    height: 24px;
+    margin-top: -7px;
+    appearance: none;
+    -webkit-appearance: none;
+    border: 3px solid #fff0d3;
+    border-radius: 50%;
+    background: #8c552f;
+    box-shadow: 0 3px 9px rgba(25, 11, 5, .38);
+    transition: transform .12s ease, background .12s ease;
+}
+
+.AccountVolumeSlider:hover::-webkit-slider-thumb {
+    transform: scale(1.06);
+    background: #a96b39;
+}
+
+.AccountVolumeSlider::-moz-range-track {
+    height: 10px;
+    border: 1px solid #765035;
+    border-radius: 999px;
+    background: #6f513b;
+    box-shadow: inset 0 2px 4px rgba(35, 16, 8, .34);
+}
+
+.AccountVolumeSlider::-moz-range-progress {
+    height: 10px;
+    border-radius: 999px;
+    background: #dfa24e;
+}
+
+.AccountVolumeSlider:hover::-moz-range-track {
+    background: #806048;
+}
+
+.AccountVolumeSlider:hover::-moz-range-progress {
+    background: #edb45f;
+}
+
+.AccountVolumeSlider::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border: 3px solid #fff0d3;
+    border-radius: 50%;
+    background: #8c552f;
+    box-shadow: 0 3px 9px rgba(25, 11, 5, .38);
+    transition: transform .12s ease, background .12s ease;
+}
+
+.AccountVolumeSlider:hover::-moz-range-thumb {
+    transform: scale(1.06);
+    background: #a96b39;
+}
+
+.AccountVolumeValue {
+    min-width: 72px;
+    padding: 8px 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    justify-self: end;
+    color: #2d170d;
+    border: 1px solid #b37a3e;
+    border-radius: 10px;
+    background: linear-gradient(180deg, #ffe8bd, #e7bd7c);
+    box-shadow: inset 0 1px rgba(255, 255, 255, .58), 0 3px 8px rgba(24, 10, 4, .22);
+    font: 900 16px/1 Georgia, "Times New Roman", serif;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+}
+
+@media (max-width: 760px) {
+    .AccountSettingRow {
+        grid-template-columns: 1fr;
+        align-items: stretch;
+    }
+
+    .AccountVolumeControl {
+        width: 100%;
+        grid-template-columns: minmax(0, 1fr) 68px;
+    }
+
+    .AccountVolumeValue {
+        min-width: 68px;
+    }
+}
