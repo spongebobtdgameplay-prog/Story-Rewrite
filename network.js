@@ -6,6 +6,10 @@ const STORY_AUTH_VALIDATION_WINDOW = 1000 * 60 * 10;
 const STORY_LAST_PROFILE_KEY = "StoryRewriteLastProfileV1";
 const STORY_LAST_SAVE_KEY = "StoryRewriteLastSaveV1";
 const STORY_SAVE_GENERATION_KEY = "StoryRewriteSaveGenerationV1";
+const STORY_SAVED_ACCOUNTS_KEY = "StoryRewriteSavedAccountsV1";
+const STORY_SESSION_EVENT_KEY = "StoryRewriteSessionEventV1";
+const STORY_TAB_ID_KEY = "StoryRewriteTabIdV1";
+const STORY_SESSION_CHANNEL_NAME = "StoryRewriteSessionChannelV1";
 const STORY_CLIENT_SNAPSHOT_KEYS = [
     STORY_LAST_PROFILE_KEY,
     STORY_LAST_SAVE_KEY,
@@ -24,6 +28,9 @@ const STORY_PROTECTED_PAGES = new Set([
 
 let AccountProfileRequestPromise = null;
 let ServerSaveRequestPromise = null;
+let StorySessionChannel = null;
+let StoryTabAuthToken = "";
+let StorySessionRedirecting = false;
 
 function ReadStoryLocalJson(Key) {
     try {
@@ -100,6 +107,159 @@ function SetServerOverride(Value) {
     else sessionStorage.removeItem(STORY_SERVER_OVERRIDE_KEY);
 }
 
+function GetStoryTabId() {
+    let TabId = sessionStorage.getItem(STORY_TAB_ID_KEY) || "";
+    if (!TabId) {
+        TabId = typeof crypto?.randomUUID === "function"
+            ? crypto.randomUUID()
+            : `${Date.now()}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;
+        sessionStorage.setItem(STORY_TAB_ID_KEY, TabId);
+    }
+    return TabId;
+}
+
+function HashStorySessionValue(Value) {
+    let Hash = 2166136261;
+    const Text = String(Value || "");
+    for (let Index = 0; Index < Text.length; Index += 1) {
+        Hash ^= Text.charCodeAt(Index);
+        Hash = Math.imul(Hash, 16777619);
+    }
+    return (Hash >>> 0).toString(36);
+}
+
+function GetStoryDeviceSignature() {
+    const ScreenWidth = Number(window.screen?.width || 0);
+    const ScreenHeight = Number(window.screen?.height || 0);
+    const ScreenSize = [Math.min(ScreenWidth, ScreenHeight), Math.max(ScreenWidth, ScreenHeight)].join("x");
+    const Parts = [
+        String(navigator.platform || "unknown").toLowerCase(),
+        String(navigator.language || "").toLowerCase(),
+        String(Intl.DateTimeFormat().resolvedOptions().timeZone || ""),
+        ScreenSize,
+        String(window.screen?.colorDepth || 0),
+        String(navigator.hardwareConcurrency || 0),
+        String(navigator.maxTouchPoints || 0)
+    ];
+    return `device-${HashStorySessionValue(Parts.join("|"))}`;
+}
+
+function GetSavedAccountSessions() {
+    const Value = ReadStoryLocalJson(STORY_SAVED_ACCOUNTS_KEY);
+    const Accounts = Array.isArray(Value?.accounts) ? Value.accounts : [];
+    return Accounts
+        .filter(Account => Account && typeof Account.username === "string" && typeof Account.token === "string" && Account.token)
+        .sort((First, Second) => Number(Second.lastUsedAt || 0) - Number(First.lastUsedAt || 0));
+}
+
+function SaveSavedAccountSessions(Accounts) {
+    WriteStoryLocalJson(STORY_SAVED_ACCOUNTS_KEY, {
+        accounts: Accounts.slice(0, 8)
+    });
+}
+
+function RememberAccountSession(Result) {
+    const Username = String(Result?.profile?.username || "").trim();
+    const Token = String(Result?.token || GetAuthToken() || "");
+    if (!Username || !Token) return;
+
+    const Accounts = GetSavedAccountSessions().filter(Account => Account.username.toLowerCase() !== Username.toLowerCase());
+    Accounts.unshift({
+        username: Username,
+        token: Token,
+        lastUsedAt: Date.now()
+    });
+    SaveSavedAccountSessions(Accounts);
+}
+
+function ForgetSavedAccount(Username) {
+    const Key = String(Username || "").trim().toLowerCase();
+    if (!Key) return;
+    SaveSavedAccountSessions(GetSavedAccountSessions().filter(Account => Account.username.toLowerCase() !== Key));
+}
+
+function ShowOtherSessionFound(Username = "") {
+    if (StorySessionRedirecting) return;
+    StorySessionRedirecting = true;
+
+    const Overlay = document.createElement("div");
+    Overlay.setAttribute("role", "status");
+    Overlay.style.position = "fixed";
+    Overlay.style.inset = "0";
+    Overlay.style.zIndex = "2147483647";
+    Overlay.style.display = "grid";
+    Overlay.style.placeItems = "center";
+    Overlay.style.background = "rgba(5, 8, 14, 0.88)";
+    Overlay.style.backdropFilter = "blur(8px)";
+    Overlay.innerHTML = `<div style="max-width:420px;margin:24px;padding:24px 26px;border-radius:18px;background:#111827;color:#fff;font:600 16px/1.45 system-ui,sans-serif;box-shadow:0 24px 80px rgba(0,0,0,.45);text-align:center"><div style="font-size:21px;margin-bottom:7px">Other Session found</div><div style="font-weight:400;opacity:.82">${Username ? `This tab is switching to ${String(Username).replace(/[<>&"']/g, "")}.` : "Your account session changed in another tab."}</div></div>`;
+    document.documentElement.appendChild(Overlay);
+
+    setTimeout(() => {
+        const Token = GetAuthToken();
+        if (!Token) {
+            window.location.replace(BuildStoryUrl("auth.html"));
+            return;
+        }
+
+        const Page = GetCurrentPageName();
+        if (Page === "multiplayer.html" || Page === "dialog.html") {
+            window.location.replace(BuildStoryUrl("main.html"));
+            return;
+        }
+
+        if (Page === "auth.html" || Page === "index.html") {
+            window.location.replace(BuildStoryUrl("index.html"));
+            return;
+        }
+
+        window.location.reload();
+    }, 850);
+}
+
+function BroadcastStorySession(Username = "") {
+    const Message = {
+        type: "auth-change",
+        sourceTabId: GetStoryTabId(),
+        token: GetAuthToken(),
+        username: String(Username || ""),
+        sentAt: Date.now()
+    };
+
+    try { StorySessionChannel?.postMessage(Message); } catch {}
+    try { localStorage.setItem(STORY_SESSION_EVENT_KEY, JSON.stringify(Message)); } catch {}
+}
+
+function HandleStorySessionMessage(Message) {
+    if (!Message || Message.type !== "auth-change") return;
+    if (Message.sourceTabId === GetStoryTabId()) return;
+
+    const IncomingToken = String(Message.token || "");
+    if (IncomingToken === StoryTabAuthToken) return;
+
+    StoryTabAuthToken = IncomingToken;
+    ShowOtherSessionFound(Message.username || "");
+}
+
+function InitializeStorySessionSync() {
+    StoryTabAuthToken = GetAuthToken();
+
+    if (typeof BroadcastChannel === "function") {
+        try {
+            StorySessionChannel = new BroadcastChannel(STORY_SESSION_CHANNEL_NAME);
+            StorySessionChannel.addEventListener("message", Event => HandleStorySessionMessage(Event.data));
+        } catch {
+            StorySessionChannel = null;
+        }
+    }
+
+    window.addEventListener("storage", Event => {
+        if (Event.key !== STORY_SESSION_EVENT_KEY || !Event.newValue) return;
+        try {
+            HandleStorySessionMessage(JSON.parse(Event.newValue));
+        } catch {}
+    });
+}
+
 function GetAuthToken() {
     const Persistent = localStorage.getItem(STORY_AUTH_TOKEN_KEY) || "";
     if (Persistent) return Persistent;
@@ -127,6 +287,7 @@ function SetAuthToken(Token) {
         localStorage.setItem(STORY_AUTH_TOKEN_KEY, Token);
         localStorage.removeItem(STORY_LEGACY_AUTH_TOKEN_KEY);
         sessionStorage.removeItem(STORY_LEGACY_AUTH_TOKEN_KEY);
+        StoryTabAuthToken = String(Token);
         return;
     }
 
@@ -135,6 +296,7 @@ function SetAuthToken(Token) {
     localStorage.removeItem(STORY_LEGACY_AUTH_TOKEN_KEY);
     sessionStorage.removeItem(STORY_LEGACY_AUTH_TOKEN_KEY);
     localStorage.removeItem(STORY_AUTH_VALIDATED_AT_KEY);
+    StoryTabAuthToken = "";
 }
 
 function MarkAuthValidated() {
@@ -146,8 +308,32 @@ function WasAuthRecentlyValidated() {
     return ValidatedAt > 0 && Date.now() - ValidatedAt < STORY_AUTH_VALIDATION_WINDOW;
 }
 
+async function SwitchSavedAccount(Username) {
+    const Key = String(Username || "").trim().toLowerCase();
+    const SavedAccount = GetSavedAccountSessions().find(Account => Account.username.toLowerCase() === Key);
+    if (!SavedAccount) throw new Error("That saved account is no longer available on this browser.");
+
+    SetAuthToken(SavedAccount.token);
+    ClearLastKnownStoryState();
+    AccountProfileRequestPromise = null;
+    ServerSaveRequestPromise = null;
+
+    try {
+        const Result = await ApiRequest("/api/me");
+        StoreLastKnownProfileResult(Result);
+        MarkAuthValidated();
+        RememberAccountSession({ profile: Result.profile, token: SavedAccount.token });
+        BroadcastStorySession(Result?.profile?.username || SavedAccount.username);
+        return Result;
+    } catch (Error) {
+        ForgetSavedAccount(SavedAccount.username);
+        throw Error;
+    }
+}
+
 function LogoutAccount() {
     SetAuthToken("");
+    BroadcastStorySession("");
 
     try {
         if (window.parent !== window && window.parent.StoryShell?.IsPersistentShell) {
@@ -181,6 +367,7 @@ async function GuardProtectedPage() {
     } catch (Error) {
         if (Error?.status === 401) {
             SetAuthToken("");
+            BroadcastStorySession("");
             window.location.replace(BuildStoryUrl("auth.html"));
         }
     }
@@ -230,6 +417,8 @@ async function RegisterAccount(Username, Password) {
     StoreLastKnownProfileResult(Result);
     if (Result?.save) StoreLastKnownServerSave(Result.save);
     MarkAuthValidated();
+    RememberAccountSession(Result);
+    BroadcastStorySession(Result?.profile?.username || Username);
     return Result;
 }
 
@@ -243,6 +432,8 @@ async function LoginAccount(Username, Password) {
     StoreLastKnownProfileResult(Result);
     if (Result?.save) StoreLastKnownServerSave(Result.save);
     MarkAuthValidated();
+    RememberAccountSession(Result);
+    BroadcastStorySession(Result?.profile?.username || Username);
     return Result;
 }
 
@@ -334,7 +525,12 @@ async function ResetServerSave() {
 
 async function DeleteAccount() {
     const Result = await ApiRequest("/api/account", { method: "DELETE" });
-    if (Result?.ok) SetAuthToken("");
+    if (Result?.ok) {
+        const Username = GetLastKnownProfileResult()?.profile?.username || "";
+        ForgetSavedAccount(Username);
+        SetAuthToken("");
+        BroadcastStorySession("");
+    }
     return Result;
 }
 
@@ -366,10 +562,21 @@ function ConnectStorySocket() {
     const ServerUrl = GetServerUrl();
     if (!ServerUrl) throw new Error("Multiplayer server is not configured.");
 
-    return io(ServerUrl, {
-        auth: { token: GetAuthToken() },
+    const Socket = io(ServerUrl, {
+        auth: {
+            token: GetAuthToken(),
+            deviceSignature: GetStoryDeviceSignature(),
+            tabId: GetStoryTabId()
+        },
         transports: ["websocket", "polling"]
     });
+
+    Socket.on("session:conflict", Payload => {
+        ShowOtherSessionFound(Payload?.username || "");
+    });
+
+    return Socket;
 }
 
+InitializeStorySessionSync();
 GuardProtectedPage();
