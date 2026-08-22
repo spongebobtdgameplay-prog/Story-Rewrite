@@ -53,6 +53,7 @@
     let MusicName = "";
     let PendingMusicName = "";
     let AudioUnlocked = false;
+    let MusicWaitingForGesture = false;
     let LastPlaybackError = "";
 
     const MusicFiles = {
@@ -91,6 +92,7 @@
             musicName: MusicName,
             pendingMusicName: PendingMusicName,
             musicPlaying: Boolean(MusicElement.src && !MusicElement.paused && !MusicElement.ended),
+            musicWaitingForGesture: MusicWaitingForGesture,
             musicVolume: MusicVolume,
             soundVolume: GetLocalSoundState().soundVolume,
             lastError: LastPlaybackError
@@ -165,10 +167,22 @@
 
     MusicElement.addEventListener("loadedmetadata", RestoreCurrentTrackPosition);
     MusicElement.addEventListener("play", () => {
+        MusicWaitingForGesture = false;
         LastPlaybackError = "";
         DispatchPlaybackState();
     });
-    MusicElement.addEventListener("pause", DispatchPlaybackState);
+
+    MusicElement.addEventListener("pause", () => {
+        MusicWaitingForGesture = Boolean(PendingMusicName && MusicVolume > 0);
+        DispatchPlaybackState();
+    });
+
+    MusicElement.addEventListener("canplay", () => {
+        if (AudioUnlocked && MusicWaitingForGesture && PendingMusicName) {
+            TryPlayPreparedMusic();
+        }
+    });
+
     MusicElement.addEventListener("timeupdate", () => {
         ApplyMusicFade();
         SavePosition();
@@ -183,11 +197,13 @@
 
         MusicElement.currentTime = 0;
         MusicElement.volume = 0;
-        MusicElement.play().catch(() => {});
+        MusicWaitingForGesture = true;
+        TryPlayPreparedMusic();
     });
 
     MusicElement.addEventListener("error", () => {
         if (!MusicName) return;
+        MusicWaitingForGesture = Boolean(PendingMusicName && MusicVolume > 0);
         LastPlaybackError = `Music failed to load: ${MusicFiles[MusicName] || MusicName}`;
         console.warn(LastPlaybackError);
         DispatchPlaybackState();
@@ -203,6 +219,7 @@
         }
 
         MusicName = "";
+        MusicWaitingForGesture = Boolean(PendingMusicName && MusicVolume > 0);
     }
 
     function PrepareMusic(Name) {
@@ -224,33 +241,69 @@
         return MusicElement;
     }
 
-    function TryPlayPreparedMusic() {
-        if (!AudioUnlocked || !PendingMusicName || MusicVolume <= 0) return Promise.resolve(false);
+    function TryPlayPreparedMusic(FromGesture = false) {
+        if (FromGesture) AudioUnlocked = true;
 
-        const Element = PrepareMusic(PendingMusicName);
-        if (!Element) return Promise.resolve(false);
+        if (!PendingMusicName || MusicVolume <= 0) {
+            MusicWaitingForGesture = false;
+            DispatchPlaybackState();
+            return Promise.resolve(false);
+        }
+
+        if (!AudioUnlocked) {
+            MusicWaitingForGesture = true;
+            DispatchPlaybackState();
+            return Promise.resolve(false);
+        }
+
+        const RequestedMusicName = PendingMusicName;
+        const Element = PrepareMusic(RequestedMusicName);
+
+        if (!Element) {
+            MusicWaitingForGesture = true;
+            DispatchPlaybackState();
+            return Promise.resolve(false);
+        }
+
+        if (!Element.paused && !Element.ended) {
+            MusicWaitingForGesture = false;
+            LastPlaybackError = "";
+            DispatchPlaybackState();
+            return Promise.resolve(true);
+        }
 
         ApplyMusicFade();
+        MusicWaitingForGesture = true;
 
         try {
             const PlayPromise = Element.play();
+
             if (!PlayPromise?.then) {
+                const IsPlaying = !Element.paused;
+                MusicWaitingForGesture = !IsPlaying;
                 DispatchPlaybackState();
-                return Promise.resolve(!Element.paused);
+                return Promise.resolve(IsPlaying);
             }
 
             return PlayPromise
                 .then(() => {
-                    LastPlaybackError = "";
+                    const IsCurrentRequest = PendingMusicName === RequestedMusicName;
+                    const IsPlaying = IsCurrentRequest && !Element.paused;
+                    MusicWaitingForGesture = Boolean(PendingMusicName && !IsPlaying);
+                    if (IsPlaying) LastPlaybackError = "";
                     DispatchPlaybackState();
-                    return true;
+                    return IsPlaying;
                 })
                 .catch(Error => {
-                    LastPlaybackError = String(Error?.message || Error || "Playback blocked");
+                    if (PendingMusicName === RequestedMusicName) {
+                        MusicWaitingForGesture = true;
+                        LastPlaybackError = String(Error?.message || Error || "Playback blocked");
+                    }
                     DispatchPlaybackState();
                     return false;
                 });
         } catch (Error) {
+            MusicWaitingForGesture = true;
             LastPlaybackError = String(Error?.message || Error || "Playback blocked");
             DispatchPlaybackState();
             return Promise.resolve(false);
@@ -260,12 +313,12 @@
     function UnlockAudioFromGesture() {
         AudioUnlocked = true;
 
-        const SoundPromise = Promise.resolve(UnlockLocalSound()).catch(() => null);
         const MusicPromise = PendingMusicName
-            ? TryPlayPreparedMusic()
+            ? TryPlayPreparedMusic(true)
             : Promise.resolve(MusicVolume <= 0);
+        const SoundPromise = Promise.resolve(UnlockLocalSound()).catch(() => null);
 
-        return Promise.all([SoundPromise, MusicPromise]).then(([, MusicPlaying]) => {
+        return Promise.all([MusicPromise, SoundPromise]).then(([MusicPlaying]) => {
             DispatchPlaybackState();
             return {
                 contextRunning: GetLocalSoundState().contextState === "running",
@@ -296,15 +349,24 @@
     };
 
     StoryAudio.PlayMusic = function(Name) {
-        PendingMusicName = String(Name || "");
-        if (!MusicFiles[PendingMusicName]) return;
+        const RequestedMusicName = String(Name || "");
+        if (!MusicFiles[RequestedMusicName]) return Promise.resolve(false);
 
+        PendingMusicName = RequestedMusicName;
+        MusicWaitingForGesture = MusicVolume > 0;
         PrepareMusic(PendingMusicName);
-        TryPlayPreparedMusic();
+
+        if (!AudioUnlocked) {
+            DispatchPlaybackState();
+            return Promise.resolve(false);
+        }
+
+        return TryPlayPreparedMusic();
     };
 
     StoryAudio.StopMusic = function() {
         PendingMusicName = "";
+        MusicWaitingForGesture = false;
         StopMusicInternal(true, false);
     };
 
