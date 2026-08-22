@@ -1,8 +1,6 @@
 (() => {
     const Root = document.getElementById("StoryShellRoot");
     const InitialFrame = document.getElementById("StoryShellFrame");
-    const AudioUnlockButton = document.getElementById("StoryAudioUnlockButton");
-    const FirefoxGestureRule = /(?:Firefox|FxiOS)\//i.test(navigator.userAgent);
     if (!Root || !InitialFrame) return;
 
     const ManagedPages = new Set([
@@ -32,7 +30,6 @@
     let CurrentMusicName = "";
     let CurrentAudioSettings = {};
     let CurrentHistoryDepth = 0;
-    let AudioStateWindow = null;
 
     function GetBaseUrl() {
         return new URL(".", window.location.href);
@@ -150,39 +147,6 @@
         return Host.GetPlaybackState();
     }
 
-    function AudioNeedsExplicitClick(State = GetAudioState()) {
-        const PendingMusicName = String(State?.pendingMusicName || CurrentMusicName || "");
-        const MusicVolume = Number(State?.musicVolume ?? CurrentAudioSettings.musicVolume ?? 0);
-        if (!PendingMusicName || MusicVolume <= 0 || State?.musicPlaying) return false;
-
-        const ErrorText = String(State?.lastError || "");
-        const BrowserBlockedPlayback = /notallowed|not allowed|autoplay|user gesture|user activation|user interaction|didn't interact|did not interact|interact with the document|denied permission|user agent.*platform/i.test(ErrorText);
-        const WaitingForFirefoxGesture = FirefoxGestureRule && State?.audioUnlocked !== true;
-        return BrowserBlockedPlayback || WaitingForFirefoxGesture;
-    }
-
-    function UpdateAudioUnlockButton(State = GetAudioState()) {
-        if (!AudioUnlockButton) return;
-        AudioUnlockButton.hidden = !AudioNeedsExplicitClick(State);
-    }
-
-    function HandleAudioStateChange(Event) {
-        UpdateAudioUnlockButton(Event?.detail || GetAudioState());
-    }
-
-    function WireAudioStateBridge() {
-        try {
-            if (AudioStateWindow) {
-                AudioStateWindow.removeEventListener("StoryAudioStateChange", HandleAudioStateChange);
-            }
-
-            AudioStateWindow = InitialFrame.contentWindow;
-            AudioStateWindow.addEventListener("StoryAudioStateChange", HandleAudioStateChange);
-        } catch {
-            AudioStateWindow = null;
-        }
-    }
-
     function FlushAudioHost() {
         const Host = GetAudioHost();
         if (!Host) return false;
@@ -199,7 +163,6 @@
         CurrentAudioSettings = { ...CurrentAudioSettings, ...Settings };
         const Host = GetAudioHost();
         if (Host && typeof Host.Configure === "function") Host.Configure(CurrentAudioSettings);
-        UpdateAudioUnlockButton();
     }
 
     function PlaySound(Name) {
@@ -221,7 +184,6 @@
         CurrentMusicName = NextMusicName;
         const Host = GetAudioHost();
         if (Host && typeof Host.PlayMusic === "function") Host.PlayMusic(CurrentMusicName);
-        UpdateAudioUnlockButton();
     }
 
     function ApplyRouteMusic(Route) {
@@ -242,21 +204,12 @@
         const Host = GetAudioHost();
         if (!Host) return Promise.resolve(null);
 
-        let Attempt = null;
-        if (typeof Host.UnlockAudio === "function") Attempt = Host.UnlockAudio();
-        else if (CurrentMusicName && typeof Host.PlayMusic === "function") {
-            Attempt = Host.PlayMusic(CurrentMusicName);
+        if (typeof Host.UnlockAudio === "function") return Host.UnlockAudio();
+        if (CurrentMusicName && typeof Host.PlayMusic === "function") {
+            return Host.PlayMusic(CurrentMusicName);
         }
 
-        return Promise.resolve(Attempt)
-            .then(Result => {
-                UpdateAudioUnlockButton();
-                return Result;
-            })
-            .catch(() => {
-                UpdateAudioUnlockButton();
-                return null;
-            });
+        return Promise.resolve(null);
     }
 
     function WireFrameInteractionBridge(Frame) {
@@ -355,11 +308,7 @@
 
         Frame.dataset.storyLoaded = "1";
         WireFrameInteractionBridge(Frame);
-        if (Frame === InitialFrame) {
-            WireAudioStateBridge();
-            FlushAudioHost();
-            UpdateAudioUnlockButton();
-        }
+        if (Frame === InitialFrame) FlushAudioHost();
 
         if (ActualRoute !== PreviousRoute) {
             if (PreviousRoute && PersistentFrames.get(PreviousRoute) === Frame) {
@@ -497,17 +446,6 @@
         const Route = NormalizeRoute(Event.state?.StoryRewriteRoute) || RouteFromLocation();
         LoadRoute(Route, { skipHistory: true });
     });
-
-    if (AudioUnlockButton) {
-        AudioUnlockButton.addEventListener("click", () => {
-            AudioUnlockButton.disabled = true;
-            const Attempt = NotifyInteraction();
-            Promise.resolve(Attempt).finally(() => {
-                AudioUnlockButton.disabled = false;
-                UpdateAudioUnlockButton();
-            });
-        });
-    }
 
     window.StoryShell = Object.freeze({
         IsPersistentShell: true,

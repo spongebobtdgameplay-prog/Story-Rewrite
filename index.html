@@ -40,54 +40,6 @@ body {
     background: #0b0d10;
 }
 
-#StoryAudioUnlockButton {
-    position: fixed;
-    left: 50%;
-    bottom: max(18px, env(safe-area-inset-bottom));
-    z-index: 100;
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    min-height: 48px;
-    padding: 10px 18px;
-    border: 1px solid #8b5726;
-    border-radius: 14px;
-    color: #351b0e;
-    background: linear-gradient(180deg, #ffe7b0, #e8bd78);
-    box-shadow: 0 9px 26px rgba(24, 9, 3, 0.32);
-    font: 700 17px Georgia, "Times New Roman", serif;
-    transform: translateX(-50%);
-    cursor: pointer;
-}
-
-#StoryAudioUnlockButton:hover {
-    background: linear-gradient(180deg, #fff0c7, #f2cb8e);
-}
-
-#StoryAudioUnlockButton:focus-visible {
-    outline: 3px solid #fff0c7;
-    outline-offset: 3px;
-}
-
-#StoryAudioUnlockButton:disabled {
-    cursor: wait;
-    opacity: 0.72;
-}
-
-#StoryAudioUnlockButton[hidden] {
-    display: none;
-}
-
-#StoryAudioUnlockButton svg {
-    width: 24px;
-    height: 24px;
-    fill: none;
-    stroke: currentColor;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    stroke-width: 1.8;
-}
-
 </style>
 <script>
 const AuthKey = "StoryRewriteAuthToken";
@@ -111,14 +63,6 @@ if (!Token) window.location.replace("auth.html");
 <div id="StoryShellRoot">
     <iframe id="StoryShellFrame" class="StoryShellFrame" title="Story Rewrite"></iframe>
 </div>
-<button id="StoryAudioUnlockButton" type="button" hidden>
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M4 10v4h4l5 4V6L8 10H4Z"></path>
-        <path d="M16 9c1 .8 1.5 1.8 1.5 3S17 14.2 16 15"></path>
-        <path d="M18.5 6.5c1.8 1.5 2.7 3.3 2.7 5.5s-.9 4-2.7 5.5"></path>
-    </svg>
-    <span>Enable audio</span>
-</button>
 <script src="cache-guard.js?v=20260821-62"></script>
 <script>
 const AssetFreshToken = Date.now().toString(36);
