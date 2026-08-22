@@ -1,24 +1,41 @@
+html,
+body {
+    min-height: 100%;
+    background: #4d301f;
+    overscroll-behavior-y: none;
+}
+
+body {
+    min-height: 100vh;
+    background:
+        radial-gradient(circle at 15% 7%, rgba(255, 240, 207, .24), transparent 24%),
+        radial-gradient(circle at 84% 16%, rgba(60, 30, 14, .19), transparent 28%),
+        linear-gradient(155deg, #b38b61 0%, #8b6848 42%, #6e4c33 72%, #4d301f 100%);
+    background-repeat: no-repeat;
+    background-size: cover;
+}
+
+#App {
+    min-height: 100vh;
+}
+
 .HomeActions {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 9px;
+    display: flex;
+    flex-wrap: nowrap;
     align-items: stretch;
+    gap: 9px;
 }
 
 .HomeActions a,
 .HomeActions button {
-    width: 100%;
+    width: auto;
     min-width: 0;
+    white-space: nowrap;
+    flex: 0 1 auto;
 }
 
-@media (max-width: 980px) {
+@media (max-width: 760px) {
     .HomeActions {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-}
-
-@media (max-width: 520px) {
-    .HomeActions {
-        grid-template-columns: 1fr;
+        flex-wrap: wrap;
     }
 }
