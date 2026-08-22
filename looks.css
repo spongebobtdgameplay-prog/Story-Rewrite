@@ -1707,61 +1707,8 @@ html[data-story-cosmetic]:not([data-story-cosmetic="classic"]) .AccountSettingsH
     }
 }
 
-body {
-    font-size: 17px;
-    font-weight: 700;
-}
-
 .BrandMark svg {
     width: 25px;
     height: 25px;
     fill: currentColor;
-}
-
-.HomeTitle,
-.Page h1,
-.Page h2,
-.ResultTitle,
-.SidebarTop h3,
-.BriefingTitle,
-.level-title-block h3,
-.AccountIdentityCopy h2 {
-    font-weight: 900;
-}
-
-.HomeText {
-    font-size: 20px;
-    font-weight: 700;
-    line-height: 1.58;
-}
-
-.Sentence {
-    font-size: 18px;
-    font-weight: 700;
-}
-
-.InfoBox p,
-.TeamClueCard p,
-.BranchPanel p,
-.RemainingStory,
-.SceneDescription,
-.Small {
-    font-size: 15px;
-    font-weight: 700;
-}
-
-.SidebarWorld {
-    font-size: 14px;
-    font-weight: 800;
-}
-
-.UiButton,
-.PrimaryButton,
-.SecondaryButton,
-.DangerButton,
-.PowerButton,
-.BranchChoice,
-.enter-level-button,
-.BriefingPlay {
-    font-weight: 900;
 }
