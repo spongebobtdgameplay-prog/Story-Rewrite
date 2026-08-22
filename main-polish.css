@@ -2,7 +2,13 @@ html,
 body {
     min-height: 100%;
     max-width: 100%;
-    background: #4d301f;
+    background:
+        radial-gradient(circle at 15% 7%, rgba(255, 240, 207, .24), transparent 24%),
+        radial-gradient(circle at 84% 16%, rgba(60, 30, 14, .19), transparent 28%),
+        linear-gradient(155deg, #b38b61 0%, #8b6848 42%, #6e4c33 72%, #4d301f 100%);
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-attachment: fixed;
 }
 
 body {
@@ -10,17 +16,12 @@ body {
     overflow-x: hidden;
     overflow-y: auto;
     overscroll-behavior-y: none;
-    background:
-        radial-gradient(circle at 15% 7%, rgba(255, 240, 207, .24), transparent 24%),
-        radial-gradient(circle at 84% 16%, rgba(60, 30, 14, .19), transparent 28%),
-        linear-gradient(155deg, #b38b61 0%, #8b6848 42%, #6e4c33 72%, #4d301f 100%);
-    background-repeat: no-repeat;
-    background-size: cover;
 }
 
 #App {
     width: 100%;
     min-height: 100vh;
+    background: transparent;
 }
 
 .TopBar {
