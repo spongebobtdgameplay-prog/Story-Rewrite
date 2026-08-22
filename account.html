@@ -18,7 +18,7 @@ for (const StyleName of ["looks.css", "shell-ui.css"]) {
 }
 </script>
 <style>
-.AccountToggleButton {
+#KeepMusicPlayingButton {
     min-width: 0;
     min-height: 0;
     padding: 0;
@@ -27,16 +27,13 @@ for (const StyleName of ["looks.css", "shell-ui.css"]) {
     border-radius: 0;
     background: transparent;
     box-shadow: none;
+    cursor: pointer;
 }
 
-.AccountToggleButton[aria-checked="true"] {
-    color: #f0d3a9;
+#KeepMusicPlayingButton[aria-checked="true"],
+#KeepMusicPlayingButton:hover,
+#KeepMusicPlayingButton:active {
     border: 0;
-    background: transparent;
-}
-
-.AccountToggleButton:hover,
-.AccountToggleButton:active {
     background: transparent;
     box-shadow: none;
     transform: none;
