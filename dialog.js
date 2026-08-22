@@ -18,6 +18,7 @@ window.addEventListener("DOMContentLoaded", async () => {
         Profile = ProfileResult.profile;
         Data = await LoadStoryData();
         Save = await LoadSave(Data);
+        ApplyStoryCosmetic(Save);
 
         const Params = new URLSearchParams(window.location.search);
         const StageId = Params.get("stage") || Save.currentStage;
@@ -231,6 +232,7 @@ async function CheckStage() {
         const Result = await CheckServerStage(Stage.id, [...RemovedSentences]);
         NextStageOverride = Result.nextStage || "";
         Save = NormalizeSave(Data, Result.save);
+        ApplyStoryCosmetic(Save);
         RenderLives();
 
         if (!Result.success) {
@@ -414,6 +416,7 @@ async function RestartChapter() {
     }
 
     Save = await RestartServerChapter(World.id);
+    ApplyStoryCosmetic(Save);
     document.getElementById("GameOverOverlay").classList.remove("Show");
     GoStage(GetWorld(Data, World.id).entryStage);
 }
