@@ -1,4 +1,5 @@
-.MobileGameControls {
+.MobileGameControls,
+.MobilePowerTray {
     display: none;
 }
 
@@ -36,7 +37,7 @@
         bottom: max(8px, env(safe-area-inset-bottom));
         z-index: 115;
         display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
+        grid-template-columns: repeat(5, minmax(0, 1fr));
         gap: 7px;
         padding: 8px;
         border: 1px solid rgba(224, 177, 103, .3);
@@ -49,7 +50,36 @@
     }
 
     .MobileGameControls:not(.HasChat) {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .MobilePowerTray {
+        position: fixed;
+        left: 50%;
+        bottom: calc(84px + env(safe-area-inset-bottom));
+        z-index: 114;
+        width: min(390px, calc(100vw - 28px));
+        padding: 7px;
+        display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 7px;
+        border: 1px solid rgba(224, 177, 103, .28);
+        border-radius: 15px;
+        background: rgba(31, 17, 10, .96);
+        box-shadow: 0 14px 36px rgba(0, 0, 0, .42), inset 0 1px rgba(255, 235, 196, .06);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        opacity: 0;
+        pointer-events: none;
+        transform: translate(-50%, 10px) scale(.97);
+        transform-origin: bottom center;
+        transition: opacity .16s ease, transform .16s ease;
+    }
+
+    .MobilePowerTray.IsOpen {
+        opacity: 1;
+        pointer-events: auto;
+        transform: translate(-50%, 0) scale(1);
     }
 
     .MobileControlButton {
@@ -90,7 +120,14 @@
         background: linear-gradient(180deg, #dfb96f, #b97835);
     }
 
-    .MobileControlButton:disabled {
+    .MobileControlButton.IsActive {
+        color: #2a170d;
+        border-color: rgba(255, 219, 158, .55);
+        background: linear-gradient(180deg, #e7bc72, #b87535);
+    }
+
+    .MobileControlButton:disabled,
+    .MobileControlButton.IsUsed {
         cursor: default;
         opacity: .42;
         transform: none;
@@ -98,6 +135,13 @@
 
     .MobileControlButton.IsHidden {
         display: none;
+    }
+
+    .MobilePowerAction {
+        min-height: 54px;
+        flex-direction: row;
+        gap: 8px;
+        font-size: 10px;
     }
 
     .MobileControlIcon {
@@ -159,20 +203,36 @@
         height: min(28dvh, 230px);
     }
 
-    body.MobileTyping .MobileGameControls {
+    body.MobileTyping .MobileGameControls,
+    body.MobileTyping .MobilePowerTray {
         pointer-events: none;
         opacity: 0;
+    }
+
+    body.MobileTyping .MobileGameControls {
         transform: translateY(calc(100% + 24px));
+    }
+
+    body.MobileTyping .MobilePowerTray {
+        transform: translate(-50%, 24px) scale(.96);
     }
 
     body.MobileTyping .MultiplayerDock {
         bottom: max(8px, env(safe-area-inset-bottom));
     }
 
-    body:has(.Overlay.Show) .MobileGameControls {
+    body:has(.Overlay.Show) .MobileGameControls,
+    body:has(.Overlay.Show) .MobilePowerTray {
         pointer-events: none;
         opacity: 0;
+    }
+
+    body:has(.Overlay.Show) .MobileGameControls {
         transform: translateY(calc(100% + 24px));
+    }
+
+    body:has(.Overlay.Show) .MobilePowerTray {
+        transform: translate(-50%, 24px) scale(.96);
     }
 }
 
@@ -193,9 +253,25 @@
         border-radius: 16px;
     }
 
+    .MobileGameControls {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+
+    .MobileGameControls:not(.HasChat) {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
     .MobileControlButton {
         min-height: 58px;
+        padding-left: 3px;
+        padding-right: 3px;
         border-radius: 11px;
+        font-size: 8.5px;
+        letter-spacing: .025em;
+    }
+
+    .MobilePowerAction {
+        min-height: 52px;
         font-size: 9px;
     }
 
@@ -214,8 +290,12 @@
     .MobileGameControls {
         left: 50%;
         right: auto;
-        width: min(580px, calc(100vw - 24px));
+        width: min(700px, calc(100vw - 24px));
         transform: translateX(-50%);
+    }
+
+    .MobilePowerTray {
+        bottom: calc(68px + env(safe-area-inset-bottom));
     }
 
     body.MobileTyping .MobileGameControls,
