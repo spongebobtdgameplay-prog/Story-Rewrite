@@ -75,6 +75,61 @@ function RenderAccountSnapshot() {
     if (SoundValue) SoundValue.textContent = `${SoundPercent}%`;
 }
 
+function GetCosmeticCatalog() {
+    const WorldCosmetics = (AccountData?.worlds || [])
+        .filter(World => World?.cosmetic?.id)
+        .map(World => ({
+            ...World.cosmetic,
+            worldName: World.name || "World"
+        }));
+
+    return [{
+        id: "classic",
+        name: "Classic Cover",
+        description: "The original Story Rewrite book cover.",
+        emblem: "◌",
+        worldName: "Always available"
+    }, ...WorldCosmetics];
+}
+
+function RenderCosmetics() {
+    const Grid = document.getElementById("CosmeticGrid");
+    if (!Grid || !AccountData || !AccountSave) return;
+
+    const Unlocked = new Set(AccountSave.cosmetics?.unlocked || []);
+    const Equipped = String(AccountSave.cosmetics?.equipped || "classic");
+
+    Grid.innerHTML = GetCosmeticCatalog().map(Cosmetic => {
+        const Available = Cosmetic.id === "classic" || Unlocked.has(Cosmetic.id);
+        const Selected = Available && Cosmetic.id === Equipped;
+        return `<button class="CosmeticCard ${Selected ? "Selected" : ""} ${Available ? "" : "Locked"}" type="button" data-cosmetic-id="${EscapeText(Cosmetic.id)}" ${Available ? "" : "disabled"}>
+            <span class="CosmeticEmblem" aria-hidden="true">${EscapeText(Cosmetic.emblem || "◇")}</span>
+            <span class="CosmeticCopy"><strong>${EscapeText(Cosmetic.name)}</strong><small>${Available ? EscapeText(Cosmetic.description) : "Earn 3 stars on " + EscapeText(Cosmetic.worldName) + "."}</small></span>
+            <span class="CosmeticState">${Selected ? "Equipped" : Available ? "Equip" : "Locked"}</span>
+        </button>`;
+    }).join("");
+
+    Grid.querySelectorAll("[data-cosmetic-id]").forEach(Button => {
+        Button.addEventListener("click", async () => {
+            const CosmeticId = Button.dataset.cosmeticId;
+            if (!CosmeticId || CosmeticId === Equipped) return;
+
+            try {
+                AccountStatus.textContent = "Equipping bookmark...";
+                AccountStatus.classList.remove("Bad", "Good");
+                const Save = await SaveEquippedCosmetic(CosmeticId);
+                AccountSave = NormalizeSave(AccountData, CloneAccountSave(Save));
+                RenderAccountState();
+                AccountStatus.textContent = "Bookmark equipped.";
+                AccountStatus.classList.add("Good");
+            } catch (Error) {
+                AccountStatus.textContent = Error.message;
+                AccountStatus.classList.add("Bad");
+            }
+        });
+    });
+}
+
 function RenderAccountState() {
     if (!AccountProfileResult || !AccountData || !AccountSave) return;
 
@@ -92,6 +147,8 @@ function RenderAccountState() {
     if (AccountMusicValue) AccountMusicValue.textContent = `${MusicPercent}%`;
     if (AccountSoundValue) AccountSoundValue.textContent = `${SoundPercent}%`;
 
+    ApplyStoryCosmetic(AccountSave);
+    RenderCosmetics();
     WriteAccountSnapshot();
 }
 
