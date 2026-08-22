@@ -1,4 +1,4 @@
-const REQUIRED_MODERATION_SERVER_VERSION = 14;
+const REQUIRED_MODERATION_SERVER_VERSION = 16;
 
 if (typeof EnsureBackendVersion === "function") {
     const BaseModerationVersionCheck = EnsureBackendVersion;
