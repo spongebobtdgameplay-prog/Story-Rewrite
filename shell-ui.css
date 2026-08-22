@@ -193,10 +193,19 @@
 
 .AccountSettingsSection h3 {
     margin: 0 0 16px;
-    color: #f3d7ad;
-    font-size: 1rem;
-    letter-spacing: .05em;
+    color: #f6ddb8;
+    font-size: 1.08rem;
+    font-weight: 900;
+    letter-spacing: .045em;
     text-transform: uppercase;
+}
+
+.AccountSectionHint {
+    margin: -5px 0 15px;
+    color: #e2c49b;
+    font-size: .9rem;
+    font-weight: 800;
+    line-height: 1.42;
 }
 
 .AccountStatGrid {
@@ -215,17 +224,17 @@
 .AccountStatTile span {
     display: block;
     color: #b99167;
-    font-size: .72rem;
+    font-size: .82rem;
     text-transform: uppercase;
-    letter-spacing: .09em;
-    font-weight: 800;
+    letter-spacing: .075em;
+    font-weight: 900;
 }
 
 .AccountStatTile strong {
     display: block;
     margin-top: 6px;
     color: #fff0d3;
-    font: 700 1.55rem/1 Georgia, 'Times New Roman', serif;
+    font: 900 1.7rem/1 Georgia, 'Times New Roman', serif;
 }
 
 .AccountSettingRow {
@@ -242,8 +251,16 @@
 }
 
 .AccountSettingRow label {
-    color: #e4c69c;
-    font-weight: 700;
+    color: #f0d3a9;
+    font-size: 1.02rem;
+    font-weight: 900;
+}
+
+.AccountDangerZone button {
+    min-height: 42px;
+    padding: 10px 15px;
+    font-size: .84rem;
+    font-weight: 900;
 }
 
 .AccountSettingRow input[type='range'] {
