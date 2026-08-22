@@ -9,6 +9,22 @@ let AccountSoundSlider = null;
 let AccountMusicValue = null;
 let AccountSoundValue = null;
 
+function SetVolumeControl(Slider, ValueElement, Percent) {
+    const NormalizedPercent = Math.max(0, Math.min(100, Math.round(Number(Percent) || 0)));
+    const PercentText = `${NormalizedPercent}%`;
+
+    if (Slider) {
+        Slider.value = NormalizedPercent;
+        Slider.style.setProperty("--VolumePercent", PercentText);
+        Slider.setAttribute("aria-valuetext", PercentText);
+    }
+
+    if (ValueElement) {
+        ValueElement.value = PercentText;
+        ValueElement.textContent = PercentText;
+    }
+}
+
 function GetAccountAuthMarker() {
     const Token = typeof GetAuthToken === "function" ? String(GetAuthToken() || "") : "";
     if (!Token) return "";
@@ -69,10 +85,8 @@ function RenderAccountSnapshot() {
     const MusicValue = document.getElementById("MusicVolumeValue");
     const SoundValue = document.getElementById("SoundVolumeValue");
 
-    if (MusicSlider) MusicSlider.value = MusicPercent;
-    if (SoundSlider) SoundSlider.value = SoundPercent;
-    if (MusicValue) MusicValue.textContent = `${MusicPercent}%`;
-    if (SoundValue) SoundValue.textContent = `${SoundPercent}%`;
+    SetVolumeControl(MusicSlider, MusicValue, MusicPercent);
+    SetVolumeControl(SoundSlider, SoundValue, SoundPercent);
 }
 
 function GetCosmeticCatalog() {
@@ -154,10 +168,8 @@ function RenderAccountState() {
     const MusicPercent = Math.round(Number(AccountSave.settings?.musicVolume ?? 0.45) * 100);
     const SoundPercent = Math.round(Number(AccountSave.settings?.soundVolume ?? 0.75) * 100);
 
-    if (AccountMusicSlider) AccountMusicSlider.value = MusicPercent;
-    if (AccountSoundSlider) AccountSoundSlider.value = SoundPercent;
-    if (AccountMusicValue) AccountMusicValue.textContent = `${MusicPercent}%`;
-    if (AccountSoundValue) AccountSoundValue.textContent = `${SoundPercent}%`;
+    SetVolumeControl(AccountMusicSlider, AccountMusicValue, MusicPercent);
+    SetVolumeControl(AccountSoundSlider, AccountSoundValue, SoundPercent);
 
     ApplyStoryCosmetic(AccountSave);
     RenderCosmetics();
@@ -208,8 +220,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     function UpdateVolumeLabels() {
-        AccountMusicValue.textContent = `${AccountMusicSlider.value}%`;
-        AccountSoundValue.textContent = `${AccountSoundSlider.value}%`;
+        SetVolumeControl(AccountMusicSlider, AccountMusicValue, AccountMusicSlider.value);
+        SetVolumeControl(AccountSoundSlider, AccountSoundValue, AccountSoundSlider.value);
     }
 
     async function SaveVolumes() {
