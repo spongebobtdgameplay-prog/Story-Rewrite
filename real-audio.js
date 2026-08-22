@@ -32,6 +32,8 @@
         StoryAudio.PlaySound.V11Wrapped = true;
 
         const NotifyInteraction = () => ShellHost.StoryShell.NotifyInteraction();
+        StoryAudio.UnlockAudio = NotifyInteraction;
+        StoryAudio.GetPlaybackState = () => ShellHost.StoryShell.GetAudioState();
         document.addEventListener("pointerdown", NotifyInteraction, { capture: true, passive: true });
         document.addEventListener("touchstart", NotifyInteraction, { capture: true, passive: true });
         document.addEventListener("keydown", NotifyInteraction, { capture: true });
@@ -50,6 +52,7 @@
     let AudioUnlocked = false;
     let LastSoundName = "";
     let LastSoundAt = 0;
+    let LastPlaybackError = "";
 
     const MusicFiles = {
         menu: "Music/menu.mp3",
@@ -78,6 +81,25 @@
     function Clamp(Value, Fallback) {
         const NumberValue = Number(Value);
         return Number.isFinite(NumberValue) ? Math.max(0, Math.min(1, NumberValue)) : Fallback;
+    }
+
+    function GetPlaybackState() {
+        return {
+            audioUnlocked: AudioUnlocked,
+            contextState: AudioContextInstance?.state || "closed",
+            musicName: MusicName,
+            pendingMusicName: PendingMusicName,
+            musicPlaying: Boolean(MusicElement.src && !MusicElement.paused && !MusicElement.ended),
+            musicVolume: MusicVolume,
+            soundVolume: SoundVolume,
+            lastError: LastPlaybackError
+        };
+    }
+
+    function DispatchPlaybackState() {
+        window.dispatchEvent(new CustomEvent("StoryAudioStateChange", {
+            detail: GetPlaybackState()
+        }));
     }
 
     function ReadPositions() {
@@ -141,6 +163,11 @@
     }
 
     MusicElement.addEventListener("loadedmetadata", RestoreCurrentTrackPosition);
+    MusicElement.addEventListener("play", () => {
+        LastPlaybackError = "";
+        DispatchPlaybackState();
+    });
+    MusicElement.addEventListener("pause", DispatchPlaybackState);
     MusicElement.addEventListener("timeupdate", () => {
         ApplyMusicFade();
         SavePosition();
@@ -160,7 +187,9 @@
 
     MusicElement.addEventListener("error", () => {
         if (!MusicName) return;
-        console.warn(`Music failed to load: ${MusicFiles[MusicName] || MusicName}`);
+        LastPlaybackError = `Music failed to load: ${MusicFiles[MusicName] || MusicName}`;
+        console.warn(LastPlaybackError);
+        DispatchPlaybackState();
     });
 
     function StopMusicInternal(Save = true, ClearSource = true) {
@@ -195,14 +224,36 @@
     }
 
     function TryPlayPreparedMusic() {
-        if (!AudioUnlocked || !PendingMusicName || MusicVolume <= 0) return;
+        if (!AudioUnlocked || !PendingMusicName || MusicVolume <= 0) return Promise.resolve(false);
 
         const Element = PrepareMusic(PendingMusicName);
-        if (!Element) return;
+        if (!Element) return Promise.resolve(false);
 
         ApplyMusicFade();
-        const PlayPromise = Element.play();
-        if (PlayPromise?.catch) PlayPromise.catch(() => {});
+
+        try {
+            const PlayPromise = Element.play();
+            if (!PlayPromise?.then) {
+                DispatchPlaybackState();
+                return Promise.resolve(!Element.paused);
+            }
+
+            return PlayPromise
+                .then(() => {
+                    LastPlaybackError = "";
+                    DispatchPlaybackState();
+                    return true;
+                })
+                .catch(Error => {
+                    LastPlaybackError = String(Error?.message || Error || "Playback blocked");
+                    DispatchPlaybackState();
+                    return false;
+                });
+        } catch (Error) {
+            LastPlaybackError = String(Error?.message || Error || "Playback blocked");
+            DispatchPlaybackState();
+            return Promise.resolve(false);
+        }
     }
 
     function GetContext() {
@@ -210,6 +261,7 @@
             const ContextClass = window.AudioContext || window.webkitAudioContext;
             if (!ContextClass) return null;
             AudioContextInstance = new ContextClass();
+            AudioContextInstance.addEventListener("statechange", DispatchPlaybackState);
         }
         return AudioContextInstance;
     }
@@ -218,12 +270,35 @@
         AudioUnlocked = true;
 
         const Context = GetContext();
+        let ContextPromise = Promise.resolve(Context?.state === "running");
+
         if (Context?.state === "suspended") {
-            const ResumePromise = Context.resume();
-            if (ResumePromise?.catch) ResumePromise.catch(() => {});
+            try {
+                const ResumePromise = Context.resume();
+                ContextPromise = Promise.resolve(ResumePromise)
+                    .then(() => Context.state === "running")
+                    .catch(Error => {
+                        LastPlaybackError = String(Error?.message || Error || "Audio context blocked");
+                        return false;
+                    });
+            } catch (Error) {
+                LastPlaybackError = String(Error?.message || Error || "Audio context blocked");
+                ContextPromise = Promise.resolve(false);
+            }
         }
 
-        if (PendingMusicName) TryPlayPreparedMusic();
+        const MusicPromise = PendingMusicName
+            ? TryPlayPreparedMusic()
+            : Promise.resolve(MusicVolume <= 0);
+
+        return Promise.all([ContextPromise, MusicPromise]).then(([ContextRunning, MusicPlaying]) => {
+            DispatchPlaybackState();
+            return {
+                contextRunning: ContextRunning,
+                musicPlaying: MusicPlaying,
+                state: GetPlaybackState()
+            };
+        });
     }
 
     async function EnsureContextRunning() {
@@ -416,4 +491,5 @@
     StoryAudio.PlaySound.V11Wrapped = true;
 
     StoryAudio.UnlockAudio = UnlockAudioFromGesture;
+    StoryAudio.GetPlaybackState = GetPlaybackState;
 })();
