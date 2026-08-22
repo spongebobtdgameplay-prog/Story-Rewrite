@@ -2,7 +2,7 @@ const { Server: SocketServer } = require("socket.io");
 
 const ActiveDeviceSessions = new Map();
 const ActiveAccountSessions = new Map();
-const OriginalServerOn = SocketServer.prototype.on;
+const OriginalServerUse = SocketServer.prototype.use;
 
 function NormalizeSessionValue(Value, MaximumLength = 160) {
     return String(Value || "").trim().slice(0, MaximumLength);
@@ -16,9 +16,11 @@ function GetConnectedSession(MapValue) {
 function RemoveSessionEntry(Session) {
     if (!Session) return;
 
-    const DeviceSession = ActiveDeviceSessions.get(Session.deviceSignature);
-    if (DeviceSession?.socket?.id === Session.socket.id) {
-        ActiveDeviceSessions.delete(Session.deviceSignature);
+    if (Session.deviceSignature) {
+        const DeviceSession = ActiveDeviceSessions.get(Session.deviceSignature);
+        if (DeviceSession?.socket?.id === Session.socket.id) {
+            ActiveDeviceSessions.delete(Session.deviceSignature);
+        }
     }
 
     const AccountSession = ActiveAccountSessions.get(Session.accountKey);
@@ -27,30 +29,28 @@ function RemoveSessionEntry(Session) {
     }
 }
 
-function InstallSingleSessionGuard(Socket) {
+function EnforceSingleSession(Socket, Next) {
     const Username = NormalizeSessionValue(Socket.data?.username, 32);
+    if (!Username) return Next();
+
     const AccountKey = Username.toLowerCase();
     const DeviceSignature = NormalizeSessionValue(Socket.handshake.auth?.deviceSignature, 128);
     const TabId = NormalizeSessionValue(Socket.handshake.auth?.tabId, 128);
-
-    if (!Username) return;
-
     const ExistingAccountSession = GetConnectedSession(ActiveAccountSessions.get(AccountKey));
     const ExistingDeviceSession = DeviceSignature
         ? GetConnectedSession(ActiveDeviceSessions.get(DeviceSignature))
         : null;
-
     const ConflictSession = ExistingAccountSession || ExistingDeviceSession;
+
     if (ConflictSession && ConflictSession.socket.id !== Socket.id) {
-        Socket.emit("session:conflict", {
+        const Error = new Error("Other Session found");
+        Error.data = {
             code: "OTHER_SESSION_FOUND",
-            message: "Other Session found",
             username: ConflictSession.username,
             sameAccount: ConflictSession.accountKey === AccountKey,
             sameDevice: Boolean(DeviceSignature && ConflictSession.deviceSignature === DeviceSignature)
-        });
-        Socket.disconnect(true);
-        return;
+        };
+        return Next(Error);
     }
 
     const Session = {
@@ -64,17 +64,38 @@ function InstallSingleSessionGuard(Socket) {
 
     ActiveAccountSessions.set(AccountKey, Session);
     if (DeviceSignature) ActiveDeviceSessions.set(DeviceSignature, Session);
-
     Socket.once("disconnect", () => RemoveSessionEntry(Session));
+    Next();
 }
 
-SocketServer.prototype.on = function(EventName, Listener) {
-    if (EventName === "connection" && !this.__StorySingleSessionGuardInstalled) {
-        this.__StorySingleSessionGuardInstalled = true;
-        OriginalServerOn.call(this, "connection", InstallSingleSessionGuard);
-    }
+SocketServer.prototype.use = function(Middleware) {
+    const WrappedMiddleware = (Socket, Next) => {
+        let Finished = false;
 
-    return OriginalServerOn.call(this, EventName, Listener);
+        const FinishOriginalMiddleware = Error => {
+            if (Finished) return;
+            Finished = true;
+            if (Error) return Next(Error);
+
+            try {
+                EnforceSingleSession(Socket, Next);
+            } catch (SessionError) {
+                console.error("Multiplayer session guard failed", SessionError);
+                Next(new Error("Could not verify multiplayer session."));
+            }
+        };
+
+        try {
+            const Result = Middleware(Socket, FinishOriginalMiddleware);
+            if (Result && typeof Result.then === "function") {
+                Result.catch(FinishOriginalMiddleware);
+            }
+        } catch (Error) {
+            FinishOriginalMiddleware(Error);
+        }
+    };
+
+    return OriginalServerUse.call(this, WrappedMiddleware);
 };
 
 require("./server-v11.js");
