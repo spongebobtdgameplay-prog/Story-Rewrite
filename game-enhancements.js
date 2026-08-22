@@ -622,6 +622,11 @@ function RefreshStoryDangerUiV12() {
     }
 }
 
+function EnsureStoryDangerLoopV12() {
+    if (StoryDangerTimerV12) return;
+    StoryDangerTimerV12 = setInterval(RefreshStoryDangerUiV12, 250);
+}
+
 function StartSingleStoryDangerV12(Force = false) {
     if (RoomCode || !Stage) return;
     if (!Force && StorySingleDangerStageIdV12 === Stage.id && StorySingleDangerEndV12 > Date.now()) return;
@@ -631,7 +636,7 @@ function StartSingleStoryDangerV12(Force = false) {
     StorySingleDangerEndV12 = Date.now() + GetStoryDangerSecondsV12() * 1000;
     StoryDangerExpiredV12 = false;
     RefreshStoryDangerUiV12();
-    StoryDangerTimerV12 = setInterval(RefreshStoryDangerUiV12, 250);
+    EnsureStoryDangerLoopV12();
 }
 
 async function ExpireSingleStoryDangerV12() {
@@ -697,8 +702,10 @@ if (typeof RenderStage === "function" && !RenderStage.V12Wrapped) {
         RenderTeamClueV12();
         RenderStoryPowerUiV12();
 
-        if (RoomCode) RefreshStoryDangerUiV12();
-        else StartSingleStoryDangerV12();
+        if (RoomCode) {
+            RefreshStoryDangerUiV12();
+            EnsureStoryDangerLoopV12();
+        } else StartSingleStoryDangerV12();
 
         return Result;
     };
@@ -714,6 +721,7 @@ if (typeof ApplyRoomState === "function" && !ApplyRoomState.V12Wrapped) {
         RenderTeamClueV12();
         RenderStoryPowerUiV12();
         RefreshStoryDangerUiV12();
+        EnsureStoryDangerLoopV12();
         return Result;
     };
     WrappedApplyRoomStateV12.V12Wrapped = true;
@@ -737,6 +745,7 @@ if (typeof CheckServerStage === "function" && !CheckServerStage.V12Wrapped) {
 if (typeof HandleMultiplayerOutcome === "function" && !HandleMultiplayerOutcome.V12Wrapped) {
     const BaseHandleMultiplayerOutcomeV12 = HandleMultiplayerOutcome;
     const WrappedHandleMultiplayerOutcomeV12 = function(Result) {
+        if (Result?.success) ClearStoryDangerTimerV12();
         if (Result?.success && Result?.cosmeticUnlocked?.name) {
             SetStoryStatusV12(`${Result.cosmeticUnlocked.name} was added to every survivor's account.`, "Good");
         }
