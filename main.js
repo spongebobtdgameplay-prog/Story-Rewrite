@@ -95,6 +95,20 @@ async function LoadMainPlayerState() {
     StoryAudio.Configure(Save.settings);
 }
 
+function BlockMainPageOverscroll(Event) {
+    if (Event.ctrlKey) return;
+
+    const Scroller = document.scrollingElement || document.documentElement;
+    const ScrollTop = Scroller.scrollTop;
+    const MaxScrollTop = Math.max(0, Scroller.scrollHeight - Scroller.clientHeight);
+
+    if ((Event.deltaY < 0 && ScrollTop <= 0) || (Event.deltaY > 0 && ScrollTop >= MaxScrollTop - 1)) {
+        Event.preventDefault();
+    }
+}
+
+window.addEventListener("wheel", BlockMainPageOverscroll, { passive: false });
+
 RenderMainPlayerSnapshot();
 
 window.addEventListener("StoryShellActivate", SyncMainFromLastKnownState);
