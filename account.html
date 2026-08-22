@@ -17,6 +17,31 @@ for (const StyleName of ["looks.css", "shell-ui.css"]) {
     document.write(`<link rel="stylesheet" href="${StyleName}?fresh=${AccountFreshToken}">`);
 }
 </script>
+<style>
+.AccountToggleButton {
+    min-width: 0;
+    min-height: 0;
+    padding: 0;
+    gap: 9px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+.AccountToggleButton[aria-checked="true"] {
+    color: #f0d3a9;
+    border: 0;
+    background: transparent;
+}
+
+.AccountToggleButton:hover,
+.AccountToggleButton:active {
+    background: transparent;
+    box-shadow: none;
+    transform: none;
+}
+</style>
 </head>
 <body class="AccountSettingsPage">
 <main class="AccountSettingsShell">
@@ -99,7 +124,7 @@ for (const StyleName of ["looks.css", "shell-ui.css"]) {
     </section>
 </main>
 <script>
-for (const ScriptName of ["server-config.js", "network.js", "app.js", "audio.js", "shell-ui.js", "account.js"]) {
+for (const ScriptName of ["server-config.js", "network.js", "app.js", "audio.js", "shell-ui.js", "build-version.js", "account.js"]) {
     document.write(`<script src="${ScriptName}?fresh=${AccountFreshToken}"><\/script>`);
 }
 </script>
