@@ -1,5 +1,5 @@
 (() => {
-    const CleanupVersion = "20260821-61";
+    const CleanupVersion = "20260821-62";
     const ReloadedKey = `StoryRewriteCacheCleanup-${CleanupVersion}-reloaded`;
 
     async function ClearLegacyCaches() {
