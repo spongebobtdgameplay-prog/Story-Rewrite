@@ -2,18 +2,17 @@ const { Server: SocketServer } = require("socket.io");
 
 const ActiveDeviceSessions = new Map();
 const ActiveAccountSessions = new Map();
-const OriginalServerUse = SocketServer.prototype.use;
+const OriginalServerOn = SocketServer.prototype.on;
 
 function NormalizeSessionValue(Value, MaximumLength = 160) {
     return String(Value || "").trim().slice(0, MaximumLength);
 }
 
 function GetConnectedSession(MapValue) {
-    if (!MapValue?.socket?.connected) return null;
-    return MapValue;
+    return MapValue?.socket?.connected ? MapValue : null;
 }
 
-function RemoveSessionEntry(Session) {
+function ReleaseSession(Session) {
     if (!Session) return;
 
     if (Session.deviceSignature) {
@@ -29,73 +28,116 @@ function RemoveSessionEntry(Session) {
     }
 }
 
-function EnforceSingleSession(Socket, Next) {
+function BuildSession(Socket) {
     const Username = NormalizeSessionValue(Socket.data?.username, 32);
-    if (!Username) return Next();
-
-    const AccountKey = Username.toLowerCase();
-    const DeviceSignature = NormalizeSessionValue(Socket.handshake.auth?.deviceSignature, 128);
-    const TabId = NormalizeSessionValue(Socket.handshake.auth?.tabId, 128);
-    const ExistingAccountSession = GetConnectedSession(ActiveAccountSessions.get(AccountKey));
-    const ExistingDeviceSession = DeviceSignature
-        ? GetConnectedSession(ActiveDeviceSessions.get(DeviceSignature))
-        : null;
-    const ConflictSession = ExistingAccountSession || ExistingDeviceSession;
-
-    if (ConflictSession && ConflictSession.socket.id !== Socket.id) {
-        const Error = new Error("Other Session found");
-        Error.data = {
-            code: "OTHER_SESSION_FOUND",
-            username: ConflictSession.username,
-            sameAccount: ConflictSession.accountKey === AccountKey,
-            sameDevice: Boolean(DeviceSignature && ConflictSession.deviceSignature === DeviceSignature)
-        };
-        return Next(Error);
-    }
-
-    const Session = {
+    return {
         socket: Socket,
         username: Username,
-        accountKey: AccountKey,
-        deviceSignature: DeviceSignature,
-        tabId: TabId,
-        connectedAt: Date.now()
+        accountKey: Username.toLowerCase(),
+        deviceSignature: NormalizeSessionValue(Socket.handshake.auth?.deviceSignature, 128),
+        tabId: NormalizeSessionValue(Socket.handshake.auth?.tabId, 128),
+        joinedAt: Date.now()
     };
-
-    ActiveAccountSessions.set(AccountKey, Session);
-    if (DeviceSignature) ActiveDeviceSessions.set(DeviceSignature, Session);
-    Socket.once("disconnect", () => RemoveSessionEntry(Session));
-    Next();
 }
 
-SocketServer.prototype.use = function(Middleware) {
-    const WrappedMiddleware = (Socket, Next) => {
-        let Finished = false;
+function FindSessionConflict(Session) {
+    const AccountSession = GetConnectedSession(ActiveAccountSessions.get(Session.accountKey));
+    const DeviceSession = Session.deviceSignature
+        ? GetConnectedSession(ActiveDeviceSessions.get(Session.deviceSignature))
+        : null;
 
-        const FinishOriginalMiddleware = Error => {
-            if (Finished) return;
-            Finished = true;
-            if (Error) return Next(Error);
+    for (const ExistingSession of [AccountSession, DeviceSession]) {
+        if (ExistingSession && ExistingSession.socket.id !== Session.socket.id) {
+            return ExistingSession;
+        }
+    }
 
-            try {
-                EnforceSingleSession(Socket, Next);
-            } catch (SessionError) {
-                console.error("Multiplayer session guard failed", SessionError);
-                Next(new Error("Could not verify multiplayer session."));
-            }
-        };
+    return null;
+}
 
-        try {
-            const Result = Middleware(Socket, FinishOriginalMiddleware);
-            if (Result && typeof Result.then === "function") {
-                Result.catch(FinishOriginalMiddleware);
-            }
-        } catch (Error) {
-            FinishOriginalMiddleware(Error);
+function RegisterSession(Session) {
+    ActiveAccountSessions.set(Session.accountKey, Session);
+    if (Session.deviceSignature) ActiveDeviceSessions.set(Session.deviceSignature, Session);
+}
+
+function BuildConflictResult(Session, ExistingSession) {
+    return {
+        ok: false,
+        error: "Other Session found",
+        code: "OTHER_SESSION_FOUND",
+        data: {
+            code: "OTHER_SESSION_FOUND",
+            username: ExistingSession.username,
+            sameAccount: ExistingSession.accountKey === Session.accountKey,
+            sameDevice: Boolean(
+                Session.deviceSignature
+                && ExistingSession.deviceSignature === Session.deviceSignature
+            )
         }
     };
+}
 
-    return OriginalServerUse.call(this, WrappedMiddleware);
+function InstallRoomSessionGuard(Socket) {
+    const OriginalSocketOn = Socket.on.bind(Socket);
+    let CurrentSession = null;
+
+    const ClearCurrentSession = () => {
+        ReleaseSession(CurrentSession);
+        CurrentSession = null;
+    };
+
+    OriginalSocketOn("disconnect", ClearCurrentSession);
+
+    Socket.on = function(EventName, Listener) {
+        if (EventName === "room:join") {
+            return OriginalSocketOn(EventName, (Payload, Reply = () => {}) => {
+                const Session = BuildSession(Socket);
+                const Conflict = FindSessionConflict(Session);
+
+                if (Conflict) {
+                    Reply(BuildConflictResult(Session, Conflict));
+                    return;
+                }
+
+                const GuardedReply = Result => {
+                    if (Result?.ok) {
+                        ClearCurrentSession();
+                        CurrentSession = Session;
+                        RegisterSession(Session);
+                    }
+                    Reply(Result);
+                };
+
+                return Listener(Payload, GuardedReply);
+            });
+        }
+
+        if (EventName === "room:leave") {
+            return OriginalSocketOn(EventName, (Payload, Reply = () => {}) => {
+                const GuardedReply = Result => {
+                    ClearCurrentSession();
+                    Reply(Result);
+                };
+
+                const Result = Listener(Payload, GuardedReply);
+                if (Listener.length < 2) ClearCurrentSession();
+                return Result;
+            });
+        }
+
+        return OriginalSocketOn(EventName, Listener);
+    };
+}
+
+SocketServer.prototype.on = function(EventName, Listener) {
+    if (EventName === "connection") {
+        return OriginalServerOn.call(this, EventName, Socket => {
+            InstallRoomSessionGuard(Socket);
+            return Listener(Socket);
+        });
+    }
+
+    return OriginalServerOn.call(this, EventName, Listener);
 };
 
 require("./server-v11.js");
