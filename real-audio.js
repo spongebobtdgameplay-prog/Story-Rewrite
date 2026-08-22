@@ -39,6 +39,12 @@
             return ShellHost.StoryShell.GetAudioState();
         };
 
+        if (/(?:Firefox|FxiOS)\//i.test(navigator.userAgent)) {
+            document.addEventListener("click", () => {
+                ShellHost.StoryShell.NotifyInteraction();
+            }, { capture: true });
+        }
+
         return;
     }
 
