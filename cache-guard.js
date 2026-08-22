@@ -1,12 +1,8 @@
 (() => {
-    const CleanupVersion = "20260821-60";
-    const CompletedKey = `StoryRewriteCacheCleanup-${CleanupVersion}`;
-    const ReloadedKey = `${CompletedKey}-reloaded`;
+    const CleanupVersion = "20260821-61";
+    const ReloadedKey = `StoryRewriteCacheCleanup-${CleanupVersion}-reloaded`;
 
     async function ClearLegacyCaches() {
-        if (sessionStorage.getItem(CompletedKey) === "1") return;
-        sessionStorage.setItem(CompletedKey, "1");
-
         let Changed = false;
 
         try {
@@ -25,7 +21,9 @@
 
         if (Changed && window.top === window && sessionStorage.getItem(ReloadedKey) !== "1") {
             sessionStorage.setItem(ReloadedKey, "1");
-            window.location.replace(window.location.href);
+            const ReloadUrl = new URL(window.location.href);
+            ReloadUrl.searchParams.set("fresh", Date.now().toString(36));
+            window.location.replace(ReloadUrl.href);
         }
     }
 

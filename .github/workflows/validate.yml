@@ -22,7 +22,6 @@ jobs:
       - run: node --check network.js
       - run: node --check app.js
       - run: node --check audio.js
-      - run: node --check audio-enhancements.js
       - run: node --check real-audio.js
       - run: node --check shell.js
       - run: node --check service-worker.js
