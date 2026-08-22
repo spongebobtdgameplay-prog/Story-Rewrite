@@ -62,6 +62,7 @@
     let MusicWaitingForGesture = false;
     let LastPlaybackError = "";
     let FreshStartMusicName = "";
+    let ResumeMusicWhenVisible = false;
 
     const MusicFiles = {
         menu: "Music/menu.mp3",
@@ -365,6 +366,23 @@
     document.addEventListener("keydown", UnlockAudioFromGesture, { capture: true });
     document.addEventListener("click", UnlockAudioFromGesture, { capture: true });
 
+    document.addEventListener("visibilitychange", () => {
+        if (document.hidden) {
+            ResumeMusicWhenVisible = Boolean(MusicElement.src && !MusicElement.paused && !MusicElement.ended);
+            if (ResumeMusicWhenVisible) {
+                SavePosition();
+                MusicElement.pause();
+            }
+            return;
+        }
+
+        const ShouldResume = ResumeMusicWhenVisible;
+        ResumeMusicWhenVisible = false;
+        if (ShouldResume && AudioUnlocked && PendingMusicName && MusicVolume > 0) {
+            TryPlayPreparedMusic();
+        }
+    });
+
     window.addEventListener("pagehide", () => SavePosition());
     window.addEventListener("beforeunload", () => SavePosition());
 
@@ -404,6 +422,7 @@
     StoryAudio.StopMusic = function() {
         PendingMusicName = "";
         FreshStartMusicName = "";
+        ResumeMusicWhenVisible = false;
         MusicWaitingForGesture = false;
         StopMusicInternal(true, false);
     };
