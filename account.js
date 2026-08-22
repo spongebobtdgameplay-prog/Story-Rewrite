@@ -189,7 +189,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         RenderAccountState();
         StoryAudio.Configure(AccountSave.settings);
-        StoryAudio.PlayMusic("menu");
     } catch (Error) {
         AccountStatus.textContent = Error.message;
         AccountStatus.classList.add("Bad");
