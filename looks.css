@@ -1712,3 +1712,72 @@ html[data-story-cosmetic]:not([data-story-cosmetic="classic"]) .AccountSettingsH
     height: 25px;
     fill: currentColor;
 }
+
+html {
+    font-size: 18px;
+}
+
+.BrandTitle {
+    font-size: 23px;
+}
+
+.BrandSub,
+.Kicker,
+.Eyebrow,
+.eyebrow,
+.ChapterLabel,
+.BookDifficulty,
+.DifficultyBadge,
+.InfoLabel,
+.StatLabel {
+    font-size: 12px;
+}
+
+.HomeText {
+    font-size: 21px;
+    line-height: 1.58;
+}
+
+.Sentence {
+    font-size: 20px;
+}
+
+.EraseHint,
+.SceneCaption,
+.Aftermath,
+.InfoBox p,
+.StatusText,
+.TeamClueCard p,
+.BranchPanel p,
+.RemainingStory,
+.SceneDescription {
+    font-size: 18px;
+}
+
+.Small,
+.SidebarWorld {
+    font-size: 16px;
+}
+
+.UiButton,
+.PrimaryButton,
+.SecondaryButton,
+.DangerButton,
+.PowerButton,
+.BranchChoice,
+.enter-level-button,
+.BriefingPlay {
+    font-size: 17px;
+}
+
+.CosmeticName {
+    font-size: 17px;
+}
+
+.CosmeticDescription {
+    font-size: 14px;
+}
+
+.CosmeticState {
+    font-size: 12px;
+}
