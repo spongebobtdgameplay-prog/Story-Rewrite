@@ -1,4 +1,4 @@
-const STORY_FRONTEND_VERSION = "20260822.5";
+const STORY_FRONTEND_VERSION = "v2";
 const STORY_BACK_ICON = `
 <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
     <path d="M14.5 5 7.5 12l7 7" />
@@ -265,14 +265,14 @@ function AddStoryVersionBadge() {
     Badge.textContent = `Build ${STORY_FRONTEND_VERSION}`;
     Badge.title = "Loaded frontend version";
 
-    const AccountHost = document.querySelector(".AccountSettingsHeader > div:last-child");
-    if (AccountHost) {
-        AccountHost.appendChild(Badge);
+    const AccountTitle = document.querySelector(".AccountSettingsHeader h1");
+    if (AccountTitle) {
+        AccountTitle.appendChild(Badge);
         return;
     }
 
-    const TopActions = document.querySelector(".TopBar .TopActions");
-    if (TopActions) TopActions.prepend(Badge);
+    const BrandTitle = document.querySelector(".TopBar .BrandTitle");
+    if (BrandTitle) BrandTitle.appendChild(Badge);
 }
 
 function WireStoryShell() {
