@@ -202,6 +202,8 @@
                 PlaySound("click");
             }
         }, { capture: true });
+
+        ChildDocument.addEventListener("click", NotifyInteraction, { capture: true });
     }
 
     function RouteFromFrame(Frame) {
