@@ -6,15 +6,24 @@
         return null;
     }
 
+    if (typeof StoryAudio === "undefined") return;
+
     const ShellHost = GetPersistentShellHost();
+    let IsShellAudioHost = false;
 
-    if (typeof StoryAudio !== "undefined" && typeof StoryAudio.ShutdownLegacyAudio === "function") {
-        StoryAudio.ShutdownLegacyAudio();
-    }
-    window.StoryRealAudioActive = true;
+    try {
+        IsShellAudioHost = Boolean(
+            ShellHost &&
+            window.frameElement &&
+            window.frameElement.id === "StoryShellFrame"
+        );
+    } catch {}
 
-    if (ShellHost && typeof StoryAudio !== "undefined") {
+    if (ShellHost && !IsShellAudioHost) {
+        const ConfigureLocalAudio = StoryAudio.Configure.bind(StoryAudio);
+
         StoryAudio.Configure = function(Settings = {}) {
+            ConfigureLocalAudio(Settings);
             ShellHost.StoryShell.ConfigureAudio(Settings);
         };
 
@@ -26,22 +35,30 @@
             ShellHost.StoryShell.StopMusic();
         };
 
-        StoryAudio.PlaySound = function(Name) {
-            ShellHost.StoryShell.PlaySound(Name);
+        StoryAudio.GetPlaybackState = function() {
+            return ShellHost.StoryShell.GetAudioState();
         };
-        StoryAudio.PlaySound.V11Wrapped = true;
 
-        const NotifyInteraction = () => ShellHost.StoryShell.NotifyInteraction();
-        StoryAudio.UnlockAudio = NotifyInteraction;
-        StoryAudio.GetPlaybackState = () => ShellHost.StoryShell.GetAudioState();
-        document.addEventListener("pointerdown", NotifyInteraction, { capture: true, passive: true });
-        document.addEventListener("touchstart", NotifyInteraction, { capture: true, passive: true });
-        document.addEventListener("keydown", NotifyInteraction, { capture: true });
-        document.addEventListener("click", NotifyInteraction, { capture: true });
+        const NotifyMusicHost = () => ShellHost.StoryShell.NotifyInteraction();
+
+        function PlayLocalButtonClick(Event) {
+            const Button = Event.target?.closest?.("button,[role='button']");
+            if (!Button || Button.disabled || Button.getAttribute("aria-disabled") === "true") return;
+            StoryAudio.PlaySound("click");
+        }
+
+        document.addEventListener("pointerdown", NotifyMusicHost, { capture: true, passive: true });
+        document.addEventListener("touchstart", NotifyMusicHost, { capture: true, passive: true });
+        document.addEventListener("keydown", NotifyMusicHost, { capture: true });
+        document.addEventListener("click", NotifyMusicHost, { capture: true });
+        document.addEventListener("click", PlayLocalButtonClick, { capture: true });
         return;
     }
 
-    if (typeof StoryAudio === "undefined") return;
+    if (typeof StoryAudio.ShutdownLegacyAudio === "function") {
+        StoryAudio.ShutdownLegacyAudio();
+    }
+    window.StoryRealAudioActive = true;
 
     let MusicVolume = 0.45;
     let SoundVolume = 0.75;
@@ -492,4 +509,5 @@
 
     StoryAudio.UnlockAudio = UnlockAudioFromGesture;
     StoryAudio.GetPlaybackState = GetPlaybackState;
+    window.StoryAudioBridge = StoryAudio;
 })();
