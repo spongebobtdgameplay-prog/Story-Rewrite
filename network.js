@@ -297,13 +297,22 @@ async function EnterServerStage(StageId) {
     return StoreLastKnownServerSave(Result.save);
 }
 
-async function CheckServerStage(StageId, RemovedIndexes) {
+async function CheckServerStage(StageId, RemovedIndexes, BranchId = "") {
     const Result = await ApiRequest("/api/stage/check", {
         method: "POST",
-        body: JSON.stringify({ stageId: StageId, removedIndexes: RemovedIndexes })
+        body: JSON.stringify({ stageId: StageId, removedIndexes: RemovedIndexes, branchId: BranchId })
     });
     if (Result?.save) StoreLastKnownServerSave(Result.save);
     return Result;
+}
+
+async function SaveEquippedCosmetic(CosmeticId) {
+    const Result = await ApiRequest("/api/cosmetics", {
+        method: "POST",
+        body: JSON.stringify({ cosmeticId: CosmeticId })
+    });
+    if (Result?.save) StoreLastKnownServerSave(Result.save);
+    return Result?.save;
 }
 
 async function RestartServerChapter(WorldId) {
