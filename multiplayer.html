@@ -75,24 +75,9 @@
     align-items: center;
     gap: 8px;
 }
-.MultiplayerVisibleBackButton {
-    min-height: 52px;
-    padding: 0 18px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    color: #ffe8c3;
-    border: 1px solid #765036;
-    border-radius: 12px;
-    background: linear-gradient(180deg, #4a2c1b, #2a180f);
-    font: 900 14px/1 system-ui, sans-serif;
-    letter-spacing: .02em;
-    text-decoration: none;
-}
-.MultiplayerVisibleBackButton:hover {
-    border-color: #b47a45;
-    background: linear-gradient(180deg, #5a361f, #321d12);
+.MultiplayerHeroCopy {
+    flex: 1;
+    min-width: 0;
 }
 @media (max-width: 560px) {
     .MultiplayerSessionConflictActions {
@@ -107,13 +92,13 @@ const MultiplayerFreshToken = Date.now().toString(36);
 <body class="MultiplayerPage">
 <div class="MultiplayerShell">
     <header class="MultiplayerHero">
-        <div>
+        <button class="GameBackButton IconBackButton" type="button" data-story-back="main.html" aria-label="Go back"></button>
+        <div class="MultiplayerHeroCopy">
             <div class="Kicker">Co-op rewrite</div>
             <h1>Multiplayer</h1>
             <p>Create a code, invite up to four other players, chat, vote on numbered story options, and share three team lives.</p>
         </div>
         <div class="RoomFooterActions MultiplayerHeroNavigation">
-            <a class="MultiplayerVisibleBackButton" href="main.html" aria-label="Back to main">← Back</a>
             <button class="IconNavButton" type="button" data-story-go="account.html" data-account-icon aria-label="Account"></button>
         </div>
     </header>
