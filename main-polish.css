@@ -9,6 +9,7 @@ body {
     min-height: 100vh;
     overflow-x: hidden;
     overflow-y: auto;
+    overscroll-behavior-y: none;
     background:
         radial-gradient(circle at 15% 7%, rgba(255, 240, 207, .24), transparent 24%),
         radial-gradient(circle at 84% 16%, rgba(60, 30, 14, .19), transparent 28%),
