@@ -1,11 +1,11 @@
 {
   "name": "story-rewrite",
-  "version": "2.9.0",
+  "version": "2.10.0",
   "private": true,
   "description": "Story Rewrite multiplayer story puzzle game",
   "scripts": {
-    "start": "node server-v20.js",
-    "dev": "node server-v20.js"
+    "start": "node server-v21.js",
+    "dev": "node server-v21.js"
   },
   "engines": {
     "node": ">=20"
