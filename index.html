@@ -39,6 +39,92 @@ body {
     border: 0;
     background: #0b0d10;
 }
+
+.StoryAudioGate {
+    position: fixed;
+    right: 18px;
+    bottom: 18px;
+    z-index: 1000;
+    max-width: min(360px, calc(100vw - 36px));
+    min-height: 66px;
+    padding: 11px 15px 11px 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #2d170d;
+    border: 2px solid #c88d47;
+    border-radius: 15px;
+    background: linear-gradient(180deg, #ffe8bd, #e9bf7d);
+    box-shadow: 0 12px 30px rgba(24, 10, 4, .38), inset 0 1px rgba(255, 255, 255, .62);
+    font-family: Georgia, "Times New Roman", serif;
+    text-align: left;
+    cursor: pointer;
+}
+
+.StoryAudioGate[hidden] {
+    display: none;
+}
+
+.StoryAudioGate:hover {
+    color: #251108;
+    border-color: #e2ac64;
+    background: linear-gradient(180deg, #fff0cf, #f1cb8c);
+}
+
+.StoryAudioGate:focus-visible {
+    outline: 4px solid #fff1ce;
+    outline-offset: 3px;
+}
+
+.StoryAudioGate:disabled {
+    cursor: wait;
+    opacity: .82;
+}
+
+.StoryAudioGateIcon {
+    width: 38px;
+    height: 38px;
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    color: #fff0ce;
+    border-radius: 11px;
+    background: linear-gradient(145deg, #8d5930, #5d351f);
+}
+
+.StoryAudioGateIcon svg {
+    width: 23px;
+    height: 23px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.StoryAudioGateCopy {
+    min-width: 0;
+    display: grid;
+    gap: 3px;
+}
+
+.StoryAudioGateCopy strong {
+    font-size: 17px;
+    line-height: 1;
+}
+
+.StoryAudioGateCopy small {
+    color: #634129;
+    font: 800 12px/1.25 system-ui, sans-serif;
+}
+
+@media (max-width: 620px) {
+    .StoryAudioGate {
+        right: 10px;
+        bottom: 10px;
+        max-width: calc(100vw - 20px);
+    }
+}
 </style>
 <script>
 const AuthKey = "StoryRewriteAuthToken";
@@ -60,8 +146,21 @@ if (!Token) window.location.replace("auth.html");
 </head>
 <body>
 <div id="StoryShellRoot">
-    <iframe id="StoryShellFrame" class="StoryShellFrame" title="Story Rewrite" src="main.html"></iframe>
+    <iframe id="StoryShellFrame" class="StoryShellFrame" title="Story Rewrite"></iframe>
 </div>
+<button class="StoryAudioGate" id="StoryAudioGate" type="button" hidden>
+    <span class="StoryAudioGateIcon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" role="presentation">
+            <path d="M5 10v4h3l4 3V7L8 10Z"></path>
+            <path d="M15.5 9.2a4 4 0 0 1 0 5.6"></path>
+            <path d="M18 6.8a7.5 7.5 0 0 1 0 10.4"></path>
+        </svg>
+    </span>
+    <span class="StoryAudioGateCopy">
+        <strong>Enable sound</strong>
+        <small id="StoryAudioGateStatus">One click enables music and sound effects.</small>
+    </span>
+</button>
 <script src="cache-guard.js?v=20260821-60"></script>
 <script>
 const AssetFreshToken = Date.now().toString(36);
