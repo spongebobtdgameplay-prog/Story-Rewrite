@@ -8,6 +8,11 @@
 
     const ShellHost = GetPersistentShellHost();
 
+    if (typeof StoryAudio !== "undefined" && typeof StoryAudio.ShutdownLegacyAudio === "function") {
+        StoryAudio.ShutdownLegacyAudio();
+    }
+    window.StoryRealAudioActive = true;
+
     if (ShellHost && typeof StoryAudio !== "undefined") {
         StoryAudio.Configure = function(Settings = {}) {
             ShellHost.StoryShell.ConfigureAudio(Settings);
@@ -30,6 +35,7 @@
         document.addEventListener("pointerdown", NotifyInteraction, { capture: true, passive: true });
         document.addEventListener("touchstart", NotifyInteraction, { capture: true, passive: true });
         document.addEventListener("keydown", NotifyInteraction, { capture: true });
+        document.addEventListener("click", NotifyInteraction, { capture: true });
         return;
     }
 
@@ -379,6 +385,7 @@
     document.addEventListener("pointerdown", UnlockAudioFromGesture, { capture: true, passive: true });
     document.addEventListener("touchstart", UnlockAudioFromGesture, { capture: true, passive: true });
     document.addEventListener("keydown", UnlockAudioFromGesture, { capture: true });
+    document.addEventListener("click", UnlockAudioFromGesture, { capture: true });
     document.addEventListener("click", GenericButtonClick, { capture: true });
     window.addEventListener("pagehide", () => SavePosition());
     window.addEventListener("beforeunload", () => SavePosition());
