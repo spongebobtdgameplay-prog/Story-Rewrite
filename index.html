@@ -25,7 +25,13 @@ html,
 body {
     overflow: hidden;
     overscroll-behavior: none;
-    background: #0b0d10;
+    background:
+        radial-gradient(circle at 15% 7%, rgba(255, 240, 207, .24), transparent 24%),
+        radial-gradient(circle at 84% 16%, rgba(60, 30, 14, .19), transparent 28%),
+        linear-gradient(155deg, #b38b61 0%, #8b6848 42%, #6e4c33 72%, #4d301f 100%);
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-attachment: fixed;
 }
 
 #StoryShellRoot {
@@ -40,7 +46,7 @@ body {
     inset: 0;
     display: block;
     border: 0;
-    background: #0b0d10;
+    background: transparent;
 }
 
 </style>
@@ -66,7 +72,7 @@ if (!Token) window.location.replace("auth.html");
 <div id="StoryShellRoot">
     <iframe id="StoryShellFrame" class="StoryShellFrame" title="Story Rewrite"></iframe>
 </div>
-<script src="cache-guard.js?v=20260822-70"></script>
+<script src="cache-guard.js?v=20260822-71"></script>
 <script>
 const AssetFreshToken = Date.now().toString(36);
 document.write(`<script src="shell.js?fresh=${AssetFreshToken}"><\/script>`);
