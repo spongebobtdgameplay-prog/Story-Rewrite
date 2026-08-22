@@ -1,0 +1,50 @@
+html {
+    min-height: 100%;
+    background: #100906;
+    overscroll-behavior-y: none;
+}
+
+body.MultiplayerPage {
+    min-height: 100vh;
+    margin: 0;
+    background: #100906;
+    overscroll-behavior-y: none;
+    position: relative;
+}
+
+body.MultiplayerPage::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background:
+        radial-gradient(circle at 18% 8%, rgba(213, 165, 95, .16), transparent 30%),
+        linear-gradient(145deg, #432718 0%, #21130d 48%, #100906 100%);
+}
+
+body.MultiplayerPage > * {
+    position: relative;
+    z-index: 1;
+}
+
+.MultiplayerShell {
+    min-height: calc(100vh - 66px);
+}
+
+.StatusText {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity .28s ease, transform .28s ease;
+}
+
+.StatusText.IsFading {
+    opacity: 0;
+    transform: translateY(-5px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .StatusText {
+        transition: none;
+    }
+}
