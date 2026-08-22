@@ -762,3 +762,33 @@ body.StoryWarningOpen {
 .AccountToggleButton {
     justify-self: end;
 }
+
+
+.AccountSettingsRightColumn,
+.AccountSettingsRightColumn .AccountSettingsSection,
+.AccountSettingsRightColumn .AccountSettingRow,
+.AccountSettingsRightColumn .AccountVolumeControl {
+    min-width: 0;
+}
+
+.AccountSettingsRightColumn .AccountSettingRow:not(.AccountToggleRow) {
+    grid-template-columns: minmax(72px, 90px) minmax(0, 1fr);
+}
+
+.AccountSettingsRightColumn .AccountVolumeControl {
+    width: 100%;
+    max-width: 100%;
+    grid-template-columns: minmax(0, 1fr) 68px;
+}
+
+.AccountSettingsRightColumn .AccountVolumeValue {
+    min-width: 68px;
+    width: 68px;
+    box-sizing: border-box;
+}
+
+@media (max-width: 760px) {
+    .AccountSettingsRightColumn .AccountSettingRow:not(.AccountToggleRow) {
+        grid-template-columns: 1fr;
+    }
+}
