@@ -1,6 +1,6 @@
 function IsOtherSessionError(Error) {
     const Message = String(Error?.message || "");
-    const Code = String(Error?.data?.code || "");
+    const Code = String(Error?.data?.code || Error?.code || "");
     return Code === "OTHER_SESSION_FOUND" || Message === "Other Session found";
 }
 
@@ -16,25 +16,19 @@ function ShowMultiplayerSessionConflict(Error) {
     if (Detail) {
         if (SameAccount) {
             Detail.textContent = Username
-                ? `${Username} is already connected to multiplayer in another tab, browser, or session.`
-                : "This account is already connected to multiplayer somewhere else.";
+                ? `${Username} is already inside a multiplayer game in another tab, browser, or session.`
+                : "This account is already inside a multiplayer game somewhere else.";
         } else if (SameDevice) {
             Detail.textContent = Username
-                ? `This device already has ${Username} connected to multiplayer. Only one multiplayer session can run on a device at a time.`
-                : "This device already has an active multiplayer session. Only one multiplayer session can run on a device at a time.";
+                ? `This device already has ${Username} inside a multiplayer game. Leave that game before joining from this tab or browser.`
+                : "This device already has an active multiplayer game. Leave it before joining from this tab or browser.";
         } else {
-            Detail.textContent = "Another multiplayer session is already active for this account or device.";
+            Detail.textContent = "Another multiplayer game session is already active for this account or device.";
         }
     }
 
     MultiplayerReadyPromise = null;
     MultiplayerState = null;
-
-    if (MultiplayerSocket) {
-        MultiplayerSocket.io.opts.reconnection = false;
-        MultiplayerSocket.disconnect();
-    }
-
     HideLobbyStatus();
     document.getElementById("RoomActions")?.classList.add("Hidden");
     document.getElementById("ActiveRoom")?.classList.add("Hidden");
@@ -44,6 +38,23 @@ function ShowMultiplayerSessionConflict(Error) {
 function HideMultiplayerSessionConflict() {
     document.getElementById("MultiplayerSessionConflict")?.classList.add("Hidden");
 }
+
+const BaseEmitWithAck = EmitWithAck;
+EmitWithAck = async function(EventName, Payload, TimeoutMilliseconds = 12000) {
+    const Result = await BaseEmitWithAck(EventName, Payload, TimeoutMilliseconds);
+
+    if (String(Result?.code || "") === "OTHER_SESSION_FOUND") {
+        const Error = new Error("Other Session found");
+        Error.code = "OTHER_SESSION_FOUND";
+        Error.data = Result?.data || {
+            code: "OTHER_SESSION_FOUND"
+        };
+        ShowMultiplayerSessionConflict(Error);
+        throw Error;
+    }
+
+    return Result;
+};
 
 WaitForSocketConnection = function(Socket, TimeoutMilliseconds) {
     if (Socket.connected) return Promise.resolve();
@@ -98,14 +109,17 @@ window.addEventListener("DOMContentLoaded", () => {
     document.getElementById("MultiplayerSessionRetryButton")?.addEventListener("click", async () => {
         HideMultiplayerSessionConflict();
         document.getElementById("RoomActions")?.classList.remove("Hidden");
-        MultiplayerSocket = null;
-        MultiplayerReadyPromise = null;
 
-        try {
-            await EnsureMultiplayerReady();
-        } catch (Error) {
-            if (IsOtherSessionError(Error)) ShowMultiplayerSessionConflict(Error);
-            else ShowLobbyStatus(FriendlyConnectionError(Error), false);
+        if (!MultiplayerSocket?.connected) {
+            MultiplayerSocket = null;
+            MultiplayerReadyPromise = null;
+
+            try {
+                await EnsureMultiplayerReady();
+            } catch (Error) {
+                if (IsOtherSessionError(Error)) ShowMultiplayerSessionConflict(Error);
+                else ShowLobbyStatus(FriendlyConnectionError(Error), false);
+            }
         }
     });
 });
