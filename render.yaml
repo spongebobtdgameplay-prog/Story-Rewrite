@@ -17,3 +17,7 @@ services:
         value: https://spongebobtdgameplay-prog.github.io,https://story-rewrite-backend.onrender.com
       - key: DATABASE_URL
         sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_MODEL
+        value: gpt-4.1-mini

@@ -385,6 +385,11 @@ function ToggleReady() {
 async function StartRoom() {
     if (StartingRoom) return;
 
+    if ((MultiplayerState?.players?.length || 0) < 2) {
+        ShowRoomStatus("Invite at least one other player before starting.", false);
+        return;
+    }
+
     const Button = ById("StartButton");
     if (!Button) return;
 
@@ -463,7 +468,13 @@ function RenderRoom() {
     SetText("PlayerCount", `${Players.length} / ${MaxPlayers}`);
 
     const IsHost = MultiplayerState.hostUsername === CurrentProfile.username;
-    ById("StartButton")?.classList.toggle("Hidden", !IsHost);
+    const HasEnoughPlayers = Players.length >= 2;
+    const StartButton = ById("StartButton");
+    StartButton?.classList.toggle("Hidden", !IsHost);
+    if (StartButton) {
+        StartButton.disabled = !HasEnoughPlayers;
+        StartButton.title = HasEnoughPlayers ? "" : "Invite at least one other player.";
+    }
 
     const LocalPlayer = Players.find(Player => Player.username === CurrentProfile.username);
     LocalReady = Boolean(LocalPlayer?.ready);
