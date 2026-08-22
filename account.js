@@ -23,9 +23,23 @@ function RenderKeepMusicPlaying() {
     AccountKeepMusicState.textContent = Enabled ? "On" : "Off";
 }
 
+function ApplyKeepMusicPlaying(Enabled) {
+    try {
+        if (window.parent !== window && window.parent.StoryShell?.IsPersistentShell) {
+            window.parent.StoryShell.SetKeepMusicPlaying(Enabled);
+            return;
+        }
+    } catch {}
+
+    if (typeof StoryAudio !== "undefined" && typeof StoryAudio.SetKeepMusicPlaying === "function") {
+        StoryAudio.SetKeepMusicPlaying(Enabled);
+    }
+}
+
 function ToggleKeepMusicPlaying() {
     const Enabled = !ReadKeepMusicPlaying();
     localStorage.setItem(KeepMusicPlayingKey, Enabled ? "1" : "0");
+    ApplyKeepMusicPlaying(Enabled);
     RenderKeepMusicPlaying();
 }
 
@@ -271,6 +285,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     AccountKeepMusicState = document.getElementById("KeepMusicPlayingState");
 
     RenderKeepMusicPlaying();
+    ApplyKeepMusicPlaying(ReadKeepMusicPlaying());
     AccountKeepMusicButton.addEventListener("click", ToggleKeepMusicPlaying);
 
     try {

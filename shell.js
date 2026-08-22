@@ -165,6 +165,14 @@
         if (Host && typeof Host.Configure === "function") Host.Configure(CurrentAudioSettings);
     }
 
+    function SetKeepMusicPlaying(Enabled) {
+        const Host = GetAudioHost();
+        if (Host && typeof Host.SetKeepMusicPlaying === "function") {
+            return Host.SetKeepMusicPlaying(Enabled);
+        }
+        return false;
+    }
+
     function PlaySound(Name) {
         const Host = GetAudioHost();
         if (Host && typeof Host.PlaySound === "function") Host.PlaySound(Name);
@@ -459,6 +467,7 @@
         Exit,
         Back,
         ConfigureAudio,
+        SetKeepMusicPlaying,
         PlaySound,
         PlayMusic,
         StopMusic,

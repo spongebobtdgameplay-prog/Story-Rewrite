@@ -367,7 +367,7 @@
     document.addEventListener("keydown", UnlockAudioFromGesture, { capture: true });
     document.addEventListener("click", UnlockAudioFromGesture, { capture: true });
 
-    function KeepMusicPlayingWhenHidden() {
+    function ReadKeepMusicPlaying() {
         try {
             return localStorage.getItem(KeepMusicPlayingKey) === "1";
         } catch {
@@ -375,9 +375,33 @@
         }
     }
 
+    let KeepMusicPlaying = ReadKeepMusicPlaying();
+
+    function SetKeepMusicPlaying(Enabled) {
+        KeepMusicPlaying = Boolean(Enabled);
+
+        try {
+            localStorage.setItem(KeepMusicPlayingKey, KeepMusicPlaying ? "1" : "0");
+        } catch {}
+
+        if (!KeepMusicPlaying && document.hidden && MusicElement.src && !MusicElement.paused && !MusicElement.ended) {
+            ResumeMusicWhenVisible = true;
+            SavePosition();
+            MusicElement.pause();
+        }
+
+        return KeepMusicPlaying;
+    }
+
+    window.addEventListener("storage", Event => {
+        if (Event.key === KeepMusicPlayingKey) {
+            KeepMusicPlaying = Event.newValue === "1";
+        }
+    });
+
     document.addEventListener("visibilitychange", () => {
         if (document.hidden) {
-            if (KeepMusicPlayingWhenHidden()) {
+            if (KeepMusicPlaying) {
                 ResumeMusicWhenVisible = false;
                 return;
             }
@@ -443,5 +467,6 @@
 
     StoryAudio.UnlockAudio = UnlockAudioFromGesture;
     StoryAudio.GetPlaybackState = GetPlaybackState;
+    StoryAudio.SetKeepMusicPlaying = SetKeepMusicPlaying;
     window.StoryAudioBridge = StoryAudio;
 })();
