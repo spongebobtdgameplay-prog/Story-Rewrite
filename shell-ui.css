@@ -191,8 +191,15 @@ html:has(body.AccountSettingsPage) {
     display: grid;
     grid-template-columns: 1.2fr .8fr;
     align-items: start;
-    gap: 18px;
-    padding: 22px;
+    gap: 14px;
+    padding: 14px;
+}
+
+.AccountSettingsColumn {
+    min-width: 0;
+    display: grid;
+    align-content: start;
+    gap: 14px;
 }
 
 .AccountSettingsSection {
@@ -200,7 +207,7 @@ html:has(body.AccountSettingsPage) {
     border: 1px solid rgba(221,169,108,.16);
     border-radius: 18px;
     background: rgba(0,0,0,.14);
-    padding: 20px;
+    padding: 16px;
 }
 
 .AccountProgressSection {
@@ -323,6 +330,83 @@ html:has(body.AccountSettingsPage) {
     min-height: 24px;
     margin-top: 12px;
     color: #d9b88d;
+}
+
+.AccountToggleRow {
+    grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.AccountToggleCopy {
+    min-width: 0;
+    display: grid;
+    gap: 4px;
+}
+
+.AccountToggleCopy small {
+    color: #b9956e;
+    font: 700 12px/1.35 system-ui, sans-serif;
+}
+
+.AccountToggleButton {
+    min-width: 106px;
+    min-height: 42px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 9px;
+    padding: 7px 10px;
+    color: #d4b58d;
+    border: 1px solid #765035;
+    border-radius: 12px;
+    background: #24130d;
+    cursor: pointer;
+}
+
+.AccountToggleTrack {
+    width: 42px;
+    height: 22px;
+    flex: 0 0 auto;
+    padding: 2px;
+    display: flex;
+    align-items: center;
+    border-radius: 999px;
+    background: #654733;
+    box-shadow: inset 0 2px 4px rgba(18, 8, 4, .38);
+}
+
+.AccountToggleTrack span {
+    width: 18px;
+    height: 18px;
+    display: block;
+    border-radius: 50%;
+    background: #eed4aa;
+    box-shadow: 0 2px 5px rgba(20, 8, 3, .4);
+    transition: transform .16s ease;
+}
+
+.AccountToggleButton strong {
+    min-width: 25px;
+    font: 900 13px/1 Georgia, "Times New Roman", serif;
+}
+
+.AccountToggleButton[aria-checked="true"] {
+    color: #2d170d;
+    border-color: #c68a45;
+    background: #edc780;
+}
+
+.AccountToggleButton[aria-checked="true"] .AccountToggleTrack {
+    background: #8b552d;
+}
+
+.AccountToggleButton[aria-checked="true"] .AccountToggleTrack span {
+    transform: translateX(20px);
+    background: #fff2d5;
+}
+
+.AccountToggleButton:focus-visible {
+    outline: 3px solid #f2c77f;
+    outline-offset: 3px;
 }
 
 .GameBackButton.IconBackButton {
@@ -492,7 +576,15 @@ body.StoryWarningOpen {
 
 @media (max-width: 760px) {
     .AccountSettingsBody {
-        grid-template-columns: 1fr;
+        display: block;
+    }
+
+    .AccountSettingsColumn {
+        margin-bottom: 14px;
+    }
+
+    .AccountSettingsColumn:last-child {
+        margin-bottom: 0;
     }
 
     .AccountIdentity {

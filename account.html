@@ -41,45 +41,59 @@ for (const StyleName of ["looks.css", "shell-ui.css"]) {
         </div>
 
         <div class="AccountSettingsBody">
-            <section class="AccountSettingsSection AccountProgressSection">
-                <h3>Progress</h3>
-                <div class="AccountStatGrid">
-                    <div class="AccountStatTile"><span>Lives</span><strong id="AccountLives">—</strong></div>
-                    <div class="AccountStatTile"><span>Stars</span><strong id="AccountStars">—</strong></div>
-                    <div class="AccountStatTile"><span>Stages cleared</span><strong id="AccountCleared">—</strong></div>
-                    <div class="AccountStatTile"><span>Failed checks</span><strong id="AccountDeaths">—</strong></div>
-                </div>
-            </section>
-
-            <section class="AccountSettingsSection">
-                <h3>Story-book cosmetics</h3>
-                <p class="AccountSectionHint">Finish a world's final level with 3 stars to unlock its bookmark.</p>
-                <div id="CosmeticGrid" class="CosmeticGrid"></div>
-            </section>
-
-            <section class="AccountSettingsSection">
-                <h3>Game settings</h3>
-                <div class="AccountSettingRow">
-                    <label for="MusicVolumeSlider">Music</label>
-                    <div class="AccountVolumeControl">
-                        <input class="AccountVolumeSlider" id="MusicVolumeSlider" type="range" min="0" max="100" step="1" value="45" style="--VolumePercent: 45%" aria-describedby="MusicVolumeValue">
-                        <output class="AccountVolumeValue" id="MusicVolumeValue" for="MusicVolumeSlider">45%</output>
+            <div class="AccountSettingsColumn">
+                <section class="AccountSettingsSection AccountProgressSection">
+                    <h3>Progress</h3>
+                    <div class="AccountStatGrid">
+                        <div class="AccountStatTile"><span>Lives</span><strong id="AccountLives">—</strong></div>
+                        <div class="AccountStatTile"><span>Stars</span><strong id="AccountStars">—</strong></div>
+                        <div class="AccountStatTile"><span>Stages cleared</span><strong id="AccountCleared">—</strong></div>
+                        <div class="AccountStatTile"><span>Failed checks</span><strong id="AccountDeaths">—</strong></div>
                     </div>
-                </div>
-                <div class="AccountSettingRow">
-                    <label for="SoundVolumeSlider">Sounds</label>
-                    <div class="AccountVolumeControl">
-                        <input class="AccountVolumeSlider" id="SoundVolumeSlider" type="range" min="0" max="100" step="1" value="75" style="--VolumePercent: 75%" aria-describedby="SoundVolumeValue">
-                        <output class="AccountVolumeValue" id="SoundVolumeValue" for="SoundVolumeSlider">75%</output>
+                </section>
+
+                <section class="AccountSettingsSection">
+                    <h3>Game settings</h3>
+                    <div class="AccountSettingRow">
+                        <label for="MusicVolumeSlider">Music</label>
+                        <div class="AccountVolumeControl">
+                            <input class="AccountVolumeSlider" id="MusicVolumeSlider" type="range" min="0" max="100" step="1" value="45" style="--VolumePercent: 45%" aria-describedby="MusicVolumeValue">
+                            <output class="AccountVolumeValue" id="MusicVolumeValue" for="MusicVolumeSlider">45%</output>
+                        </div>
                     </div>
-                </div>
-                <div class="AccountDangerZone">
-                    <button class="DangerButton" id="ResetProgressButton" type="button">Reset Progress</button>
-                    <button class="SecondaryButton" id="SignOutButton" type="button">Sign Out</button>
-                    <button class="DangerButton" id="DeleteAccountButton" type="button">Delete Account</button>
-                </div>
-                <div class="AccountStatusLine" id="AccountStatus"></div>
-            </section>
+                    <div class="AccountSettingRow">
+                        <label for="SoundVolumeSlider">Sounds</label>
+                        <div class="AccountVolumeControl">
+                            <input class="AccountVolumeSlider" id="SoundVolumeSlider" type="range" min="0" max="100" step="1" value="75" style="--VolumePercent: 75%" aria-describedby="SoundVolumeValue">
+                            <output class="AccountVolumeValue" id="SoundVolumeValue" for="SoundVolumeSlider">75%</output>
+                        </div>
+                    </div>
+                    <div class="AccountSettingRow AccountToggleRow">
+                        <div class="AccountToggleCopy">
+                            <label id="KeepMusicPlayingLabel">Keep music playing</label>
+                            <small>Continue when the tab is hidden or inactive.</small>
+                        </div>
+                        <button class="AccountToggleButton" id="KeepMusicPlayingButton" type="button" role="switch" aria-checked="false" aria-labelledby="KeepMusicPlayingLabel KeepMusicPlayingState">
+                            <span class="AccountToggleTrack" aria-hidden="true"><span></span></span>
+                            <strong id="KeepMusicPlayingState">Off</strong>
+                        </button>
+                    </div>
+                    <div class="AccountDangerZone">
+                        <button class="DangerButton" id="ResetProgressButton" type="button">Reset Progress</button>
+                        <button class="SecondaryButton" id="SignOutButton" type="button">Sign Out</button>
+                        <button class="DangerButton" id="DeleteAccountButton" type="button">Delete Account</button>
+                    </div>
+                    <div class="AccountStatusLine" id="AccountStatus"></div>
+                </section>
+            </div>
+
+            <div class="AccountSettingsColumn">
+                <section class="AccountSettingsSection">
+                    <h3>Story-book cosmetics</h3>
+                    <p class="AccountSectionHint">Finish a world's final level with 3 stars to unlock its bookmark.</p>
+                    <div id="CosmeticGrid" class="CosmeticGrid"></div>
+                </section>
+            </div>
         </div>
     </section>
 </main>

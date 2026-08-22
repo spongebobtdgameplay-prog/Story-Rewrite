@@ -1,4 +1,5 @@
 const AccountSnapshotKey = "StoryRewriteAccountSnapshotV1";
+const KeepMusicPlayingKey = "StoryRewriteKeepMusicPlayingV1";
 let AccountProfileResult = null;
 let AccountData = null;
 let AccountSave = null;
@@ -8,6 +9,25 @@ let AccountMusicSlider = null;
 let AccountSoundSlider = null;
 let AccountMusicValue = null;
 let AccountSoundValue = null;
+let AccountKeepMusicButton = null;
+let AccountKeepMusicState = null;
+
+function ReadKeepMusicPlaying() {
+    return localStorage.getItem(KeepMusicPlayingKey) === "1";
+}
+
+function RenderKeepMusicPlaying() {
+    if (!AccountKeepMusicButton || !AccountKeepMusicState) return;
+    const Enabled = ReadKeepMusicPlaying();
+    AccountKeepMusicButton.setAttribute("aria-checked", Enabled ? "true" : "false");
+    AccountKeepMusicState.textContent = Enabled ? "On" : "Off";
+}
+
+function ToggleKeepMusicPlaying() {
+    const Enabled = !ReadKeepMusicPlaying();
+    localStorage.setItem(KeepMusicPlayingKey, Enabled ? "1" : "0");
+    RenderKeepMusicPlaying();
+}
 
 function ApplyAccountAudioSettings(Settings) {
     StoryAudio.Configure(Settings);
@@ -247,6 +267,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     AccountSoundSlider = document.getElementById("SoundVolumeSlider");
     AccountMusicValue = document.getElementById("MusicVolumeValue");
     AccountSoundValue = document.getElementById("SoundVolumeValue");
+    AccountKeepMusicButton = document.getElementById("KeepMusicPlayingButton");
+    AccountKeepMusicState = document.getElementById("KeepMusicPlayingState");
+
+    RenderKeepMusicPlaying();
+    AccountKeepMusicButton.addEventListener("click", ToggleKeepMusicPlaying);
 
     try {
         const LoadedState = await LoadAccountState();

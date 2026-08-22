@@ -81,6 +81,7 @@
     };
 
     const MusicPositionKey = "StoryRewriteMusicPositionsV2";
+    const KeepMusicPlayingKey = "StoryRewriteKeepMusicPlayingV1";
     const FadeInSeconds = 0.85;
     const FadeOutSeconds = 3;
 
@@ -366,8 +367,21 @@
     document.addEventListener("keydown", UnlockAudioFromGesture, { capture: true });
     document.addEventListener("click", UnlockAudioFromGesture, { capture: true });
 
+    function KeepMusicPlayingWhenHidden() {
+        try {
+            return localStorage.getItem(KeepMusicPlayingKey) === "1";
+        } catch {
+            return false;
+        }
+    }
+
     document.addEventListener("visibilitychange", () => {
         if (document.hidden) {
+            if (KeepMusicPlayingWhenHidden()) {
+                ResumeMusicWhenVisible = false;
+                return;
+            }
+
             ResumeMusicWhenVisible = Boolean(MusicElement.src && !MusicElement.paused && !MusicElement.ended);
             if (ResumeMusicWhenVisible) {
                 SavePosition();
