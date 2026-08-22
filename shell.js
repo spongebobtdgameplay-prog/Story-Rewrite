@@ -200,11 +200,13 @@
         if (Host && typeof Host.StopMusic === "function") Host.StopMusic();
     }
 
-    function NotifyInteraction() {
+    function NotifyInteraction(FromTrustedGesture = false) {
+        if (!FromTrustedGesture) return Promise.resolve(null);
+
         const Host = GetAudioHost();
         if (!Host) return Promise.resolve(null);
 
-        if (typeof Host.UnlockAudio === "function") return Host.UnlockAudio();
+        if (typeof Host.UnlockAudio === "function") return Host.UnlockAudio(true);
         if (CurrentMusicName && typeof Host.PlayMusic === "function") {
             return Host.PlayMusic(CurrentMusicName);
         }
@@ -223,7 +225,10 @@
         if (!ChildDocument || ChildDocument.documentElement?.dataset.storyShellBridge === "1") return;
         if (ChildDocument.documentElement) ChildDocument.documentElement.dataset.storyShellBridge = "1";
 
-        const ResumePersistentMusic = () => NotifyInteraction();
+        const ResumePersistentMusic = Event => {
+            if (!Event.isTrusted) return;
+            NotifyInteraction(true);
+        };
         ChildDocument.addEventListener("pointerdown", ResumePersistentMusic, { capture: true, passive: true });
         ChildDocument.addEventListener("touchstart", ResumePersistentMusic, { capture: true, passive: true });
         ChildDocument.addEventListener("keydown", ResumePersistentMusic, { capture: true });

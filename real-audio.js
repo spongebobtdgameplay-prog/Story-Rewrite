@@ -41,7 +41,7 @@
 
         if (/(?:Firefox|FxiOS)\//i.test(navigator.userAgent)) {
             document.addEventListener("click", () => {
-                ShellHost.StoryShell.NotifyInteraction();
+                ShellHost.StoryShell.NotifyInteraction(true);
             }, { capture: true });
         }
 
@@ -61,6 +61,7 @@
     let AudioUnlocked = false;
     let MusicWaitingForGesture = false;
     let LastPlaybackError = "";
+    let FreshStartMusicName = "";
 
     const MusicFiles = {
         menu: "Music/menu.mp3",
@@ -159,6 +160,12 @@
     function RestoreCurrentTrackPosition() {
         if (!MusicName || !Number.isFinite(MusicElement.duration) || MusicElement.duration <= 0) return;
 
+        if (FreshStartMusicName === MusicName) {
+            try { MusicElement.currentTime = 0; } catch {}
+            ApplyMusicFade();
+            return;
+        }
+
         const Position = SavedPosition(MusicName);
         const SafePosition = Position >= MusicElement.duration - FadeOutSeconds
             ? 0
@@ -173,6 +180,7 @@
 
     MusicElement.addEventListener("loadedmetadata", RestoreCurrentTrackPosition);
     MusicElement.addEventListener("play", () => {
+        FreshStartMusicName = "";
         MusicWaitingForGesture = false;
         LastPlaybackError = "";
         DispatchPlaybackState();
@@ -271,6 +279,13 @@
             return Promise.resolve(false);
         }
 
+        if (FreshStartMusicName === RequestedMusicName) {
+            try {
+                Element.pause();
+                Element.currentTime = 0;
+            } catch {}
+        }
+
         if (!Element.paused && !Element.ended) {
             MusicWaitingForGesture = false;
             LastPlaybackError = "";
@@ -316,8 +331,19 @@
         }
     }
 
-    function UnlockAudioFromGesture() {
+    function UnlockAudioFromGesture(EventOrTrusted = false) {
+        const TrustedGesture = EventOrTrusted === true || EventOrTrusted?.isTrusted === true;
+        if (!TrustedGesture) {
+            return Promise.resolve({
+                contextRunning: GetLocalSoundState().contextState === "running",
+                musicPlaying: false,
+                state: GetPlaybackState()
+            });
+        }
+
+        const FirstUnlock = !AudioUnlocked;
         AudioUnlocked = true;
+        if (FirstUnlock && PendingMusicName) FreshStartMusicName = PendingMusicName;
 
         const MusicPromise = PendingMusicName
             ? TryPlayPreparedMusic(true)
@@ -360,9 +386,14 @@
 
         PendingMusicName = RequestedMusicName;
         MusicWaitingForGesture = MusicVolume > 0;
-        PrepareMusic(PendingMusicName);
 
         if (!AudioUnlocked) {
+            MusicElement.pause();
+            try { MusicElement.currentTime = 0; } catch {}
+            MusicElement.removeAttribute("src");
+            try { MusicElement.load(); } catch {}
+            MusicName = "";
+            FreshStartMusicName = PendingMusicName;
             DispatchPlaybackState();
             return Promise.resolve(false);
         }
@@ -372,6 +403,7 @@
 
     StoryAudio.StopMusic = function() {
         PendingMusicName = "";
+        FreshStartMusicName = "";
         MusicWaitingForGesture = false;
         StopMusicInternal(true, false);
     };
