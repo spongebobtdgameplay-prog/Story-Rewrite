@@ -46,23 +46,23 @@ const StoryAudio = (() => {
         if (!Context || Context.state !== "running" || SoundVolume <= 0) return false;
 
         const StartTime = Context.currentTime;
-        const EndTime = StartTime + 0.065;
+        const EndTime = StartTime + 0.08;
         const PrimaryTone = Context.createOscillator();
         const AccentTone = Context.createOscillator();
         const MasterGain = Context.createGain();
 
         PrimaryTone.type = "triangle";
-        PrimaryTone.frequency.setValueAtTime(920, StartTime);
-        PrimaryTone.frequency.exponentialRampToValueAtTime(520, EndTime);
+        PrimaryTone.frequency.setValueAtTime(760, StartTime);
+        PrimaryTone.frequency.exponentialRampToValueAtTime(420, EndTime);
 
         AccentTone.type = "sine";
-        AccentTone.frequency.setValueAtTime(1450, StartTime);
-        AccentTone.frequency.exponentialRampToValueAtTime(980, StartTime + 0.032);
+        AccentTone.frequency.setValueAtTime(1180, StartTime);
+        AccentTone.frequency.exponentialRampToValueAtTime(720, StartTime + 0.038);
 
-        const Peak = Math.max(0.0001, 0.15 * SoundVolume);
+        const Peak = Math.max(0.0001, 0.48 * SoundVolume);
         MasterGain.gain.setValueAtTime(0.0001, StartTime);
         MasterGain.gain.exponentialRampToValueAtTime(Peak, StartTime + 0.002);
-        MasterGain.gain.exponentialRampToValueAtTime(Math.max(0.0001, Peak * 0.24), StartTime + 0.018);
+        MasterGain.gain.exponentialRampToValueAtTime(Math.max(0.0001, Peak * 0.34), StartTime + 0.022);
         MasterGain.gain.exponentialRampToValueAtTime(0.0001, EndTime);
 
         PrimaryTone.connect(MasterGain);
@@ -71,7 +71,7 @@ const StoryAudio = (() => {
 
         PrimaryTone.start(StartTime);
         AccentTone.start(StartTime);
-        AccentTone.stop(StartTime + 0.035);
+        AccentTone.stop(StartTime + 0.042);
         PrimaryTone.stop(EndTime);
         return true;
     }

@@ -62,15 +62,15 @@ for (const StyleName of ["looks.css", "shell-ui.css"]) {
                 <div class="AccountSettingRow">
                     <label for="MusicVolumeSlider">Music</label>
                     <div class="AccountVolumeControl">
-                        <input class="AccountVolumeSlider" id="MusicVolumeSlider" type="range" min="0" max="100" step="1" aria-describedby="MusicVolumeValue">
-                        <output class="AccountVolumeValue" id="MusicVolumeValue" for="MusicVolumeSlider">—</output>
+                        <input class="AccountVolumeSlider" id="MusicVolumeSlider" type="range" min="0" max="100" step="1" value="45" style="--VolumePercent: 45%" aria-describedby="MusicVolumeValue">
+                        <output class="AccountVolumeValue" id="MusicVolumeValue" for="MusicVolumeSlider">45%</output>
                     </div>
                 </div>
                 <div class="AccountSettingRow">
                     <label for="SoundVolumeSlider">Sounds</label>
                     <div class="AccountVolumeControl">
-                        <input class="AccountVolumeSlider" id="SoundVolumeSlider" type="range" min="0" max="100" step="1" aria-describedby="SoundVolumeValue">
-                        <output class="AccountVolumeValue" id="SoundVolumeValue" for="SoundVolumeSlider">—</output>
+                        <input class="AccountVolumeSlider" id="SoundVolumeSlider" type="range" min="0" max="100" step="1" value="75" style="--VolumePercent: 75%" aria-describedby="SoundVolumeValue">
+                        <output class="AccountVolumeValue" id="SoundVolumeValue" for="SoundVolumeSlider">75%</output>
                     </div>
                 </div>
                 <div class="AccountDangerZone">
@@ -84,7 +84,7 @@ for (const StyleName of ["looks.css", "shell-ui.css"]) {
     </section>
 </main>
 <script>
-for (const ScriptName of ["server-config.js", "network.js", "app.js", "audio.js", "real-audio.js", "shell-ui.js", "account.js"]) {
+for (const ScriptName of ["server-config.js", "network.js", "app.js", "audio.js", "shell-ui.js", "account.js"]) {
     document.write(`<script src="${ScriptName}?fresh=${AccountFreshToken}"><\/script>`);
 }
 </script>

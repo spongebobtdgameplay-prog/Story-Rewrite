@@ -9,6 +9,16 @@ let AccountSoundSlider = null;
 let AccountMusicValue = null;
 let AccountSoundValue = null;
 
+function ApplyAccountAudioSettings(Settings) {
+    StoryAudio.Configure(Settings);
+
+    try {
+        if (window.parent !== window && window.parent.StoryShell?.IsPersistentShell) {
+            window.parent.StoryShell.ConfigureAudio(Settings);
+        }
+    } catch {}
+}
+
 function SetVolumeControl(Slider, ValueElement, Percent) {
     const NormalizedPercent = Math.max(0, Math.min(100, Math.round(Number(Percent) || 0)));
     const PercentText = `${NormalizedPercent}%`;
@@ -176,6 +186,39 @@ function RenderAccountState() {
     WriteAccountSnapshot();
 }
 
+function GetCachedAccountProfile() {
+    const Profile = typeof GetLastKnownProfileResult === "function"
+        ? GetLastKnownProfileResult()
+        : null;
+    return Profile?.profile ? Profile : null;
+}
+
+function GetCachedAccountSave() {
+    return typeof GetLastKnownServerSave === "function"
+        ? GetLastKnownServerSave()
+        : null;
+}
+
+async function LoadAccountState() {
+    const CachedProfile = GetCachedAccountProfile();
+    const CachedSave = GetCachedAccountSave();
+    const ProfilePromise = CachedProfile
+        ? Promise.resolve(CachedProfile)
+        : RequireAccount();
+
+    const [Profile, Data] = await Promise.all([
+        ProfilePromise,
+        LoadStoryData()
+    ]);
+
+    const Save = CachedSave || await FetchServerSave();
+    return {
+        profile: Profile,
+        data: Data,
+        save: NormalizeSave(Data, CloneAccountSave(Save))
+    };
+}
+
 function SyncAccountFromLastKnownState() {
     if (!AccountInitialized || !AccountData) return;
 
@@ -206,13 +249,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     AccountSoundValue = document.getElementById("SoundVolumeValue");
 
     try {
-        AccountProfileResult = await RequireAccount();
-        AccountData = await LoadStoryData();
-        AccountSave = await LoadSave(AccountData);
+        const LoadedState = await LoadAccountState();
+        AccountProfileResult = LoadedState.profile;
+        AccountData = LoadedState.data;
+        AccountSave = LoadedState.save;
         AccountInitialized = true;
 
         RenderAccountState();
-        StoryAudio.Configure(AccountSave.settings);
     } catch (Error) {
         AccountStatus.textContent = Error.message;
         AccountStatus.classList.add("Bad");
@@ -222,6 +265,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     function UpdateVolumeLabels() {
         SetVolumeControl(AccountMusicSlider, AccountMusicValue, AccountMusicSlider.value);
         SetVolumeControl(AccountSoundSlider, AccountSoundValue, AccountSoundSlider.value);
+        ApplyAccountAudioSettings({
+            musicVolume: Number(AccountMusicSlider.value) / 100,
+            soundVolume: Number(AccountSoundSlider.value) / 100
+        });
     }
 
     async function SaveVolumes() {
@@ -241,7 +288,6 @@ document.addEventListener("DOMContentLoaded", async () => {
             };
 
             RenderAccountState();
-            StoryAudio.Configure({ musicVolume: Music, soundVolume: Sound });
             AccountStatus.textContent = "Settings saved.";
             AccountStatus.classList.add("Good");
         } catch (Error) {
@@ -272,7 +318,6 @@ document.addEventListener("DOMContentLoaded", async () => {
             AccountSave = await ResetServerSave();
             AccountSave = NormalizeSave(AccountData, CloneAccountSave(AccountSave));
             RenderAccountState();
-            StoryAudio.Configure(AccountSave.settings);
             AccountStatus.textContent = "Progress reset.";
             AccountStatus.classList.add("Good");
         } catch (Error) {
