@@ -17,10 +17,10 @@ function ScheduleMultiplayerStatusFade(Status, HideCallback) {
     MultiplayerPolishFadeTimer = setTimeout(() => {
         Status.classList.add("IsFading");
         MultiplayerPolishHideTimer = setTimeout(() => {
-            Status.classList.remove("IsFading");
             HideCallback();
-        }, 280);
-    }, 4000);
+            Status.classList.remove("IsFading");
+        }, 650);
+    }, 1800);
 }
 
 const BaseShowLobbyStatusForPolish = ShowLobbyStatus;
@@ -42,8 +42,8 @@ const BaseHideLobbyStatusForPolish = HideLobbyStatus;
 HideLobbyStatus = function() {
     ClearMultiplayerPolishTimers();
     const Status = document.getElementById("LobbyStatus");
-    Status?.classList.remove("IsFading");
     BaseHideLobbyStatusForPolish();
+    Status?.classList.remove("IsFading");
 };
 
 const BaseShowRoomStatusForPolish = ShowRoomStatus;
@@ -68,6 +68,6 @@ const BaseHideRoomStatusForPolish = HideRoomStatus;
 HideRoomStatus = function() {
     ClearMultiplayerPolishTimers();
     const Status = document.getElementById("RoomStatus");
-    Status?.classList.remove("IsFading");
     BaseHideRoomStatusForPolish();
+    Status?.classList.remove("IsFading");
 };
