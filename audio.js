@@ -2,6 +2,7 @@ const StoryAudio = (() => {
     let AudioContextInstance = null;
     let AudioUnlocked = false;
     let SoundVolume = 0.8;
+    let SoundSettingsReady = false;
     let LastClickAt = 0;
 
     function Clamp(Value, Fallback) {
@@ -76,7 +77,7 @@ const StoryAudio = (() => {
     }
 
     function PlayClick() {
-        if (SoundVolume <= 0) return Promise.resolve(false);
+        if (!SoundSettingsReady || SoundVolume <= 0) return Promise.resolve(false);
 
         const CurrentTime = Date.now();
         if (CurrentTime - LastClickAt < 120) return Promise.resolve(false);
@@ -108,7 +109,10 @@ const StoryAudio = (() => {
     document.addEventListener("click", PlayClickFromCompletedClick, { capture: true });
 
     function Configure(Settings = {}) {
-        SoundVolume = Clamp(Settings.soundVolume, SoundVolume);
+        const NextSoundVolume = Number(Settings.soundVolume);
+        if (!Number.isFinite(NextSoundVolume)) return;
+        SoundVolume = Clamp(NextSoundVolume, SoundVolume);
+        SoundSettingsReady = true;
     }
 
     function UnlockAudio() {
@@ -134,6 +138,7 @@ const StoryAudio = (() => {
     function GetSoundState() {
         return {
             audioUnlocked: AudioUnlocked,
+            settingsReady: SoundSettingsReady,
             contextState: AudioContextInstance?.state || "closed",
             soundVolume: SoundVolume
         };
