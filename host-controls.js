@@ -113,25 +113,21 @@ function EnsureLobbyHostPanel() {
         Panel.setAttribute("aria-labelledby", "HostControlTitle");
         Panel.innerHTML = `
             <div class="HostPanelHeader">
-                <div class="HostPanelHeading">
-                    <div class="Kicker">Host only</div>
+                <div class="HostPanelTitleGroup">
+                    <span class="HostOnlyBadge">Host only</span>
                     <h3 id="HostControlTitle">Room Controls</h3>
-                    <p>Manage players, join requests, chat access, and moderation.</p>
                 </div>
-                <button class="HostCloseButton" id="LobbyHostClose" type="button" aria-label="Close room controls">
-                    <svg class="HostCloseIcon" viewBox="0 0 24 24" aria-hidden="true">
-                        <path d="M7 7l10 10"></path>
-                        <path d="M17 7 7 17"></path>
-                    </svg>
-                </button>
+                <button class="HostCloseButton" id="LobbyHostClose" type="button" aria-label="Close room controls"></button>
             </div>
             <div class="HostControlBody">
                 <div class="HostJoinRequests Hidden" id="HostJoinRequests">
                     <div class="HostSectionTitle">Join requests <span id="HostRequestCount">0</span></div>
                     <div id="HostRequestList"></div>
                 </div>
-                <div class="HostSectionTitle">Players</div>
-                <div id="HostPlayerControls"></div>
+                <section class="HostPlayersSection">
+                    <div class="HostSectionTitle">Players</div>
+                    <div id="HostPlayerControls"></div>
+                </section>
             </div>
         `;
 
@@ -270,7 +266,7 @@ function RenderHostPlayers(ListId) {
         HostSelectedPlayers.delete(ListId);
         List.innerHTML = `
             <div class="HostPlayerEmptyState">
-                <strong>No players found, except the host.</strong>
+                <span>No players found, except the host.</span>
             </div>
         `;
         return;
