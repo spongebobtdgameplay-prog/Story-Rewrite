@@ -17,17 +17,32 @@
 }
 
 .HostPanelHeader {
+    min-height: 92px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 14px;
+    gap: 22px;
+    margin: 0;
+    padding: 18px 20px 18px 26px;
+    border-bottom: 1px solid rgba(226, 177, 107, .15);
+    background: rgba(15, 8, 5, .16);
+}
+
+.HostPanelHeading {
+    min-width: 0;
 }
 
 .HostPanelHeader h3 {
-    margin: 3px 0 0;
-    color: #ffe7bd;
-    font: 800 19px/1.1 Georgia, "Times New Roman", serif;
+    margin: 4px 0 0;
+    color: #ffe8c2;
+    font: 900 30px/1.05 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    letter-spacing: -.025em;
+}
+
+.HostPanelHeader p {
+    margin: 7px 0 0;
+    color: #bfa483;
+    font: 650 12px/1.4 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
 .HostShieldIcon,
@@ -187,12 +202,36 @@
 }
 
 .HostCloseButton {
-    width: 34px;
+    flex: 0 0 auto;
+    width: 46px;
+    height: 46px;
+    min-height: 46px;
     padding: 0;
-    color: #e8cba0;
-    border: 1px solid #67472f;
-    background: #21130d;
-    font-size: 20px;
+    display: grid;
+    place-items: center;
+    color: #f0d7b4;
+    border: 1px solid #745039;
+    border-radius: 12px;
+    background: #24140e;
+    box-shadow: inset 0 1px rgba(255,255,255,.04);
+    font: 500 32px/1 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    transition: transform .15s ease, color .15s ease, border-color .15s ease, background .15s ease;
+}
+
+.HostCloseButton span {
+    display: block;
+    transform: translateY(-1px);
+}
+
+.HostCloseButton:hover {
+    color: #fff0d3;
+    border-color: #aa764a;
+    background: #342015;
+    transform: translateY(-1px) scale(1.035);
+}
+
+.HostCloseButton:active {
+    transform: translateY(1px) scale(.96);
 }
 
 @media (max-width: 700px) {
@@ -225,22 +264,47 @@
     }
 }
 
-.HostControlPanel {
+.HostControlBackdrop {
     position: fixed;
-    right: 18px;
-    top: 96px;
+    inset: 0;
     z-index: 10020;
-    width: min(400px, calc(100vw - 36px));
-    max-height: calc(100vh - 128px);
-    overflow-y: auto;
+    display: grid;
+    place-items: center;
+    padding: 28px;
+    background: rgba(11, 6, 4, .74);
+    backdrop-filter: blur(7px);
+    animation: HostControlBackdropIn .18s ease-out;
+}
+
+.HostControlBackdrop.Hidden {
+    display: none !important;
+}
+
+.HostControlPanel {
+    position: relative;
+    width: min(760px, calc(100vw - 56px));
+    max-height: min(82vh, 760px);
+    overflow: hidden;
     margin: 0;
-    transition: opacity .16s ease, transform .16s ease;
+    padding: 0;
+    border: 1px solid rgba(226, 177, 107, .34);
+    border-radius: 20px;
+    background: linear-gradient(180deg, #3a2116, #20120d);
+    box-shadow: 0 30px 90px rgba(0, 0, 0, .58), inset 0 1px rgba(255, 236, 202, .07);
+    transform-origin: center;
+    animation: HostControlPanelIn .2s cubic-bezier(.2,.8,.2,1);
 }
 
 .HostControlPanel.IsCollapsed {
     pointer-events: none;
     opacity: 0;
-    transform: translateY(-8px) scale(.98);
+    transform: scale(.96);
+}
+
+.HostControlBody {
+    max-height: calc(min(82vh, 760px) - 116px);
+    overflow-y: auto;
+    padding: 22px 26px 26px;
 }
 
 .LobbyHostToggle {
@@ -293,14 +357,6 @@
 }
 
 @media (max-width: 700px) {
-    .HostControlPanel {
-        left: max(8px, env(safe-area-inset-left));
-        right: max(8px, env(safe-area-inset-right));
-        top: max(76px, env(safe-area-inset-top));
-        width: auto;
-        max-height: calc(100vh - 166px);
-    }
-
     .LobbyHostToggle {
         right: max(8px, env(safe-area-inset-right));
         bottom: calc(88px + env(safe-area-inset-bottom));
@@ -472,5 +528,102 @@
 
     .HostSelectedPlayerActions .HostModeratePlayerButton {
         grid-column: auto;
+    }
+}
+
+
+.HostControlPanel button {
+    transition: transform .15s ease, background .15s ease, border-color .15s ease, color .15s ease, box-shadow .15s ease;
+}
+
+.HostControlPanel button:hover:not(:disabled) {
+    transform: translateY(-1px);
+}
+
+.HostControlPanel button:active:not(:disabled) {
+    transform: translateY(1px) scale(.975);
+}
+
+.HostAllowButton:hover,
+.HostMuteButton:hover {
+    border-color: #a87547;
+    background: linear-gradient(180deg, #664026, #3b2416);
+}
+
+.HostDenyButton:hover,
+.HostKickButton:hover {
+    border-color: rgba(221, 107, 88, .78);
+    background: linear-gradient(180deg, rgba(158, 65, 51, .96), rgba(92, 36, 28, .98));
+}
+
+.HostPlayerEmptyState {
+    min-height: 110px;
+    display: grid;
+    place-items: center;
+    padding: 22px;
+    font: 750 15px/1.45 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.HostPlayerPickerHeading strong {
+    font: 850 18px/1.2 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.HostPlayerPickerHeading span,
+.HostPlayerSelectIdentity small,
+.HostSelectedPlayerHint,
+.HostPlayerIdentity span {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.HostPlayerSelectIdentity strong {
+    font: 800 16px/1.2 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.HostSelectedPlayerActions button,
+.HostMiniActions button {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+body.HostControlsOpen {
+    overflow: hidden;
+}
+
+@keyframes HostControlBackdropIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes HostControlPanelIn {
+    from { opacity: 0; transform: translateY(12px) scale(.965); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (max-width: 700px) {
+    .HostControlBackdrop {
+        padding: 14px;
+    }
+
+    .HostControlPanel {
+        width: min(100%, 760px);
+        max-height: 88vh;
+        border-radius: 16px;
+    }
+
+    .HostPanelHeader {
+        min-height: 82px;
+        padding: 16px 16px 16px 19px;
+    }
+
+    .HostPanelHeader h3 {
+        font-size: 25px;
+    }
+
+    .HostPanelHeader p {
+        display: none;
+    }
+
+    .HostControlBody {
+        max-height: calc(88vh - 98px);
+        padding: 18px;
     }
 }
