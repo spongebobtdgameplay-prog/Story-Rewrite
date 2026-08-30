@@ -59,12 +59,15 @@ function RemoveStrayLobbyHostArtifacts() {
 function SetLobbyHostPanelOpen(Open) {
     const Toggle = document.getElementById("LobbyHostToggle");
     const Panel = document.getElementById("HostControlPanel");
-    if (!Toggle || !Panel) return;
+    const Backdrop = document.getElementById("HostControlBackdrop");
+    if (!Toggle || !Panel || !Backdrop) return;
 
     const ShouldOpen = Boolean(Open);
+    Backdrop.classList.toggle("Hidden", !ShouldOpen);
     Panel.classList.toggle("IsCollapsed", !ShouldOpen);
     Panel.setAttribute("aria-hidden", String(!ShouldOpen));
     Toggle.setAttribute("aria-expanded", String(ShouldOpen));
+    document.body.classList.toggle("HostControlsOpen", ShouldOpen);
 
     if (ShouldOpen) {
         RenderJoinRequestList("HostRequestList", "HostJoinRequests", "HostRequestCount");
@@ -73,6 +76,8 @@ function SetLobbyHostPanelOpen(Open) {
             if (typeof DecorateModerationV20Rows === "function") DecorateModerationV20Rows();
             document.getElementById("LobbyHostClose")?.focus();
         });
+    } else {
+        Toggle.focus();
     }
 }
 
@@ -89,29 +94,50 @@ function EnsureLobbyHostPanel() {
     const Toggle = document.getElementById("LobbyHostToggle");
     if (!Toggle) return null;
 
+    let Backdrop = document.getElementById("HostControlBackdrop");
     let Panel = document.getElementById("HostControlPanel");
 
-    if (!Panel) {
+    if (!Backdrop || !Panel) {
+        Backdrop?.remove();
+
+        Backdrop = document.createElement("div");
+        Backdrop.id = "HostControlBackdrop";
+        Backdrop.className = "HostControlBackdrop Hidden";
+
         Panel = document.createElement("section");
         Panel.id = "HostControlPanel";
         Panel.className = "HostControlPanel Hidden IsCollapsed";
         Panel.setAttribute("aria-hidden", "true");
+        Panel.setAttribute("role", "dialog");
+        Panel.setAttribute("aria-modal", "true");
+        Panel.setAttribute("aria-labelledby", "HostControlTitle");
         Panel.innerHTML = `
             <div class="HostPanelHeader">
-                <div>
+                <div class="HostPanelHeading">
                     <div class="Kicker">Host only</div>
-                    <h3>Room Controls</h3>
+                    <h3 id="HostControlTitle">Room Controls</h3>
+                    <p>Manage players, join requests, chat access, and moderation.</p>
                 </div>
-                <button class="HostCloseButton" id="LobbyHostClose" type="button" aria-label="Close host controls">×</button>
+                <button class="HostCloseButton" id="LobbyHostClose" type="button" aria-label="Close room controls">
+                    <span aria-hidden="true">×</span>
+                </button>
             </div>
-            <div class="HostJoinRequests Hidden" id="HostJoinRequests">
-                <div class="HostSectionTitle">Join requests <span id="HostRequestCount">0</span></div>
-                <div id="HostRequestList"></div>
+            <div class="HostControlBody">
+                <div class="HostJoinRequests Hidden" id="HostJoinRequests">
+                    <div class="HostSectionTitle">Join requests <span id="HostRequestCount">0</span></div>
+                    <div id="HostRequestList"></div>
+                </div>
+                <div class="HostSectionTitle">Players</div>
+                <div id="HostPlayerControls"></div>
             </div>
-            <div class="HostSectionTitle">Players</div>
-            <div id="HostPlayerControls"></div>
         `;
-        document.body.appendChild(Panel);
+
+        Backdrop.appendChild(Panel);
+        document.body.appendChild(Backdrop);
+
+        Backdrop.addEventListener("click", Event => {
+            if (Event.target === Backdrop) SetLobbyHostPanelOpen(false);
+        });
     }
 
     Toggle.setAttribute("aria-haspopup", "dialog");
@@ -122,6 +148,19 @@ function EnsureLobbyHostPanel() {
     if (CloseButton) CloseButton.onclick = () => SetLobbyHostPanelOpen(false);
 
     return Panel;
+}
+
+function HandleHostControlsKeydown(Event) {
+    if (Event.key !== "Escape") return;
+    const Backdrop = document.getElementById("HostControlBackdrop");
+    if (!Backdrop || Backdrop.classList.contains("Hidden")) return;
+    Event.preventDefault();
+    SetLobbyHostPanelOpen(false);
+}
+
+if (!window.__StoryHostControlsEscapeBound) {
+    window.__StoryHostControlsEscapeBound = true;
+    document.addEventListener("keydown", HandleHostControlsKeydown);
 }
 
 function EnsureGameHostPanel() {
