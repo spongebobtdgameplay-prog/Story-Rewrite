@@ -339,9 +339,14 @@ function ApplyFailureOutcome(Result) {
     LastCheckFailed = true;
     StoryAudio.PlaySound(Result.gameOver ? "life" : "fail");
     StoryAudio.PlayMusic("danger");
+
+    const FailureReason = Result?.timedOut
+        ? "The danger timer ran out."
+        : String(Result?.reason || "The rewrite failed.");
+
     const Status = document.getElementById("StatusText");
     Status.className = "StatusText Bad";
-    Status.textContent = `${Result.reason} Life lost.`;
+    Status.textContent = `${FailureReason} Life lost.`;
 
     const Aftermath = document.getElementById("Aftermath");
     Aftermath.classList.remove("Hidden");
@@ -351,7 +356,7 @@ function ApplyFailureOutcome(Result) {
     ShakeBook();
 
     if (Result.gameOver) {
-        document.getElementById("GameOverText").textContent = `${Result.aftermath} No lives remain. Restart the chapter to continue.`;
+        document.getElementById("GameOverText").textContent = `${FailureReason} ${Result.aftermath} No lives remain. Restart the chapter to continue.`;
         document.getElementById("GameOverOverlay").classList.add("Show");
     }
 }
