@@ -59,6 +59,8 @@
     let MusicName = "";
     let PendingMusicName = "";
     let AudioUnlocked = false;
+    let MusicSettingsReady = false;
+    let MusicReady = false;
     let MusicWaitingForGesture = false;
     let LastPlaybackError = "";
     let FreshStartMusicName = "";
@@ -97,6 +99,8 @@
     function GetPlaybackState() {
         return {
             audioUnlocked: AudioUnlocked,
+            musicSettingsReady: MusicSettingsReady,
+            musicReady: MusicReady,
             contextState: GetLocalSoundState().contextState,
             musicName: MusicName,
             pendingMusicName: PendingMusicName,
@@ -194,6 +198,10 @@
     });
 
     MusicElement.addEventListener("canplay", () => {
+        MusicReady = true;
+        ApplyMusicFade();
+        DispatchPlaybackState();
+
         if (AudioUnlocked && MusicWaitingForGesture && PendingMusicName) {
             TryPlayPreparedMusic();
         }
@@ -218,6 +226,7 @@
     });
 
     MusicElement.addEventListener("error", () => {
+        MusicReady = false;
         if (!MusicName) return;
         MusicWaitingForGesture = Boolean(PendingMusicName && MusicVolume > 0);
         LastPlaybackError = `Music failed to load: ${MusicFiles[MusicName] || MusicName}`;
@@ -231,6 +240,7 @@
 
         if (ClearSource) {
             MusicElement.removeAttribute("src");
+            MusicReady = false;
             try { MusicElement.load(); } catch {}
         }
 
@@ -240,9 +250,10 @@
 
     function PrepareMusic(Name) {
         const RelativeUrl = MusicFiles[Name];
-        if (!RelativeUrl || MusicVolume <= 0) return null;
+        if (!MusicSettingsReady || !RelativeUrl || MusicVolume <= 0) return null;
 
         if (MusicName === Name && MusicElement.src) {
+            MusicReady = MusicElement.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA;
             ApplyMusicFade();
             return MusicElement;
         }
@@ -251,6 +262,7 @@
         MusicElement.pause();
 
         MusicName = Name;
+        MusicReady = false;
         MusicElement.volume = 0;
         MusicElement.src = new URL(RelativeUrl, window.location.href).href;
         try { MusicElement.load(); } catch {}
@@ -259,6 +271,12 @@
 
     function TryPlayPreparedMusic(FromGesture = false) {
         if (FromGesture) AudioUnlocked = true;
+
+        if (!MusicSettingsReady) {
+            MusicWaitingForGesture = Boolean(PendingMusicName);
+            DispatchPlaybackState();
+            return Promise.resolve(false);
+        }
 
         if (!PendingMusicName || MusicVolume <= 0) {
             MusicWaitingForGesture = false;
@@ -276,6 +294,13 @@
         const Element = PrepareMusic(RequestedMusicName);
 
         if (!Element) {
+            MusicWaitingForGesture = true;
+            DispatchPlaybackState();
+            return Promise.resolve(false);
+        }
+
+        MusicReady = Element.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA;
+        if (!MusicReady) {
             MusicWaitingForGesture = true;
             DispatchPlaybackState();
             return Promise.resolve(false);
@@ -426,14 +451,26 @@
 
     StoryAudio.Configure = function(Settings = {}) {
         ConfigureLocalSound(Settings);
-        MusicVolume = Clamp(Settings.musicVolume, MusicVolume);
+
+        const NextMusicVolume = Number(Settings.musicVolume);
+        if (!Number.isFinite(NextMusicVolume)) {
+            DispatchPlaybackState();
+            return;
+        }
+
+        MusicVolume = Clamp(NextMusicVolume, MusicVolume);
+        MusicSettingsReady = true;
         ApplyMusicFade();
 
         if (MusicVolume <= 0) {
             StopMusicInternal(true, false);
-        } else if (AudioUnlocked && PendingMusicName) {
-            TryPlayPreparedMusic();
+            DispatchPlaybackState();
+            return;
         }
+
+        if (PendingMusicName) PrepareMusic(PendingMusicName);
+        if (AudioUnlocked && PendingMusicName) TryPlayPreparedMusic();
+        else DispatchPlaybackState();
     };
 
     StoryAudio.PlayMusic = function(Name) {
@@ -443,12 +480,15 @@
         PendingMusicName = RequestedMusicName;
         MusicWaitingForGesture = MusicVolume > 0;
 
+        if (!MusicSettingsReady) {
+            FreshStartMusicName = PendingMusicName;
+            DispatchPlaybackState();
+            return Promise.resolve(false);
+        }
+
+        PrepareMusic(RequestedMusicName);
+
         if (!AudioUnlocked) {
-            MusicElement.pause();
-            try { MusicElement.currentTime = 0; } catch {}
-            MusicElement.removeAttribute("src");
-            try { MusicElement.load(); } catch {}
-            MusicName = "";
             FreshStartMusicName = PendingMusicName;
             DispatchPlaybackState();
             return Promise.resolve(false);
