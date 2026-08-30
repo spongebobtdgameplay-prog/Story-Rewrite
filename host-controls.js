@@ -119,7 +119,10 @@ function EnsureLobbyHostPanel() {
                     <p>Manage players, join requests, chat access, and moderation.</p>
                 </div>
                 <button class="HostCloseButton" id="LobbyHostClose" type="button" aria-label="Close room controls">
-                    <span aria-hidden="true">×</span>
+                    <svg class="HostCloseIcon" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M7 7l10 10"></path>
+                        <path d="M17 7 7 17"></path>
+                    </svg>
                 </button>
             </div>
             <div class="HostControlBody">
