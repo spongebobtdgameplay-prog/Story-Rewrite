@@ -1,6 +1,7 @@
 let HostPendingRequests = new Map();
 let HostControlsSocket = null;
 let PendingLateJoinCode = "";
+const HostSelectedPlayers = new Map();
 
 const HOST_SHIELD_ICON = `
 <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -183,33 +184,123 @@ function RenderJoinRequestList(ListId, SectionId, CountId) {
     }
 }
 
+function GetHostPlayerStatus(Player) {
+    if (Player?.chatBanned) return "Chat restricted";
+    if (Player?.ready) return "Ready";
+    return "Connected";
+}
+
+function SelectHostPlayer(ListId, Username) {
+    if (!ListId || !Username) return;
+    HostSelectedPlayers.set(ListId, Username);
+    RenderHostPlayers(ListId);
+}
+
+function ClearHostPlayerSelection(ListId) {
+    HostSelectedPlayers.delete(ListId);
+    RenderHostPlayers(ListId);
+}
+
+function OpenHostPlayerModeration(Username) {
+    if (!Username) return;
+
+    if (typeof OpenModerationV20 === "function") {
+        OpenModerationV20(Username);
+        return;
+    }
+
+    if (typeof ShowRoomStatus === "function") {
+        ShowRoomStatus("Moderation controls are still loading.", false);
+    }
+}
+
 function RenderHostPlayers(ListId) {
     const List = document.getElementById(ListId);
     if (!List) return;
 
     const State = GetHostRoomState();
     const LocalName = GetHostProfileName();
-    const Players = Array.isArray(State?.players) ? State.players.filter(Player => Player.username !== LocalName) : [];
+    const Players = Array.isArray(State?.players)
+        ? State.players.filter(Player => Player.username !== LocalName)
+        : [];
 
-    List.innerHTML = Players.length ? Players.map(Player => `
-        <div class="HostPlayerRow">
-            <div class="HostPlayerIdentity">
-                <strong>${HostEscape(Player.username)}</strong>
-                <span>${Player.chatBanned ? "Chat muted" : Player.ready ? "Ready" : "Connected"}</span>
+    if (!Players.length) {
+        HostSelectedPlayers.delete(ListId);
+        List.innerHTML = `
+            <div class="HostPlayerEmptyState">
+                <strong>No players found, except the host.</strong>
             </div>
-            <div class="HostMiniActions">
-                <button class="HostMuteButton" type="button" data-host-mute="${HostEscape(Player.username)}" data-host-muted="${Player.chatBanned ? "1" : "0"}">${Player.chatBanned ? "Unmute" : "Mute"}</button>
-                <button class="HostKickButton" type="button" data-host-kick="${HostEscape(Player.username)}">Kick</button>
+        `;
+        return;
+    }
+
+    const SelectedUsername = HostSelectedPlayers.get(ListId) || "";
+    const SelectedPlayer = Players.find(Player => Player.username === SelectedUsername) || null;
+
+    if (!SelectedPlayer) {
+        HostSelectedPlayers.delete(ListId);
+        List.innerHTML = `
+            <div class="HostPlayerPickerHeading">
+                <strong>Select a player</strong>
+                <span>Choose who you want to manage.</span>
             </div>
+            <div class="HostPlayerPicker">
+                ${Players.map(Player => `
+                    <button class="HostPlayerSelectButton" type="button" data-host-select-player="${HostEscape(Player.username)}" data-host-select-list="${HostEscape(ListId)}">
+                        <span class="HostPlayerSelectIdentity">
+                            <strong>${HostEscape(Player.username)}</strong>
+                            <small>${HostEscape(GetHostPlayerStatus(Player))}</small>
+                        </span>
+                        <span class="HostPlayerSelectArrow" aria-hidden="true">›</span>
+                    </button>
+                `).join("")}
+            </div>
+        `;
+
+        for (const Button of List.querySelectorAll("[data-host-select-player]")) {
+            Button.addEventListener("click", () => {
+                SelectHostPlayer(Button.dataset.hostSelectList, Button.dataset.hostSelectPlayer);
+            });
+        }
+        return;
+    }
+
+    List.innerHTML = `
+        <div class="HostSelectedPlayerCard">
+            <button class="HostPlayerBackButton" type="button" data-host-player-back="${HostEscape(ListId)}">‹ Back to players</button>
+            <div class="HostSelectedPlayerHeader">
+                <div class="HostPlayerIdentity">
+                    <strong>${HostEscape(SelectedPlayer.username)}</strong>
+                    <span>${HostEscape(GetHostPlayerStatus(SelectedPlayer))}</span>
+                </div>
+            </div>
+            <div class="HostSelectedPlayerActions">
+                <button class="HostMuteButton" type="button" data-host-mute="${HostEscape(SelectedPlayer.username)}" data-host-muted="${SelectedPlayer.chatBanned ? "1" : "0"}">
+                    ${SelectedPlayer.chatBanned ? "Unmute Chat" : "Mute Chat"}
+                </button>
+                <button class="HostKickButton" type="button" data-host-kick="${HostEscape(SelectedPlayer.username)}">Kick From Room</button>
+                <button class="ModerationV20Button HostModeratePlayerButton" type="button" data-host-moderate="${HostEscape(SelectedPlayer.username)}">Moderate</button>
+            </div>
+            <div class="HostSelectedPlayerHint">Moderate opens timeout, game restriction, ban, and reason controls.</div>
         </div>
-    `).join("") : `<div class="HostEmptyState">No other players connected.</div>`;
+    `;
 
-    for (const Button of List.querySelectorAll("[data-host-mute]")) {
-        Button.addEventListener("click", () => ToggleHostMute(Button.dataset.hostMute, Button.dataset.hostMuted !== "1"));
-    }
-    for (const Button of List.querySelectorAll("[data-host-kick]")) {
-        Button.addEventListener("click", () => KickHostPlayer(Button.dataset.hostKick));
-    }
+    List.querySelector("[data-host-player-back]")?.addEventListener("click", ButtonEvent => {
+        ClearHostPlayerSelection(ButtonEvent.currentTarget.dataset.hostPlayerBack);
+    });
+
+    List.querySelector("[data-host-mute]")?.addEventListener("click", ButtonEvent => {
+        const Button = ButtonEvent.currentTarget;
+        ToggleHostMute(Button.dataset.hostMute, Button.dataset.hostMuted !== "1");
+    });
+
+    List.querySelector("[data-host-kick]")?.addEventListener("click", ButtonEvent => {
+        KickHostPlayer(ButtonEvent.currentTarget.dataset.hostKick);
+    });
+
+    List.querySelector("[data-host-moderate]")?.addEventListener("click", ButtonEvent => {
+        OpenHostPlayerModeration(ButtonEvent.currentTarget.dataset.hostModerate);
+    });
 }
 
 function RenderHostControls() {
