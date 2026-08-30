@@ -532,6 +532,7 @@ function StartMultiplayer() {
         RemovedSentences.clear();
         LastCheckFailed = false;
         document.getElementById("CompleteOverlay").classList.remove("Show");
+        document.getElementById("GameOverOverlay")?.classList.remove("Show");
         if (typeof ResetStoryDangerAfterReviveV12 === "function") ResetStoryDangerAfterReviveV12();
         else {
             document.getElementById("Aftermath")?.classList.add("Hidden");
