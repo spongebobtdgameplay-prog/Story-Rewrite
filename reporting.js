@@ -9,21 +9,22 @@ function GetChatModerationSocket() {
     return null;
 }
 
+let StoryAbuseWarningTimer = null;
+
 function EnsureAbuseWarningStyles() {
     if (document.getElementById("StoryAbuseWarningStyles")) return;
 
     const Style = document.createElement("style");
     Style.id = "StoryAbuseWarningStyles";
     Style.textContent = `
-.StoryAbuseWarningOverlay{position:fixed;inset:0;z-index:120000;display:grid;place-items:center;padding:22px;background:rgba(8,4,2,.72);backdrop-filter:blur(7px)}
-.StoryAbuseWarningOverlay.Hidden{display:none}
-.StoryAbuseWarningCard{width:min(520px,100%);padding:24px;border:1px solid rgba(197,92,70,.66);border-radius:17px;background:linear-gradient(180deg,#3b2118,#21120d);box-shadow:0 26px 80px rgba(0,0,0,.55);color:#f7e6cb}
-.StoryAbuseWarningKicker{color:#e7a36f;font:900 11px/1.1 system-ui,sans-serif;letter-spacing:.12em;text-transform:uppercase}
-.StoryAbuseWarningCard h2{margin:8px 0 10px;color:#ffe6c0;font:800 25px/1.12 Georgia,"Times New Roman",serif}
-.StoryAbuseWarningCard p{margin:0;color:#e1c8a7;font:600 15px/1.55 system-ui,sans-serif}
-.StoryAbuseWarningCount{margin-top:14px;padding:10px 12px;border:1px solid rgba(230,177,107,.22);border-radius:10px;background:rgba(255,235,198,.055);color:#f0cf9d;font:800 13px/1.3 system-ui,sans-serif}
-.StoryAbuseWarningActions{display:flex;justify-content:flex-end;margin-top:18px}
-.StoryAbuseWarningActions button{min-width:120px}
+.StoryAbuseWarningBanner{position:fixed;left:50%;bottom:22px;z-index:120000;width:min(720px,calc(100vw - 30px));box-sizing:border-box;padding:12px 16px;display:flex;align-items:center;gap:14px;border:1px solid rgba(208,117,83,.7);border-radius:7px;background:#321b13;box-shadow:0 14px 42px rgba(0,0,0,.42);color:#f5dfbf;transform:translate(-50%,0);opacity:1;transition:opacity .18s ease,transform .18s ease;pointer-events:none}
+.StoryAbuseWarningBanner.Hidden{opacity:0;transform:translate(-50%,12px);visibility:hidden}
+.StoryAbuseWarningMark{flex:0 0 auto;padding:5px 8px;border-radius:5px;background:#8f3c30;color:#fff1df;font:900 10px/1 system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase}
+.StoryAbuseWarningCopy{min-width:0;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.StoryAbuseWarningCopy strong{color:#ffe3b9;font:900 14px/1.2 system-ui,sans-serif}
+.StoryAbuseWarningCopy span{color:#d9bea0;font:650 13px/1.35 system-ui,sans-serif}
+.StoryAbuseWarningCount{margin-left:auto;flex:0 0 auto;color:#f1c88d;font:900 12px/1 system-ui,sans-serif}
+@media(max-width:620px){.StoryAbuseWarningBanner{bottom:12px;align-items:flex-start}.StoryAbuseWarningCopy{display:block}.StoryAbuseWarningCopy strong,.StoryAbuseWarningCopy span{display:block}.StoryAbuseWarningCopy span{margin-top:3px}.StoryAbuseWarningCount{margin-left:0}}
 `;
     document.head.appendChild(Style);
 }
@@ -31,35 +32,46 @@ function EnsureAbuseWarningStyles() {
 function ShowAbuseContentWarning(Payload = {}) {
     EnsureAbuseWarningStyles();
 
-    let Overlay = document.getElementById("StoryAbuseWarningOverlay");
-    if (!Overlay) {
-        Overlay = document.createElement("div");
-        Overlay.id = "StoryAbuseWarningOverlay";
-        Overlay.className = "StoryAbuseWarningOverlay";
-        Overlay.innerHTML = `
-            <section class="StoryAbuseWarningCard" role="alertdialog" aria-modal="true" aria-labelledby="StoryAbuseWarningTitle">
-                <div class="StoryAbuseWarningKicker">Chat moderation</div>
-                <h2 id="StoryAbuseWarningTitle">Warning — abusive content is not allowed</h2>
-                <p>Swearing or harassment can lead to reports, chat timeouts, or account action. Repeated or severe abuse can lead to account termination.</p>
-                <div class="StoryAbuseWarningCount Hidden" id="StoryAbuseWarningCount"></div>
-                <div class="StoryAbuseWarningActions">
-                    <button class="SecondaryButton" id="StoryAbuseWarningClose" type="button">Understood</button>
-                </div>
-            </section>
+    let Banner = document.getElementById("StoryAbuseWarningBanner");
+    if (!Banner) {
+        Banner = document.createElement("div");
+        Banner.id = "StoryAbuseWarningBanner";
+        Banner.className = "StoryAbuseWarningBanner Hidden";
+        Banner.setAttribute("role", "status");
+        Banner.setAttribute("aria-live", "assertive");
+        Banner.innerHTML = `
+            <div class="StoryAbuseWarningMark">Warning</div>
+            <div class="StoryAbuseWarningCopy">
+                <strong id="StoryAbuseWarningDetected">Detected: Abusive content</strong>
+                <span id="StoryAbuseWarningMessage">Abusive content is not allowed.</span>
+            </div>
+            <div class="StoryAbuseWarningCount" id="StoryAbuseWarningCount"></div>
         `;
-        document.body.appendChild(Overlay);
-        document.getElementById("StoryAbuseWarningClose")?.addEventListener("click", () => Overlay.classList.add("Hidden"));
+        document.body.appendChild(Banner);
     }
 
-    const Count = document.getElementById("StoryAbuseWarningCount");
+    const Detected = String(Payload?.detected || Payload?.category || "Abusive or harmful content").trim();
     const Strikes = Number(Payload?.strikes || 0);
-    if (Count) {
-        Count.classList.toggle("Hidden", Strikes <= 0);
-        Count.textContent = Strikes > 0 ? `Abuse warnings: ${Math.min(Strikes, 3)}/3` : "";
-    }
+    const TimedOut = Boolean(Payload?.timedOut || Payload?.muted);
 
-    Overlay.classList.remove("Hidden");
-    document.getElementById("StoryAbuseWarningClose")?.focus();
+    const DetectedNode = document.getElementById("StoryAbuseWarningDetected");
+    const MessageNode = document.getElementById("StoryAbuseWarningMessage");
+    const CountNode = document.getElementById("StoryAbuseWarningCount");
+
+    if (DetectedNode) DetectedNode.textContent = `Detected: ${Detected}`;
+    if (MessageNode) {
+        MessageNode.textContent = TimedOut
+            ? "Repeated abuse triggered a chat timeout."
+            : "Abusive content is not allowed. Continued abuse can lead to reports, timeouts, or account action.";
+    }
+    if (CountNode) CountNode.textContent = Strikes > 0 ? `Warning ${Math.min(Strikes, 3)}/3` : "";
+
+    Banner.classList.remove("Hidden");
+
+    if (StoryAbuseWarningTimer) clearTimeout(StoryAbuseWarningTimer);
+    StoryAbuseWarningTimer = setTimeout(() => {
+        Banner.classList.add("Hidden");
+    }, TimedOut ? 9000 : 6500);
 }
 
 function ShowChatModerationNotice(Text, Good = false) {
@@ -224,11 +236,6 @@ function BindChatModerationSocket(Socket) {
 
     Socket.on("room:moderationResult", Payload => {
         ShowAbuseContentWarning(Payload || {});
-        ShowChatModerationNotice(
-            Payload?.muted
-                ? "Chat was disabled after repeated abusive messages."
-                : "Abusive content was censored. Continued abuse can lead to chat restrictions."
-        );
     });
 }
 
