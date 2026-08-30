@@ -332,7 +332,7 @@ function WireStoryShell() {
                     return;
                 }
 
-                StoryGoBack(BackTarget);
+                StoryNavigate(BackTarget);
             });
         }
 
