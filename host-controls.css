@@ -11,6 +11,7 @@
 .HostControlPanel.Hidden,
 .GameHostControls.Hidden,
 .GameHostToggle.Hidden,
+.LobbyHostToggle.Hidden,
 .HostJoinRequests.Hidden {
     display: none !important;
 }
@@ -243,16 +244,52 @@
 }
 
 .LobbyHostToggle {
-    left: auto;
+    position: fixed;
     right: 18px;
     bottom: 18px;
+    left: auto;
+    top: auto;
     z-index: 10021;
+    width: 52px;
+    height: 52px;
+    padding: 0;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    color: #efc57f;
+    border: 1px solid rgba(235, 188, 117, .4);
+    border-radius: 15px;
+    background: rgba(34, 19, 12, .98);
+    box-shadow: 0 14px 34px rgba(0, 0, 0, .42);
+}
+
+.LobbyHostToggle svg {
+    width: 23px;
+    height: 23px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.9;
+    stroke-linecap: round;
+    stroke-linejoin: round;
 }
 
 .LobbyHostToggle span {
     position: absolute;
     right: -5px;
     top: -5px;
+    display: none;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 5px;
+    place-items: center;
+    border-radius: 999px;
+    color: #2b170d;
+    background: #efc879;
+    font: 900 9px/1 system-ui, sans-serif;
+}
+
+.LobbyHostToggle span.HasRequests {
+    display: grid;
 }
 
 @media (max-width: 700px) {
@@ -265,8 +302,9 @@
     }
 
     .LobbyHostToggle {
-        left: auto;
         right: max(8px, env(safe-area-inset-right));
         bottom: calc(88px + env(safe-area-inset-bottom));
+        left: auto;
+        top: auto;
     }
 }
