@@ -12,6 +12,8 @@ let RoomCode = "";
 let GameChatUnreadCount = 0;
 let NextStageOverride = "";
 let MultiplayerLeaveBusy = false;
+let LevelLeaveBusy = false;
+const LevelLeaveReminderKey = "StoryRewriteSkipLevelLeaveWarningV1";
 
 window.addEventListener("DOMContentLoaded", async () => {
     try {
@@ -95,13 +97,45 @@ async function LeaveMultiplayerStoryToLobby() {
     }
 }
 
+async function RequestLeaveCurrentLevel(TargetPage = "levels.html") {
+    if (RoomCode) {
+        await LeaveMultiplayerStoryToLobby();
+        return;
+    }
+
+    if (LevelLeaveBusy) return;
+    LevelLeaveBusy = true;
+
+    try {
+        const Confirmed = typeof StoryConfirm === "function"
+            ? await StoryConfirm({
+                title: "Leave this level?",
+                message: "Your current progress on this level will be lost.",
+                confirmText: "Leave Level",
+                cancelText: "Stay",
+                danger: true,
+                rememberKey: LevelLeaveReminderKey,
+                rememberLabel: "Do not remind me again"
+            })
+            : window.confirm("Leave this level? Your current progress on this level will be lost.");
+
+        if (!Confirmed) return;
+
+        if (typeof StoryNavigate === "function") {
+            StoryNavigate(TargetPage);
+            return;
+        }
+
+        window.location.href = TargetPage;
+    } finally {
+        LevelLeaveBusy = false;
+    }
+}
+
 function BindActions() {
     document.getElementById("CheckButton").addEventListener("click", CheckStage);
     document.getElementById("RestoreButton").addEventListener("click", RestoreStage);
-    document.getElementById("BackButton").addEventListener("click", () => {
-        if (RoomCode) LeaveMultiplayerStoryToLobby();
-        else window.location.href = "levels.html";
-    });
+    document.getElementById("BackButton").addEventListener("click", () => RequestLeaveCurrentLevel("levels.html"));
     document.getElementById("NextButton").addEventListener("click", NextStage);
     document.getElementById("ReplayButton").addEventListener("click", ReplayStage);
     document.getElementById("CompleteSelectButton").addEventListener("click", ReturnToSelectWithTrail);
