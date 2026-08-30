@@ -1,5 +1,3 @@
-const ChatReportTimers = new WeakMap();
-
 function GetChatReporterUsername() {
     if (typeof CurrentProfile !== "undefined" && CurrentProfile?.username) return CurrentProfile.username;
     if (typeof Profile !== "undefined" && Profile?.username) return Profile.username;
@@ -9,30 +7,6 @@ function GetChatReporterUsername() {
 function GetChatModerationSocket() {
     if (typeof MultiplayerSocket !== "undefined") return MultiplayerSocket;
     return null;
-}
-
-function SetReportButtonCountdown(Button, DueAt) {
-    const ExistingTimer = ChatReportTimers.get(Button);
-    if (ExistingTimer) clearInterval(ExistingTimer);
-
-    const Update = () => {
-        const RemainingSeconds = Math.max(0, Math.ceil((DueAt - Date.now()) / 1000));
-        if (RemainingSeconds <= 0) {
-            Button.textContent = "Reviewing";
-            const Timer = ChatReportTimers.get(Button);
-            if (Timer) clearInterval(Timer);
-            ChatReportTimers.delete(Button);
-            return;
-        }
-
-        const Minutes = Math.floor(RemainingSeconds / 60);
-        const Seconds = String(RemainingSeconds % 60).padStart(2, "0");
-        Button.textContent = "Review " + Minutes + ":" + Seconds;
-    };
-
-    Update();
-    const Timer = setInterval(Update, 1000);
-    ChatReportTimers.set(Button, Timer);
 }
 
 function ShowChatModerationNotice(Text, Good = false) {
@@ -67,8 +41,8 @@ function SubmitChatReport(Message, Button) {
         }
 
         Button.dataset.reportId = Result.reportId || "";
-        SetReportButtonCountdown(Button, Number(Result.dueAt || Date.now() + 60000));
-        ShowChatModerationNotice("Report queued. The conversation will be reviewed in about one minute.", true);
+        Button.textContent = "Reported";
+        ShowChatModerationNotice("Report received. The conversation evidence will be reviewed.", true);
     });
 }
 
@@ -144,9 +118,6 @@ function BindChatModerationSocket(Socket) {
             : null;
 
         if (Button) {
-            const Timer = ChatReportTimers.get(Button);
-            if (Timer) clearInterval(Timer);
-            ChatReportTimers.delete(Button);
             Button.textContent = Payload?.actionTaken ? "Removed" : "Reviewed";
         }
 
