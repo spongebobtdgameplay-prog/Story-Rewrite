@@ -799,3 +799,71 @@ body.HostControlsOpen {
         padding: 11px 13px 13px !important;
     }
 }
+
+
+.MultiplayerPage .HostControlBackdrop {
+    display: none !important;
+}
+
+.MultiplayerPage .HostControlInline {
+    width: 100%;
+    box-sizing: border-box;
+    margin-top: 12px;
+    padding: 14px;
+    border: 1px solid rgba(211, 160, 93, .24);
+    border-radius: 12px;
+    background: rgba(20, 11, 7, .42);
+    box-shadow: inset 0 1px rgba(255, 239, 207, .025);
+}
+
+.MultiplayerPage .HostControlInline.Hidden {
+    display: none !important;
+}
+
+.MultiplayerPage .HostInlineTop {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding-bottom: 10px;
+    margin-bottom: 9px;
+    border-bottom: 1px solid rgba(211, 160, 93, .13);
+}
+
+.MultiplayerPage .HostInlineTop h3 {
+    margin: 2px 0 0;
+    color: #f6dfbb;
+    font: 850 18px/1.15 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.MultiplayerPage .HostInlineHint {
+    color: #a98e6d;
+    font: 650 10px/1.3 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    text-align: right;
+}
+
+.MultiplayerPage .HostControlInline .HostSectionTitle {
+    margin: 8px 0 6px !important;
+}
+
+.MultiplayerPage .HostControlInline .HostPlayerEmptyState {
+    padding: 10px 12px !important;
+}
+
+.MultiplayerPage .HostRoomControlsButton[aria-expanded="true"] {
+    color: #ffe6b9 !important;
+    border-color: #9e6637 !important;
+    background: linear-gradient(180deg, #51301d, #321d13) !important;
+}
+
+@media (max-width: 620px) {
+    .MultiplayerPage .HostInlineTop {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .MultiplayerPage .HostInlineHint {
+        text-align: left;
+    }
+}
