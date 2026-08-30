@@ -369,9 +369,10 @@ async function LeaveRoom() {
     LeavingRoom = true;
 
     const Button = ById("LeaveButton");
+    const DestroyingRoom = Button?.dataset.destroyRoom === "1";
     if (Button) {
         Button.disabled = true;
-        Button.textContent = "Leaving...";
+        Button.textContent = DestroyingRoom ? "Destroying..." : "Leaving...";
     }
 
     try {
@@ -394,6 +395,7 @@ async function LeaveRoom() {
 
         if (Button) {
             Button.disabled = false;
+            Button.dataset.destroyRoom = "0";
             Button.textContent = "Leave Room";
         }
 
@@ -500,6 +502,13 @@ function RenderRoom() {
 
     const IsHost = MultiplayerState.hostUsername === CurrentProfile.username;
     const HasEnoughPlayers = Players.length >= 2;
+    const DestroyRoomOnLeave = IsHost && Players.length === 1;
+    const LeaveButton = ById("LeaveButton");
+    if (LeaveButton && !LeavingRoom) {
+        LeaveButton.dataset.destroyRoom = DestroyRoomOnLeave ? "1" : "0";
+        LeaveButton.textContent = DestroyRoomOnLeave ? "Destroy Room" : "Leave Room";
+    }
+
     const StartButton = ById("StartButton");
     StartButton?.classList.toggle("Hidden", !IsHost);
     if (StartButton) {
