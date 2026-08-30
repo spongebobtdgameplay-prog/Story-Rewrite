@@ -49,20 +49,21 @@ function HostEmit(EventName, Payload, Timeout = 10000) {
     });
 }
 
+function RemoveStrayLobbyHostArtifacts() {
+    if (!document.body.classList.contains("MultiplayerPage")) return;
+    document.getElementById("GameHostToggle")?.remove();
+    document.getElementById("GameHostControls")?.remove();
+}
+
 function EnsureLobbyHostPanel() {
     if (!document.body.classList.contains("MultiplayerPage")) return null;
+    RemoveStrayLobbyHostArtifacts();
+
     const ExistingPanel = document.getElementById("HostControlPanel");
     if (ExistingPanel) return ExistingPanel;
 
-    document.getElementById("GameHostToggle")?.remove();
-    document.getElementById("GameHostControls")?.remove();
-
-    const Toggle = document.createElement("button");
-    Toggle.id = "LobbyHostToggle";
-    Toggle.className = "LobbyHostToggle Hidden";
-    Toggle.type = "button";
-    Toggle.setAttribute("aria-label", "Open host controls");
-    Toggle.innerHTML = `${HOST_SHIELD_ICON}<span id="LobbyHostRequestBadge">0</span>`;
+    const Toggle = document.getElementById("LobbyHostToggle");
+    if (!Toggle) return null;
 
     const Panel = document.createElement("section");
     Panel.id = "HostControlPanel";
@@ -83,7 +84,7 @@ function EnsureLobbyHostPanel() {
         <div id="HostPlayerControls"></div>
     `;
 
-    document.body.append(Toggle, Panel);
+    document.body.appendChild(Panel);
     Toggle.addEventListener("click", () => Panel.classList.toggle("IsCollapsed"));
     document.getElementById("LobbyHostClose")?.addEventListener("click", () => Panel.classList.add("IsCollapsed"));
     return Panel;
@@ -179,6 +180,7 @@ function RenderHostPlayers(ListId) {
 }
 
 function RenderHostControls() {
+    RemoveStrayLobbyHostArtifacts();
     const Host = IsLocalHost();
 
     const LobbyPanel = EnsureLobbyHostPanel();
