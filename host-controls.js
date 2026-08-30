@@ -59,32 +59,26 @@ function RemoveStrayLobbyHostArtifacts() {
 function SetLobbyHostPanelOpen(Open) {
     const Toggle = document.getElementById("LobbyHostToggle");
     const Panel = document.getElementById("HostControlPanel");
-    const Backdrop = document.getElementById("HostControlBackdrop");
-    if (!Toggle || !Panel || !Backdrop) return;
+    if (!Toggle || !Panel) return;
 
     const ShouldOpen = Boolean(Open);
-    Backdrop.classList.toggle("Hidden", !ShouldOpen);
-    Panel.classList.toggle("IsCollapsed", !ShouldOpen);
+    Panel.classList.toggle("Hidden", !ShouldOpen);
     Panel.setAttribute("aria-hidden", String(!ShouldOpen));
     Toggle.setAttribute("aria-expanded", String(ShouldOpen));
-    document.body.classList.toggle("HostControlsOpen", ShouldOpen);
 
     if (ShouldOpen) {
         RenderJoinRequestList("HostRequestList", "HostJoinRequests", "HostRequestCount");
         RenderHostPlayers("HostPlayerControls");
         requestAnimationFrame(() => {
             if (typeof DecorateModerationV20Rows === "function") DecorateModerationV20Rows();
-            document.getElementById("LobbyHostClose")?.focus();
         });
-    } else {
-        Toggle.focus();
     }
 }
 
 function ToggleLobbyHostPanel() {
     const Panel = document.getElementById("HostControlPanel");
     if (!Panel) return;
-    SetLobbyHostPanelOpen(Panel.classList.contains("IsCollapsed"));
+    SetLobbyHostPanelOpen(Panel.classList.contains("Hidden"));
 }
 
 function EnsureLobbyHostPanel() {
@@ -92,74 +86,13 @@ function EnsureLobbyHostPanel() {
     RemoveStrayLobbyHostArtifacts();
 
     const Toggle = document.getElementById("LobbyHostToggle");
-    if (!Toggle) return null;
+    const Panel = document.getElementById("HostControlPanel");
+    if (!Toggle || !Panel) return null;
 
-    let Backdrop = document.getElementById("HostControlBackdrop");
-    let Panel = document.getElementById("HostControlPanel");
-
-    if (!Backdrop || !Panel) {
-        Backdrop?.remove();
-
-        Backdrop = document.createElement("div");
-        Backdrop.id = "HostControlBackdrop";
-        Backdrop.className = "HostControlBackdrop Hidden";
-
-        Panel = document.createElement("section");
-        Panel.id = "HostControlPanel";
-        Panel.className = "HostControlPanel Hidden IsCollapsed";
-        Panel.setAttribute("aria-hidden", "true");
-        Panel.setAttribute("role", "dialog");
-        Panel.setAttribute("aria-modal", "true");
-        Panel.setAttribute("aria-labelledby", "HostControlTitle");
-        Panel.innerHTML = `
-            <div class="HostPanelHeader">
-                <div class="HostPanelTitleGroup">
-                    <span class="HostOnlyBadge">Host only</span>
-                    <h3 id="HostControlTitle">Room Controls</h3>
-                </div>
-                <button class="HostCloseButton" id="LobbyHostClose" type="button" aria-label="Close room controls"></button>
-            </div>
-            <div class="HostControlBody">
-                <div class="HostJoinRequests Hidden" id="HostJoinRequests">
-                    <div class="HostSectionTitle">Join requests <span id="HostRequestCount">0</span></div>
-                    <div id="HostRequestList"></div>
-                </div>
-                <section class="HostPlayersSection">
-                    <div class="HostSectionTitle">Players</div>
-                    <div id="HostPlayerControls"></div>
-                </section>
-            </div>
-        `;
-
-        Backdrop.appendChild(Panel);
-        document.body.appendChild(Backdrop);
-
-        Backdrop.addEventListener("click", Event => {
-            if (Event.target === Backdrop) SetLobbyHostPanelOpen(false);
-        });
-    }
-
-    Toggle.setAttribute("aria-haspopup", "dialog");
-    Toggle.setAttribute("aria-expanded", String(!Panel.classList.contains("IsCollapsed")));
+    Toggle.setAttribute("aria-controls", "HostControlPanel");
+    Toggle.setAttribute("aria-expanded", String(!Panel.classList.contains("Hidden")));
     Toggle.onclick = ToggleLobbyHostPanel;
-
-    const CloseButton = document.getElementById("LobbyHostClose");
-    if (CloseButton) CloseButton.onclick = () => SetLobbyHostPanelOpen(false);
-
     return Panel;
-}
-
-function HandleHostControlsKeydown(Event) {
-    if (Event.key !== "Escape") return;
-    const Backdrop = document.getElementById("HostControlBackdrop");
-    if (!Backdrop || Backdrop.classList.contains("Hidden")) return;
-    Event.preventDefault();
-    SetLobbyHostPanelOpen(false);
-}
-
-if (!window.__StoryHostControlsEscapeBound) {
-    window.__StoryHostControlsEscapeBound = true;
-    document.addEventListener("keydown", HandleHostControlsKeydown);
 }
 
 function EnsureGameHostPanel() {
@@ -347,8 +280,8 @@ function RenderHostControls() {
 
     const LobbyPanel = EnsureLobbyHostPanel();
     const LobbyToggle = document.getElementById("LobbyHostToggle");
-    LobbyPanel?.classList.toggle("Hidden", !Host);
     LobbyToggle?.classList.toggle("Hidden", !Host);
+    if (!Host) SetLobbyHostPanelOpen(false);
 
     const GamePanel = EnsureGameHostPanel();
     const GameToggle = document.getElementById("GameHostToggle");
@@ -356,7 +289,6 @@ function RenderHostControls() {
     GameToggle?.classList.toggle("Hidden", !Host);
 
     if (!Host) {
-        SetLobbyHostPanelOpen(false);
         GamePanel?.classList.add("IsCollapsed");
         return;
     }
