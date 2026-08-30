@@ -169,7 +169,7 @@ function BindModerationV20Socket(Socket) {
         if (Payload?.kicked) return;
         if (Payload?.timedOut) {
             ShowModerationV20Notice(
-                "Automatic chat timeout",
+                "Chat banned by game",
                 Payload?.reason || "Three confirmed abuse warnings were reached.",
                 true,
                 [`Warnings: ${Strikes}/3`, "The host can remove this timeout early."]
