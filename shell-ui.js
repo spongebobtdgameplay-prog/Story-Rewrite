@@ -139,6 +139,15 @@ function StoryConfirm(Options = {}) {
     const ConfirmText = String(Options.confirmText || "Continue");
     const CancelText = String(Options.cancelText || "Cancel");
     const Danger = Boolean(Options.danger);
+    const RememberKey = String(Options.rememberKey || "");
+    const RememberLabel = String(Options.rememberLabel || "");
+
+    if (RememberKey) {
+        try {
+            if (localStorage.getItem(RememberKey) === "1") return Promise.resolve(true);
+        } catch {}
+    }
+
     const PreviousFocus = document.activeElement;
 
     return new Promise(Resolve => {
@@ -172,6 +181,22 @@ function StoryConfirm(Options = {}) {
         Description.id = "StoryWarningMessage";
         Description.textContent = Message;
 
+        let RememberInput = null;
+        let RememberRow = null;
+
+        if (RememberKey && RememberLabel) {
+            RememberRow = document.createElement("label");
+            RememberRow.className = "StoryWarningRemember";
+
+            RememberInput = document.createElement("input");
+            RememberInput.type = "checkbox";
+
+            const RememberText = document.createElement("span");
+            RememberText.textContent = RememberLabel;
+
+            RememberRow.append(RememberInput, RememberText);
+        }
+
         const Actions = document.createElement("div");
         Actions.className = "StoryWarningActions";
 
@@ -186,6 +211,7 @@ function StoryConfirm(Options = {}) {
         ConfirmButton.textContent = ConfirmText;
 
         Copy.append(Kicker, Heading, Description);
+        if (RememberRow) Copy.appendChild(RememberRow);
         Actions.append(CancelButton, ConfirmButton);
         Dialog.append(Icon, Copy, Actions);
         Overlay.appendChild(Dialog);
@@ -197,6 +223,11 @@ function StoryConfirm(Options = {}) {
         const Finish = Result => {
             if (Settled) return;
             Settled = true;
+
+            if (Result && RememberInput?.checked && RememberKey) {
+                try { localStorage.setItem(RememberKey, "1"); } catch {}
+            }
+
             StoryConfirmCloser = null;
             document.removeEventListener("keydown", OnKeyDown, true);
             Overlay.classList.add("IsClosing");
@@ -293,7 +324,16 @@ function WireStoryShell() {
             });
         } else {
             Button.innerHTML = STORY_BACK_ICON;
-            Button.addEventListener("click", () => StoryGoBack(Button.dataset.storyBack || "main.html"));
+            Button.addEventListener("click", () => {
+                const BackTarget = Button.dataset.storyBack || "main.html";
+
+                if (document.body.classList.contains("GamePage") && typeof RequestLeaveCurrentLevel === "function") {
+                    RequestLeaveCurrentLevel(BackTarget);
+                    return;
+                }
+
+                StoryGoBack(BackTarget);
+            });
         }
 
         Button.addEventListener("contextmenu", Event => Event.preventDefault());
