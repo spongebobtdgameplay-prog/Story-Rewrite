@@ -59,10 +59,27 @@
     letter-spacing: .015em;
 }
 
+.HostRoomControlsButton {
+    transition: transform .16s ease, background .16s ease, border-color .16s ease, box-shadow .16s ease;
+}
+
 .HostRoomControlsButton:hover {
     color: #ffedc8 !important;
     border-color: #c18749 !important;
     background: linear-gradient(180deg, #5b351f, #342015) !important;
+    box-shadow: 0 8px 18px rgba(33, 16, 8, .32), inset 0 1px rgba(255, 226, 171, .14);
+    transform: translateY(-1px);
+}
+
+.HostRoomControlsButton:active {
+    transform: translateY(1px) scale(.985);
+}
+
+.HostRoomControlsButton[aria-expanded="true"] {
+    color: #fff0cf !important;
+    border-color: #d09a5b !important;
+    background: linear-gradient(180deg, #654027, #3b2518) !important;
+    box-shadow: 0 6px 18px rgba(33, 16, 8, .34), inset 0 1px rgba(255, 226, 171, .16);
 }
 
 .HostRoomControlsButton.Hidden {
