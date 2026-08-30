@@ -214,7 +214,7 @@ async function UseRevive() {
         RemovedSentences.clear();
         LastCheckFailed = false;
         document.getElementById("GameOverOverlay")?.classList.remove("Show");
-        document.getElementById("Aftermath")?.classList.add("Hidden");
+        ResetStoryDangerAfterReviveV12();
         StoryAudio?.PlayMusic?.(World?.theme || "menu");
         RenderStage();
     } catch (Error) {
@@ -527,6 +527,27 @@ async function UseStoryPowerV12(Name) {
     StoryPowerChargesV12[Name] -= 1;
     RenderSentences();
     RenderStoryPowerUiV12();
+}
+
+function ResetStoryDangerAfterReviveV12() {
+    StoryDangerExpiredV12 = false;
+    StorySingleDangerStageIdV12 = "";
+    ClearStoryDangerTimerV12();
+
+    document.getElementById("Aftermath")?.classList.add("Hidden");
+    document.getElementById("Book")?.classList.remove("StoryDangerActive", "StoryDangerCritical");
+    document.getElementById("Illustration")?.classList.remove("StoryDangerActive", "StoryDangerCritical");
+
+    const Status = document.getElementById("StatusText");
+    if (Status) {
+        Status.className = "StatusText";
+        Status.textContent = "Rewrite the page, then check whether the objective and survival rule both hold.";
+    }
+
+    const Value = document.getElementById("DangerTimerValue");
+    const Fill = document.getElementById("DangerTimerFill");
+    if (Value) Value.textContent = "--:--";
+    if (Fill) Fill.style.width = "0%";
 }
 
 function ClearStoryDangerTimerV12() {
