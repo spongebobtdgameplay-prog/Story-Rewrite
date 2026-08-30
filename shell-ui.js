@@ -1,4 +1,4 @@
-const STORY_FRONTEND_VERSION = "v2.34";
+const STORY_FRONTEND_VERSION = "v2.35";
 const STORY_BACK_ICON = `
 <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
     <path d="M14.5 5 7.5 12l7 7" />
@@ -268,24 +268,6 @@ function StoryConfirm(Options = {}) {
 }
 
 function WireLeaveRoomWarning() {
-    const Button = document.getElementById("LeaveButton");
-    if (!Button || Button.dataset.storyWarningBound === "1") return;
-
-    Button.dataset.storyWarningBound = "1";
-    Button.addEventListener("click", async Event => {
-        Event.preventDefault();
-        Event.stopImmediatePropagation();
-
-        const Confirmed = await StoryConfirm({
-            title: "Leave this room?",
-            message: "You will leave the multiplayer lobby and your ready state will be cleared.",
-            confirmText: "Leave Room",
-            cancelText: "Stay",
-            danger: true
-        });
-
-        if (Confirmed && typeof LeaveRoom === "function") LeaveRoom();
-    }, true);
 }
 
 function AddStoryVersionBadge() {
