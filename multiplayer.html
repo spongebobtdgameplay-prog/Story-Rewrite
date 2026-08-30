@@ -42,6 +42,33 @@
     box-shadow: 0 28px 90px rgba(0, 0, 0, .58), inset 0 1px rgba(255, 235, 196, .08);
     text-align: center;
 }
+.HostRoomControlsButton {
+    min-height: 44px;
+    padding: 10px 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #ffe0aa !important;
+    border: 1px solid #9f6937 !important;
+    border-radius: 12px;
+    background: linear-gradient(180deg, #4b2a19, #2c180f) !important;
+    box-shadow: 0 5px 14px rgba(33, 16, 8, .24), inset 0 1px rgba(255, 226, 171, .1);
+    text-shadow: none !important;
+    font: 800 17px/1.1 system-ui, sans-serif;
+    letter-spacing: .015em;
+}
+
+.HostRoomControlsButton:hover {
+    color: #ffedc8 !important;
+    border-color: #c18749 !important;
+    background: linear-gradient(180deg, #5b351f, #342015) !important;
+}
+
+.HostRoomControlsButton.Hidden {
+    display: none !important;
+}
+
 .MultiplayerSessionConflictIcon {
     width: 58px;
     height: 58px;
@@ -134,7 +161,7 @@ const MultiplayerFreshToken = Date.now().toString(36);
             <div class="RoomFooterActions">
                 <button class="SecondaryButton" id="ReadyButton" type="button">Ready</button>
                 <button class="PrimaryButton Hidden" id="StartButton" type="button">Start Story</button>
-                <button class="SecondaryButton Hidden" id="LobbyHostToggle" type="button">Room Controls</button>
+                <button class="HostRoomControlsButton Hidden" id="LobbyHostToggle" type="button">Room Controls</button>
                 <button class="DangerButton" id="LeaveButton" type="button">Leave Room</button>
             </div>
             <div class="StatusText Hidden" id="RoomStatus" aria-live="polite"></div>
