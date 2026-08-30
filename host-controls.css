@@ -223,3 +223,50 @@
         max-height: 54vh;
     }
 }
+
+.HostControlPanel {
+    position: fixed;
+    right: 18px;
+    top: 96px;
+    z-index: 10020;
+    width: min(400px, calc(100vw - 36px));
+    max-height: calc(100vh - 128px);
+    overflow-y: auto;
+    margin: 0;
+    transition: opacity .16s ease, transform .16s ease;
+}
+
+.HostControlPanel.IsCollapsed {
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(-8px) scale(.98);
+}
+
+.LobbyHostToggle {
+    left: auto;
+    right: 18px;
+    bottom: 18px;
+    z-index: 10021;
+}
+
+.LobbyHostToggle span {
+    position: absolute;
+    right: -5px;
+    top: -5px;
+}
+
+@media (max-width: 700px) {
+    .HostControlPanel {
+        left: max(8px, env(safe-area-inset-left));
+        right: max(8px, env(safe-area-inset-right));
+        top: max(76px, env(safe-area-inset-top));
+        width: auto;
+        max-height: calc(100vh - 166px);
+    }
+
+    .LobbyHostToggle {
+        left: auto;
+        right: max(8px, env(safe-area-inset-right));
+        bottom: calc(88px + env(safe-area-inset-bottom));
+    }
+}
