@@ -23,6 +23,7 @@ for (const StyleName of ["looks.css", "shell-ui.css"]) {
     min-height: 0;
     padding: 0;
     gap: 9px;
+    color: #e6c79e;
     border: 0;
     border-radius: 0;
     background: transparent;
@@ -30,13 +31,33 @@ for (const StyleName of ["looks.css", "shell-ui.css"]) {
     cursor: pointer;
 }
 
-#KeepMusicPlayingButton[aria-checked="true"],
 #KeepMusicPlayingButton:hover,
 #KeepMusicPlayingButton:active {
     border: 0;
     background: transparent;
     box-shadow: none;
     transform: none;
+}
+
+#KeepMusicPlayingButton strong {
+    min-width: 34px;
+    padding: 5px 8px;
+    color: #e9cfaa;
+    text-align: center;
+    border: 1px solid rgba(218, 176, 116, .24);
+    border-radius: 999px;
+    background: rgba(255, 239, 207, .06);
+}
+
+#KeepMusicPlayingButton[aria-checked="true"] {
+    color: #fff0d0;
+}
+
+#KeepMusicPlayingButton[aria-checked="true"] strong {
+    color: #34190d;
+    border-color: #e5b96e;
+    background: #efc77f;
+    box-shadow: 0 2px 8px rgba(16, 7, 3, .28);
 }
 </style>
 </head>
