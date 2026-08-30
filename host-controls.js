@@ -54,9 +54,12 @@ function EnsureLobbyHostPanel() {
     const ExistingPanel = document.getElementById("HostControlPanel");
     if (ExistingPanel) return ExistingPanel;
 
+    document.getElementById("GameHostToggle")?.remove();
+    document.getElementById("GameHostControls")?.remove();
+
     const Toggle = document.createElement("button");
     Toggle.id = "LobbyHostToggle";
-    Toggle.className = "GameHostToggle LobbyHostToggle Hidden";
+    Toggle.className = "LobbyHostToggle Hidden";
     Toggle.type = "button";
     Toggle.setAttribute("aria-label", "Open host controls");
     Toggle.innerHTML = `${HOST_SHIELD_ICON}<span id="LobbyHostRequestBadge">0</span>`;
