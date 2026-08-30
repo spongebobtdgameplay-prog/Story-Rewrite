@@ -48,86 +48,6 @@
     background: rgba(124, 47, 47, .08);
 }
 
-.SceneThreatArt {
-    position: absolute;
-    right: clamp(12px, 5%, 38px);
-    bottom: 28px;
-    z-index: 1;
-    width: clamp(104px, 25%, 165px);
-    opacity: .78;
-    pointer-events: none;
-    filter: drop-shadow(0 16px 24px rgba(0,0,0,.34));
-}
-
-.SceneThreatArt svg {
-    display: block;
-    width: 100%;
-    height: auto;
-}
-
-.SceneThreatArtSmiler .ThreatShadow {
-    fill: rgba(25, 22, 20, .9);
-}
-
-.SceneThreatArtSmiler .ThreatFace {
-    fill: #cbbca5;
-    stroke: rgba(66, 45, 32, .72);
-    stroke-width: 3;
-}
-
-.SceneThreatArtSmiler .ThreatHair {
-    fill: #3e342e;
-}
-
-.SceneThreatArtSmiler .ThreatEye {
-    fill: #191411;
-}
-
-.SceneThreatArtSmiler .ThreatSmile {
-    fill: #2a1712;
-}
-
-.SceneThreatArtSmiler .ThreatFang {
-    fill: #e9dfce;
-    stroke: rgba(70, 45, 34, .4);
-    stroke-width: 1;
-    stroke-linejoin: round;
-}
-
-.SceneThreatArtYellow {
-    width: clamp(120px, 28%, 190px);
-    opacity: .9;
-}
-
-.SceneThreatArtYellow .YellowGlow {
-    fill: rgba(239, 194, 54, .12);
-}
-
-.SceneThreatArtYellow .YellowHat,
-.SceneThreatArtYellow .YellowCoat {
-    fill: #c7a520;
-    stroke: #725d13;
-    stroke-width: 3;
-}
-
-.SceneThreatArtYellow .YellowHead {
-    fill: #33291f;
-}
-
-.SceneThreatArtYellow .YellowLapels {
-    fill: none;
-    stroke: #6b5714;
-    stroke-width: 4;
-    stroke-linejoin: round;
-}
-
-.SceneThreatArtYellow .YellowFace {
-    fill: none;
-    stroke: #e7c94f;
-    stroke-width: 3;
-    stroke-linecap: round;
-}
-
 .ReviveMeta {
     display: flex;
     align-items: center;
@@ -214,16 +134,6 @@
         font-size: 9px;
     }
 
-    .SceneThreatArt {
-        right: 8px;
-        bottom: 20px;
-        width: 96px;
-        opacity: .6;
-    }
-
-    .SceneThreatArtYellow {
-        width: 110px;
-    }
 }
 
 
@@ -232,11 +142,19 @@
 .BranchPanel,
 .TeamClueCard {
     margin: 12px 0;
-    padding: 13px;
-    border: 1px solid rgba(123, 77, 43, .28);
-    border-radius: 13px;
-    background: linear-gradient(145deg, rgba(255, 247, 231, .82), rgba(225, 202, 170, .34));
-    box-shadow: 0 8px 20px rgba(78, 43, 19, .08);
+    padding: 13px 14px;
+    border: 1px solid rgba(112, 68, 36, .42);
+    border-radius: 12px;
+    background: #e8c99a;
+    box-shadow: inset 0 1px rgba(255, 246, 224, .62), 0 5px 14px rgba(74, 39, 20, .08);
+}
+
+.DangerTimerCard {
+    background: linear-gradient(180deg, #e7c89b, #ddb984);
+}
+
+.PowerPanel {
+    background: linear-gradient(180deg, #ecd4ab, #e1c08f);
 }
 
 .DangerTimerTop,
@@ -245,10 +163,15 @@
     align-items: center;
     justify-content: space-between;
     gap: 10px;
-    color: #6a422a;
-    font: 900 11px/1 system-ui, sans-serif;
-    letter-spacing: .08em;
+    color: #62371f;
+    font: 900 12px/1.05 Georgia, "Times New Roman", serif;
+    letter-spacing: .045em;
     text-transform: uppercase;
+}
+
+.PowerPanelHeading strong {
+    color: #87502b;
+    font-size: 11px;
 }
 
 .DangerTimerTop strong {
@@ -262,7 +185,7 @@
     margin-top: 10px;
     overflow: hidden;
     border-radius: 999px;
-    background: rgba(78, 40, 27, .13);
+    background: rgba(86, 48, 25, .18);
 }
 
 .DangerTimerTrack span {
@@ -292,11 +215,12 @@
 .PowerButton,
 .BranchChoice {
     min-height: 42px;
-    padding: 9px 10px;
-    border: 1px solid #85572f;
+    padding: 9px 11px;
+    border: 1px solid rgba(111, 66, 34, .46);
     border-radius: 9px;
-    background: linear-gradient(180deg, #fff1ce, #e3c38c);
+    background: rgba(255, 244, 218, .58);
     color: #402212;
+    box-shadow: inset 0 1px rgba(255, 252, 239, .62);
     font-family: Georgia, "Times New Roman", serif;
     font-weight: 900;
     cursor: pointer;
@@ -325,8 +249,8 @@
 .PowerButton:hover:not(:disabled),
 .BranchChoice:hover:not(:disabled),
 .BranchChoice.Selected {
-    border-color: #5f341c;
-    background: linear-gradient(180deg, #ffe8ad, #dba75b);
+    border-color: #74421f;
+    background: #efd09a;
 }
 
 .PowerButton:disabled,
@@ -369,21 +293,8 @@
     color: #2f7163;
 }
 
-.Book.StoryDangerActive .SceneThreatArt {
-    animation: storyThreatPulse 1.5s ease-in-out infinite;
-}
-
 .Book.StoryDangerCritical .DangerTimerTrack span {
     background: #a62129;
-}
-
-.Book.StoryDangerCritical .SceneThreatArt {
-    animation-duration: .65s;
-    opacity: 1;
-}
-
-@keyframes storyThreatPulse {
-    50% { transform: scale(1.045) translateY(-4px); filter: drop-shadow(0 10px 24px rgba(146, 35, 28, .56)); }
 }
 
 @media (max-width: 700px) {
