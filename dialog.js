@@ -531,8 +531,16 @@ function StartMultiplayer() {
     MultiplayerSocket.on("game:retry", () => {
         RemovedSentences.clear();
         LastCheckFailed = false;
-        document.getElementById("Aftermath").classList.add("Hidden");
         document.getElementById("CompleteOverlay").classList.remove("Show");
+        if (typeof ResetStoryDangerAfterReviveV12 === "function") ResetStoryDangerAfterReviveV12();
+        else {
+            document.getElementById("Aftermath")?.classList.add("Hidden");
+            const Status = document.getElementById("StatusText");
+            if (Status) {
+                Status.className = "StatusText";
+                Status.textContent = "Rewrite the page, then check whether the objective and survival rule both hold.";
+            }
+        }
         StoryAudio.PlayMusic(World.theme || "menu");
         RenderStage();
     });
