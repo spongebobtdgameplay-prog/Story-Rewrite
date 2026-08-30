@@ -167,8 +167,14 @@ function BindModerationV20Socket(Socket) {
     Socket.on("room:moderationResult", Payload => {
         const Strikes = Number(Payload?.strikes || 0);
         if (Payload?.kicked) return;
-        if (Payload?.timedOut) ShowModerationV20Notice("Automatic chat timeout", Payload?.reason || "Three confirmed abuse warnings were reached.", true, [`Warnings: ${Strikes}/3`, "The host can remove this timeout early."]);
-        else ShowModerationV20Notice(`Abuse warning ${Math.min(Strikes, 3)}/3`, Payload?.reason || "A message was confirmed as abusive.", true);
+        if (Payload?.timedOut) {
+            ShowModerationV20Notice(
+                "Automatic chat timeout",
+                Payload?.reason || "Three confirmed abuse warnings were reached.",
+                true,
+                [`Warnings: ${Strikes}/3`, "The host can remove this timeout early."]
+            );
+        }
     });
     Socket.on("room:chatTimeoutState", Payload => {
         ShowModerationV20Notice(Payload?.active ? "Chat timed out" : "Chat restored", Payload?.reason || (Payload?.active ? "You cannot use room chat right now." : "You can use room chat again."), Boolean(Payload?.active));
