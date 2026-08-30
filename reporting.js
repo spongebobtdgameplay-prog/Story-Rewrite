@@ -168,13 +168,14 @@ function CensorModeratedChatMessage(MessageId, Text = "*") {
         else Element.appendChild(document.createTextNode(SafeText));
     }
 
-    for (const StateName of ["MultiplayerState"]) {
-        try {
-            const State = eval(StateName);
-            const Message = State?.messages?.find?.(Entry => String(Entry?.id || "") === MessageId);
+    try {
+        if (typeof MultiplayerState !== "undefined") {
+            const Message = MultiplayerState?.messages?.find?.(
+                Entry => String(Entry?.id || "") === MessageId
+            );
             if (Message) Message.text = SafeText;
-        } catch {}
-    }
+        }
+    } catch {}
 }
 
 function RemoveModeratedChatMessage(MessageId) {
