@@ -300,3 +300,45 @@
 @media (max-width: 700px) {
     .PowerButtons { grid-template-columns: 1fr; }
 }
+
+@media (min-width: 901px) {
+    .Sidebar .DangerTimerCard {
+        position: sticky;
+        top: 14px;
+        z-index: 8;
+        border-width: 2px;
+        box-shadow: 0 12px 28px rgba(63, 31, 13, .18), inset 0 1px rgba(255, 248, 229, .7);
+    }
+
+    .Sidebar .PowerPanel {
+        position: sticky;
+        top: 108px;
+        z-index: 7;
+        border-width: 2px;
+        box-shadow: 0 12px 28px rgba(63, 31, 13, .16), inset 0 1px rgba(255, 248, 229, .68);
+    }
+
+    .DangerTimerTop {
+        font-size: 13px;
+    }
+
+    .DangerTimerTop strong {
+        font-size: 19px;
+    }
+
+    .PowerPanelHeading {
+        font-size: 13px;
+    }
+
+    .PowerButton {
+        min-height: 48px;
+    }
+
+    .PowerButton span {
+        font-size: 16px;
+    }
+
+    .PowerButton small {
+        font-size: 11px;
+    }
+}
