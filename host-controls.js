@@ -51,21 +51,26 @@ function HostEmit(EventName, Payload, Timeout = 10000) {
 
 function EnsureLobbyHostPanel() {
     if (!document.body.classList.contains("MultiplayerPage")) return null;
-    if (document.getElementById("HostControlPanel")) return document.getElementById("HostControlPanel");
+    const ExistingPanel = document.getElementById("HostControlPanel");
+    if (ExistingPanel) return ExistingPanel;
 
-    const PlayerList = document.getElementById("PlayerList");
-    if (!PlayerList) return null;
+    const Toggle = document.createElement("button");
+    Toggle.id = "LobbyHostToggle";
+    Toggle.className = "GameHostToggle LobbyHostToggle Hidden";
+    Toggle.type = "button";
+    Toggle.setAttribute("aria-label", "Open host controls");
+    Toggle.innerHTML = `${HOST_SHIELD_ICON}<span id="LobbyHostRequestBadge">0</span>`;
 
     const Panel = document.createElement("section");
     Panel.id = "HostControlPanel";
-    Panel.className = "HostControlPanel Hidden";
+    Panel.className = "HostControlPanel Hidden IsCollapsed";
     Panel.innerHTML = `
         <div class="HostPanelHeader">
             <div>
                 <div class="Kicker">Host only</div>
                 <h3>Room Controls</h3>
             </div>
-            <span class="HostShieldIcon">${HOST_SHIELD_ICON}</span>
+            <button class="HostCloseButton" id="LobbyHostClose" type="button" aria-label="Close host controls">×</button>
         </div>
         <div class="HostJoinRequests Hidden" id="HostJoinRequests">
             <div class="HostSectionTitle">Join requests <span id="HostRequestCount">0</span></div>
@@ -75,7 +80,9 @@ function EnsureLobbyHostPanel() {
         <div id="HostPlayerControls"></div>
     `;
 
-    PlayerList.after(Panel);
+    document.body.append(Toggle, Panel);
+    Toggle.addEventListener("click", () => Panel.classList.toggle("IsCollapsed"));
+    document.getElementById("LobbyHostClose")?.addEventListener("click", () => Panel.classList.add("IsCollapsed"));
     return Panel;
 }
 
@@ -172,22 +179,29 @@ function RenderHostControls() {
     const Host = IsLocalHost();
 
     const LobbyPanel = EnsureLobbyHostPanel();
+    const LobbyToggle = document.getElementById("LobbyHostToggle");
     LobbyPanel?.classList.toggle("Hidden", !Host);
+    LobbyToggle?.classList.toggle("Hidden", !Host);
 
     const GamePanel = EnsureGameHostPanel();
     const GameToggle = document.getElementById("GameHostToggle");
     GamePanel?.classList.toggle("Hidden", !Host);
     GameToggle?.classList.toggle("Hidden", !Host);
 
-    if (!Host) return;
+    if (!Host) {
+        LobbyPanel?.classList.add("IsCollapsed");
+        GamePanel?.classList.add("IsCollapsed");
+        return;
+    }
 
     RenderJoinRequestList("HostRequestList", "HostJoinRequests", "HostRequestCount");
     RenderJoinRequestList("GameHostRequestList", "GameHostJoinRequests", "GameHostRequestCount");
     RenderHostPlayers("HostPlayerControls");
     RenderHostPlayers("GameHostPlayerControls");
 
-    const Badge = document.getElementById("GameHostRequestBadge");
-    if (Badge) {
+    for (const BadgeId of ["LobbyHostRequestBadge", "GameHostRequestBadge"]) {
+        const Badge = document.getElementById(BadgeId);
+        if (!Badge) continue;
         Badge.textContent = String(HostPendingRequests.size);
         Badge.classList.toggle("HasRequests", HostPendingRequests.size > 0);
     }
