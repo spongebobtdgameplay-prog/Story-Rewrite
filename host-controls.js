@@ -246,12 +246,15 @@ function ApplyLocalChatBan(State) {
     const Username = GetHostProfileName();
     const Player = State?.players?.find?.(Entry => Entry.username === Username);
     const Banned = Boolean(Player?.chatBanned);
+    const IssuedBy = String(Player?.moderation?.chatTimeoutIssuedBy || "");
+    const Automatic = IssuedBy.toLowerCase() === "automatic moderation";
+    const DisabledText = Automatic ? "Chat banned by game" : "Chat banned by host";
 
     for (const InputId of ["ChatInput", "GameChatInput"]) {
         const Input = document.getElementById(InputId);
         if (!Input) continue;
         Input.disabled = Banned;
-        Input.placeholder = Banned ? "Host disabled your chat" : (InputId === "ChatInput" ? "Type to your group..." : "Talk to your group...");
+        Input.placeholder = Banned ? DisabledText : (InputId === "ChatInput" ? "Type to your group..." : "Talk to your group...");
     }
 }
 
@@ -319,7 +322,9 @@ function BindHostSocket(Socket) {
         const Banned = Boolean(Payload?.banned);
         for (const InputId of ["ChatInput", "GameChatInput"]) {
             const Input = document.getElementById(InputId);
-            if (Input) Input.disabled = Banned;
+            if (!Input) continue;
+            Input.disabled = Banned;
+            if (Banned) Input.placeholder = "Chat banned by host";
         }
         const Status = document.getElementById("RoomStatus") || document.getElementById("StatusText") || document.getElementById("LobbyStatus");
         if (Status && Payload?.reason) Status.textContent = Payload.reason;
