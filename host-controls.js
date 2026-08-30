@@ -55,38 +55,71 @@ function RemoveStrayLobbyHostArtifacts() {
     document.getElementById("GameHostControls")?.remove();
 }
 
+function SetLobbyHostPanelOpen(Open) {
+    const Toggle = document.getElementById("LobbyHostToggle");
+    const Panel = document.getElementById("HostControlPanel");
+    if (!Toggle || !Panel) return;
+
+    const ShouldOpen = Boolean(Open);
+    Panel.classList.toggle("IsCollapsed", !ShouldOpen);
+    Panel.setAttribute("aria-hidden", String(!ShouldOpen));
+    Toggle.setAttribute("aria-expanded", String(ShouldOpen));
+
+    if (ShouldOpen) {
+        RenderJoinRequestList("HostRequestList", "HostJoinRequests", "HostRequestCount");
+        RenderHostPlayers("HostPlayerControls");
+        requestAnimationFrame(() => {
+            if (typeof DecorateModerationV20Rows === "function") DecorateModerationV20Rows();
+            document.getElementById("LobbyHostClose")?.focus();
+        });
+    }
+}
+
+function ToggleLobbyHostPanel() {
+    const Panel = document.getElementById("HostControlPanel");
+    if (!Panel) return;
+    SetLobbyHostPanelOpen(Panel.classList.contains("IsCollapsed"));
+}
+
 function EnsureLobbyHostPanel() {
     if (!document.body.classList.contains("MultiplayerPage")) return null;
     RemoveStrayLobbyHostArtifacts();
 
-    const ExistingPanel = document.getElementById("HostControlPanel");
-    if (ExistingPanel) return ExistingPanel;
-
     const Toggle = document.getElementById("LobbyHostToggle");
     if (!Toggle) return null;
 
-    const Panel = document.createElement("section");
-    Panel.id = "HostControlPanel";
-    Panel.className = "HostControlPanel Hidden IsCollapsed";
-    Panel.innerHTML = `
-        <div class="HostPanelHeader">
-            <div>
-                <div class="Kicker">Host only</div>
-                <h3>Room Controls</h3>
-            </div>
-            <button class="HostCloseButton" id="LobbyHostClose" type="button" aria-label="Close host controls">×</button>
-        </div>
-        <div class="HostJoinRequests Hidden" id="HostJoinRequests">
-            <div class="HostSectionTitle">Join requests <span id="HostRequestCount">0</span></div>
-            <div id="HostRequestList"></div>
-        </div>
-        <div class="HostSectionTitle">Players</div>
-        <div id="HostPlayerControls"></div>
-    `;
+    let Panel = document.getElementById("HostControlPanel");
 
-    document.body.appendChild(Panel);
-    Toggle.addEventListener("click", () => Panel.classList.toggle("IsCollapsed"));
-    document.getElementById("LobbyHostClose")?.addEventListener("click", () => Panel.classList.add("IsCollapsed"));
+    if (!Panel) {
+        Panel = document.createElement("section");
+        Panel.id = "HostControlPanel";
+        Panel.className = "HostControlPanel Hidden IsCollapsed";
+        Panel.setAttribute("aria-hidden", "true");
+        Panel.innerHTML = `
+            <div class="HostPanelHeader">
+                <div>
+                    <div class="Kicker">Host only</div>
+                    <h3>Room Controls</h3>
+                </div>
+                <button class="HostCloseButton" id="LobbyHostClose" type="button" aria-label="Close host controls">×</button>
+            </div>
+            <div class="HostJoinRequests Hidden" id="HostJoinRequests">
+                <div class="HostSectionTitle">Join requests <span id="HostRequestCount">0</span></div>
+                <div id="HostRequestList"></div>
+            </div>
+            <div class="HostSectionTitle">Players</div>
+            <div id="HostPlayerControls"></div>
+        `;
+        document.body.appendChild(Panel);
+    }
+
+    Toggle.setAttribute("aria-haspopup", "dialog");
+    Toggle.setAttribute("aria-expanded", String(!Panel.classList.contains("IsCollapsed")));
+    Toggle.onclick = ToggleLobbyHostPanel;
+
+    const CloseButton = document.getElementById("LobbyHostClose");
+    if (CloseButton) CloseButton.onclick = () => SetLobbyHostPanelOpen(false);
+
     return Panel;
 }
 
@@ -194,7 +227,7 @@ function RenderHostControls() {
     GameToggle?.classList.toggle("Hidden", !Host);
 
     if (!Host) {
-        LobbyPanel?.classList.add("IsCollapsed");
+        SetLobbyHostPanelOpen(false);
         GamePanel?.classList.add("IsCollapsed");
         return;
     }
