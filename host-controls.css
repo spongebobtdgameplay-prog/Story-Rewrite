@@ -308,3 +308,22 @@
         top: auto;
     }
 }
+
+
+.MultiplayerPage #GameHostToggle,
+.MultiplayerPage #GameHostControls {
+    display: none !important;
+}
+
+.MultiplayerPage #LobbyHostToggle {
+    position: static !important;
+    inset: auto !important;
+    width: auto;
+    height: auto;
+    padding: 12px 18px;
+    display: inline-flex;
+    place-items: initial;
+    color: inherit;
+    border-radius: 12px;
+    box-shadow: none;
+}
