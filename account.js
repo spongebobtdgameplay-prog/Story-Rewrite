@@ -276,6 +276,12 @@ window.addEventListener("pagehide", () => {
 });
 
 document.addEventListener("DOMContentLoaded", async () => {
+    const AccountBackButton = document.querySelector("[data-story-back]");
+    const AccountSource = new URLSearchParams(window.location.search).get("from");
+    if (AccountBackButton && AccountSource === "multiplayer") {
+        AccountBackButton.dataset.storyBack = "multiplayer.html";
+    }
+
     AccountStatus = document.getElementById("AccountStatus");
     AccountMusicSlider = document.getElementById("MusicVolumeSlider");
     AccountSoundSlider = document.getElementById("SoundVolumeSlider");
