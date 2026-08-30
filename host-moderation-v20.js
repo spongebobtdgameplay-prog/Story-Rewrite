@@ -177,7 +177,17 @@ function BindModerationV20Socket(Socket) {
         }
     });
     Socket.on("room:chatTimeoutState", Payload => {
-        ShowModerationV20Notice(Payload?.active ? "Chat timed out" : "Chat restored", Payload?.reason || (Payload?.active ? "You cannot use room chat right now." : "You can use room chat again."), Boolean(Payload?.active));
+        const IssuedBy = String(Payload?.issuedBy || "");
+        const Automatic = IssuedBy.toLowerCase() === "automatic moderation";
+        const Title = Payload?.active
+            ? (Automatic ? "Chat banned by game" : "Chat banned by host")
+            : "Chat restored";
+
+        ShowModerationV20Notice(
+            Title,
+            Payload?.reason || (Payload?.active ? "You cannot use room chat right now." : "You can use room chat again."),
+            Boolean(Payload?.active)
+        );
     });
     Socket.on("room:gameRestrictionState", Payload => {
         ShowModerationV20Notice(Payload?.active ? "Host game restriction" : "Game restriction removed", Payload?.reason || "Your host game restriction changed.", Boolean(Payload?.active));
