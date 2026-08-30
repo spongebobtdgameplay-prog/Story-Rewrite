@@ -15,7 +15,7 @@
 <link rel="stylesheet" href="multiplayer.css?v=20260822-67">
 <link rel="stylesheet" href="multiplayer-polish.css?v=20260822-1">
 <link rel="stylesheet" href="shell-ui.css">
-<link rel="stylesheet" href="host-controls.css?v=20260830-5">
+<link rel="stylesheet" href="host-controls.css?v=20260830-6">
 <link rel="stylesheet" href="chat-ai.css">
 <link rel="stylesheet" href="game-enhancements.css">
 <link rel="stylesheet" href="scene-fix.css" data-story-scene-fix="1">
@@ -137,14 +137,13 @@ const MultiplayerFreshToken = Date.now().toString(36);
 <body class="MultiplayerPage">
 <div class="MultiplayerShell">
     <header class="MultiplayerHero">
-        <button class="GameBackButton IconBackButton" type="button" data-story-back="main.html" aria-label="Go back"></button>
         <div class="MultiplayerHeroCopy">
             <div class="Kicker">Co-op rewrite</div>
             <h1>Multiplayer</h1>
             <p>Create a code, invite up to four other players, chat, vote on numbered story options, and share three team lives.</p>
         </div>
         <div class="RoomFooterActions MultiplayerHeroNavigation">
-            <button class="IconNavButton" type="button" data-story-go="account.html" data-account-icon aria-label="Account"></button>
+            <button class="IconNavButton" type="button" data-story-go="account.html?from=multiplayer" data-account-icon aria-label="Account"></button>
         </div>
     </header>
 
@@ -178,9 +177,26 @@ const MultiplayerFreshToken = Date.now().toString(36);
             <div class="RoomFooterActions">
                 <button class="SecondaryButton" id="ReadyButton" type="button">Ready</button>
                 <button class="PrimaryButton Hidden" id="StartButton" type="button">Start Story</button>
-                <button class="HostRoomControlsButton Hidden" id="LobbyHostToggle" type="button">Room Controls</button>
+                <button class="HostRoomControlsButton Hidden" id="LobbyHostToggle" type="button" aria-expanded="false">Room Controls</button>
                 <button class="DangerButton" id="LeaveButton" type="button">Leave Room</button>
             </div>
+            <section class="HostControlInline Hidden" id="HostControlPanel" aria-hidden="true">
+                <div class="HostInlineTop">
+                    <div>
+                        <div class="Kicker">Host controls</div>
+                        <h3>Manage Room</h3>
+                    </div>
+                    <span class="HostInlineHint">Select a player to manage them.</span>
+                </div>
+                <div class="HostJoinRequests Hidden" id="HostJoinRequests">
+                    <div class="HostSectionTitle">Join requests <span id="HostRequestCount">0</span></div>
+                    <div id="HostRequestList"></div>
+                </div>
+                <section class="HostPlayersSection">
+                    <div class="HostSectionTitle">Players</div>
+                    <div id="HostPlayerControls"></div>
+                </section>
+            </section>
             <div class="StatusText Hidden" id="RoomStatus" aria-live="polite"></div>
         </div>
 
