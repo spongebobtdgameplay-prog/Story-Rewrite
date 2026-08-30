@@ -1,59 +1,6 @@
 const VoteTapLocks = new Set();
 let MultiplayerCheckBusyV11 = false;
 
-function GetDifficultyLevelValue() {
-    const Value = String(Stage?.difficulty || "").toLowerCase();
-    if (/nightmare|extreme|brutal|insane/.test(Value)) return 4;
-    if (/hard/.test(Value)) return 3;
-    if (/normal|medium/.test(Value)) return 2;
-    return 1;
-}
-
-function BuildSmilerArt() {
-    return `
-        <div class="SceneThreatArt SceneThreatArtSmiler" aria-label="A smiling night creature watches the story">
-            <svg viewBox="0 0 160 190" aria-hidden="true">
-                <path class="ThreatShadow" d="M34 173c2-38 18-58 46-58s44 20 46 58H34Z"></path>
-                <ellipse class="ThreatFace" cx="80" cy="76" rx="47" ry="56"></ellipse>
-                <path class="ThreatHair" d="M37 70c0-39 18-61 44-61 27 0 45 22 45 61-11-15-26-23-45-23-18 0-33 8-44 23Z"></path>
-                <ellipse class="ThreatEye" cx="62" cy="72" rx="5" ry="7"></ellipse>
-                <ellipse class="ThreatEye" cx="98" cy="72" rx="5" ry="7"></ellipse>
-                <path class="ThreatSmile" d="M50 93c18 22 42 22 60 0-5 32-55 32-60 0Z"></path>
-                <path class="ThreatFang" d="M58 100 64 111 70 100ZM74 102 80 114 86 101ZM90 101 96 112 102 99Z"></path>
-            </svg>
-        </div>
-    `;
-}
-
-function BuildManInYellowArt() {
-    return `
-        <div class="SceneThreatArt SceneThreatArtYellow" aria-label="A mysterious man in yellow stands behind the story">
-            <svg viewBox="0 0 170 210" aria-hidden="true">
-                <ellipse class="YellowGlow" cx="85" cy="94" rx="68" ry="90"></ellipse>
-                <path class="YellowHat" d="M43 48h84l-12-18H58L43 48Z"></path>
-                <path class="YellowHead" d="M61 48h48v47H61Z"></path>
-                <path class="YellowCoat" d="M48 89h74l28 104H20L48 89Z"></path>
-                <path class="YellowLapels" d="M61 91 84 125 109 91M84 125v68"></path>
-                <path class="YellowFace" d="M70 65h8M94 65h8M74 82c8 5 14 5 22 0"></path>
-            </svg>
-        </div>
-    `;
-}
-
-function BuildDifficultyThreatArt() {
-    return GetDifficultyLevelValue() >= 3 ? BuildManInYellowArt() : BuildSmilerArt();
-}
-
-if (typeof BuildSceneVisual === "function" && !BuildSceneVisual.V11Wrapped) {
-    const BaseBuildSceneVisual = BuildSceneVisual;
-    const WrappedBuildSceneVisual = function(...Arguments) {
-        const Markup = BaseBuildSceneVisual(...Arguments);
-        return Markup.replace('<div class="SceneFocus">', `${BuildDifficultyThreatArt()}<div class="SceneFocus">`);
-    };
-    WrappedBuildSceneVisual.V11Wrapped = true;
-    BuildSceneVisual = WrappedBuildSceneVisual;
-}
-
 if (typeof ToggleSentence === "function" && !ToggleSentence.V11Wrapped) {
     const BaseToggleSentence = ToggleSentence;
     const WrappedToggleSentence = function(Index) {
