@@ -330,3 +330,147 @@
     box-shadow: inset 0 1px rgba(255,255,255,.48);
     text-shadow: none !important;
 }
+
+
+.HostPlayerEmptyState {
+    padding: 18px 14px;
+    border: 1px dashed rgba(211, 160, 93, .24);
+    border-radius: 11px;
+    background: rgba(255, 255, 255, .02);
+    color: #c5a982;
+    text-align: center;
+    font: 750 13px/1.45 system-ui, sans-serif;
+}
+
+.HostPlayerPickerHeading {
+    display: grid;
+    gap: 3px;
+    margin: 4px 0 10px;
+}
+
+.HostPlayerPickerHeading strong {
+    color: #f4ddba;
+    font: 800 15px/1.2 Georgia, "Times New Roman", serif;
+}
+
+.HostPlayerPickerHeading span {
+    color: #9f8768;
+    font: 650 11px/1.35 system-ui, sans-serif;
+}
+
+.HostPlayerPicker {
+    display: grid;
+    gap: 8px;
+}
+
+.HostPlayerSelectButton {
+    width: 100%;
+    min-height: 54px;
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    cursor: pointer;
+    color: #f3dfbf;
+    border: 1px solid rgba(211, 160, 93, .2);
+    border-radius: 11px;
+    background: rgba(255, 255, 255, .025);
+    text-align: left;
+    transition: transform .15s ease, border-color .15s ease, background .15s ease;
+}
+
+.HostPlayerSelectButton:hover {
+    transform: translateY(-1px);
+    border-color: rgba(226, 177, 107, .42);
+    background: rgba(255, 238, 207, .055);
+}
+
+.HostPlayerSelectButton:active {
+    transform: translateY(1px) scale(.99);
+}
+
+.HostPlayerSelectIdentity {
+    min-width: 0;
+    display: grid;
+    gap: 3px;
+}
+
+.HostPlayerSelectIdentity strong {
+    overflow: hidden;
+    color: #f8e7c9;
+    font: 800 14px/1.2 Georgia, "Times New Roman", serif;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.HostPlayerSelectIdentity small {
+    color: #a99070;
+    font: 700 10px/1.2 system-ui, sans-serif;
+}
+
+.HostPlayerSelectArrow {
+    flex: 0 0 auto;
+    color: #d6ad72;
+    font: 700 28px/1 Georgia, serif;
+}
+
+.HostSelectedPlayerCard {
+    padding: 13px;
+    border: 1px solid rgba(211, 160, 93, .22);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, .025);
+}
+
+.HostPlayerBackButton {
+    padding: 0;
+    cursor: pointer;
+    color: #c9a675;
+    border: 0;
+    background: transparent;
+    font: 800 11px/1.2 system-ui, sans-serif;
+}
+
+.HostPlayerBackButton:hover {
+    color: #f0c887;
+}
+
+.HostSelectedPlayerHeader {
+    margin: 13px 0;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(211, 160, 93, .13);
+}
+
+.HostSelectedPlayerActions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.HostSelectedPlayerActions .HostModeratePlayerButton {
+    grid-column: 1 / -1;
+    min-height: 40px;
+}
+
+.HostSelectedPlayerActions button {
+    min-height: 40px;
+    border-radius: 9px;
+    cursor: pointer;
+    font: 800 11px/1.1 system-ui, sans-serif;
+}
+
+.HostSelectedPlayerHint {
+    margin-top: 10px;
+    color: #9f8768;
+    font: 650 10px/1.4 system-ui, sans-serif;
+}
+
+@media (max-width: 520px) {
+    .HostSelectedPlayerActions {
+        grid-template-columns: 1fr;
+    }
+
+    .HostSelectedPlayerActions .HostModeratePlayerButton {
+        grid-column: auto;
+    }
+}
