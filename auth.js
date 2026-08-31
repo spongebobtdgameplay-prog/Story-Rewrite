@@ -31,11 +31,39 @@ function SetMode(Mode) {
 function RenderSavedAccounts() {
     const Section = document.getElementById("SavedAccountsSection");
     const List = document.getElementById("SavedAccountsList");
+    const Hint = document.getElementById("SavedAccountsHint");
     if (!Section || !List || typeof GetSavedAccountSessions !== "function") return;
 
     const Accounts = GetSavedAccountSessions();
-    Section.classList.toggle("Hidden", Accounts.length === 0);
+    Section.classList.remove("Hidden");
     List.innerHTML = "";
+    if (Hint) Hint.style.display = Accounts.length > 0 ? "block" : "none";
+
+    if (Accounts.length === 0) {
+        const Empty = document.createElement("div");
+        Empty.className = "SavedAccountsEmpty";
+
+        const Text = document.createElement("div");
+        Text.className = "SavedAccountsEmptyText";
+        Text.textContent = "You don't have any saved accounts.";
+
+        const AddButton = document.createElement("button");
+        AddButton.className = "SecondaryButton";
+        AddButton.type = "button";
+        AddButton.textContent = "Add Account";
+        AddButton.addEventListener("click", () => {
+            SetMode("login");
+            document.getElementById("AccountForm")?.scrollIntoView({
+                behavior: "smooth",
+                block: "center"
+            });
+            setTimeout(() => document.getElementById("UsernameInput")?.focus(), 120);
+        });
+
+        Empty.append(Text, AddButton);
+        List.appendChild(Empty);
+        return;
+    }
 
     for (const Account of Accounts) {
         const Row = document.createElement("div");
