@@ -48,3 +48,93 @@ body {
         flex-wrap: wrap;
     }
 }
+
+
+.Main {
+    margin-top: 20px;
+    margin-bottom: 34px;
+}
+
+.HomeHero {
+    min-height: min(700px, calc(100vh - 150px));
+    padding: clamp(30px, 4.2vw, 56px);
+    gap: clamp(34px, 4vw, 54px);
+    align-items: center;
+}
+
+.HomeCopy {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.HomeText {
+    margin-bottom: 0;
+}
+
+.HomeActions {
+    margin-top: 28px;
+    padding-bottom: 4px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    gap: 12px;
+}
+
+.HomeActions a,
+.HomeActions button {
+    min-height: 48px;
+    padding: 13px 20px;
+    flex: 0 1 auto;
+}
+
+.HomeStats {
+    align-self: center;
+}
+
+@media (max-height: 820px) and (min-width: 821px) {
+    .Main {
+        margin-top: 14px;
+        margin-bottom: 24px;
+    }
+
+    .HomeHero {
+        min-height: 0;
+        padding-top: 34px;
+        padding-bottom: 34px;
+    }
+
+    .HomeActions {
+        margin-top: 22px;
+    }
+
+    .StatCard {
+        padding-top: 16px;
+        padding-bottom: 16px;
+    }
+}
+
+@media (max-width: 1040px) and (min-width: 821px) {
+    .HomeActions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .HomeActions a,
+    .HomeActions button {
+        width: 100%;
+    }
+}
+
+@media (max-width: 820px) {
+    .HomeHero {
+        min-height: 0;
+        padding-top: 30px;
+        padding-bottom: 34px;
+    }
+
+    .HomeActions {
+        margin-top: 22px;
+    }
+}
