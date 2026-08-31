@@ -1,4 +1,4 @@
-const STORY_FRONTEND_VERSION = "v2.36";
+const STORY_FRONTEND_VERSION = "v2.37";
 const STORY_BACK_ICON = `
 <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
     <path d="M14.5 5 7.5 12l7 7" />
