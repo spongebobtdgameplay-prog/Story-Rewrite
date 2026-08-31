@@ -1,5 +1,5 @@
 (() => {
-    const FrontendVersion = "20260830.1";
+    const FrontendVersion = "20260830.2";
     const Root = document.getElementById("StoryShellRoot");
     const InitialFrame = document.getElementById("StoryShellFrame");
     if (!Root || !InitialFrame) return;
@@ -216,8 +216,19 @@
 
         if (NextMusicName !== RouteMusicName && !IsAllowedDialogOverride) return;
 
-        CurrentMusicName = NextMusicName;
         const Host = GetAudioHost();
+        if (CurrentMusicName === NextMusicName) {
+            const State = GetAudioState();
+            if (
+                State?.musicName === NextMusicName ||
+                State?.pendingMusicName === NextMusicName ||
+                (!Host && CurrentMusicName === NextMusicName)
+            ) {
+                return;
+            }
+        }
+
+        CurrentMusicName = NextMusicName;
         if (Host && typeof Host.PlayMusic === "function") Host.PlayMusic(CurrentMusicName);
     }
 
