@@ -34,7 +34,14 @@ function RenderSavedAccounts() {
     const Hint = document.getElementById("SavedAccountsHint");
     if (!Section || !List || typeof GetSavedAccountSessions !== "function") return;
 
-    const Accounts = GetSavedAccountSessions();
+    const SwitchFromUsername = typeof GetAccountSwitchSourceUsername === "function"
+        ? GetAccountSwitchSourceUsername().toLowerCase()
+        : "";
+    const Accounts = GetSavedAccountSessions().filter(Account => {
+        if (!SwitchFromUsername) return true;
+        return Account.username.toLowerCase() !== SwitchFromUsername;
+    });
+
     Section.classList.remove("Hidden");
     List.innerHTML = "";
     if (Hint) Hint.style.display = Accounts.length > 0 ? "block" : "none";
