@@ -82,6 +82,20 @@
         danger: "Music/danger.mp3"
     };
 
+    const MusicAuthTokenKey = "StoryRewriteAuthToken";
+    const LegacyMusicAuthTokenKey = "StoryRewriteSessionToken";
+
+    function HasAuthenticatedMusicSession() {
+        try {
+            return Boolean(
+                localStorage.getItem(MusicAuthTokenKey) ||
+                localStorage.getItem(LegacyMusicAuthTokenKey)
+            );
+        } catch {
+            return false;
+        }
+    }
+
     const MusicPositionKey = "StoryRewriteMusicPositionsV2";
     const KeepMusicPlayingKey = "StoryRewriteKeepMusicPlayingV1";
     const FadeInSeconds = 0.85;
@@ -250,6 +264,7 @@
 
     function PrepareMusic(Name) {
         const RelativeUrl = MusicFiles[Name];
+        if (!HasAuthenticatedMusicSession()) return null;
         if (!MusicSettingsReady || !RelativeUrl || MusicVolume <= 0) return null;
 
         if (MusicName === Name && MusicElement.src) {
@@ -271,6 +286,16 @@
 
     function TryPlayPreparedMusic(FromGesture = false) {
         if (FromGesture) AudioUnlocked = true;
+
+        if (!HasAuthenticatedMusicSession()) {
+            PendingMusicName = "";
+            FreshStartMusicName = "";
+            MusicWaitingForGesture = false;
+            ResumeMusicWhenVisible = false;
+            StopMusicInternal(false, true);
+            DispatchPlaybackState();
+            return Promise.resolve(false);
+        }
 
         if (!MusicSettingsReady) {
             MusicWaitingForGesture = Boolean(PendingMusicName);
@@ -421,7 +446,16 @@
     window.addEventListener("storage", Event => {
         if (Event.key === KeepMusicPlayingKey) {
             KeepMusicPlaying = Event.newValue === "1";
+            return;
         }
+
+        if (Event.key === MusicAuthTokenKey || Event.key === LegacyMusicAuthTokenKey) {
+            if (!HasAuthenticatedMusicSession()) StoryAudio.StopMusic();
+        }
+    });
+
+    window.addEventListener("StoryAuthStateChange", Event => {
+        if (!Event?.detail?.authenticated) StoryAudio.StopMusic();
     });
 
     document.addEventListener("visibilitychange", () => {
@@ -476,6 +510,16 @@
     StoryAudio.PlayMusic = function(Name) {
         const RequestedMusicName = String(Name || "");
         if (!MusicFiles[RequestedMusicName]) return Promise.resolve(false);
+
+        if (!HasAuthenticatedMusicSession()) {
+            PendingMusicName = "";
+            FreshStartMusicName = "";
+            ResumeMusicWhenVisible = false;
+            MusicWaitingForGesture = false;
+            StopMusicInternal(false, true);
+            DispatchPlaybackState();
+            return Promise.resolve(false);
+        }
 
         PendingMusicName = RequestedMusicName;
         MusicWaitingForGesture = MusicVolume > 0;
