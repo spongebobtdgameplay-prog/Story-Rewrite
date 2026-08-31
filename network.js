@@ -260,6 +260,28 @@ function InitializeStorySessionSync() {
     });
 }
 
+function StopStoryMusicForSignedOutState() {
+    try {
+        if (typeof StoryAudio !== "undefined" && typeof StoryAudio.StopMusic === "function") {
+            StoryAudio.StopMusic();
+        }
+    } catch {}
+
+    try {
+        if (window.parent !== window && window.parent.StoryShell?.IsPersistentShell) {
+            window.parent.StoryShell.StopMusic();
+        }
+    } catch {}
+}
+
+function DispatchStoryAuthState(Authenticated) {
+    try {
+        window.dispatchEvent(new CustomEvent("StoryAuthStateChange", {
+            detail: { authenticated: Boolean(Authenticated) }
+        }));
+    } catch {}
+}
+
 function GetAuthToken() {
     const Persistent = localStorage.getItem(STORY_AUTH_TOKEN_KEY) || "";
     if (Persistent) return Persistent;
@@ -288,15 +310,18 @@ function SetAuthToken(Token) {
         localStorage.removeItem(STORY_LEGACY_AUTH_TOKEN_KEY);
         sessionStorage.removeItem(STORY_LEGACY_AUTH_TOKEN_KEY);
         StoryTabAuthToken = String(Token);
+        DispatchStoryAuthState(true);
         return;
     }
 
+    StopStoryMusicForSignedOutState();
     ClearLastKnownStoryState();
     localStorage.removeItem(STORY_AUTH_TOKEN_KEY);
     localStorage.removeItem(STORY_LEGACY_AUTH_TOKEN_KEY);
     sessionStorage.removeItem(STORY_LEGACY_AUTH_TOKEN_KEY);
     localStorage.removeItem(STORY_AUTH_VALIDATED_AT_KEY);
     StoryTabAuthToken = "";
+    DispatchStoryAuthState(false);
 }
 
 function MarkAuthValidated() {
@@ -313,25 +338,33 @@ async function SwitchSavedAccount(Username) {
     const SavedAccount = GetSavedAccountSessions().find(Account => Account.username.toLowerCase() === Key);
     if (!SavedAccount) throw new Error("That saved account is no longer available on this browser.");
 
-    SetAuthToken(SavedAccount.token);
-    ClearLastKnownStoryState();
-    AccountProfileRequestPromise = null;
-    ServerSaveRequestPromise = null;
-
     try {
-        const Result = await ApiRequest("/api/me");
+        const Result = await ApiRequest("/api/me", {
+            authToken: SavedAccount.token,
+            preserveAuthOn401: true
+        });
+
+        if (!Result?.profile?.username) {
+            throw new Error("The server did not verify that saved account.");
+        }
+
+        SetAuthToken(SavedAccount.token);
+        ClearLastKnownStoryState();
+        AccountProfileRequestPromise = null;
+        ServerSaveRequestPromise = null;
         StoreLastKnownProfileResult(Result);
         MarkAuthValidated();
         RememberAccountSession({ profile: Result.profile, token: SavedAccount.token });
-        BroadcastStorySession(Result?.profile?.username || SavedAccount.username);
+        BroadcastStorySession(Result.profile.username);
         return Result;
     } catch (Error) {
-        ForgetSavedAccount(SavedAccount.username);
+        if (Error?.status === 401) ForgetSavedAccount(SavedAccount.username);
         throw Error;
     }
 }
 
 function LogoutAccount() {
+    StopStoryMusicForSignedOutState();
     SetAuthToken("");
     BroadcastStorySession("");
 
@@ -379,14 +412,21 @@ async function ApiRequest(Path, Options = {}) {
         throw new Error("Multiplayer server is not configured yet. Run server.js locally or set the deployed server URL in server-config.js.");
     }
 
-    const RequestHeaders = new window.Headers(Options.headers || {});
-    if (!RequestHeaders.has("Content-Type") && Options.body !== undefined) RequestHeaders.set("Content-Type", "application/json");
+    const RequestOptions = { ...Options };
+    const HasAuthOverride = Object.prototype.hasOwnProperty.call(RequestOptions, "authToken");
+    const AuthTokenOverride = HasAuthOverride ? String(RequestOptions.authToken || "") : "";
+    const PreserveAuthOn401 = Boolean(RequestOptions.preserveAuthOn401);
+    delete RequestOptions.authToken;
+    delete RequestOptions.preserveAuthOn401;
 
-    const Token = GetAuthToken();
-    if (Token) RequestHeaders.set("Authorization", `Bearer ${Token}`);
+    const RequestHeaders = new window.Headers(RequestOptions.headers || {});
+    if (!RequestHeaders.has("Content-Type") && RequestOptions.body !== undefined) RequestHeaders.set("Content-Type", "application/json");
+
+    const Token = HasAuthOverride ? AuthTokenOverride : GetAuthToken();
+    if (Token && !RequestHeaders.has("Authorization")) RequestHeaders.set("Authorization", `Bearer ${Token}`);
 
     const Response = await fetch(`${ServerUrl}${Path}`, {
-        ...Options,
+        ...RequestOptions,
         headers: RequestHeaders,
         cache: "no-store"
     });
@@ -397,7 +437,7 @@ async function ApiRequest(Path, Options = {}) {
     } catch {}
 
     if (!Response.ok) {
-        if (Response.status === 401) SetAuthToken("");
+        if (Response.status === 401 && !PreserveAuthOn401) SetAuthToken("");
         const RequestError = new Error(Data.error || `Server request failed: ${Response.status}`);
         RequestError.status = Response.status;
         RequestError.data = Data;
