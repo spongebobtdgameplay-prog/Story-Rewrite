@@ -9,6 +9,7 @@ const STORY_SAVE_GENERATION_KEY = "StoryRewriteSaveGenerationV1";
 const STORY_SAVED_ACCOUNTS_KEY = "StoryRewriteSavedAccountsV1";
 const STORY_SESSION_EVENT_KEY = "StoryRewriteSessionEventV1";
 const STORY_TAB_ID_KEY = "StoryRewriteTabIdV1";
+const STORY_SWITCH_FROM_USERNAME_KEY = "StoryRewriteSwitchFromUsernameV1";
 const STORY_SESSION_CHANNEL_NAME = "StoryRewriteSessionChannelV1";
 const STORY_CLIENT_SNAPSHOT_KEYS = [
     STORY_LAST_PROFILE_KEY,
@@ -301,6 +302,36 @@ function GetAuthToken() {
     return LegacySession;
 }
 
+function GetAccountSwitchSourceUsername() {
+    return String(sessionStorage.getItem(STORY_SWITCH_FROM_USERNAME_KEY) || "").trim();
+}
+
+function ClearAccountSwitchSource() {
+    sessionStorage.removeItem(STORY_SWITCH_FROM_USERNAME_KEY);
+}
+
+function BeginAccountSwitch(Username) {
+    const SwitchFromUsername = String(Username || "").trim();
+    if (SwitchFromUsername) {
+        sessionStorage.setItem(STORY_SWITCH_FROM_USERNAME_KEY, SwitchFromUsername);
+    } else {
+        ClearAccountSwitchSource();
+    }
+
+    StopStoryMusicForSignedOutState();
+    SetAuthToken("");
+    BroadcastStorySession("");
+
+    try {
+        if (window.parent !== window && window.parent.StoryShell?.IsPersistentShell) {
+            window.parent.StoryShell.Exit("auth.html", true);
+            return;
+        }
+    } catch {}
+
+    window.location.replace(BuildStoryUrl("auth.html"));
+}
+
 function SetAuthToken(Token) {
     const PreviousToken = localStorage.getItem(STORY_AUTH_TOKEN_KEY) || "";
 
@@ -309,6 +340,7 @@ function SetAuthToken(Token) {
         localStorage.setItem(STORY_AUTH_TOKEN_KEY, Token);
         localStorage.removeItem(STORY_LEGACY_AUTH_TOKEN_KEY);
         sessionStorage.removeItem(STORY_LEGACY_AUTH_TOKEN_KEY);
+        ClearAccountSwitchSource();
         StoryTabAuthToken = String(Token);
         DispatchStoryAuthState(true);
         return;
