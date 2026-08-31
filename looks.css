@@ -601,13 +601,25 @@ svg {
 }
 
 .Sidebar {
+    width: 100%;
+    min-width: 0;
+    max-height: calc(100dvh - 32px);
     padding: 17px;
     position: sticky;
     top: 16px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
     border: 1px solid #5e3d26;
     border-radius: 18px;
     background: linear-gradient(180deg, #c7a16f, #ad7f4e);
     box-shadow: var(--ShadowSmall);
+}
+
+.Sidebar > * {
+    min-width: 0;
+    max-width: 100%;
 }
 
 .SidebarTop {
@@ -1454,7 +1466,10 @@ body.paper-body {
     }
 
     .Sidebar {
+        max-height: none;
         position: static;
+        overflow: visible;
+        scrollbar-gutter: auto;
     }
 
     .select-hero,
