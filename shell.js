@@ -1,5 +1,5 @@
 (() => {
-    const FrontendVersion = "20260822.7";
+    const FrontendVersion = "20260830.1";
     const Root = document.getElementById("StoryShellRoot");
     const InitialFrame = document.getElementById("StoryShellFrame");
     if (!Root || !InitialFrame) return;
@@ -86,6 +86,17 @@
         return PersistentPages.has(PageForRoute(Route));
     }
 
+    function HasAuthenticatedSession() {
+        try {
+            return Boolean(
+                localStorage.getItem("StoryRewriteAuthToken") ||
+                localStorage.getItem("StoryRewriteSessionToken")
+            );
+        } catch {
+            return false;
+        }
+    }
+
     function MusicForRoute(Route) {
         try {
             const Url = new URL(Route, GetBaseUrl());
@@ -156,6 +167,13 @@
         if (!Host) return false;
 
         if (typeof Host.Configure === "function") Host.Configure(CurrentAudioSettings);
+
+        if (!HasAuthenticatedSession()) {
+            CurrentMusicName = "";
+            if (typeof Host.StopMusic === "function") Host.StopMusic();
+            return true;
+        }
+
         if (CurrentMusicName && typeof Host.PlayMusic === "function") {
             Host.PlayMusic(CurrentMusicName);
         }
@@ -186,6 +204,11 @@
         const NextMusicName = String(Name || "");
         if (!NextMusicName) return;
 
+        if (!HasAuthenticatedSession()) {
+            StopMusic();
+            return;
+        }
+
         const ActiveRoute = CurrentRoute || RouteFromLocation();
         const RouteMusicName = MusicForRoute(ActiveRoute);
         const ActivePageName = PageForRoute(ActiveRoute);
@@ -199,6 +222,11 @@
     }
 
     function ApplyRouteMusic(Route) {
+        if (!HasAuthenticatedSession()) {
+            StopMusic();
+            return;
+        }
+
         if (PageForRoute(Route) === "account.html" && CurrentMusicName) return;
 
         const DesiredMusic = MusicForRoute(Route);
@@ -214,6 +242,10 @@
 
     function NotifyInteraction(FromTrustedGesture = false) {
         if (!FromTrustedGesture) return Promise.resolve(null);
+        if (!HasAuthenticatedSession()) {
+            StopMusic();
+            return Promise.resolve(null);
+        }
 
         const Host = GetAudioHost();
         if (!Host) return Promise.resolve(null);
@@ -443,9 +475,11 @@
     }
 
     function Exit(Value, Replace = false) {
-        const Url = new URL(String(Value || "auth.html"), GetBaseUrl()).href;
-        if (Replace) window.location.replace(Url);
-        else window.location.href = Url;
+        const Url = new URL(String(Value || "auth.html"), GetBaseUrl());
+        if (Url.pathname.endsWith("/auth.html")) StopMusic();
+
+        if (Replace) window.location.replace(Url.href);
+        else window.location.href = Url.href;
     }
 
     function Back(Fallback = "main.html") {
@@ -457,6 +491,11 @@
         const NormalizedFallback = NormalizeRoute(Fallback) || "main.html";
         LoadRoute(NormalizedFallback, { replace: true });
     }
+
+    window.addEventListener("storage", Event => {
+        if (Event.key !== "StoryRewriteAuthToken" && Event.key !== "StoryRewriteSessionToken") return;
+        if (!HasAuthenticatedSession()) StopMusic();
+    });
 
     window.addEventListener("popstate", Event => {
         CurrentHistoryDepth = Math.max(0, Number(Event.state?.StoryRewriteDepth || 0));
