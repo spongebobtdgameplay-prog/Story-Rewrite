@@ -91,6 +91,10 @@ function EnsureLobbyEnhancements() {
     if (ChatInput) ChatInput.maxLength = CHAT_MAX_LENGTH;
 }
 
+function SetMultiplayerSetupBackVisible(Visible) {
+    ById("MultiplayerSetupBackButton")?.classList.toggle("Hidden", !Visible);
+}
+
 function BindUi() {
     On("CreateRoomButton", "click", CreateRoom);
     On("JoinRoomButton", "click", JoinRoom);
@@ -391,6 +395,7 @@ async function LeaveRoom() {
         StartingRoom = false;
         ById("ActiveRoom")?.classList.add("Hidden");
         ById("RoomActions")?.classList.remove("Hidden");
+        SetMultiplayerSetupBackVisible(true);
         HideRoomStatus();
 
         if (Button) {
@@ -491,6 +496,7 @@ function ToggleLobbyChat() {
 function RenderRoom() {
     if (!MultiplayerState || !CurrentProfile) return;
 
+    SetMultiplayerSetupBackVisible(false);
     ById("RoomActions")?.classList.add("Hidden");
     ById("ActiveRoom")?.classList.remove("Hidden");
     SetText("RoomCodeValue", MultiplayerState.code || "------");
