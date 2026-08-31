@@ -227,8 +227,9 @@
 }
 
 .PowerButton {
+    min-width: 0;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: minmax(0, 1fr) minmax(0, .92fr);
     align-items: center;
     gap: 10px;
     text-align: left;
@@ -241,9 +242,11 @@
 }
 
 .PowerButton small {
+    min-width: 0;
     color: #744122;
     font: 800 10px/1.1 system-ui, sans-serif;
     text-align: right;
+    overflow-wrap: anywhere;
 }
 
 .PowerButton:hover:not(:disabled),
@@ -302,20 +305,20 @@
 }
 
 @media (min-width: 901px) {
-    .Sidebar .DangerTimerCard {
-        position: sticky;
-        top: 14px;
-        z-index: 8;
+    .Sidebar .DangerTimerCard,
+    .Sidebar .PowerPanel {
+        position: static;
+        top: auto;
+        z-index: auto;
         border-width: 2px;
-        box-shadow: 0 12px 28px rgba(63, 31, 13, .18), inset 0 1px rgba(255, 248, 229, .7);
+    }
+
+    .Sidebar .DangerTimerCard {
+        box-shadow: 0 7px 18px rgba(63, 31, 13, .14), inset 0 1px rgba(255, 248, 229, .7);
     }
 
     .Sidebar .PowerPanel {
-        position: sticky;
-        top: 108px;
-        z-index: 7;
-        border-width: 2px;
-        box-shadow: 0 12px 28px rgba(63, 31, 13, .16), inset 0 1px rgba(255, 248, 229, .68);
+        box-shadow: 0 7px 18px rgba(63, 31, 13, .12), inset 0 1px rgba(255, 248, 229, .68);
     }
 
     .DangerTimerTop {
