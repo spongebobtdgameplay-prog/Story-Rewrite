@@ -410,6 +410,18 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     });
 
+    document.getElementById("SwitchAccountButton").addEventListener("click", () => {
+        const Username = String(AccountProfileResult?.profile?.username || "").trim();
+        localStorage.removeItem(AccountSnapshotKey);
+
+        if (typeof BeginAccountSwitch === "function") {
+            BeginAccountSwitch(Username);
+            return;
+        }
+
+        LogoutAccount();
+    });
+
     document.getElementById("SignOutButton").addEventListener("click", () => {
         localStorage.removeItem(AccountSnapshotKey);
         LogoutAccount();
