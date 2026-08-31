@@ -11,6 +11,25 @@
 <link rel="stylesheet" href="looks.css?v=20260822-66">
 <link rel="stylesheet" href="multiplayer.css">
 <link rel="stylesheet" href="shell-ui.css">
+<style>
+.SavedAccountsEmpty {
+    display: grid;
+    gap: 10px;
+    padding: 12px;
+    border: 1px dashed rgba(255,255,255,.12);
+    border-radius: 11px;
+    background: rgba(255,255,255,.025);
+}
+
+.SavedAccountsEmptyText {
+    color: rgba(255,255,255,.76);
+    font: 700 13px/1.4 system-ui, sans-serif;
+}
+
+.SavedAccountsEmpty .SecondaryButton {
+    width: fit-content;
+}
+</style>
 </head>
 <body class="AccountPage">
 <main class="AccountShell">
@@ -19,10 +38,10 @@
         <h1 id="AccountTitle">Create your account</h1>
         <p class="AccountLead">Create an account or sign in to continue your story.</p>
 
-        <section class="Hidden" id="SavedAccountsSection" style="margin:0 0 18px;padding:14px;border:1px solid rgba(255,255,255,.12);border-radius:14px;background:rgba(255,255,255,.035)">
+        <section id="SavedAccountsSection" style="margin:0 0 18px;padding:14px;border:1px solid rgba(255,255,255,.12);border-radius:14px;background:rgba(255,255,255,.035)">
             <div style="font-weight:800;margin-bottom:9px">Saved accounts</div>
             <div id="SavedAccountsList" style="display:grid;gap:8px"></div>
-            <small style="display:block;margin-top:9px;opacity:.68">Saved on this browser only. Switching still asks the server to verify the saved session before it is trusted. Passwords are never stored here.</small>
+            <small id="SavedAccountsHint" style="display:none;margin-top:9px;opacity:.68">Saved on this browser only. Switching still asks the server to verify the saved session before it is trusted. Passwords are never stored here.</small>
         </section>
 
         <div class="AccountTabs">
@@ -62,6 +81,6 @@
 <script src="app.js"></script>
 <script src="audio.js?v=20260821-62"></script>
 <script src="shell-ui.js"></script>
-<script src="auth.js?v=20260822-71"></script>
+<script src="auth.js?v=20260830-1"></script>
 </body>
 </html>
