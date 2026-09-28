@@ -32,6 +32,7 @@
     let CurrentAudioSettings = {};
     let CurrentHistoryDepth = 0;
     let GameplayAudioPaused = false;
+    let ShellPauseState = false;
     const GameplayPauseButton = document.getElementById("StoryShellPauseButton");
 
     function GetBaseUrl() {
@@ -352,6 +353,7 @@
         GameplayPauseButton.hidden = !Ready;
 
         if (!Ready) {
+            ShellPauseState = false;
             GameplayPauseButton.classList.remove("IsPaused");
             GameplayPauseButton.setAttribute("aria-pressed", "false");
             GameplayPauseButton.setAttribute("aria-label", "Pause game");
@@ -361,6 +363,7 @@
         }
 
         const Paused = Boolean(Options.paused);
+        ShellPauseState = Paused;
         GameplayPauseButton.classList.toggle("IsPaused", Paused);
         GameplayPauseButton.setAttribute("aria-pressed", Paused ? "true" : "false");
         GameplayPauseButton.setAttribute("aria-label", Paused ? "Resume game" : "Pause game");
@@ -371,14 +374,20 @@
     function ToggleGameplayPause() {
         if (!GameplayPauseButton || GameplayPauseButton.hidden) return;
         if (!IsSinglePlayerGameRoute() || ActiveFrame?.dataset.storyLoaded !== "1") return;
+
         const ActiveRoute = RouteFromFrame(ActiveFrame);
         if (!ActiveRoute || ActiveRoute !== CurrentRoute) return;
+
+        const NextPaused = !ShellPauseState;
+        SyncGameplayPauseButton({ paused: NextPaused });
 
         try {
             ActiveFrame.contentWindow.dispatchEvent(
                 new ActiveFrame.contentWindow.CustomEvent("StoryShellPauseToggle")
             );
-        } catch {}
+        } catch {
+            SyncGameplayPauseButton({ paused: ShellPauseState });
+        }
     }
 
     if (GameplayPauseButton) {
