@@ -136,9 +136,15 @@ function ToggleGamePaused() {
 }
 
 window.addEventListener("StoryShellPauseToggle", ToggleGamePaused);
+
+window.addEventListener("StoryShellDeactivate", () => {
+    if (!RoomCode && Stage && !GamePaused) {
+        SetGamePaused(true, "navigation");
+    }
+});
+
 window.addEventListener("StoryShellActivate", () => {
     if (!RoomCode && Stage) {
-        SetGamePaused(false, "route");
         RenderGamePauseState();
     }
 });
