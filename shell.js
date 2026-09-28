@@ -32,6 +32,7 @@
     let CurrentAudioSettings = {};
     let CurrentHistoryDepth = 0;
     let GameplayAudioPaused = false;
+    const GameplayPauseButton = document.getElementById("StoryShellPauseButton");
 
     function GetBaseUrl() {
         return new URL(".", window.location.href);
@@ -318,6 +319,54 @@
         } catch {}
     }
 
+    function IsSinglePlayerGameRoute(Route = CurrentRoute) {
+        try {
+            const Url = new URL(Route, GetBaseUrl());
+            const PageName = Url.pathname.split("/").pop() || "main.html";
+            return PageName === "dialog.html" && !Url.searchParams.get("room");
+        } catch {
+            return false;
+        }
+    }
+
+    function SyncGameplayPauseButton(Options = {}) {
+        if (!GameplayPauseButton) return;
+
+        const Visible = IsSinglePlayerGameRoute();
+        GameplayPauseButton.hidden = !Visible;
+
+        if (!Visible) {
+            GameplayPauseButton.classList.remove("IsPaused");
+            GameplayPauseButton.setAttribute("aria-pressed", "false");
+            GameplayPauseButton.setAttribute("aria-label", "Pause game");
+            GameplayPauseButton.title = "Pause game";
+            return;
+        }
+
+        const Paused = Boolean(Options.paused);
+        GameplayPauseButton.classList.toggle("IsPaused", Paused);
+        GameplayPauseButton.setAttribute("aria-pressed", Paused ? "true" : "false");
+        GameplayPauseButton.setAttribute("aria-label", Paused ? "Resume game" : "Pause game");
+        GameplayPauseButton.title = Paused ? "Resume game" : "Pause game";
+    }
+
+    function ToggleGameplayPause() {
+        if (!IsSinglePlayerGameRoute()) return;
+        try {
+            ActiveFrame?.contentWindow?.dispatchEvent(
+                new ActiveFrame.contentWindow.CustomEvent("StoryShellPauseToggle")
+            );
+        } catch {}
+    }
+
+    if (GameplayPauseButton) {
+        GameplayPauseButton.addEventListener("click", ToggleGameplayPause);
+    }
+
+    window.addEventListener("StoryShellPauseState", Event => {
+        SyncGameplayPauseButton({ paused: Boolean(Event?.detail?.paused) });
+    });
+
     function HideFrame(Frame) {
         Frame.style.display = "none";
         Frame.style.pointerEvents = "none";
@@ -339,6 +388,7 @@
         ActiveFrame = Frame;
         if (PendingFrame === Frame) PendingFrame = null;
 
+        SyncGameplayPauseButton();
         UpdateTitle(Frame);
         DispatchFrameEvent(Frame, "StoryShellActivate", Route);
         return true;
@@ -468,6 +518,7 @@
         }
 
         CurrentRoute = Normalized;
+        SyncGameplayPauseButton();
         ApplyRouteMusic(Normalized);
 
         if (!SkipHistory) SetTopHistory(Normalized, Replace);
@@ -556,6 +607,7 @@
         PauseMusicForGameplay,
         ResumeMusicForGameplay,
         IsGameplayAudioPaused,
+        ToggleGameplayPause,
         SetKeepMusicPlaying,
         PlaySound,
         PlayMusic,
@@ -585,6 +637,7 @@
     const InitialRoute = RouteFromLocation();
     CurrentRoute = InitialRoute;
     CurrentHistoryDepth = 0;
+    SyncGameplayPauseButton();
     SetTopHistory(InitialRoute, true);
     ApplyRouteMusic(InitialRoute);
 
