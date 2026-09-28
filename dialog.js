@@ -51,8 +51,6 @@ window.addEventListener("DOMContentLoaded", async () => {
 
         if (RoomCode) {
             SetGamePaused(false);
-            const PauseButton = document.getElementById("PauseButton");
-            if (PauseButton) PauseButton.hidden = true;
         } else if (document.hidden) {
             SetGamePaused(true, "inactive");
         }
@@ -73,7 +71,6 @@ function IsGameplayPauseEligible() {
 
 function RenderGamePauseState() {
     const Overlay = document.getElementById("PauseOverlay");
-    const PauseButton = document.getElementById("PauseButton");
     const ResumeButton = document.getElementById("ResumeGameButton");
     const PauseGlyph = document.querySelector(".PauseGlyph svg");
 
@@ -241,7 +238,6 @@ async function RequestLeaveCurrentLevel(TargetPage = "levels.html") {
 }
 
 function BindActions() {
-    document.getElementById("PauseButton")?.addEventListener("click", ToggleGamePaused);
     document.getElementById("ResumeGameButton")?.addEventListener("click", () => SetGamePaused(false, "manual"));
     document.getElementById("CheckButton").addEventListener("click", CheckStage);
     document.getElementById("RestoreButton").addEventListener("click", RestoreStage);
