@@ -49,6 +49,68 @@ body {
     background: transparent;
 }
 
+#StoryShellPauseButton {
+    position: fixed;
+    top: max(16px, env(safe-area-inset-top));
+    left: max(16px, env(safe-area-inset-left));
+    z-index: 10000;
+    width: 50px;
+    height: 50px;
+    padding: 0;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    border: 1px solid rgba(226, 180, 108, .62);
+    border-radius: 50%;
+    color: #f2d39c;
+    background: radial-gradient(circle at 32% 28%, #6f472b, #2a190f 74%);
+    box-shadow:
+        0 10px 28px rgba(0,0,0,.34),
+        0 0 0 4px rgba(222, 170, 96, .08),
+        inset 0 0 0 3px rgba(255, 238, 197, .045),
+        inset 0 1px rgba(255,255,255,.11);
+    transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease;
+}
+
+#StoryShellPauseButton:hover {
+    transform: scale(1.06);
+    border-color: #f0c67e;
+    box-shadow:
+        0 12px 30px rgba(0,0,0,.36),
+        0 0 0 6px rgba(222, 170, 96, .11),
+        0 0 26px rgba(222, 170, 96, .14),
+        inset 0 1px rgba(255,255,255,.12);
+}
+
+#StoryShellPauseButton:active {
+    transform: scale(.95);
+}
+
+#StoryShellPauseButton.IsPaused {
+    border-color: #f2c97f;
+    box-shadow:
+        0 0 0 7px rgba(222, 170, 96, .13),
+        0 0 30px rgba(222, 170, 96, .18),
+        0 12px 30px rgba(0,0,0,.38),
+        inset 0 0 0 3px rgba(255, 238, 197, .06);
+}
+
+#StoryShellPauseButton svg {
+    width: 23px;
+    height: 23px;
+    fill: currentColor;
+    pointer-events: none;
+}
+
+@media (max-width: 700px) {
+    #StoryShellPauseButton {
+        top: max(10px, env(safe-area-inset-top));
+        left: max(10px, env(safe-area-inset-left));
+        width: 46px;
+        height: 46px;
+    }
+}
+
 </style>
 <script>
 const AuthKey = "StoryRewriteAuthToken";
@@ -70,6 +132,12 @@ if (!Token) window.location.replace("auth.html");
 </head>
 <body>
 <div id="StoryShellRoot">
+    <button id="StoryShellPauseButton" type="button" hidden aria-label="Pause game" title="Pause game">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <rect x="7" y="5.5" width="3.5" height="13" rx="1"></rect>
+            <rect x="13.5" y="5.5" width="3.5" height="13" rx="1"></rect>
+        </svg>
+    </button>
     <iframe id="StoryShellFrame" class="StoryShellFrame" title="Story Rewrite"></iframe>
 </div>
 <script src="cache-guard.js?v=20260822-71"></script>
