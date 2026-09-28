@@ -185,7 +185,16 @@ function BuildStageNode(Stage, Position) {
     return `
         <div class="StageNodeWrap ${Selected ? "Selected" : ""}" data-position="${Position}">
             <div class="StageNodeDifficulty">${EscapeText(String(Stage.difficulty || "Normal").toUpperCase())}</div>
-            <button class="${Classes}" type="button" data-stage-node="${EscapeText(Stage.id)}" ${Unlocked ? "" : "disabled"} aria-label="Level ${Stage.levelNumber}: ${EscapeText(Stage.name)}">${Unlocked ? Stage.levelNumber : "×"}</button>
+            <button class="${Classes}" type="button" data-stage-node="${EscapeText(Stage.id)}" ${Unlocked ? "" : "disabled"} aria-label="${Unlocked ? `Level ${Stage.levelNumber}: ${EscapeText(Stage.name)}` : `Level ${Stage.levelNumber}: Locked until earlier progress is completed`}">
+                ${Unlocked ? EscapeText(Stage.levelNumber) : `
+                    <span class="StageNodeLock" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" focusable="false">
+                            <rect x="5.5" y="10" width="13" height="10" rx="2"></rect>
+                            <path d="M8 10V7.8a4 4 0 0 1 8 0V10"></path>
+                        </svg>
+                    </span>
+                `}
+            </button>
             <div class="StageNodeLabel">${EscapeText(Stage.name)}</div>
         </div>
     `;
