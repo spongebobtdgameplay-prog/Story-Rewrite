@@ -24,7 +24,23 @@ ReplaceRequired(
 const JoinRequestLifetime = 45000;
 const ProfanityWords = [
     "fuck", "fucking", "fucker", "shit", "bitch", "asshole", "dick", "cunt", "nigger", "nigga", "faggot", "retard"
-];`,
+];
+
+const LoginIpWindowMs = Math.max(60000, Number(process.env.LOGIN_IP_WINDOW_MS || 10 * 60 * 1000));
+const LoginAccountWindowMs = Math.max(60000, Number(process.env.LOGIN_ACCOUNT_WINDOW_MS || 15 * 60 * 1000));
+const LoginIpMaxFailures = Math.max(3, Math.min(100, Number(process.env.LOGIN_IP_MAX_FAILURES || 10)));
+const LoginAccountMaxFailures = Math.max(3, Math.min(100, Number(process.env.LOGIN_ACCOUNT_MAX_FAILURES || 8)));
+const LoginLockoutMs = Math.max(30000, Number(process.env.LOGIN_LOCKOUT_MS || 15 * 60 * 1000));
+const LoginDelayBaseMs = Math.max(100, Number(process.env.LOGIN_DELAY_BASE_MS || 500));
+const LoginDelayMaxMs = Math.max(LoginDelayBaseMs, Number(process.env.LOGIN_DELAY_MAX_MS || 10000));
+const LoginRateCleanupMs = Math.max(60000, Number(process.env.LOGIN_RATE_CLEANUP_MS || 5 * 60 * 1000));
+const LoginGenericError = "Wrong username or password.";
+
+const LoginIpFailures = new Map();
+const LoginAccountFailures = new Map();
+
+const DummyPasswordSalt = crypto.randomBytes(16);
+const DummyPasswordHash = `scrypt$${DummyPasswordSalt.toString("hex")}$${crypto.scryptSync("StoryRewrite-Invalid-Password", DummyPasswordSalt, 64).toString("hex")}`;`,
     "moderation constants"
 );
 
