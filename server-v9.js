@@ -40,7 +40,7 @@ const LoginIpFailures = new Map();
 const LoginAccountFailures = new Map();
 
 const DummyPasswordSalt = crypto.randomBytes(16);
-const DummyPasswordHash = `scrypt$${DummyPasswordSalt.toString("hex")}$${crypto.scryptSync("StoryRewrite-Invalid-Password", DummyPasswordSalt, 64).toString("hex")}`;`,
+const DummyPasswordHash = "scrypt$" + DummyPasswordSalt.toString("hex") + "$" + crypto.scryptSync("StoryRewrite-Invalid-Password", DummyPasswordSalt, 64).toString("hex");`,
     "moderation constants"
 );
 
