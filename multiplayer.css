@@ -399,21 +399,33 @@
 }
 
 .LivesBar .LifeHeart:not(.Empty) {
-    color: #ff3345 !important;
+    color: #ff1738 !important;
     text-shadow:
         0 0 5px rgba(255,51,69,.52),
         0 0 12px rgba(255,51,69,.34),
         0 2px 8px rgba(159,53,47,.45);
     animation: LifeHeartBeat 1.12s ease-in-out infinite;
     transform-origin: center;
+    will-change: transform, filter;
+}
+
+.LivesBar .LifeHeart:not(.Empty) svg {
+    fill: #ff1738 !important;
+    filter:
+        drop-shadow(0 0 4px rgba(255, 23, 56, .72))
+        drop-shadow(0 0 10px rgba(255, 23, 56, .42));
+}
+
+.LifeHeart.Empty svg {
+    fill: #57463d !important;
 }
 
 .LivesBar .LifeHeart:nth-child(2):not(.Empty) {
-    animation-delay: .16s;
+    animation-delay: .14s;
 }
 
 .LivesBar .LifeHeart:nth-child(3):not(.Empty) {
-    animation-delay: .32s;
+    animation-delay: .28s;
 }
 
 .LifeHeart.Empty {
@@ -427,19 +439,23 @@
         transform: scale(1);
         filter: brightness(1);
     }
-    14% {
-        transform: scale(1.12);
-        filter: brightness(1.18);
+    8% {
+        transform: scale(1.06);
+        filter: brightness(1.08);
+    }
+    18% {
+        transform: scale(1.22);
+        filter: brightness(1.28);
     }
     28% {
-        transform: scale(.99);
-        filter: brightness(1.02);
+        transform: scale(1.04);
+        filter: brightness(1.06);
     }
-    42% {
-        transform: scale(1.08);
-        filter: brightness(1.12);
+    38% {
+        transform: scale(1.15);
+        filter: brightness(1.18);
     }
-    56%, 100% {
+    50% {
         transform: scale(1);
         filter: brightness(1);
     }
