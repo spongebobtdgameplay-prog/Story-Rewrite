@@ -77,6 +77,42 @@ const StoryAudio = (() => {
         return true;
     }
 
+    function DrawBell(Context) {
+        if (!Context || Context.state !== "running" || SoundVolume <= 0) return false;
+
+        const StartTime = Context.currentTime;
+        const MasterGain = Context.createGain();
+        MasterGain.connect(Context.destination);
+
+        const Partials = [
+            { frequency: 880, gain: 0.42 },
+            { frequency: 1320, gain: 0.2 },
+            { frequency: 1760, gain: 0.11 }
+        ];
+
+        for (const Partial of Partials) {
+            const Oscillator = Context.createOscillator();
+            const PartialGain = Context.createGain();
+
+            Oscillator.type = "sine";
+            Oscillator.frequency.setValueAtTime(Partial.frequency, StartTime);
+            Oscillator.frequency.exponentialRampToValueAtTime(Partial.frequency * 0.94, StartTime + 0.75);
+
+            const Peak = Math.max(0.0001, Partial.gain * SoundVolume);
+            PartialGain.gain.setValueAtTime(0.0001, StartTime);
+            PartialGain.gain.exponentialRampToValueAtTime(Peak, StartTime + 0.008);
+            PartialGain.gain.exponentialRampToValueAtTime(Math.max(0.0001, Peak * 0.45), StartTime + 0.18);
+            PartialGain.gain.exponentialRampToValueAtTime(0.0001, StartTime + 1.05);
+
+            Oscillator.connect(PartialGain);
+            PartialGain.connect(MasterGain);
+            Oscillator.start(StartTime);
+            Oscillator.stop(StartTime + 1.08);
+        }
+
+        return true;
+    }
+
     function PlayClick() {
         if (SoundsPaused || !SoundSettingsReady || SoundVolume <= 0) return Promise.resolve(false);
 
@@ -121,7 +157,13 @@ const StoryAudio = (() => {
         return ResumeAudio();
     }
 
-    function PlaySound() {
+    function PlaySound(Name = "click") {
+        if (SoundsPaused || !SoundSettingsReady || SoundVolume <= 0) return Promise.resolve(false);
+
+        if (String(Name) === "timerBell") {
+            return ResumeAudio().then(Context => DrawBell(Context));
+        }
+
         return PlayClick();
     }
 
