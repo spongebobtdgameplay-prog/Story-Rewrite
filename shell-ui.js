@@ -314,7 +314,7 @@ function WireStoryShell() {
                     return;
                 }
 
-                StoryNavigate(BackTarget);
+                StoryGoBack(BackTarget);
             });
         }
 
