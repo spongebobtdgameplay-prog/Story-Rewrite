@@ -359,7 +359,9 @@
             return;
         }
 
-        const Paused = Boolean(Options.paused);
+        const Paused = Object.prototype.hasOwnProperty.call(Options, "paused")
+            ? Boolean(Options.paused)
+            : ShellPauseState;
         ShellPauseState = Paused;
         GameplayPauseButton.classList.toggle("IsPaused", Paused);
         GameplayPauseButton.setAttribute("aria-pressed", Paused ? "true" : "false");
@@ -416,7 +418,7 @@
         ActiveFrame = Frame;
         if (PendingFrame === Frame) PendingFrame = null;
 
-        SyncGameplayPauseButton({ paused: false });
+        SyncGameplayPauseButton();
         GameplayPauseButton?.removeAttribute("aria-busy");
         UpdateTitle(Frame);
         DispatchFrameEvent(Frame, "StoryShellActivate", Route);
