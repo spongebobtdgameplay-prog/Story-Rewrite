@@ -54,8 +54,8 @@ body {
     top: max(16px, env(safe-area-inset-top));
     left: max(16px, env(safe-area-inset-left));
     z-index: 10000;
-    width: 50px;
-    height: 50px;
+    width: 42px;
+    height: 42px;
     padding: 0;
     display: grid;
     place-items: center;
@@ -106,8 +106,8 @@ body {
     #StoryShellPauseButton {
         top: max(10px, env(safe-area-inset-top));
         left: max(10px, env(safe-area-inset-left));
-        width: 46px;
-        height: 46px;
+        width: 39px;
+        height: 39px;
     }
 }
 
@@ -132,7 +132,7 @@ if (!Token) window.location.replace("auth.html");
 </head>
 <body>
 <div id="StoryShellRoot">
-    <button id="StoryShellPauseButton" type="button" hidden aria-label="Pause game" title="Pause game">
+    <button id="StoryShellPauseButton" type="button" hidden aria-label="Pause game" title="Pause game" aria-pressed="false">
         <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
             <rect x="7" y="5.5" width="3.5" height="13" rx="1"></rect>
             <rect x="13.5" y="5.5" width="3.5" height="13" rx="1"></rect>
