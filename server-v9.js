@@ -66,6 +66,115 @@ ReplaceRequired(
 
 ReplaceRequired(
     "function EmitRoom(Room) {",
+    `function GetLoginClientKey(Request) {
+    const ForwardedFor = String(Request.headers["x-forwarded-for"] || "")
+        .split(",")[0]
+        .trim();
+    const RealIp = String(Request.headers["x-real-ip"] || "").trim();
+    const RemoteAddress = String(Request.socket?.remoteAddress || "unknown").trim();
+    const Address = ForwardedFor || RealIp || RemoteAddress || "unknown";
+    return crypto.createHash("sha256").update(Address).digest("hex").slice(0, 32);
+}
+
+function ReadLoginFailureState(Store, Key, WindowMs, Now) {
+    if (!Key) return null;
+    const State = Store.get(Key);
+    if (!State) return null;
+
+    if (State.lockedUntil <= Now && Now - State.windowStartedAt >= WindowMs) {
+        Store.delete(Key);
+        return null;
+    }
+
+    return State;
+}
+
+function GetLoginThrottleInfo(IpKey, AccountKey, Now) {
+    const IpState = ReadLoginFailureState(LoginIpFailures, IpKey, LoginIpWindowMs, Now);
+    const AccountState = ReadLoginFailureState(LoginAccountFailures, AccountKey, LoginAccountWindowMs, Now);
+
+    const LockedUntil = Math.max(
+        Number(IpState?.lockedUntil || 0),
+        Number(AccountState?.lockedUntil || 0)
+    );
+
+    if (LockedUntil > Now) {
+        return { locked: true, delayMs: 0 };
+    }
+
+    const FailureCount = Math.max(
+        Number(IpState?.failed || 0),
+        Number(AccountState?.failed || 0)
+    );
+
+    if (FailureCount < 2) {
+        return { locked: false, delayMs: 0 };
+    }
+
+    const DelayExponent = Math.max(0, FailureCount - 2);
+    const DelayMs = Math.min(LoginDelayMaxMs, LoginDelayBaseMs * (2 ** DelayExponent));
+    return { locked: false, delayMs: DelayMs };
+}
+
+function RecordLoginFailure(Store, Key, WindowMs, MaxFailures, Now) {
+    if (!Key) return;
+
+    let State = ReadLoginFailureState(Store, Key, WindowMs, Now);
+    if (!State) {
+        State = {
+            failed: 0,
+            windowStartedAt: Now,
+            lockedUntil: 0,
+            lastSeenAt: Now
+        };
+        Store.set(Key, State);
+    }
+
+    State.failed += 1;
+    State.lastSeenAt = Now;
+
+    if (State.failed >= MaxFailures) {
+        State.lockedUntil = Math.max(State.lockedUntil, Now + LoginLockoutMs);
+    }
+}
+
+function ClearLoginFailure(Store, Key) {
+    if (Key) Store.delete(Key);
+}
+
+function CleanupLoginRateLimitStore(Store, MaxAgeMs, Now) {
+    for (const [Key, State] of Store.entries()) {
+        const LastSeenAt = Number(State.lastSeenAt || State.windowStartedAt || 0);
+        const LockedUntil = Number(State.lockedUntil || 0);
+        if (LockedUntil <= Now && Now - LastSeenAt > MaxAgeMs) {
+            Store.delete(Key);
+        }
+    }
+}
+
+function CleanupLoginRateLimits() {
+    const Now = Date.now();
+    CleanupLoginRateLimitStore(
+        LoginIpFailures,
+        Math.max(LoginIpWindowMs, LoginLockoutMs) + 60000,
+        Now
+    );
+    CleanupLoginRateLimitStore(
+        LoginAccountFailures,
+        Math.max(LoginAccountWindowMs, LoginLockoutMs) + 60000,
+        Now
+    );
+}
+
+const LoginRateCleanupTimer = setInterval(CleanupLoginRateLimits, LoginRateCleanupMs);
+LoginRateCleanupTimer.unref?.();
+
+function EmitRoom(Room) {`,
+    "login security helpers"
+);
+
+ReplaceRequired(
+    "function EmitRoom(Room) {",
     `function CensorChatText(Value) {
     let Text = String(Value || "")
         .replace(/[\\u0000-\\u001F\\u007F]/g, " ")
