@@ -81,13 +81,17 @@ function RenderGamePauseState() {
         Overlay.setAttribute("aria-hidden", GamePaused && !RoomCode ? "false" : "true");
     }
 
-    if (PauseButton) {
-        PauseButton.setAttribute("aria-pressed", GamePaused ? "true" : "false");
-        PauseButton.setAttribute("aria-label", GamePaused ? "Resume game" : "Pause game");
-        PauseButton.title = GamePaused ? "Resume game" : "Pause game";
-        PauseButton.hidden = Boolean(RoomCode);
-        PauseButton.classList.toggle("IsPaused", GamePaused);
-    }
+    const ParentShellEvent = {
+        paused: GamePaused && !RoomCode
+    };
+
+    try {
+        if (window.parent !== window) {
+            window.parent.dispatchEvent(new window.parent.CustomEvent("StoryShellPauseState", {
+                detail: ParentShellEvent
+            }));
+        }
+    } catch {}
 
     if (ResumeButton && GamePaused) {
         requestAnimationFrame(() => ResumeButton.focus());
@@ -126,6 +130,8 @@ function ToggleGamePaused() {
     if (!IsGameplayPauseEligible()) return;
     SetGamePaused(!GamePaused, "manual");
 }
+
+window.addEventListener("StoryShellPauseToggle", ToggleGamePaused);
 
 document.addEventListener("visibilitychange", () => {
     if (document.hidden) {
