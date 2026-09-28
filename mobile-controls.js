@@ -22,12 +22,6 @@ const MOBILE_CHAT_ICON = `
     <path d="M8 9h8M8 12h5"></path>
 </svg>`;
 
-const MOBILE_PAUSE_ICON = `
-<svg viewBox="0 0 24 24" aria-hidden="true">
-    <rect x="7" y="5.5" width="3.5" height="13" rx="1"></rect>
-    <rect x="13.5" y="5.5" width="3.5" height="13" rx="1"></rect>
-</svg>`;
-
 const MOBILE_POWER_ICON = `
 <svg viewBox="0 0 24 24" aria-hidden="true">
     <path d="m13.5 2.8-7 10h5l-1 8.4 7-10h-5l1-8.4Z"></path>
@@ -133,12 +127,6 @@ function EnsureMobileControls() {
         Primary: true
     });
 
-    const PauseButton = BuildMobileControlButton({
-        Id: "MobilePauseButton",
-        Label: "Pause",
-        Icon: MOBILE_PAUSE_ICON
-    });
-
     const PowerButton = BuildMobileControlButton({
         Id: "MobilePowerButton",
         Label: "Powers",
@@ -153,13 +141,13 @@ function EnsureMobileControls() {
         Badge: true
     });
 
-    Controls.append(MapButton, RestoreButton, CheckButton, PauseButton, PowerButton, ChatButton);
+    Controls.append(MapButton, RestoreButton, CheckButton, PowerButton, ChatButton);
     document.body.append(PowerTray, Controls);
 
     MapButton.addEventListener("click", () => MobilePressDesktopButton("BackButton"));
     RestoreButton.addEventListener("click", () => MobilePressDesktopButton("RestoreButton"));
     CheckButton.addEventListener("click", () => MobilePressDesktopButton("CheckButton"));
-    PauseButton.addEventListener("click", () => MobilePressDesktopButton("PauseButton"));
+
     PowerButton.addEventListener("click", () => {
         MobileHaptic();
         const Open = !PowerTray.classList.contains("IsOpen");
@@ -187,8 +175,6 @@ function SyncMobileControls() {
     const CheckButton = document.getElementById("MobileCheckButton");
     const RestoreButton = document.getElementById("MobileRestoreButton");
     const MapButton = document.getElementById("MobileMapButton");
-    const PauseSource = document.getElementById("PauseButton");
-    const PauseButton = document.getElementById("MobilePauseButton");
     const ChatButton = document.getElementById("MobileChatButton");
     const PowerButton = document.getElementById("MobilePowerButton");
     const PowerTray = document.getElementById("MobilePowerTray");
@@ -199,12 +185,6 @@ function SyncMobileControls() {
     if (CheckButton) CheckButton.disabled = Boolean(CheckSource?.disabled);
     if (RestoreButton) RestoreButton.disabled = Boolean(RestoreSource?.disabled);
     if (MapButton) MapButton.disabled = Boolean(MapSource?.disabled);
-    if (PauseButton) {
-        PauseButton.classList.toggle("IsHidden", Boolean(PauseSource?.hidden));
-        PauseButton.setAttribute("aria-label", PauseSource?.getAttribute("aria-label") || "Pause game");
-        PauseButton.classList.toggle("IsActive", PauseSource?.getAttribute("aria-pressed") === "true");
-    }
-
     for (const PowerName of ["reveal", "undo", "seal"]) {
         const Source = document.querySelector(`[data-story-power="${PowerName}"]`);
         const MobileButton = document.querySelector(`[data-mobile-power="${PowerName}"]`);
@@ -258,7 +238,7 @@ function WireMobileTypingState() {
 function WatchMobileControlState() {
     const Observer = new MutationObserver(SyncMobileControls);
 
-    for (const Id of ["CheckButton", "RestoreButton", "BackButton", "PauseButton", "PowerPanel", "MultiplayerDock", "GameChatUnread"]) {
+    for (const Id of ["CheckButton", "RestoreButton", "BackButton", "PowerPanel", "MultiplayerDock", "GameChatUnread"]) {
         const Element = document.getElementById(Id);
         if (!Element) continue;
         Observer.observe(Element, {
@@ -266,7 +246,7 @@ function WatchMobileControlState() {
             childList: true,
             characterData: true,
             subtree: true,
-            attributeFilter: ["class", "disabled", "hidden", "aria-pressed", "aria-label"]
+            attributeFilter: ["class", "disabled"]
         });
     }
 
