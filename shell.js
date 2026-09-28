@@ -345,8 +345,7 @@
         let Ready = false;
         if (IsSinglePlayerGameRoute() && ActiveFrame?.dataset.storyLoaded === "1") {
             const ActiveRoute = ActiveFrame.dataset.storyRoute || RouteFromFrame(ActiveFrame);
-            Ready = ActiveFrame === GetFrameForRoute(CurrentRoute)
-                && ActiveRoute === CurrentRoute
+            Ready = ActiveRoute === CurrentRoute
                 && ActiveRoute === RouteFromFrame(ActiveFrame);
         }
 
