@@ -1,5 +1,5 @@
 (() => {
-    const FrontendVersion = "20260928.1";
+    const FrontendVersion = "20260928.2";
     const Root = document.getElementById("StoryShellRoot");
     const InitialFrame = document.getElementById("StoryShellFrame");
     if (!Root || !InitialFrame) return;
