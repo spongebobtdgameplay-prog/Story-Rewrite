@@ -122,7 +122,9 @@ function SetGamePaused(Paused, Reason = "manual") {
     }));
 
     if (GamePaused) {
-        StoryAudio?.PauseForGameplay?.();
+        if (GamePauseReason !== "navigation") {
+            StoryAudio?.PauseForGameplay?.();
+        }
     } else {
         StoryAudio?.ResumeForGameplay?.();
     }
