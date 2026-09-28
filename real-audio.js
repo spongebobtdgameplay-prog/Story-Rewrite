@@ -39,6 +39,21 @@
             return ShellHost.StoryShell.GetAudioState();
         };
 
+        StoryAudio.PauseForGameplay = function() {
+            if (typeof StoryAudio.PauseSounds === "function") StoryAudio.PauseSounds();
+            if (typeof ShellHost.StoryShell.PauseMusicForGameplay === "function") {
+                ShellHost.StoryShell.PauseMusicForGameplay();
+            }
+        };
+
+        StoryAudio.ResumeForGameplay = function() {
+            if (typeof StoryAudio.ResumeSounds === "function") StoryAudio.ResumeSounds();
+            if (typeof ShellHost.StoryShell.ResumeMusicForGameplay === "function") {
+                return ShellHost.StoryShell.ResumeMusicForGameplay();
+            }
+            return Promise.resolve(false);
+        };
+
         if (/(?:Firefox|FxiOS)\//i.test(navigator.userAgent)) {
             document.addEventListener("click", () => {
                 ShellHost.StoryShell.NotifyInteraction(true);
@@ -65,6 +80,8 @@
     let LastPlaybackError = "";
     let FreshStartMusicName = "";
     let ResumeMusicWhenVisible = false;
+    let GameplayMusicPaused = false;
+    let GameplayMusicWasPlaying = false;
 
     const MusicFiles = {
         menu: "Music/menu.mp3",
@@ -458,7 +475,32 @@
         if (!Event?.detail?.authenticated) StoryAudio.StopMusic();
     });
 
+    function PauseMusicForGameplay() {
+        GameplayMusicPaused = true;
+        GameplayMusicWasPlaying = Boolean(MusicElement.src && !MusicElement.paused && !MusicElement.ended);
+        if (GameplayMusicWasPlaying) {
+            SavePosition();
+            MusicElement.pause();
+        }
+        ResumeMusicWhenVisible = false;
+        DispatchPlaybackState();
+    }
+
+    function ResumeMusicForGameplay() {
+        if (!GameplayMusicPaused) return Promise.resolve(false);
+        GameplayMusicPaused = false;
+        if (!GameplayMusicWasPlaying) {
+            GameplayMusicWasPlaying = false;
+            DispatchPlaybackState();
+            return Promise.resolve(false);
+        }
+        GameplayMusicWasPlaying = false;
+        if (AudioUnlocked && PendingMusicName && MusicVolume > 0) return TryPlayPreparedMusic();
+        return Promise.resolve(false);
+    }
+
     document.addEventListener("visibilitychange", () => {
+        const ShellGameplayPaused = Boolean(window.parent?.StoryShell?.IsGameplayAudioPaused?.());
         if (document.hidden) {
             if (KeepMusicPlaying) {
                 ResumeMusicWhenVisible = false;
@@ -470,6 +512,11 @@
                 SavePosition();
                 MusicElement.pause();
             }
+            return;
+        }
+
+        if (ShellGameplayPaused || GameplayMusicPaused) {
+            ResumeMusicWhenVisible = false;
             return;
         }
 
@@ -552,5 +599,7 @@
     StoryAudio.UnlockAudio = UnlockAudioFromGesture;
     StoryAudio.GetPlaybackState = GetPlaybackState;
     StoryAudio.SetKeepMusicPlaying = SetKeepMusicPlaying;
+    StoryAudio.PauseMusicForGameplay = PauseMusicForGameplay;
+    StoryAudio.ResumeMusicForGameplay = ResumeMusicForGameplay;
     window.StoryAudioBridge = StoryAudio;
 })();
