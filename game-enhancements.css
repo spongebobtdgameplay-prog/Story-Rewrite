@@ -345,3 +345,72 @@
         font-size: 11px;
     }
 }
+
+
+/* Single-player pause state */
+.PauseOverlay {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    background: rgba(12, 7, 5, .76);
+    backdrop-filter: blur(7px);
+    -webkit-backdrop-filter: blur(7px);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity .18s ease, visibility .18s ease;
+}
+
+.PauseOverlay.IsOpen {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+.PauseCard {
+    width: min(460px, 100%);
+    padding: 30px 28px 26px;
+    border: 1px solid rgba(230, 190, 124, .34);
+    border-radius: 18px;
+    background:
+        radial-gradient(circle at 50% 0%, rgba(219, 170, 96, .13), transparent 48%),
+        linear-gradient(180deg, #3c2417, #21130d);
+    box-shadow: 0 28px 90px rgba(0, 0, 0, .5), inset 0 1px rgba(255, 240, 207, .1);
+    color: #f5e6cf;
+    text-align: center;
+}
+
+.PauseCard .Kicker {
+    margin-bottom: 7px;
+    color: #d8a45c;
+}
+
+.PauseCard h2 {
+    margin: 0;
+    font: 900 clamp(30px, 6vw, 46px)/.95 Georgia, "Times New Roman", serif;
+    letter-spacing: -.02em;
+}
+
+.PauseCard p {
+    max-width: 36ch;
+    margin: 14px auto 22px;
+    color: #c7b497;
+    font: 600 13px/1.5 system-ui, sans-serif;
+}
+
+.PauseResumeButton {
+    min-width: 160px;
+}
+
+@media (max-width: 700px), (pointer: coarse) and (max-width: 1000px) {
+    .PauseOverlay {
+        padding: 16px;
+    }
+
+    .PauseCard {
+        padding: 24px 20px 22px;
+    }
+}
