@@ -301,6 +301,39 @@ let StorySingleDangerEndV12 = 0;
 let StorySingleDangerStageIdV12 = "";
 let StoryDangerTimerV12 = null;
 let StoryDangerExpiredV12 = false;
+let StoryGamePausedV12 = false;
+let StoryGamePauseStartedAtV12 = 0;
+
+function SetStoryGamePausedV12(Paused) {
+    if (RoomCode) return;
+
+    const NextPaused = Boolean(Paused);
+    if (NextPaused === StoryGamePausedV12) {
+        RefreshStoryDangerUiV12();
+        return;
+    }
+
+    if (NextPaused) {
+        StoryGamePausedV12 = true;
+        StoryGamePauseStartedAtV12 = Date.now();
+        RefreshStoryDangerUiV12();
+        return;
+    }
+
+    const PauseStarted = StoryGamePauseStartedAtV12;
+    StoryGamePausedV12 = false;
+    StoryGamePauseStartedAtV12 = 0;
+
+    if (PauseStarted && StorySingleDangerEndV12 > 0) {
+        StorySingleDangerEndV12 += Math.max(0, Date.now() - PauseStarted);
+    }
+
+    RefreshStoryDangerUiV12();
+}
+
+window.addEventListener("StoryGamePauseChange", Event => {
+    SetStoryGamePausedV12(Event?.detail?.paused);
+});
 
 function GetStoryDangerSecondsV12(StageData = Stage) {
     const Configured = Number(StageData?.dangerSeconds);
@@ -582,7 +615,9 @@ function RefreshStoryDangerUiV12() {
         return;
     }
 
-    const Remaining = Math.max(0, End - Date.now());
+    const Remaining = StoryGamePausedV12 && !RoomCode && StoryGamePauseStartedAtV12
+        ? Math.max(0, End - StoryGamePauseStartedAtV12)
+        : Math.max(0, End - Date.now());
     const Seconds = Math.ceil(Remaining / 1000);
     const Critical = Remaining > 0 && Remaining <= Math.min(15000, Total * 250);
 
@@ -594,7 +629,7 @@ function RefreshStoryDangerUiV12() {
     document.getElementById("Book")?.classList.toggle("StoryDangerCritical", Critical);
     document.getElementById("Illustration")?.classList.toggle("StoryDangerCritical", Critical);
 
-    if (!RoomCode && End > 0 && Remaining <= 0 && !StoryDangerExpiredV12) {
+    if (!StoryGamePausedV12 && !RoomCode && End > 0 && Remaining <= 0 && !StoryDangerExpiredV12) {
         ExpireSingleStoryDangerV12();
     }
 }
@@ -605,7 +640,7 @@ function EnsureStoryDangerLoopV12() {
 }
 
 function StartSingleStoryDangerV12(Force = false) {
-    if (RoomCode || !Stage) return;
+    if (RoomCode || !Stage || StoryGamePausedV12) return;
     if (!Force && StorySingleDangerStageIdV12 === Stage.id && StorySingleDangerEndV12 > Date.now()) return;
 
     ClearStoryDangerTimerV12();
