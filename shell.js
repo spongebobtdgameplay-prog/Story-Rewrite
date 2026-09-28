@@ -411,6 +411,7 @@
         if (PendingFrame === Frame) PendingFrame = null;
 
         SyncGameplayPauseButton({ paused: false });
+        GameplayPauseButton?.removeAttribute("aria-busy");
         UpdateTitle(Frame);
         DispatchFrameEvent(Frame, "StoryShellActivate", Route);
         return true;
