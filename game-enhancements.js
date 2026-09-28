@@ -305,6 +305,8 @@ let StorySingleDangerEndV12 = 0;
 let StorySingleDangerStageIdV12 = "";
 let StoryDangerTimerV12 = null;
 let StoryDangerExpiredV12 = false;
+let StoryDangerBell10V12 = false;
+let StoryDangerBell5V12 = false;
 let StoryGamePausedV12 = false;
 let StoryGamePauseStartedAtV12 = 0;
 
@@ -568,6 +570,8 @@ async function UseStoryPowerV12(Name) {
 
 function ResetStoryDangerAfterReviveV12() {
     StoryDangerExpiredV12 = false;
+    StoryDangerBell10V12 = false;
+    StoryDangerBell5V12 = false;
     StorySingleDangerStageIdV12 = "";
     ClearStoryDangerTimerV12();
 
@@ -628,6 +632,62 @@ function RefreshStoryDangerUiV12() {
     if (Value) Value.textContent = `${Math.floor(Seconds / 60)}:${String(Seconds % 60).padStart(2, "0")}`;
     if (Fill) Fill.style.width = `${Math.max(0, Math.min(100, Remaining / (Total * 10)))}%`;
 
+    if (Value) Value.textContent = "--:--";
+    if (Fill) Fill.style.width = "0%";
+}
+
+function ClearStoryDangerTimerV12() {
+    if (StoryDangerTimerV12) {
+        clearInterval(StoryDangerTimerV12);
+        StoryDangerTimerV12 = null;
+    }
+
+    StorySingleDangerEndV12 = 0;
+    document.getElementById("Book")?.classList.remove("StoryDangerActive", "StoryDangerCritical");
+    document.getElementById("Illustration")?.classList.remove("StoryDangerActive", "StoryDangerCritical");
+}
+
+function GetStoryDangerEndV12() {
+    if (RoomCode) return Number(MultiplayerState?.dangerEndsAt || 0);
+    return StorySingleDangerEndV12;
+}
+
+function RefreshStoryDangerUiV12() {
+    if (!Stage) return;
+
+    const Value = document.getElementById("DangerTimerValue");
+    const Fill = document.getElementById("DangerTimerFill");
+    const End = GetStoryDangerEndV12();
+    const Total = GetStoryDangerSecondsV12();
+
+    if (!End) {
+        if (Value) Value.textContent = "--:--";
+        if (Fill) Fill.style.width = "0%";
+        document.getElementById("Book")?.classList.remove("StoryDangerActive", "StoryDangerCritical");
+        document.getElementById("Illustration")?.classList.remove("StoryDangerActive", "StoryDangerCritical");
+        return;
+    }
+
+    const Remaining = StoryGamePausedV12 && !RoomCode && StoryGamePauseStartedAtV12
+        ? Math.max(0, End - StoryGamePauseStartedAtV12)
+        : Math.max(0, End - Date.now());
+    const Seconds = Math.ceil(Remaining / 1000);
+    const Critical = Remaining > 0 && Remaining <= Math.min(15000, Total * 250);
+
+    if (Value) Value.textContent = `${Math.floor(Seconds / 60)}:${String(Seconds % 60).padStart(2, "0")}`;
+    if (Fill) Fill.style.width = `${Math.max(0, Math.min(100, Remaining / (Total * 10)))}%`;
+
+    if (!StoryGamePausedV12 && !RoomCode && Remaining > 0) {
+        if (Seconds <= 10 && !StoryDangerBell10V12) {
+            StoryDangerBell10V12 = true;
+            StoryAudio?.PlaySound?.("timerBell");
+        }
+        if (Seconds <= 5 && !StoryDangerBell5V12) {
+            StoryDangerBell5V12 = true;
+            StoryAudio?.PlaySound?.("timerBell");
+        }
+    }
+
     document.getElementById("Book")?.classList.toggle("StoryDangerActive", Remaining > 0);
     document.getElementById("Illustration")?.classList.toggle("StoryDangerActive", Remaining > 0);
     document.getElementById("Book")?.classList.toggle("StoryDangerCritical", Critical);
@@ -651,6 +711,8 @@ function StartSingleStoryDangerV12(Force = false) {
     StorySingleDangerStageIdV12 = Stage.id;
     StorySingleDangerEndV12 = Date.now() + GetStoryDangerSecondsV12() * 1000;
     StoryDangerExpiredV12 = false;
+    StoryDangerBell10V12 = false;
+    StoryDangerBell5V12 = false;
     RefreshStoryDangerUiV12();
     EnsureStoryDangerLoopV12();
 }
