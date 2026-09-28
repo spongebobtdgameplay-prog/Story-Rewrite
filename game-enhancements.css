@@ -414,3 +414,101 @@
         padding: 24px 20px 22px;
     }
 }
+
+
+/* Single-player gameplay pause control */
+.GameplayPauseButton {
+    width: 46px;
+    height: 46px;
+    flex: 0 0 46px;
+    display: inline-grid;
+    place-items: center;
+    padding: 0;
+    cursor: pointer;
+    border: 1px solid rgba(226, 180, 108, .55);
+    border-radius: 50%;
+    color: #f1d5a5;
+    background: radial-gradient(circle at 32% 27%, #6b4228, #2d1a11 72%);
+    box-shadow:
+        0 8px 22px rgba(0,0,0,.28),
+        inset 0 0 0 3px rgba(255, 238, 197, .045),
+        inset 0 1px rgba(255, 240, 207, .12);
+    transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease, background .16s ease;
+}
+
+.GameplayPauseButton:hover {
+    transform: translateY(-1px) scale(1.04);
+    border-color: #efc87f;
+    background: radial-gradient(circle at 32% 27%, #7b4b2e, #382015 74%);
+    box-shadow:
+        0 10px 26px rgba(0,0,0,.3),
+        0 0 0 4px rgba(222, 170, 96, .09),
+        inset 0 0 0 3px rgba(255, 238, 197, .055);
+}
+
+.GameplayPauseButton:active {
+    transform: scale(.96);
+}
+
+.GameplayPauseButton.IsPaused {
+    border-color: rgba(241, 201, 125, .82);
+    box-shadow:
+        0 0 0 5px rgba(222, 170, 96, .12),
+        0 10px 26px rgba(0,0,0,.32),
+        inset 0 0 0 3px rgba(255, 238, 197, .07);
+}
+
+.GameplayPauseButton svg {
+    width: 21px;
+    height: 21px;
+    fill: currentColor;
+    pointer-events: none;
+}
+
+.PauseCard {
+    width: min(598px, 100%);
+    max-width: 598px;
+    padding: 39px 36px 34px;
+}
+
+.PauseCard h2 {
+    font-size: clamp(36px, 6vw, 52px);
+}
+
+.PauseCard p {
+    max-width: 42ch;
+    margin-top: 17px;
+    font-size: 14px;
+}
+
+.PauseGlyph {
+    width: 78px;
+    height: 78px;
+    margin: 0 auto 16px;
+    display: grid;
+    place-items: center;
+    border: 1px solid rgba(239, 195, 121, .48);
+    border-radius: 50%;
+    color: #f1cf91;
+    background: radial-gradient(circle at 35% 28%, rgba(120, 75, 43, .9), rgba(38, 22, 14, .96));
+    box-shadow: 0 0 0 7px rgba(226, 180, 108, .07), 0 14px 28px rgba(0,0,0,.28), inset 0 1px rgba(255,255,255,.08);
+}
+
+.PauseGlyph svg {
+    width: 30px;
+    height: 30px;
+    fill: currentColor;
+}
+
+@media (max-width: 700px) {
+    .GameplayPauseButton {
+        width: 42px;
+        height: 42px;
+        flex-basis: 42px;
+    }
+
+    .PauseCard {
+        width: min(100%, 598px);
+        padding: 31px 24px 28px;
+    }
+}
