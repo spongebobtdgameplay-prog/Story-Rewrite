@@ -541,14 +541,6 @@
         const SkipHistory = Boolean(Options.skipHistory);
         const Frame = GetFrameForRoute(Normalized);
 
-        if (GameplayAudioPaused) {
-            GameplayAudioPaused = false;
-            const Host = GetAudioHost();
-            if (Host && typeof Host.ResumeMusicForGameplay === "function") {
-                Host.ResumeMusicForGameplay();
-            }
-        }
-
         CurrentRoute = Normalized;
         GameplayPauseButton?.setAttribute("aria-busy", "true");
         SyncGameplayPauseButton();
