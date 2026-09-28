@@ -22,6 +22,12 @@ const MOBILE_CHAT_ICON = `
     <path d="M8 9h8M8 12h5"></path>
 </svg>`;
 
+const MOBILE_PAUSE_ICON = `
+<svg viewBox="0 0 24 24" aria-hidden="true">
+    <rect x="7" y="5.5" width="3.5" height="13" rx="1"></rect>
+    <rect x="13.5" y="5.5" width="3.5" height="13" rx="1"></rect>
+</svg>`;
+
 const MOBILE_POWER_ICON = `
 <svg viewBox="0 0 24 24" aria-hidden="true">
     <path d="m13.5 2.8-7 10h5l-1 8.4 7-10h-5l1-8.4Z"></path>
@@ -127,6 +133,12 @@ function EnsureMobileControls() {
         Primary: true
     });
 
+    const PauseButton = BuildMobileControlButton({
+        Id: "MobilePauseButton",
+        Label: "Pause",
+        Icon: MOBILE_PAUSE_ICON
+    });
+
     const PowerButton = BuildMobileControlButton({
         Id: "MobilePowerButton",
         Label: "Powers",
@@ -141,12 +153,13 @@ function EnsureMobileControls() {
         Badge: true
     });
 
-    Controls.append(MapButton, RestoreButton, CheckButton, PowerButton, ChatButton);
+    Controls.append(MapButton, RestoreButton, CheckButton, PauseButton, PowerButton, ChatButton);
     document.body.append(PowerTray, Controls);
 
     MapButton.addEventListener("click", () => MobilePressDesktopButton("BackButton"));
     RestoreButton.addEventListener("click", () => MobilePressDesktopButton("RestoreButton"));
     CheckButton.addEventListener("click", () => MobilePressDesktopButton("CheckButton"));
+    PauseButton.addEventListener("click", () => MobilePressDesktopButton("PauseButton"));
     PowerButton.addEventListener("click", () => {
         MobileHaptic();
         const Open = !PowerTray.classList.contains("IsOpen");
