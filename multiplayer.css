@@ -400,37 +400,44 @@
 
 .LivesBar .LifeHeart:not(.Empty) {
     color: #ff1738 !important;
-    text-shadow:
-        0 0 5px rgba(255,51,69,.52),
-        0 0 12px rgba(255,51,69,.34),
-        0 2px 8px rgba(159,53,47,.45);
-    animation: LifeHeartBeat 1.12s ease-in-out infinite;
+    text-shadow: none !important;
     transform-origin: center;
-    will-change: transform, filter;
 }
 
 .LivesBar .LifeHeart:not(.Empty) svg {
     fill: #ff1738 !important;
+    color: #ff1738 !important;
     filter:
-        drop-shadow(0 0 4px rgba(255, 23, 56, .72))
-        drop-shadow(0 0 10px rgba(255, 23, 56, .42));
+        drop-shadow(0 0 3px rgba(255, 23, 56, .9))
+        drop-shadow(0 0 8px rgba(255, 23, 56, .7))
+        drop-shadow(0 0 16px rgba(255, 23, 56, .45));
+    animation: LifeHeartBeat .86s cubic-bezier(.34,1.56,.64,1) infinite;
+    transform-origin: center;
+    transform-box: fill-box;
+    will-change: transform, filter;
 }
 
 .LifeHeart.Empty svg {
     fill: #57463d !important;
 }
 
-.LivesBar .LifeHeart:nth-child(2):not(.Empty) {
+.LivesBar .LifeHeart:nth-child(2):not(.Empty) svg {
     animation-delay: .14s;
 }
 
-.LivesBar .LifeHeart:nth-child(3):not(.Empty) {
+.LivesBar .LifeHeart:nth-child(3):not(.Empty) svg {
     animation-delay: .28s;
 }
 
 .LifeHeart.Empty {
     color: #57463d;
     text-shadow: none;
+}
+
+.LifeHeart.Empty svg {
+    fill: #6d625d !important;
+    color: #6d625d !important;
+    filter: none;
     animation: none;
 }
 
@@ -439,23 +446,23 @@
         transform: scale(1);
         filter: brightness(1);
     }
-    8% {
+    10% {
         transform: scale(1.06);
         filter: brightness(1.08);
     }
-    18% {
-        transform: scale(1.22);
-        filter: brightness(1.28);
+    20% {
+        transform: scale(1.24);
+        filter: brightness(1.34);
     }
-    28% {
-        transform: scale(1.04);
-        filter: brightness(1.06);
+    32% {
+        transform: scale(1.03);
+        filter: brightness(1.05);
     }
-    38% {
-        transform: scale(1.15);
-        filter: brightness(1.18);
+    43% {
+        transform: scale(1.14);
+        filter: brightness(1.2);
     }
-    50% {
+    56% {
         transform: scale(1);
         filter: brightness(1);
     }
