@@ -495,7 +495,20 @@
             return Promise.resolve(false);
         }
         GameplayMusicWasPlaying = false;
-        if (AudioUnlocked && PendingMusicName && MusicVolume > 0) return TryPlayPreparedMusic();
+        if (AudioUnlocked && PendingMusicName && MusicVolume > 0) {
+            const SavedTrackPosition = SavedPosition(PendingMusicName);
+            const Result = TryPlayPreparedMusic();
+            if (MusicName === PendingMusicName && SavedTrackPosition > 0.05 && Number.isFinite(MusicElement.duration)) {
+                try {
+                    const SafePosition = SavedTrackPosition >= MusicElement.duration - FadeOutSeconds
+                        ? 0
+                        : Math.min(SavedTrackPosition, Math.max(0, MusicElement.duration - 0.25));
+                    if (SafePosition > 0.05) MusicElement.currentTime = SafePosition;
+                } catch {}
+                ApplyMusicFade();
+            }
+            return Result;
+        }
         return Promise.resolve(false);
     }
 
