@@ -258,7 +258,7 @@ function WireMobileTypingState() {
 function WatchMobileControlState() {
     const Observer = new MutationObserver(SyncMobileControls);
 
-    for (const Id of ["CheckButton", "RestoreButton", "BackButton", "PowerPanel", "MultiplayerDock", "GameChatUnread"]) {
+    for (const Id of ["CheckButton", "RestoreButton", "BackButton", "PauseButton", "PowerPanel", "MultiplayerDock", "GameChatUnread"]) {
         const Element = document.getElementById(Id);
         if (!Element) continue;
         Observer.observe(Element, {
@@ -266,7 +266,7 @@ function WatchMobileControlState() {
             childList: true,
             characterData: true,
             subtree: true,
-            attributeFilter: ["class", "disabled"]
+            attributeFilter: ["class", "disabled", "hidden", "aria-pressed", "aria-label"]
         });
     }
 
