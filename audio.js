@@ -3,6 +3,7 @@ const StoryAudio = (() => {
     let AudioUnlocked = false;
     let SoundVolume = 0.8;
     let SoundSettingsReady = false;
+    let SoundsPaused = false;
     let LastClickAt = 0;
 
     function Clamp(Value, Fallback) {
@@ -77,7 +78,7 @@ const StoryAudio = (() => {
     }
 
     function PlayClick() {
-        if (!SoundSettingsReady || SoundVolume <= 0) return Promise.resolve(false);
+        if (SoundsPaused || !SoundSettingsReady || SoundVolume <= 0) return Promise.resolve(false);
 
         const CurrentTime = Date.now();
         if (CurrentTime - LastClickAt < 120) return Promise.resolve(false);
@@ -124,6 +125,22 @@ const StoryAudio = (() => {
         return PlayClick();
     }
 
+    function PauseSounds() {
+        SoundsPaused = true;
+
+        if (AudioContextInstance?.state === "running") {
+            try {
+                const PausePromise = AudioContextInstance.suspend();
+                if (PausePromise?.catch) PausePromise.catch(() => {});
+            } catch {}
+        }
+    }
+
+    function ResumeSounds() {
+        SoundsPaused = false;
+        return ResumeAudio();
+    }
+
     function ShutdownLegacyAudio() {
         AudioUnlocked = false;
 
@@ -153,6 +170,8 @@ const StoryAudio = (() => {
         StopMusic() {},
         UnlockAudio,
         ShutdownLegacyAudio,
+        PauseSounds,
+        ResumeSounds,
         GetSoundState
     };
 })();
