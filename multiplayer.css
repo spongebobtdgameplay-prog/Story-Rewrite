@@ -382,14 +382,55 @@
 }
 
 .LifeHeart {
-    color: #9f352f;
     font-size: 25px;
-    text-shadow: 0 2px 8px rgba(159,53,47,.28);
+    line-height: 1;
+}
+
+.LivesBar .LifeHeart:not(.Empty) {
+    color: #ff3345 !important;
+    text-shadow:
+        0 0 5px rgba(255,51,69,.52),
+        0 0 12px rgba(255,51,69,.34),
+        0 2px 8px rgba(159,53,47,.45);
+    animation: LifeHeartBeat 1.12s ease-in-out infinite;
+    transform-origin: center;
+}
+
+.LivesBar .LifeHeart:nth-child(2):not(.Empty) {
+    animation-delay: .16s;
+}
+
+.LivesBar .LifeHeart:nth-child(3):not(.Empty) {
+    animation-delay: .32s;
 }
 
 .LifeHeart.Empty {
     color: #57463d;
     text-shadow: none;
+    animation: none;
+}
+
+@keyframes LifeHeartBeat {
+    0%, 100% {
+        transform: scale(1);
+        filter: brightness(1);
+    }
+    14% {
+        transform: scale(1.12);
+        filter: brightness(1.18);
+    }
+    28% {
+        transform: scale(.99);
+        filter: brightness(1.02);
+    }
+    42% {
+        transform: scale(1.08);
+        filter: brightness(1.12);
+    }
+    56%, 100% {
+        transform: scale(1);
+        filter: brightness(1);
+    }
 }
 
 .MultiplayerDock {
