@@ -323,23 +323,41 @@
         try {
             const Url = new URL(Route, GetBaseUrl());
             const PageName = Url.pathname.split("/").pop() || "main.html";
-            return PageName === "dialog.html" && !Url.searchParams.get("room");
+            return PageName === "dialog.html"
+                && Boolean(Url.searchParams.get("stage"))
+                && !Url.searchParams.get("room");
         } catch {
             return false;
         }
     }
 
+    function SetGameplayPauseButtonIcon(Paused) {
+        if (!GameplayPauseButton) return;
+
+        GameplayPauseButton.innerHTML = Paused
+            ? '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M8 5.2 19 12 8 18.8V5.2Z"></path></svg>'
+            : '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="7" y="5.5" width="3.5" height="13" rx="1"></rect><rect x="13.5" y="5.5" width="3.5" height="13" rx="1"></rect></svg>';
+    }
+
     function SyncGameplayPauseButton(Options = {}) {
         if (!GameplayPauseButton) return;
 
-        const Visible = IsSinglePlayerGameRoute();
-        GameplayPauseButton.hidden = !Visible;
+        let Ready = false;
+        if (IsSinglePlayerGameRoute() && ActiveFrame?.dataset.storyLoaded === "1") {
+            const ActiveRoute = ActiveFrame.dataset.storyRoute || RouteFromFrame(ActiveFrame);
+            Ready = ActiveFrame === GetFrameForRoute(CurrentRoute)
+                && ActiveRoute === CurrentRoute
+                && ActiveRoute === RouteFromFrame(ActiveFrame);
+        }
 
-        if (!Visible) {
+        GameplayPauseButton.hidden = !Ready;
+
+        if (!Ready) {
             GameplayPauseButton.classList.remove("IsPaused");
             GameplayPauseButton.setAttribute("aria-pressed", "false");
             GameplayPauseButton.setAttribute("aria-label", "Pause game");
             GameplayPauseButton.title = "Pause game";
+            SetGameplayPauseButtonIcon(false);
             return;
         }
 
@@ -348,12 +366,17 @@
         GameplayPauseButton.setAttribute("aria-pressed", Paused ? "true" : "false");
         GameplayPauseButton.setAttribute("aria-label", Paused ? "Resume game" : "Pause game");
         GameplayPauseButton.title = Paused ? "Resume game" : "Pause game";
+        SetGameplayPauseButtonIcon(Paused);
     }
 
     function ToggleGameplayPause() {
-        if (!IsSinglePlayerGameRoute()) return;
+        if (!GameplayPauseButton || GameplayPauseButton.hidden) return;
+        if (!IsSinglePlayerGameRoute() || ActiveFrame?.dataset.storyLoaded !== "1") return;
+        const ActiveRoute = RouteFromFrame(ActiveFrame);
+        if (!ActiveRoute || ActiveRoute !== CurrentRoute) return;
+
         try {
-            ActiveFrame?.contentWindow?.dispatchEvent(
+            ActiveFrame.contentWindow.dispatchEvent(
                 new ActiveFrame.contentWindow.CustomEvent("StoryShellPauseToggle")
             );
         } catch {}
@@ -388,7 +411,7 @@
         ActiveFrame = Frame;
         if (PendingFrame === Frame) PendingFrame = null;
 
-        SyncGameplayPauseButton();
+        SyncGameplayPauseButton({ paused: false });
         UpdateTitle(Frame);
         DispatchFrameEvent(Frame, "StoryShellActivate", Route);
         return true;
@@ -419,6 +442,7 @@
 
         Frame.dataset.storyLoaded = "1";
         WireFrameInteractionBridge(Frame);
+        if (Frame !== ActiveFrame) SyncGameplayPauseButton({ paused: false });
         if (Frame === InitialFrame) FlushAudioHost();
 
         if (ActualRoute !== PreviousRoute) {
@@ -518,6 +542,7 @@
         }
 
         CurrentRoute = Normalized;
+        GameplayPauseButton?.setAttribute("aria-busy", "true");
         SyncGameplayPauseButton();
         ApplyRouteMusic(Normalized);
 
@@ -526,10 +551,12 @@
         if (Frame.dataset.storyLoaded === "1") {
             PendingFrame = null;
             ActivateFrame(Frame, Normalized);
+            GameplayPauseButton?.removeAttribute("aria-busy");
         } else {
             PendingFrame = Frame;
         }
 
+        if (Frame.dataset.storyLoaded !== "1") SyncGameplayPauseButton();
         return true;
     }
 
