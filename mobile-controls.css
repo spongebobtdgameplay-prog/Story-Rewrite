@@ -50,7 +50,7 @@
     }
 
     .MobileGameControls:not(.HasChat) {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
+        grid-template-columns: repeat(5, minmax(0, 1fr));
     }
 
     .MobilePowerTray {
@@ -135,6 +135,12 @@
 
     .MobileControlButton.IsHidden {
         display: none;
+    }
+
+    #MobilePauseButton.IsActive {
+        color: #2a170d;
+        border-color: rgba(255, 219, 158, .55);
+        background: linear-gradient(180deg, #e7bc72, #b87535);
     }
 
     .MobilePowerAction {
