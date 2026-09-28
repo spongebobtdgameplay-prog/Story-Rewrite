@@ -13,6 +13,8 @@ let GameChatUnreadCount = 0;
 let NextStageOverride = "";
 let MultiplayerLeaveBusy = false;
 let LevelLeaveBusy = false;
+let GamePaused = false;
+let GamePauseReason = "";
 const LevelLeaveReminderKey = "StoryRewriteSkipLevelLeaveWarningV1";
 
 window.addEventListener("DOMContentLoaded", async () => {
@@ -47,9 +49,85 @@ window.addEventListener("DOMContentLoaded", async () => {
         BindActions();
         RenderStage();
 
+        if (RoomCode) {
+            SetGamePaused(false);
+            const PauseButton = document.getElementById("PauseButton");
+            if (PauseButton) PauseButton.hidden = true;
+        } else if (document.hidden) {
+            SetGamePaused(true, "inactive");
+        }
+
         if (RoomCode) StartMultiplayer();
     } catch (Error) {
         document.getElementById("GameRoot").innerHTML = `<div class="Panel" style="padding:28px">${EscapeText(Error.message)}</div>`;
+    }
+});
+
+function IsGameplayPauseEligible() {
+    if (RoomCode || !Stage) return false;
+    if (document.getElementById("CompleteOverlay")?.classList.contains("Show")) return false;
+    if (document.getElementById("GameOverOverlay")?.classList.contains("Show")) return false;
+    if (document.getElementById("TbcOverlay")?.classList.contains("Show")) return false;
+    return true;
+}
+
+function RenderGamePauseState() {
+    const Overlay = document.getElementById("PauseOverlay");
+    const PauseButton = document.getElementById("PauseButton");
+    const ResumeButton = document.getElementById("ResumeGameButton");
+
+    if (Overlay) {
+        Overlay.classList.toggle("IsOpen", GamePaused && !RoomCode);
+        Overlay.setAttribute("aria-hidden", GamePaused && !RoomCode ? "false" : "true");
+    }
+
+    if (PauseButton) {
+        PauseButton.textContent = GamePaused ? "Paused" : "Pause";
+        PauseButton.setAttribute("aria-pressed", GamePaused ? "true" : "false");
+        PauseButton.hidden = Boolean(RoomCode);
+    }
+
+    if (ResumeButton && GamePaused) {
+        requestAnimationFrame(() => ResumeButton.focus());
+    }
+}
+
+function SetGamePaused(Paused, Reason = "manual") {
+    if (RoomCode) return;
+
+    const NextPaused = Boolean(Paused);
+    if (NextPaused === GamePaused) {
+        RenderGamePauseState();
+        return;
+    }
+
+    GamePaused = NextPaused;
+    GamePauseReason = NextPaused ? String(Reason || "manual") : "";
+
+    window.dispatchEvent(new CustomEvent("StoryGamePauseChange", {
+        detail: {
+            paused: GamePaused,
+            reason: GamePauseReason
+        }
+    }));
+
+    if (GamePaused) {
+        StoryAudio?.PauseForGameplay?.();
+    } else {
+        StoryAudio?.ResumeForGameplay?.();
+    }
+
+    RenderGamePauseState();
+}
+
+function ToggleGamePaused() {
+    if (!IsGameplayPauseEligible()) return;
+    SetGamePaused(!GamePaused, "manual");
+}
+
+document.addEventListener("visibilitychange", () => {
+    if (document.hidden) {
+        if (IsGameplayPauseEligible()) SetGamePaused(true, "inactive");
     }
 });
 
@@ -142,6 +220,8 @@ async function RequestLeaveCurrentLevel(TargetPage = "levels.html") {
 }
 
 function BindActions() {
+    document.getElementById("PauseButton")?.addEventListener("click", ToggleGamePaused);
+    document.getElementById("ResumeGameButton")?.addEventListener("click", () => SetGamePaused(false, "manual"));
     document.getElementById("CheckButton").addEventListener("click", CheckStage);
     document.getElementById("RestoreButton").addEventListener("click", RestoreStage);
     document.getElementById("BackButton").addEventListener("click", () => RequestLeaveCurrentLevel("levels.html"));
