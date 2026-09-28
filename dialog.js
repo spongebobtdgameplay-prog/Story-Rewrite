@@ -75,6 +75,13 @@ function RenderGamePauseState() {
     const Overlay = document.getElementById("PauseOverlay");
     const PauseButton = document.getElementById("PauseButton");
     const ResumeButton = document.getElementById("ResumeGameButton");
+    const PauseGlyph = document.querySelector(".PauseGlyph svg");
+
+    if (PauseGlyph) {
+        PauseGlyph.innerHTML = GamePaused
+            ? '<path d="M9 6.5 22 16 9 25.5V6.5Z"></path>'
+            : '<rect x="7" y="6.5" width="4.5" height="19" rx="1.5"></rect><rect x="16.5" y="6.5" width="4.5" height="19" rx="1.5"></rect>';
+    }
 
     if (Overlay) {
         Overlay.classList.toggle("IsOpen", GamePaused && !RoomCode);
@@ -132,6 +139,12 @@ function ToggleGamePaused() {
 }
 
 window.addEventListener("StoryShellPauseToggle", ToggleGamePaused);
+window.addEventListener("StoryShellActivate", () => {
+    if (!RoomCode && Stage) {
+        SetGamePaused(false, "route");
+        RenderGamePauseState();
+    }
+});
 
 document.addEventListener("visibilitychange", () => {
     if (document.hidden) {
@@ -338,10 +351,13 @@ function RenderLives() {
     const Container = document.getElementById("LivesHearts");
     Container.innerHTML = "";
 
+    const HeartPath = "M12 20.7 3.5 12.8C.9 10.4 1.1 6.5 3.9 4.5c2.45-1.77 5.73-1.32 8.1.86 2.37-2.18 5.65-2.63 8.1-.86 2.8 2 3 5.9.4 8.3L12 20.7Z";
+
     for (let Index = 0; Index < MaxLives; Index += 1) {
         const Heart = document.createElement("span");
         Heart.className = `LifeHeart ${Index < Lives ? "" : "Empty"}`;
-        Heart.textContent = "♥";
+        Heart.setAttribute("aria-hidden", "true");
+        Heart.innerHTML = `<svg viewBox="0 0 24 24" focusable="false"><path d="${HeartPath}"></path></svg>`;
         Container.appendChild(Heart);
     }
 }
