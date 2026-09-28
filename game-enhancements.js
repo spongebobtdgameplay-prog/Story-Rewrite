@@ -211,10 +211,14 @@ async function UseRevive() {
 
         const Result = await ApiRequest("/api/revive", { method: "POST" });
         Save = NormalizeSave(Data, Result.save);
-        RemovedSentences.clear();
         LastCheckFailed = false;
         document.getElementById("GameOverOverlay")?.classList.remove("Show");
         ResetStoryDangerAfterReviveV12();
+        SetStoryStatusV12(
+            RemovedSentences.size
+                ? "Revived. Your crossed-out choices are still in place."
+                : "Revived. Your page is ready to continue."
+        );
         StoryAudio?.PlayMusic?.(World?.theme || "menu");
         RenderStage();
     } catch (Error) {
