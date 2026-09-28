@@ -398,6 +398,24 @@ body.LevelSelectPage {
     box-shadow: none;
 }
 
+.StageNodeLock {
+    width: 30px;
+    height: 30px;
+    display: grid;
+    place-items: center;
+}
+
+.StageNodeLock svg {
+    width: 27px;
+    height: 27px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    opacity: .86;
+}
+
 .StageNode.Unlocking {
     animation: UnlockNode 1.15s ease both;
 }
