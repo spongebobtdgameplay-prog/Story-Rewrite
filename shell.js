@@ -31,6 +31,7 @@
     let CurrentMusicName = "";
     let CurrentAudioSettings = {};
     let CurrentHistoryDepth = 0;
+    let GameplayAudioPaused = false;
 
     function GetBaseUrl() {
         return new URL(".", window.location.href);
@@ -485,6 +486,28 @@
         return LoadRoute(Normalized, Options);
     }
 
+    function PauseMusicForGameplay() {
+        GameplayAudioPaused = true;
+        const Host = GetAudioHost();
+        if (Host && typeof Host.PauseMusicForGameplay === "function") {
+            return Host.PauseMusicForGameplay();
+        }
+        return false;
+    }
+
+    function ResumeMusicForGameplay() {
+        GameplayAudioPaused = false;
+        const Host = GetAudioHost();
+        if (Host && typeof Host.ResumeMusicForGameplay === "function") {
+            return Host.ResumeMusicForGameplay();
+        }
+        return false;
+    }
+
+    function IsGameplayAudioPaused() {
+        return GameplayAudioPaused;
+    }
+
     function Exit(Value, Replace = false) {
         const Url = new URL(String(Value || "auth.html"), GetBaseUrl());
         if (Url.pathname.endsWith("/auth.html")) StopMusic();
@@ -522,6 +545,9 @@
         Exit,
         Back,
         ConfigureAudio,
+        PauseMusicForGameplay,
+        ResumeMusicForGameplay,
+        IsGameplayAudioPaused,
         SetKeepMusicPlaying,
         PlaySound,
         PlayMusic,
