@@ -353,7 +353,6 @@
         GameplayPauseButton.hidden = !Ready;
 
         if (!Ready) {
-            ShellPauseState = false;
             GameplayPauseButton.classList.remove("IsPaused");
             GameplayPauseButton.setAttribute("aria-pressed", "false");
             GameplayPauseButton.setAttribute("aria-label", "Pause game");
