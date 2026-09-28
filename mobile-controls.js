@@ -187,6 +187,8 @@ function SyncMobileControls() {
     const CheckButton = document.getElementById("MobileCheckButton");
     const RestoreButton = document.getElementById("MobileRestoreButton");
     const MapButton = document.getElementById("MobileMapButton");
+    const PauseSource = document.getElementById("PauseButton");
+    const PauseButton = document.getElementById("MobilePauseButton");
     const ChatButton = document.getElementById("MobileChatButton");
     const PowerButton = document.getElementById("MobilePowerButton");
     const PowerTray = document.getElementById("MobilePowerTray");
@@ -197,6 +199,11 @@ function SyncMobileControls() {
     if (CheckButton) CheckButton.disabled = Boolean(CheckSource?.disabled);
     if (RestoreButton) RestoreButton.disabled = Boolean(RestoreSource?.disabled);
     if (MapButton) MapButton.disabled = Boolean(MapSource?.disabled);
+    if (PauseButton) {
+        PauseButton.classList.toggle("IsHidden", Boolean(PauseSource?.hidden));
+        PauseButton.setAttribute("aria-label", PauseSource?.getAttribute("aria-label") || "Pause game");
+        PauseButton.classList.toggle("IsActive", PauseSource?.getAttribute("aria-pressed") === "true");
+    }
 
     for (const PowerName of ["reveal", "undo", "seal"]) {
         const Source = document.querySelector(`[data-story-power="${PowerName}"]`);
