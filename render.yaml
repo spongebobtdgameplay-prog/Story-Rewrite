@@ -14,5 +14,19 @@ services:
         generateValue: true
       - key: ALLOWED_ORIGINS
         value: https://spongebobtdgameplay-prog.github.io,https://story-rewrite-backend.onrender.com
+      - key: LOGIN_IP_MAX_FAILURES
+        value: "10"
+      - key: LOGIN_ACCOUNT_MAX_FAILURES
+        value: "8"
+      - key: LOGIN_IP_WINDOW_MS
+        value: "600000"
+      - key: LOGIN_ACCOUNT_WINDOW_MS
+        value: "900000"
+      - key: LOGIN_LOCKOUT_MS
+        value: "900000"
+      - key: LOGIN_DELAY_BASE_MS
+        value: "500"
+      - key: LOGIN_DELAY_MAX_MS
+        value: "10000"
       - key: DATABASE_URL
         sync: false
