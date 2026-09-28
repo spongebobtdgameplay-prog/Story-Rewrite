@@ -241,8 +241,6 @@
             return;
         }
 
-        if (PageForRoute(Route) === "account.html" && CurrentMusicName) return;
-
         const DesiredMusic = MusicForRoute(Route);
         if (!DesiredMusic) return;
         PlayMusic(DesiredMusic);
