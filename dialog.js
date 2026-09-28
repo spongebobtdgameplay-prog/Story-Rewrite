@@ -82,9 +82,11 @@ function RenderGamePauseState() {
     }
 
     if (PauseButton) {
-        PauseButton.textContent = GamePaused ? "Paused" : "Pause";
         PauseButton.setAttribute("aria-pressed", GamePaused ? "true" : "false");
+        PauseButton.setAttribute("aria-label", GamePaused ? "Resume game" : "Pause game");
+        PauseButton.title = GamePaused ? "Resume game" : "Pause game";
         PauseButton.hidden = Boolean(RoomCode);
+        PauseButton.classList.toggle("IsPaused", GamePaused);
     }
 
     if (ResumeButton && GamePaused) {
