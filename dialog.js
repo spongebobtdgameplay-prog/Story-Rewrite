@@ -121,6 +121,15 @@ async function RequestLeaveCurrentLevel(TargetPage = "levels.html") {
 
         if (!Confirmed) return;
 
+        const Shell = typeof GetPersistentStoryShell === "function"
+            ? GetPersistentStoryShell()
+            : null;
+
+        if (Shell?.Back) {
+            Shell.Back(TargetPage);
+            return;
+        }
+
         if (typeof StoryNavigate === "function") {
             StoryNavigate(TargetPage);
             return;
