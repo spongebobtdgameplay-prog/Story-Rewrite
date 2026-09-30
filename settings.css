@@ -1,11 +1,13 @@
 html:has(body.StorySettingsPage){background:#8d6849}
 body.StorySettingsPage{min-height:100vh;background:transparent;color:#f7e7c7}
 .StorySettingsShell{padding-bottom:48px}
+.StorySettingsHeader{display:grid;grid-template-columns:54px minmax(0,1fr);align-items:center;gap:14px;margin-bottom:18px}
+.StorySettingsHeader h1{margin:0;text-align:left;font-family:Georgia,'Times New Roman',serif;color:#f7e7c7;font-size:clamp(1.55rem,4vw,2.2rem)}
+
 .StorySettingsHeader h1{font-family:Georgia,'Times New Roman',serif}
 .StorySettingsTitle{display:inline-flex;align-items:center;justify-content:center;gap:10px}
 .StorySettingsCog{display:inline-grid;place-items:center;width:36px;height:36px;color:#e7bb72;vertical-align:middle}
 .StorySettingsCog svg{width:31px;height:31px;fill:none;stroke:currentColor;stroke-width:1.55;stroke-linecap:round;stroke-linejoin:round;transform-origin:50% 50%;animation:StorySettingsCogSpin 8s linear infinite}
-.StorySettingsBuild{color:#a17c52;font:900 8px/1.2 system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase}
 .StorySettingsCard{border-radius:24px}
 .StorySettingsIntro{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;padding:23px 26px;border-bottom:1px solid rgba(221,169,108,.15)}
 .StorySettingsIntro h2{margin:4px 0 5px;color:#fff0d3;font:900 clamp(1.35rem,3vw,1.85rem)/1.05 Georgia,'Times New Roman',serif}
@@ -30,6 +32,8 @@ body.StorySettingsPage{min-height:100vh;background:transparent;color:#f7e7c7}
 @keyframes StorySettingsCogSpin{to{transform:rotate(360deg)}}
 @media(prefers-reduced-motion:reduce){.StorySettingsCog svg{animation:none}}
 @media(max-width:700px){
+ .StorySettingsHeader{grid-template-columns:44px minmax(0,1fr)}
+
  .StorySettingsIntro{align-items:flex-start;flex-direction:column;padding:20px}
  .StorySettingsApply{white-space:normal}
  .StorySettingRow,.StorySettingsRows .AccountToggleRow{grid-template-columns:1fr;gap:12px;padding:15px 8px}
@@ -37,4 +41,8 @@ body.StorySettingsPage{min-height:100vh;background:transparent;color:#f7e7c7}
  .StorySettingsStatusRow{padding-left:20px;padding-right:20px}
  .StorySettingsCog{width:31px;height:31px}.StorySettingsCog svg{width:27px;height:27px}
 }
-.StorySettingsBuild{display:block;text-align:right;align-self:start;margin-top:4px;color:#a17c52;font:900 8px/1.2 system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase}
+
+html,body,.StorySettingsPage .AccountSettingsCard,.StorySettingsPage .StorySettingsCard{scrollbar-color:#6d472e transparent;scrollbar-width:thin}
+html::-webkit-scrollbar,body::-webkit-scrollbar,.StorySettingsPage .AccountSettingsCard::-webkit-scrollbar,.StorySettingsPage .StorySettingsCard::-webkit-scrollbar{width:9px;height:9px}
+html::-webkit-scrollbar-track,body::-webkit-scrollbar-track,.StorySettingsPage .AccountSettingsCard::-webkit-scrollbar-track,.StorySettingsPage .StorySettingsCard::-webkit-scrollbar-track{background:transparent}
+html::-webkit-scrollbar-thumb,body::-webkit-scrollbar-thumb,.StorySettingsPage .AccountSettingsCard::-webkit-scrollbar-thumb{background:#6d472e;border-radius:999px;border:2px solid transparent;background-clip:padding-box}
