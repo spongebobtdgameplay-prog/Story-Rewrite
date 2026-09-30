@@ -97,9 +97,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     KeepMusicState = document.getElementById("KeepMusicPlayingState");
     Status = document.getElementById("SettingsStatus");
 
-    document.getElementById("SettingsBuild").textContent =
-        typeof STORY_BUILD_VERSION !== "undefined" ? `Build ${STORY_BUILD_VERSION}` : "Settings";
-
     RenderKeepMusicPlaying();
     ApplyKeepMusicPlaying(ReadKeepMusicPlaying());
 
