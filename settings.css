@@ -1,53 +1,39 @@
-html,body{min-height:100%;margin:0}
-body.StorySettingsPage{min-height:100vh;color:#f2e4ce;background:
-radial-gradient(circle at 50% -15%,rgba(231,194,135,.22),transparent 34%),
-linear-gradient(135deg,#765438 0%,#5a3b26 48%,#382217 100%);
-}
-.StorySettingsFrame{width:min(980px,calc(100vw - 32px));margin:0 auto;padding:32px 0 56px}
-.StorySettingsTop{min-height:92px;display:grid;grid-template-columns:48px minmax(0,1fr) auto;align-items:center;gap:18px;padding:18px 22px;border:1px solid rgba(247,226,192,.17);background:linear-gradient(135deg,#1c120c,#110b08);box-shadow:0 20px 55px rgba(18,8,3,.24)}
-.StorySettingsBack{width:44px;height:44px}
-.StorySettingsHeading{display:flex;align-items:center;gap:14px;min-width:0}
-.StorySettingsCog{width:48px;height:48px;display:grid;place-items:center;color:#e0ae63;border:1px solid rgba(224,174,99,.42);background:rgba(224,174,99,.06)}
-.StorySettingsCog svg{width:29px;height:29px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;transform-origin:50% 50%;animation:StorySettingsCogSpin 8s linear infinite}
-.StorySettingsKicker{margin-bottom:3px;color:#b77837;font:900 9px/1 system-ui,sans-serif;letter-spacing:.2em}
-.StorySettingsHeading h1{margin:0;color:#fff0d4;font-size:clamp(32px,5vw,46px);line-height:.95}
-.StorySettingsHeading p{margin:5px 0 0;color:#9e8a72;font-size:12px}
-.StorySettingsVersion{align-self:start;margin-top:4px;color:#6f5e4b;font:800 8px/1.2 ui-monospace,SFMono-Regular,Consolas,monospace;letter-spacing:.08em;text-transform:uppercase}
-.StorySettingsPanel{margin-top:14px;overflow:hidden;border:1px solid rgba(247,226,192,.15);background:#140d09;box-shadow:0 24px 65px rgba(14,6,3,.25)}
-.StorySettingsPanelHead{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;padding:25px 28px 21px;border-bottom:1px solid rgba(247,226,192,.09)}
-.StorySettingsSectionLabel{color:#b97b3b;font:900 8px/1 system-ui,sans-serif;letter-spacing:.2em}
-.StorySettingsPanelHead h2{margin:5px 0 0;color:#ffefd3;font-size:27px;line-height:1}
-.StorySettingsHint{color:#746553;font-size:10px}
-.StorySetting{display:grid;grid-template-columns:minmax(0,1fr) minmax(350px,48%);align-items:center;gap:35px;padding:24px 28px;border-bottom:1px solid rgba(247,226,192,.075)}
-.StorySettingText{min-width:0}
-.StorySettingTitle{color:#f5e4c8;font-size:15px;font-weight:900}
-.StorySettingDescription{margin-top:6px;color:#897764;font-size:11px;line-height:1.45}
-.StorySettingControl{display:grid;grid-template-columns:minmax(0,1fr) 66px;gap:14px;align-items:center}
-.StorySettingControl input[type=range]{width:100%;height:26px;accent-color:#d9a75f;cursor:pointer}
-.StorySettingControl output{padding:9px 6px;color:#e8c78f;border:1px solid rgba(218,167,95,.28);background:rgba(218,167,95,.055);font:900 11px/1 ui-monospace,SFMono-Regular,Consolas,monospace;text-align:center}
-.StorySettingControl input[type=range]:focus-visible{outline:2px solid rgba(221,173,102,.55);outline-offset:4px}
-.StorySettingToggleRow{min-height:76px}
-.StorySwitch{width:112px;height:40px;display:grid;grid-template-columns:1fr 28px;align-items:center;gap:8px;padding:4px;border:1px solid rgba(247,226,192,.15);background:#21150e;color:#c3af92;cursor:pointer}
-.StorySwitchState{font:900 9px/1 ui-monospace,SFMono-Regular,Consolas,monospace;letter-spacing:.1em;text-align:center}
-.StorySwitchKnob{width:28px;height:28px;border-radius:50%;background:#6e5c4c;box-shadow:inset 0 0 0 1px rgba(255,255,255,.07);transition:transform .2s ease,background .2s ease}
-.StorySwitch[aria-checked=true]{border-color:rgba(222,173,102,.48);background:rgba(222,173,102,.08);color:#f0d099}
-.StorySwitch[aria-checked=true] .StorySwitchKnob{background:#dfac62;transform:translateX(-76px)}
-.StorySwitch[aria-checked=true] .StorySwitchState{grid-column:2;grid-row:1}
-.StorySettingsBottom{display:flex;align-items:center;gap:8px;padding:14px 28px;color:#6e5e4e;font-size:10px;background:rgba(255,247,226,.018)}
-.StorySettingsSaveMark{width:6px;height:6px;border-radius:50%;background:#8fa66f;box-shadow:0 0 9px rgba(143,166,111,.28)}
-#SettingsStatus{min-height:14px;color:#8d7a65}
+html:has(body.StorySettingsPage){background:#8d6849}
+body.StorySettingsPage{min-height:100vh;background:transparent;color:#f7e7c7}
+.StorySettingsShell{padding-bottom:48px}
+.StorySettingsHeader h1{font-family:Georgia,'Times New Roman',serif}
+.StorySettingsTitle{display:inline-flex;align-items:center;justify-content:center;gap:10px}
+.StorySettingsCog{display:inline-grid;place-items:center;width:36px;height:36px;color:#e7bb72;vertical-align:middle}
+.StorySettingsCog svg{width:31px;height:31px;fill:none;stroke:currentColor;stroke-width:1.55;stroke-linecap:round;stroke-linejoin:round;transform-origin:50% 50%;animation:StorySettingsCogSpin 8s linear infinite}
+.StorySettingsBuild{color:#a17c52;font:900 8px/1.2 system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase}
+.StorySettingsCard{border-radius:24px}
+.StorySettingsIntro{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;padding:23px 26px;border-bottom:1px solid rgba(221,169,108,.15)}
+.StorySettingsIntro h2{margin:4px 0 5px;color:#fff0d3;font:900 clamp(1.35rem,3vw,1.85rem)/1.05 Georgia,'Times New Roman',serif}
+.StorySettingsIntro p{margin:0;color:#caa97e;font-size:.88rem;line-height:1.4}
+.StorySettingsApply{padding-bottom:2px;color:#9f8060;font-size:.72rem;font-weight:800;white-space:nowrap}
+.StorySettingsRows{padding:10px 18px 4px}
+.StorySettingRow{grid-template-columns:minmax(0,1fr) minmax(320px,42%);padding:16px 8px;border-bottom:1px solid rgba(221,169,108,.11)}
+.StorySettingRow:last-child{border-bottom:0}
+.StorySettingCopy{min-width:0}
+.StorySettingCopy label{display:block;color:#f0d3a9;font-size:1.02rem;font-weight:900}
+.StorySettingCopy small{display:block;margin-top:5px;color:#b9956e;font:700 12px/1.4 system-ui,sans-serif}
+.StoryVolumeControl{display:grid;grid-template-columns:minmax(0,1fr) 58px;align-items:center;gap:12px}
+.StoryVolumeControl input[type=range]{width:100%;accent-color:#d9a65d}
+.StoryVolumeControl input[type=range]:focus-visible{outline:3px solid #f2c77f;outline-offset:3px}
+.StoryVolumeControl output{display:block;padding:8px 6px;color:#f1d19c;border:1px solid #765035;background:#24130d;font:900 12px/1 Georgia,'Times New Roman',serif;text-align:center}
+.StorySettingsRows .AccountToggleRow{grid-template-columns:minmax(0,1fr) auto}
+.StorySettingsRows .AccountToggleButton{min-width:106px}
+.StorySettingsStatusRow{display:flex;align-items:center;gap:8px;min-height:42px;padding:4px 26px 15px;color:#9d8161;font-size:.78rem}
+.StorySettingsSaved{width:7px;height:7px;flex:0 0 auto;border-radius:50%;background:#91a96f;box-shadow:0 0 8px rgba(145,169,111,.32)}
 #SettingsStatus.Bad{color:#d89589}
 #SettingsStatus.Good{color:#a9c98d}
 @keyframes StorySettingsCogSpin{to{transform:rotate(360deg)}}
 @media(prefers-reduced-motion:reduce){.StorySettingsCog svg{animation:none}}
 @media(max-width:700px){
- .StorySettingsFrame{width:min(100% - 20px,980px);padding-top:12px}
- .StorySettingsTop{grid-template-columns:42px minmax(0,1fr);gap:12px;padding:15px}
- .StorySettingsVersion{grid-column:2;margin-top:-4px}
- .StorySettingsCog{width:42px;height:42px}
- .StorySettingsCog svg{width:25px;height:25px}
- .StorySettingsPanelHead{padding:20px}
- .StorySetting{grid-template-columns:1fr;gap:15px;padding:21px 20px}
- .StorySettingControl{grid-template-columns:minmax(0,1fr) 62px}
- .StorySettingsBottom{padding:13px 20px}
+ .StorySettingsIntro{align-items:flex-start;flex-direction:column;padding:20px}
+ .StorySettingsApply{white-space:normal}
+ .StorySettingRow,.StorySettingsRows .AccountToggleRow{grid-template-columns:1fr;gap:12px;padding:15px 8px}
+ .StoryVolumeControl{grid-template-columns:minmax(0,1fr) 58px}
+ .StorySettingsStatusRow{padding-left:20px;padding-right:20px}
+ .StorySettingsCog{width:31px;height:31px}.StorySettingsCog svg{width:27px;height:27px}
 }
