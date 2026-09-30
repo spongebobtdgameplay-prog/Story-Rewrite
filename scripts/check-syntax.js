@@ -41,7 +41,7 @@ function CheckDomEventBindings() {
                 CollectHtmlFiles(FullPath);
             } else if (Entry.isFile() && Entry.name.endsWith(".html")) {
                 const Html = fs.readFileSync(FullPath, "utf8");
-                for (const Match of Html.matchAll(/\\bid=["']([^"']+)["']/g)) {
+                for (const Match of Html.matchAll(/\bid=["']([^"']+)["']/g)) {
                     HtmlIds.add(Match[1]);
                 }
             }
@@ -50,7 +50,7 @@ function CheckDomEventBindings() {
 
     CollectHtmlFiles(Root);
 
-    const BindingPattern = /document\\.getElementById\\(["']([^"']+)["']\\)\\.addEventListener\\s*\\(/g;
+    const BindingPattern = /document\.getElementById\(["']([^"']+)["']\)\.addEventListener\s*\(/g;
     for (const File of JavaScriptFiles) {
         const Source = fs.readFileSync(File, "utf8");
         for (const Match of Source.matchAll(BindingPattern)) {
