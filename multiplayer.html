@@ -236,26 +236,20 @@ const MultiplayerFreshToken = Date.now().toString(36);
     </section>
 </div>
 
-<script>
-for (const ScriptName of [
-    "server-config.js",
-    "network.js",
-    "app.js",
-    "audio.js",
-    "real-audio.js",
-    "shell-ui.js",
-    "multiplayer.js",
-    "multiplayer-polish.js",
-    "multiplayer-session-ui.js",
-    "multiplayer-connection.js",
-    "moderation-version.js",
-    "host-controls.js",
-    "ai-chat.js",
-    "reporting.js",
-    "host-moderation-v20.js"
-]) {
-    document.write(`<script src="${ScriptName}?fresh=${MultiplayerFreshToken}"><\/script>`);
-}
-</script>
+<script src="server-config.js?v=20260930-1"></script>
+<script src="network.js?v=20260930-1"></script>
+<script src="app.js?v=20260930-1"></script>
+<script src="audio.js?v=20260930-1"></script>
+<script src="real-audio.js?v=20260930-1"></script>
+<script src="shell-ui.js?v=20260930-2"></script>
+<script src="multiplayer.js?v=20260930-1"></script>
+<script src="multiplayer-polish.js?v=20260930-1"></script>
+<script src="multiplayer-session-ui.js?v=20260930-1"></script>
+<script src="multiplayer-connection.js?v=20260930-1"></script>
+<script src="moderation-version.js?v=20260930-1"></script>
+<script src="host-controls.js?v=20260930-1"></script>
+<script src="ai-chat.js?v=20260930-1"></script>
+<script src="reporting.js?v=20260930-1"></script>
+<script src="host-moderation-v20.js?v=20260930-1"></script>
 </body>
 </html>
