@@ -35,6 +35,9 @@ const MainFreshToken = Date.now().toString(36);
         <button class="UiButton" type="button" data-story-go="levels.html">Worlds</button>
         <button class="UiButton" type="button" data-story-go="multiplayer.html">Multiplayer</button>
         <button class="UiButton" type="button" data-story-go="tutorial.html">Tutorial</button>
+        <button class="UiButton SettingsNavButton" type="button" data-story-go="settings.html" aria-label="Open Settings" title="Settings">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.4 13.2 6l2.8.4-2 2 .5 2.8-2.5-1.4-2.5 1.4.5-2.8-2-2 2.8-.4L12 3.4Zm0 9.1a4.3 4.3 0 1 0 0 8.6 4.3 4.3 0 0 0 0-8.6Z"/></svg>
+        </button>
         <button class="UiButton AccountNavButton" id="AccountButton" type="button" data-story-go="account.html" data-account-icon>
             <span id="AccountButtonLabel">Account</span>
         </button>
@@ -52,6 +55,10 @@ const MainFreshToken = Date.now().toString(36);
                 <button class="PrimaryButton" type="button" data-story-go="multiplayer.html">Play Multiplayer</button>
                 <button class="SecondaryButton" type="button" data-story-go="levels.html">World Select</button>
                 <button class="SecondaryButton" type="button" data-story-go="tutorial.html">How to Play</button>
+                <button class="SecondaryButton SettingsMainButton" type="button" data-story-go="settings.html">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.4 13.2 6l2.8.4-2 2 .5 2.8-2.5-1.4-2.5 1.4.5-2.8-2-2 2.8-.4L12 3.4Zm0 9.1a4.3 4.3 0 1 0 0 8.6 4.3 4.3 0 0 0 0-8.6Z"/></svg>
+                    Settings
+                </button>
             </div>
             <div id="LoadError" class="StatusText Bad Hidden"></div>
         </div>
