@@ -168,12 +168,6 @@ document.addEventListener("visibilitychange", () => {
     }
 });
 
-window.addEventListener("pagehide", () => {
-    if (RoomCode && MultiplayerSocket) {
-        MultiplayerSocket.disconnect();
-        MultiplayerSocket = null;
-    }
-});
 
 async function LeaveMultiplayerStoryToLobby() {
     if (MultiplayerLeaveBusy) return;
