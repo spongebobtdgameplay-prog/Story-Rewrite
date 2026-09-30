@@ -1,9 +1,9 @@
-@import url("./looks-base.css?v=20260930-1");
-@import url("./looks-game.css?v=20260930-1");
-@import url("./looks-worlds.css?v=20260930-1");
-@import url("./looks-responsive.css?v=20260930-2");
-
 /* Compatibility entry point.
-   The original looks.css URL remains valid while the stylesheet is split
-   into smaller ordered layers above.
+   Production pages load looks1.css through looks4.css directly so the
+   browser can discover all visual layers immediately and avoid @import
+   request waterfalls.
 */
+@import url("./looks1.css?v=20260930-1");
+@import url("./looks2.css?v=20260930-1");
+@import url("./looks3.css?v=20260930-1");
+@import url("./looks4.css?v=20260930-1");
