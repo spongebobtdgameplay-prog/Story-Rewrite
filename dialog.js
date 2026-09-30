@@ -534,12 +534,10 @@ async function ShowTrail(TargetStageId, SelectOnly = false) {
     document.getElementById("TravelCaption").textContent = SelectOnly ? "The current page closes." : Target ? Target.name : "There are no recovered pages beyond this point.";
     document.getElementById("TravelTarget").textContent = SelectOnly ? "☰" : Target ? Target.levelNumber : "?";
 
-    Overlay.querySelectorAll(".TrailDot").forEach(Dot => {
-        Dot.style.animation = "none";
-        void Dot.offsetWidth;
-        Dot.style.animation = "";
-    });
-
+    // Let the browser complete the hidden state before showing the overlay again.
+    // This restarts the CSS animation without forcing a synchronous layout/reflow.
+    Overlay.classList.remove("Show");
+    await new Promise(Resolve => requestAnimationFrame(Resolve));
     Overlay.classList.add("Show");
     await Delay(1500);
     Overlay.classList.remove("Show");
