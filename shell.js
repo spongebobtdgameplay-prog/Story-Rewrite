@@ -596,6 +596,10 @@
         const Frame = GetFrameForRoute(Normalized);
         const PreviousRoute = CurrentRoute;
 
+        if (IsSinglePlayerGameRoute(Normalized) && PreviousRoute !== Normalized) {
+            ShellPauseState = false;
+        }
+
         CurrentRoute = Normalized;
         GameplayPauseButton?.setAttribute("aria-busy", "true");
         SyncGameplayPauseButton();
