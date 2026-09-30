@@ -70,12 +70,25 @@
         return `#${encodeURIComponent(Route)}`;
     }
 
+    function GetShellAuthMarker() {
+        try {
+            const Token = localStorage.getItem("StoryRewriteAuthToken")
+                || localStorage.getItem("StoryRewriteSessionToken")
+                || "";
+            if (!Token) return "";
+            return `${Token.length}:${Token.slice(-8)}`;
+        } catch {
+            return "";
+        }
+    }
+
     function ReadLastShellState() {
         try {
             const State = JSON.parse(localStorage.getItem(LastShellStateKey) || "null");
             const Route = NormalizeRoute(State?.route || "");
             const BackRoute = NormalizeRoute(State?.backRoute || "");
-            if (!Route) return null;
+            const AuthMarker = GetShellAuthMarker();
+            if (!Route || !AuthMarker || State?.authMarker !== AuthMarker) return null;
             return { route: Route, backRoute: BackRoute || "main.html" };
         } catch {
             return null;
@@ -92,6 +105,7 @@
             localStorage.setItem(LastShellStateKey, JSON.stringify({
                 route: NormalizedRoute,
                 backRoute: NormalizedBackRoute,
+                authMarker: GetShellAuthMarker(),
                 savedAt: Date.now()
             }));
         } catch {}
