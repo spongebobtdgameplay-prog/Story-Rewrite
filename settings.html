@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<script src="cache-guard.js?v=20260930-81"></script>
+<script src="cache-guard.js?v=20260930-82"></script>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -11,83 +11,82 @@
 <link rel="icon" type="image/x-icon" href="favicon_io/favicon.ico?v=1000001">
 <link rel="stylesheet" href="looks.css?v=20260822-66">
 <link rel="stylesheet" href="shell-ui.css">
-<link rel="stylesheet" href="settings.css?v=20260930-3">
+<link rel="stylesheet" href="settings.css?v=20260930-4">
 </head>
-<body class="StorySettingsPage">
-<main class="StorySettingsFrame">
-    <header class="StorySettingsTop">
-        <button class="StorySettingsBack IconBackButton" type="button" data-story-back="main.html" aria-label="Back to main menu"></button>
-
-        <div class="StorySettingsHeading">
-            <div class="StorySettingsCog" aria-hidden="true">
-                <svg viewBox="0 0 24 24"><path d="M9.35 3.45 10.4 2.3h3.2l1.05 1.15 1.55.65 1.5-.18 2.25 2.25-.18 1.5.65 1.55 1.18 1.05v3.2l-1.18 1.05-.65 1.55.18 1.5-2.25 2.25-1.5-.18-1.55.65-1.05 1.18h-3.2l-1.05-1.18-1.55-.65-1.5.18-2.25-2.25.18-1.5-.65-1.55L2.4 13.6v-3.2l1.18-1.05.65-1.55-.18-1.5L6.3 4.05l1.5.18 1.55-.78ZM12 8.4a3.6 3.6 0 1 0 0 7.2 3.6 3.6 0 0 0 0-7.2Z"></path></svg>
-            </div>
-            <div>
-                <div class="StorySettingsKicker">PLAYER SETTINGS</div>
-                <h1>Settings</h1>
-                <p>Audio and playback</p>
-            </div>
-        </div>
-
-        <div class="StorySettingsVersion" id="SettingsBuild">Build</div>
+<body class="AccountSettingsPage StorySettingsPage">
+<main class="AccountSettingsShell StorySettingsShell">
+    <header class="AccountSettingsHeader StorySettingsHeader">
+        <button class="IconBackButton" type="button" data-story-back="main.html" aria-label="Go back"></button>
+        <h1>
+            <span class="StorySettingsTitle">
+                <span class="StorySettingsCog" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="M9.35 3.45 10.4 2.3h3.2l1.05 1.15 1.55.65 1.5-.18 2.25 2.25-.18 1.5.65 1.55 1.18 1.05v3.2l-1.18 1.05-.65 1.55.18 1.5-2.25 2.25-1.5-.18-1.55.65-1.05 1.18h-3.2l-1.05-1.18-1.55-.65-1.5.18-2.25-2.25.18-1.5-.65-1.55L2.4 13.6v-3.2l1.18-1.05.65-1.55-.18-1.5L6.3 4.05l1.5.18 1.55-.78ZM12 8.4a3.6 3.6 0 1 0 0 7.2 3.6 3.6 0 0 0 0-7.2Z"></path></svg>
+                </span>
+                <span>Settings</span>
+            </span>
+        </h1>
+        <div class="StorySettingsBuild" id="SettingsBuild">Build</div>
     </header>
 
-    <section class="StorySettingsPanel">
-        <div class="StorySettingsPanelHead">
+    <section class="AccountSettingsCard StorySettingsCard">
+        <div class="StorySettingsIntro">
             <div>
-                <div class="StorySettingsSectionLabel">SOUND</div>
-                <h2>Audio</h2>
+                <div class="Kicker">Player options</div>
+                <h2>Audio &amp; playback</h2>
+                <p>Adjust the same sound controls used throughout Story Rewrite.</p>
             </div>
-            <div class="StorySettingsHint">Changes apply immediately.</div>
+            <span class="StorySettingsApply">Changes apply immediately.</span>
         </div>
 
-        <div class="StorySetting">
-            <div class="StorySettingText">
-                <div class="StorySettingTitle">Music volume</div>
-                <div class="StorySettingDescription">Menu, lobby, and chapter music.</div>
+        <div class="StorySettingsRows">
+            <div class="AccountSettingRow StorySettingRow">
+                <div class="StorySettingCopy">
+                    <label for="MusicVolumeSlider">Music volume</label>
+                    <small>Menu, lobby, and chapter music.</small>
+                </div>
+                <div class="StoryVolumeControl">
+                    <input id="MusicVolumeSlider" type="range" min="0" max="100" step="1" value="45" aria-label="Music volume">
+                    <output id="MusicVolumeValue" for="MusicVolumeSlider">45%</output>
+                </div>
             </div>
-            <div class="StorySettingControl">
-                <input id="MusicVolumeSlider" type="range" min="0" max="100" step="1" value="45" aria-label="Music volume">
-                <output id="MusicVolumeValue" for="MusicVolumeSlider">45%</output>
+
+            <div class="AccountSettingRow StorySettingRow">
+                <div class="StorySettingCopy">
+                    <label for="SoundVolumeSlider">Sound effects</label>
+                    <small>Clicks, alerts, confirmations, and gameplay sounds.</small>
+                </div>
+                <div class="StoryVolumeControl">
+                    <input id="SoundVolumeSlider" type="range" min="0" max="100" step="1" value="75" aria-label="Sound effects volume">
+                    <output id="SoundVolumeValue" for="SoundVolumeSlider">75%</output>
+                </div>
+            </div>
+
+            <div class="AccountSettingRow AccountToggleRow StorySettingRow">
+                <div class="AccountToggleCopy StorySettingCopy">
+                    <label for="KeepMusicPlayingButton">Keep music playing</label>
+                    <small>Continue music when the tab is hidden or inactive.</small>
+                </div>
+                <button id="KeepMusicPlayingButton" class="AccountToggleButton" type="button" role="switch" aria-checked="false" aria-label="Keep music playing">
+                    <span class="AccountToggleTrack"><span></span></span>
+                    <strong id="KeepMusicPlayingState">Off</strong>
+                </button>
             </div>
         </div>
 
-        <div class="StorySetting">
-            <div class="StorySettingText">
-                <div class="StorySettingTitle">Sound effects</div>
-                <div class="StorySettingDescription">Clicks, alerts, confirmations, and gameplay sounds.</div>
-            </div>
-            <div class="StorySettingControl">
-                <input id="SoundVolumeSlider" type="range" min="0" max="100" step="1" value="75" aria-label="Sound effects volume">
-                <output id="SoundVolumeValue" for="SoundVolumeSlider">75%</output>
-            </div>
-        </div>
-
-        <div class="StorySetting StorySettingToggleRow">
-            <div class="StorySettingText">
-                <div class="StorySettingTitle">Keep music playing</div>
-                <div class="StorySettingDescription">Keep music running when the tab is hidden or inactive.</div>
-            </div>
-            <button id="KeepMusicPlayingButton" class="StorySwitch" type="button" role="switch" aria-checked="false" aria-label="Keep music playing">
-                <span class="StorySwitchState" id="KeepMusicPlayingState">OFF</span>
-                <span class="StorySwitchKnob" aria-hidden="true"></span>
-            </button>
-        </div>
-
-        <div class="StorySettingsBottom">
-            <span class="StorySettingsSaveMark" aria-hidden="true"></span>
-            <span id="SettingsStatus" aria-live="polite">Your settings are saved automatically.</span>
+        <div class="StorySettingsStatusRow">
+            <span class="StorySettingsSaved" aria-hidden="true"></span>
+            <span id="SettingsStatus" aria-live="polite">Your settings save automatically.</span>
         </div>
     </section>
 </main>
 
-<script src="server-config.js?fresh=20260930-81"></script>
-<script src="network.js?fresh=20260930-81"></script>
-<script src="app.js?fresh=20260930-81"></script>
-<script src="audio.js?fresh=20260930-81"></script>
-<script src="real-audio.js?fresh=20260930-81"></script>
-<script src="shell-ui.js?fresh=20260930-81"></script>
-<script src="build-version.js?fresh=20260930-81"></script>
-<script src="settings.js?fresh=20260930-81"></script>
+<script src="server-config.js?fresh=20260930-82"></script>
+<script src="network.js?fresh=20260930-82"></script>
+<script src="app.js?fresh=20260930-82"></script>
+<script src="audio.js?fresh=20260930-82"></script>
+<script src="real-audio.js?fresh=20260930-82"></script>
+<script src="shell-ui.js?fresh=20260930-82"></script>
+<script src="build-version.js?fresh=20260930-82"></script>
+<script src="settings.js?fresh=20260930-82"></script>
 </body>
 </html>
