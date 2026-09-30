@@ -57,14 +57,15 @@ async function InitLevelsPage() {
 }
 
 function GetDefaultStageId(WorldId) {
+    return GetChapterFocusStageId(WorldId);
+}
+
+function GetChapterFocusStageId(WorldId) {
     const Stages = GetWorldStages(LevelPageState.Data, WorldId);
-    const CurrentStage = LevelPageState.Data.stages[LevelPageState.Save.currentStage];
-
-    if (CurrentStage && CurrentStage.worldId === WorldId && IsStageUnlocked(LevelPageState.Save, CurrentStage.id)) {
-        return CurrentStage.id;
-    }
-
-    const FirstIncomplete = Stages.find(Stage => IsStageUnlocked(LevelPageState.Save, Stage.id) && GetStageStars(LevelPageState.Save, Stage.id) === 0);
+    const FirstIncomplete = Stages.find(Stage =>
+        IsStageUnlocked(LevelPageState.Save, Stage.id)
+        && GetStageStars(LevelPageState.Save, Stage.id) === 0
+    );
     if (FirstIncomplete) return FirstIncomplete.id;
 
     const LastUnlocked = [...Stages].reverse().find(Stage => IsStageUnlocked(LevelPageState.Save, Stage.id));
@@ -178,12 +179,13 @@ function BuildStageNode(Stage, Position) {
     const Unlocked = IsStageUnlocked(LevelPageState.Save, Stage.id);
     const Stars = GetStageStars(LevelPageState.Save, Stage.id);
     const Completed = Stars > 0;
-    const Current = LevelPageState.Save.currentStage === Stage.id;
+    const FocusStageId = GetChapterFocusStageId(LevelPageState.SelectedWorldId);
+    const Current = !Completed && FocusStageId === Stage.id;
     const Selected = LevelPageState.SelectedStageId === Stage.id;
     const Classes = ["StageNode", Unlocked ? "" : "Locked", Completed ? "Completed" : "", Current ? "Current" : "", Selected ? "Selected" : ""].filter(Boolean).join(" ");
 
     return `
-        <div class="StageNodeWrap ${Selected ? "Selected" : ""}" data-position="${Position}">
+        <div class="StageNodeWrap ${Selected ? "Selected" : ""} ${Current ? "CurrentTarget" : ""}" data-position="${Position}">
             <div class="StageNodeDifficulty">${EscapeText(String(Stage.difficulty || "Normal").toUpperCase())}</div>
             <button class="${Classes}" type="button" data-stage-node="${EscapeText(Stage.id)}" ${Unlocked ? "" : "disabled"} aria-label="${Unlocked ? `Level ${Stage.levelNumber}: ${EscapeText(Stage.name)}` : `Level ${Stage.levelNumber}: Locked until earlier progress is completed`}">
                 ${Unlocked ? EscapeText(Stage.levelNumber) : `
