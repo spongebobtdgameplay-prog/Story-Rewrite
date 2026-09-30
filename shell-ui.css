@@ -873,3 +873,47 @@ body.StoryWarningOpen {
         grid-template-columns: 1fr;
     }
 }
+
+
+/* Narrow-device tuning for profile/settings surfaces. */
+@media (max-width: 700px) {
+    .AccountSettingsShell {
+        width: calc(100% - clamp(16px, 4vw, 24px));
+        padding-top: clamp(14px, 4vw, 24px);
+        padding-bottom: clamp(28px, 8vw, 48px);
+    }
+
+    .AccountIdentity {
+        padding: clamp(18px, 4.5vw, 26px);
+        gap: clamp(12px, 3.5vw, 18px);
+    }
+
+    .AccountAvatarVector {
+        width: clamp(54px, 15vw, 66px);
+        height: clamp(54px, 15vw, 66px);
+        min-width: clamp(54px, 15vw, 66px);
+    }
+}
+
+@media (max-width: 380px) {
+    .AccountStatGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .AccountSettingsBody {
+        padding: 10px;
+    }
+
+    .AccountSettingsSection {
+        padding: 13px;
+    }
+
+    .StoryWarningDialog {
+        grid-template-columns: 1fr;
+    }
+
+    .StoryWarningIcon {
+        width: 44px;
+        height: 44px;
+    }
+}
