@@ -1,3 +1,12 @@
+html {
+    overscroll-behavior: none;
+}
+
+body {
+    overscroll-behavior: none;
+    overflow-x: hidden;
+}
+
 :root {
     --GameInk: #f4e8d3;
     --GameMuted: #bda98b;
@@ -384,6 +393,10 @@ body.LevelSelectPage {
     animation: CurrentNodePulse 1.55s ease-in-out infinite;
 }
 
+.StageNodeWrap.CurrentTarget {
+    animation: CurrentNodeBob 1.8s ease-in-out infinite;
+}
+
 .StageNode.Selected {
     transform: scale(1.08);
     border-color: #fff0c2;
@@ -423,6 +436,11 @@ body.LevelSelectPage {
 @keyframes CurrentNodePulse {
     0%, 100% { box-shadow: 0 0 0 5px rgba(217,166,94,.08), 0 0 23px rgba(223,167,84,.22); }
     50% { box-shadow: 0 0 0 10px rgba(217,166,94,.14), 0 0 38px rgba(223,167,84,.38); }
+}
+
+@keyframes CurrentNodeBob {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
 }
 
 @keyframes UnlockNode {
