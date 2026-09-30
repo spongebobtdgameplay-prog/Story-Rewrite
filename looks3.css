@@ -642,6 +642,7 @@ body.paper-body {
 .CosmeticCard:hover:not(:disabled),
 .CosmeticCard.Selected {
     border-color: var(--StoryCosmeticAccent, #a46a39);
+    box-shadow: 0 0 0 3px rgba(164, 106, 57, .28);
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--StoryCosmeticAccent, #a46a39) 28%, transparent);
 }
 
@@ -657,6 +658,7 @@ body.paper-body {
     display: grid;
     place-items: center;
     border-radius: 11px;
+    border: 1px solid rgba(164, 106, 57, .28);
     border: 1px solid color-mix(in srgb, var(--StoryCosmeticAccent, #a46a39) 28%, transparent);
     background: #f8e9cb;
     color: var(--StoryCosmeticAccent, #8b552d);
@@ -703,6 +705,7 @@ html[data-story-cosmetic="city-bookmark"] { --StoryCosmeticAccent: #277b9e; }
 
 html[data-story-cosmetic]:not([data-story-cosmetic="classic"]) .TopBar,
 html[data-story-cosmetic]:not([data-story-cosmetic="classic"]) .AccountSettingsHeader {
+    border-color: rgba(164, 106, 57, .45);
     border-color: color-mix(in srgb, var(--StoryCosmeticAccent) 45%, transparent);
 }
 
