@@ -1,0 +1,40 @@
+html,body{min-height:100%;margin:0}
+body.StorySettingsPage{min-height:100vh;background:radial-gradient(circle at 14% 8%,rgba(255,240,207,.20),transparent 25%),linear-gradient(145deg,#6e4b32 0%,#3f281b 58%,#21140d 100%);color:#f7ead5}
+.StorySettingsShell{width:min(1120px,calc(100vw - 32px));margin:0 auto;padding:28px 0 46px}
+.StorySettingsHeader{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:18px;padding:22px 24px;border:1px solid rgba(255,231,196,.18);background:linear-gradient(145deg,rgba(29,18,12,.96),rgba(17,12,9,.94));box-shadow:0 22px 60px rgba(16,7,3,.25)}
+.StorySettingsHeading{display:flex;align-items:center;gap:15px;min-width:0}
+.StorySettingsIcon{width:52px;height:52px;display:grid;place-items:center;flex:none;border:1px solid rgba(225,178,105,.42);background:rgba(225,178,105,.08);color:#edc786}
+.StorySettingsIcon svg{width:25px;height:25px;fill:none;stroke:currentColor;stroke-width:1.55;stroke-linecap:round;stroke-linejoin:round}
+.StorySettingsHeading h1{margin:3px 0 5px;font-size:clamp(28px,4vw,44px);line-height:1}
+.StorySettingsHeading p{max-width:650px;margin:0;color:#cdb99d;font-size:13px;line-height:1.5}
+.StorySettingsBuild{align-self:start;color:rgba(255,238,211,.42);font:800 10px/1.2 ui-monospace,SFMono-Regular,Consolas,monospace;letter-spacing:.08em;text-transform:uppercase}
+.StorySettingsGrid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:14px;margin-top:14px}
+.StorySettingsCard{border:1px solid rgba(255,231,196,.14);background:linear-gradient(160deg,rgba(29,20,14,.97),rgba(16,11,8,.96));box-shadow:0 18px 50px rgba(10,5,3,.20)}
+.StorySettingsCardHead{padding:22px 24px;border-bottom:1px solid rgba(255,231,196,.11)}
+.StorySettingsCardHead h2,.StorySettingsNotes h2{margin:4px 0 0;color:#fff0d5;font-size:24px;line-height:1.08}
+.StorySettingsEyebrow{color:#c89250;font:900 8px/1.2 system-ui,sans-serif;letter-spacing:.18em;text-transform:uppercase}
+.StorySettingRow{display:grid;grid-template-columns:minmax(0,1fr) minmax(220px,42%);gap:22px;align-items:center;padding:22px 24px;border-bottom:1px solid rgba(255,231,196,.09)}
+.StorySettingRow:last-child{border-bottom:0}
+.StorySettingRow label{display:block;color:#f9e9ce;font-size:14px;font-weight:900;letter-spacing:.025em}
+.StorySettingRow p{margin:5px 0 0;color:#a99478;font-size:12px;line-height:1.45}
+.StorySettingControl{display:grid;grid-template-columns:minmax(0,1fr) 54px;gap:12px;align-items:center}
+.StorySettingControl input[type=range]{width:100%;accent-color:#d8aa61}
+.StorySettingControl output{display:block;padding:7px 8px;color:#eed09c;border:1px solid rgba(216,170,97,.27);background:rgba(216,170,97,.06);font:800 11px ui-monospace,SFMono-Regular,Consolas,monospace;text-align:center}
+.StorySwitch{width:88px;height:40px;display:flex;align-items:center;justify-content:space-between;gap:7px;padding:4px 7px 4px 6px;border:1px solid rgba(255,231,196,.16);background:#1f1711;color:#f4dfbc;cursor:pointer}
+.StorySwitch span{width:30px;height:30px;position:relative;border-radius:50%;background:#746253;transition:transform .18s ease,background .18s ease}
+.StorySwitch strong{font:900 9px/1 system-ui,sans-serif;letter-spacing:.07em}
+.StorySwitch[aria-checked=true]{border-color:rgba(226,177,97,.5);background:rgba(222,170,90,.12)}
+.StorySwitch[aria-checked=true] span{background:#e7bd78;transform:translateX(42px)}
+.StorySwitch[aria-checked=true] strong{margin-right:39px}
+.StorySettingsNotes{padding:24px}
+.StorySettingsNotes p{margin:12px 0 0;color:#bba88d;font-size:13px;line-height:1.58}
+.StorySettingsRule{height:1px;margin:22px 0;border-top:1px solid rgba(255,231,196,.10)}
+.StorySettingsMini{display:flex;justify-content:space-between;gap:14px;padding:10px 0;border-bottom:1px solid rgba(255,231,196,.08)}
+.StorySettingsMini:last-child{border-bottom:0}
+.StorySettingsMini span{color:#b9854b;font:900 8px/1.2 system-ui,sans-serif;letter-spacing:.15em}
+.StorySettingsMini strong{max-width:185px;color:#efe0c5;font-size:11px;text-align:right}
+.StorySettingsStatus{min-height:22px;margin-top:12px;color:#d8bd91;font-size:12px;text-align:right}
+.StorySettingsStatus.Bad{color:#e49a8f}
+.StorySettingsStatus.Good{color:#abd19f}
+.IconBackButton{display:grid;place-items:center;width:42px;height:42px}
+@media(max-width:760px){.StorySettingsShell{width:min(100% - 20px,1120px);padding-top:10px}.StorySettingsHeader{grid-template-columns:auto 1fr;align-items:start}.StorySettingsBuild{grid-column:2}.StorySettingsGrid{grid-template-columns:1fr}.StorySettingRow{grid-template-columns:1fr}.StorySettingControl{max-width:none}.StorySettingsNotes{order:2}}
