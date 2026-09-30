@@ -47,9 +47,20 @@ function FindSessionConflict(Session) {
         : null;
 
     for (const ExistingSession of [AccountSession, DeviceSession]) {
-        if (ExistingSession && ExistingSession.socket.id !== Session.socket.id) {
-            return ExistingSession;
+        if (!ExistingSession || ExistingSession.socket.id === Session.socket.id) continue;
+
+        // A navigation can briefly leave the previous socket connected while the
+        // same browser tab opens the next page. Reuse that tab session instead
+        // of blocking the new connection as a second active session.
+        if (
+            ExistingSession.tabId
+            && Session.tabId
+            && ExistingSession.tabId === Session.tabId
+        ) {
+            continue;
         }
+
+        return ExistingSession;
     }
 
     return null;
