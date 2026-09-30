@@ -1,6 +1,5 @@
 const KeepMusicPlayingKey = "StoryRewriteKeepMusicPlayingV1";
 let SettingsSave = null;
-let SettingsInitialized = false;
 let MusicSlider = null;
 let SoundSlider = null;
 let MusicValue = null;
@@ -111,15 +110,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
 
     try {
-        const [Profile] = await Promise.all([
+        const [, Data] = await Promise.all([
             RequireAccount(),
             LoadStoryData()
         ]);
-        const Data = await LoadStoryData();
         const CachedSave = typeof GetLastKnownServerSave === "function" ? GetLastKnownServerSave() : null;
         const Save = CachedSave || await FetchServerSave();
         SettingsSave = NormalizeSave(Data, CloneSettingsSave(Save));
-        SettingsInitialized = true;
         RenderSettings();
 
         MusicSlider.addEventListener("input", () => SetVolumeControl(MusicSlider, MusicValue, Number(MusicSlider.value) / 100));
