@@ -28,6 +28,43 @@ function FindJavaScriptFiles(CurrentPath) {
 
 const JavaScriptFiles = FindJavaScriptFiles(Root).sort();
 
+function CheckDomEventBindings() {
+    const HtmlIds = new Set();
+
+    function CollectHtmlFiles(CurrentPath) {
+        const Entries = fs.readdirSync(CurrentPath, { withFileTypes: true });
+        for (const Entry of Entries) {
+            if (SkipDirectories.has(Entry.name)) continue;
+
+            const FullPath = path.join(CurrentPath, Entry.name);
+            if (Entry.isDirectory()) {
+                CollectHtmlFiles(FullPath);
+            } else if (Entry.isFile() && Entry.name.endsWith(".html")) {
+                const Html = fs.readFileSync(FullPath, "utf8");
+                for (const Match of Html.matchAll(/\\bid=["']([^"']+)["']/g)) {
+                    HtmlIds.add(Match[1]);
+                }
+            }
+        }
+    }
+
+    CollectHtmlFiles(Root);
+
+    const BindingPattern = /document\\.getElementById\\(["']([^"']+)["']\\)\\.addEventListener\\s*\\(/g;
+    for (const File of JavaScriptFiles) {
+        const Source = fs.readFileSync(File, "utf8");
+        for (const Match of Source.matchAll(BindingPattern)) {
+            const Id = Match[1];
+            if (!HtmlIds.has(Id)) {
+                Failed = true;
+                process.stderr.write("\nUNGUARDED DOM EVENT BINDING: " + path.relative(Root, File) + "\n");
+                process.stderr.write('Missing HTML id "' + Id + '". Guard the element with ?.addEventListener(...) or an explicit null check.\n');
+            }
+        }
+    }
+}
+
+
 if (!JavaScriptFiles.length) {
     console.error("No JavaScript files found.");
     process.exit(1);
@@ -47,6 +84,8 @@ for (const File of JavaScriptFiles) {
         process.stderr.write(Result.stderr || Result.stdout || "node --check failed.\n");
     }
 }
+
+CheckDomEventBindings();
 
 if (Failed) {
     process.exit(1);
