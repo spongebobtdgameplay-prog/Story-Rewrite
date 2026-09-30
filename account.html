@@ -7,7 +7,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Story Rewrite — Account</title>
+<title>Story Rewrite — Profile</title>
 <link rel="icon" type="image/x-icon" href="favicon_io/favicon.ico?v=1000001">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon_io/favicon-32x32.png?v=1000001">
 <link rel="icon" type="image/png" sizes="16x16" href="favicon_io/favicon-16x16.png?v=1000001">
@@ -17,55 +17,13 @@ for (const StyleName of ["looks.css", "shell-ui.css"]) {
     document.write(`<link rel="stylesheet" href="${StyleName}?fresh=${AccountFreshToken}">`);
 }
 </script>
-<style>
-#KeepMusicPlayingButton {
-    min-width: 0;
-    min-height: 0;
-    padding: 0;
-    gap: 9px;
-    color: #e6c79e;
-    border: 0;
-    border-radius: 0;
-    background: transparent;
-    box-shadow: none;
-    cursor: pointer;
-}
 
-#KeepMusicPlayingButton:hover,
-#KeepMusicPlayingButton:active {
-    border: 0;
-    background: transparent;
-    box-shadow: none;
-    transform: none;
-}
-
-#KeepMusicPlayingButton strong {
-    min-width: 34px;
-    padding: 5px 8px;
-    color: #e9cfaa;
-    text-align: center;
-    border: 1px solid rgba(218, 176, 116, .24);
-    border-radius: 999px;
-    background: rgba(255, 239, 207, .06);
-}
-
-#KeepMusicPlayingButton[aria-checked="true"] {
-    color: #fff0d0;
-}
-
-#KeepMusicPlayingButton[aria-checked="true"] strong {
-    color: #34190d;
-    border-color: #e5b96e;
-    background: #efc77f;
-    box-shadow: 0 2px 8px rgba(16, 7, 3, .28);
-}
-</style>
 </head>
-<body class="AccountSettingsPage">
+<body class="AccountSettingsPage ProfilePage">
 <main class="AccountSettingsShell">
     <header class="AccountSettingsHeader">
         <button class="IconBackButton" type="button" data-story-back="main.html" aria-label="Go back"></button>
-        <h1>Account</h1>
+        <h1>Profile</h1>
         <div></div>
     </header>
 
@@ -95,32 +53,9 @@ for (const StyleName of ["looks.css", "shell-ui.css"]) {
                     </div>
                 </section>
 
-                <section class="AccountSettingsSection">
-                    <h3>Game settings</h3>
-                    <div class="AccountSettingRow">
-                        <label for="MusicVolumeSlider">Music</label>
-                        <div class="AccountVolumeControl">
-                            <input class="AccountVolumeSlider" id="MusicVolumeSlider" type="range" min="0" max="100" step="1" value="45" style="--VolumePercent: 45%" aria-describedby="MusicVolumeValue">
-                            <output class="AccountVolumeValue" id="MusicVolumeValue" for="MusicVolumeSlider">45%</output>
-                        </div>
-                    </div>
-                    <div class="AccountSettingRow">
-                        <label for="SoundVolumeSlider">Sounds</label>
-                        <div class="AccountVolumeControl">
-                            <input class="AccountVolumeSlider" id="SoundVolumeSlider" type="range" min="0" max="100" step="1" value="75" style="--VolumePercent: 75%" aria-describedby="SoundVolumeValue">
-                            <output class="AccountVolumeValue" id="SoundVolumeValue" for="SoundVolumeSlider">75%</output>
-                        </div>
-                    </div>
-                    <div class="AccountSettingRow AccountToggleRow">
-                        <div class="AccountToggleCopy">
-                            <label id="KeepMusicPlayingLabel">Keep music playing</label>
-                            <small>Continue when the tab is hidden or inactive.</small>
-                        </div>
-                        <button class="AccountToggleButton" id="KeepMusicPlayingButton" type="button" role="switch" aria-checked="false" aria-labelledby="KeepMusicPlayingLabel KeepMusicPlayingState">
-                            <span class="AccountToggleTrack" aria-hidden="true"><span></span></span>
-                            <strong id="KeepMusicPlayingState">Off</strong>
-                        </button>
-                    </div>
+                <section class="AccountSettingsSection ProfileAccountSection">
+                    <h3>Account</h3>
+                    <p class="AccountSectionHint">Manage your Story Rewrite account and saved progress from your profile.</p>
                     <div class="AccountDangerZone">
                         <button class="DangerButton" id="ResetProgressButton" type="button">Reset Progress</button>
                         <button class="SecondaryButton" id="SwitchAccountButton" type="button">Switch Account</button>
