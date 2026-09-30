@@ -1,0 +1,592 @@
+/* Story Rewrite visual layer 2. */
+.GameLayout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 330px;
+    gap: 17px;
+    align-items: start;
+}
+
+.BookShell {
+    padding: 13px;
+    border: 1px solid #3d2315;
+    border-radius: 23px;
+    background: linear-gradient(180deg, #684026, #422516);
+    box-shadow: var(--Shadow);
+}
+
+.Book {
+    min-height: 690px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0,1fr));
+    overflow: hidden;
+    position: relative;
+    border: 1px solid #372116;
+    border-radius: 13px;
+    background: #d8ba8b;
+}
+
+.Book::after {
+    content: "";
+    width: 16px;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    pointer-events: none;
+    background: linear-gradient(90deg, transparent, rgba(72,41,22,.2), rgba(255,249,232,.2), rgba(72,41,22,.16), transparent);
+}
+
+.Page {
+    min-width: 0;
+    padding: clamp(23px, 3vw, 40px);
+    background:
+        radial-gradient(circle at 22% 14%, rgba(102,68,37,.05), transparent 24%),
+        linear-gradient(180deg, var(--PaperBright), var(--Paper));
+}
+
+.Page.Left {
+    border-right: 1px solid rgba(79,48,28,.2);
+}
+
+.BookMeta {
+    margin-bottom: 13px;
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.ChapterLabel {
+    color: #765035;
+    font: 900 9px/1.2 system-ui, sans-serif;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+}
+
+.BookDifficulty,
+.DifficultyBadge {
+    width: fit-content;
+    padding: 5px 8px;
+    color: #faead0;
+    border: 1px solid #50301d;
+    border-radius: 7px;
+    background: #654025;
+    font: 900 9px/1.2 system-ui, sans-serif;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.Page h1,
+.Page h2,
+.ResultTitle {
+    color: #29170e;
+}
+
+.Page h2 {
+    margin: 8px 0 15px;
+}
+
+.SentenceList {
+    display: grid;
+    gap: 7px;
+}
+
+.Sentence {
+    width: 100%;
+    padding: 9px 10px;
+    position: relative;
+    cursor: pointer;
+    text-align: left;
+    color: #29170e;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background: transparent;
+    font-size: 17px;
+    line-height: 1.48;
+}
+
+.Sentence:hover {
+    border-color: #cfaf80;
+    background: #efddba;
+}
+
+.Sentence.Crossed {
+    color: #9d7770;
+    background: #ecdbcf;
+}
+
+.Sentence.Crossed::after {
+    content: "";
+    position: absolute;
+    left: 7px;
+    right: 7px;
+    top: 50%;
+    height: 3px;
+    border-radius: 999px;
+    background: var(--Strike);
+    transform: rotate(-.5deg);
+}
+
+.EraseHint {
+    margin-top: 17px;
+    padding: 10px 11px;
+    color: #624631;
+    border: 1px dashed #a78358;
+    border-radius: 9px;
+    background: #ead6b3;
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+.Scene {
+    min-height: 360px;
+    overflow: hidden;
+    border: 2px solid #704d34;
+    border-radius: 13px;
+    background: #cfb17f;
+    box-shadow: inset 0 0 0 5px rgba(255,246,222,.28), 0 6px 15px rgba(50,25,10,.13);
+}
+
+.PictureBookArt {
+    width: 100%;
+    min-height: 340px;
+    display: block;
+}
+
+.SceneCaption {
+    max-height: 160px;
+    overflow: auto;
+    padding: 11px 12px;
+    color: #493121;
+    border: 1px solid #b99568;
+    border-radius: 9px;
+    background: #f0dfbf;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.Aftermath {
+    margin-top: 11px;
+    padding: 12px 13px;
+    color: #5d241d;
+    border: 1px solid #9d5046;
+    border-left: 5px solid var(--Bad);
+    border-radius: 9px;
+    background: var(--BadBg);
+    line-height: 1.48;
+}
+
+.Aftermath strong {
+    display: block;
+    margin-bottom: 4px;
+    color: #72231d;
+    font: 900 9px/1.2 system-ui, sans-serif;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+}
+
+.Sidebar {
+    width: 100%;
+    min-width: 0;
+    max-height: calc(100dvh - 32px);
+    padding: 17px;
+    position: sticky;
+    top: 16px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+    border: 1px solid #5e3d26;
+    border-radius: 18px;
+    background: linear-gradient(180deg, #c7a16f, #ad7f4e);
+    box-shadow: var(--ShadowSmall);
+}
+
+.Sidebar > * {
+    min-width: 0;
+    max-width: 100%;
+}
+
+.SidebarTop {
+    padding-bottom: 13px;
+    border-bottom: 1px solid #795537;
+}
+
+.SidebarTop .DifficultyBadge {
+    margin: 0 0 8px;
+}
+
+.SidebarTop h3 {
+    margin: 0 0 4px;
+    color: #2c180e;
+    font-size: 22px;
+    line-height: 1.2;
+}
+
+.SidebarWorld {
+    color: #65452f;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.InfoBox {
+    margin-top: 10px;
+    padding: 12px;
+    color: #3b2618;
+    border: 1px solid #92704b;
+    border-radius: 10px;
+    background: linear-gradient(180deg, #f1dfbd, #dfc393);
+}
+
+.InfoLabel {
+    display: block;
+    margin-bottom: 5px;
+    color: #70431f;
+    font: 900 9px/1.2 system-ui, sans-serif;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+}
+
+.InfoBox p {
+    margin: 0;
+    color: #46301f;
+    font-size: 13px;
+    line-height: 1.43;
+}
+
+.StatsBox {
+    color: #f6e6cb;
+    border-color: #1e110a;
+    background: linear-gradient(145deg, #4a2c1a, #29170e);
+}
+
+.StatsBox .InfoLabel {
+    color: #e2b66c;
+}
+
+.StatLine {
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+    color: #dbc7a8;
+    font-size: 12px;
+}
+
+.StatLine + .StatLine {
+    margin-top: 7px;
+}
+
+.StatLine strong {
+    color: #ffe0a2;
+}
+
+.StatusText {
+    min-height: 41px;
+    margin-top: 11px;
+    padding: 10px 11px;
+    color: #3b2719;
+    border: 1px solid #92704a;
+    border-left: 4px solid #704c32;
+    border-radius: 9px;
+    background: #ead3ac;
+    font-size: 12px;
+    line-height: 1.43;
+}
+
+.StatusText.Good {
+    color: #24462d;
+    border-color: #607d64;
+    border-left-color: var(--Good);
+    background: var(--GoodBg);
+}
+
+.StatusText.Bad {
+    color: #67241f;
+    border-color: #995248;
+    border-left-color: var(--Bad);
+    background: var(--BadBg);
+}
+
+.GameActions {
+    margin-top: 11px;
+    display: grid;
+    gap: 7px;
+}
+
+.GameActions button,
+.GameActions a {
+    width: 100%;
+    text-align: center;
+}
+
+.Overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    padding: 20px;
+    display: none;
+    place-items: center;
+    background: rgba(24,12,6,.74);
+    backdrop-filter: blur(5px);
+}
+
+.Overlay.Show {
+    display: grid;
+    animation: OverlayIn .2s ease;
+}
+
+@keyframes OverlayIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.OverlayCard {
+    width: min(720px, 96vw);
+    overflow: hidden;
+    color: var(--Ink);
+    border: 1px solid #5e3f29;
+    border-radius: 18px;
+    background: linear-gradient(180deg, #f6e7ca, #ddc091);
+    box-shadow: 0 28px 85px rgba(21,10,4,.48), inset 0 0 0 5px rgba(255,249,235,.28);
+}
+
+.CompleteCard {
+    max-width: 550px;
+    padding: 29px;
+    text-align: center;
+}
+
+.CompleteCard .DifficultyBadge {
+    margin: auto;
+}
+
+.CompleteCard h2 {
+    margin: 8px 0 7px;
+    font-size: 38px;
+}
+
+.CompleteCard p {
+    color: #5a402c;
+    line-height: 1.5;
+}
+
+.StarRow {
+    margin: 14px 0 17px;
+    color: #a96e19;
+    font-size: 38px;
+    letter-spacing: 5px;
+}
+
+.OverlayActions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+}
+
+.TravelCard {
+    padding: 36px 40px 42px;
+    text-align: center;
+}
+
+.TravelTitle {
+    margin: 7px 0 0;
+    color: #2b170e;
+    font-size: clamp(28px,5vw,43px);
+}
+
+.TravelCaption {
+    margin-top: 16px;
+    color: #664831;
+    font-style: italic;
+}
+
+.Trail {
+    width: min(600px,90%);
+    height: 116px;
+    margin: 24px auto 7px;
+    position: relative;
+}
+
+.TrailLine {
+    position: absolute;
+    left: 4%;
+    right: 9%;
+    top: 57px;
+    height: 2px;
+    background: repeating-linear-gradient(90deg, rgba(72,45,27,.28) 0 8px, transparent 8px 16px);
+}
+
+.TrailDot {
+    width: 16px;
+    height: 16px;
+    position: absolute;
+    left: 4%;
+    top: 49px;
+    opacity: 0;
+    border: 2px solid #e3c28c;
+    border-radius: 50%;
+    background: #5e351a;
+    animation: TrailMove 1.22s cubic-bezier(.2,.7,.25,1) forwards;
+}
+
+.TrailDot:nth-child(2) { animation-delay: .12s; }
+.TrailDot:nth-child(3) { animation-delay: .24s; }
+.TrailDot:nth-child(4) { animation-delay: .36s; }
+.TrailDot:nth-child(5) { animation-delay: .48s; }
+.TrailDot:nth-child(6) { animation-delay: .6s; }
+
+@keyframes TrailMove {
+    0% { opacity: 0; transform: translateX(0) scale(.45); }
+    18%, 78% { opacity: 1; }
+    100% { opacity: 0; transform: translateX(min(490px,65vw)) scale(1.1); }
+}
+
+.TrailTarget {
+    width: 58px;
+    height: 58px;
+    position: absolute;
+    right: 0;
+    top: 33px;
+    display: grid;
+    place-items: center;
+    color: #ffe9c1;
+    border: 4px double #d6b477;
+    border-radius: 50%;
+    background: #4e2b17;
+    font-weight: 900;
+}
+
+.ChapterCard {
+    padding: 30px;
+    text-align: center;
+}
+
+.ChapterCard h2 {
+    margin: 7px 0 16px;
+    font-size: clamp(31px,5vw,48px);
+}
+
+.ChapterArt {
+    min-height: 300px;
+    overflow: hidden;
+    display: grid;
+    place-items: center;
+    border: 1px solid #92704b;
+    border-radius: 12px;
+    background: #d8bd91;
+}
+
+.ChapterArt svg {
+    width: 100%;
+    display: block;
+}
+
+.ChapterText {
+    margin-top: 14px;
+    color: #62442f;
+    font-style: italic;
+}
+
+.TbcCard {
+    max-width: 700px;
+    padding: 56px 32px 40px;
+    text-align: center;
+}
+
+.TbcRule {
+    width: 84px;
+    height: 5px;
+    margin: 0 auto 18px;
+    background: #5c331a;
+}
+
+.TbcTitle {
+    margin: 8px 0 10px;
+    font-size: clamp(44px,9vw,82px);
+}
+
+.TbcCard p {
+    margin: 0 0 25px;
+    color: #674831;
+    font-style: italic;
+}
+
+.TutorialShell,
+.RulesShell {
+    padding: clamp(24px,4vw,46px);
+}
+
+.TutorialShell h1,
+.RulesShell h1 {
+    margin: 6px 0 12px;
+    font-size: clamp(36px,6vw,60px);
+}
+
+.TutorialSteps,
+.RulesGrid {
+    display: grid;
+    grid-template-columns: repeat(2,minmax(0,1fr));
+    gap: 13px;
+    margin-top: 22px;
+}
+
+.TutorialStep,
+.RuleCard {
+    padding: 18px;
+    border: 1px solid #8e6843;
+    border-radius: 13px;
+    background: linear-gradient(180deg, #f4e5c9, #e2c79c);
+}
+
+.TutorialStep h3,
+.RuleCard h3 {
+    margin: 5px 0 8px;
+    color: #301b10;
+}
+
+.TutorialStep p,
+.RuleCard p {
+    margin: 0;
+    color: #59402e;
+    line-height: 1.55;
+}
+
+.TutorialDemo {
+    margin-top: 10px;
+    padding: 13px;
+    border: 1px solid #a47f55;
+    border-radius: 10px;
+    background: #ead5b0;
+}
+
+.DemoSentence {
+    padding: 8px 9px;
+    position: relative;
+    color: #2b180f;
+    border-radius: 7px;
+    background: #f2e3c6;
+}
+
+.DemoSentence.Crossed {
+    color: #9b746c;
+}
+
+.DemoSentence.Crossed::after {
+    content: "";
+    position: absolute;
+    left: 6px;
+    right: 6px;
+    top: 50%;
+    height: 3px;
+    background: var(--Strike);
+}
+
+.PictureBookArt .CreatureSkin { fill: #8c9294; }
+.PictureBookArt .CreatureBody { fill: #666d6f; }
+.PictureBookArt .CreatureEye { fill: #efe4ce; stroke: #362e29; stroke-width: 2; }
+.PictureBookArt .CreaturePupil { fill: #281d17; }
+.PictureBookArt .CreatureFace { fill: none; stroke: #312a27; stroke-width: 3; stroke-linecap: round; }
+.PictureBookArt .CreatureMouth { fill: #1a0e0c; stroke: #3a302c; stroke-width: 2; }
+.PictureBookArt .CreatureTeeth { fill: #f2e8d3; stroke: #413833; stroke-width: 1.2; }
+
