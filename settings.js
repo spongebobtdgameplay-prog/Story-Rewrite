@@ -49,12 +49,21 @@ function ApplyAudio(Settings) {
         musicVolume: Math.max(0, Math.min(1, Number(Settings?.musicVolume ?? 0.45))),
         soundVolume: Math.max(0, Math.min(1, Number(Settings?.soundVolume ?? 0.75)))
     };
-    if (typeof StoryAudio !== "undefined") StoryAudio.Configure(Next);
+
+    if (typeof StoryAudio !== "undefined") {
+        StoryAudio.Configure(Next);
+    }
+
     try {
-        if (window.parent !== window && window.parent.StoryShell?.IsPersistentShell) {
-            window.parent.StoryShell.ConfigureAudio(Next);
+        const Shell = window.parent !== window && window.parent.StoryShell?.IsPersistentShell
+            ? window.parent.StoryShell
+            : null;
+
+        if (Shell && typeof Shell.ConfigureAudio === "function") {
+            Shell.ConfigureAudio(Next);
         }
     } catch {}
+
     return Next;
 }
 
@@ -70,16 +79,34 @@ function RenderSettings() {
 async function SaveVolumes() {
     const Music = Number(MusicSlider.value) / 100;
     const Sound = Number(SoundSlider.value) / 100;
-    ApplyAudio({ musicVolume: Music, soundVolume: Sound });
+
+    SettingsSave = NormalizeSave(SettingsData, {
+        ...CloneSettingsSave(SettingsSave),
+        settings: {
+            ...(SettingsSave?.settings || {}),
+            musicVolume: Music,
+            soundVolume: Sound
+        }
+    });
+
+    ApplyAudio(SettingsSave.settings);
     Status.textContent = "Saving settings...";
     Status.className = "StorySettingsStatus";
+
     try {
         const Result = await SaveAudioSettings(Music, Sound);
-        SettingsSave = NormalizeSave(SettingsData, CloneSettingsSave(Result?.save || {
-            ...SettingsSave,
-            settings: { ...(SettingsSave.settings || {}), musicVolume: Music, soundVolume: Sound }
-        }));
-        RenderSettings();
+
+        if (Result?.save) {
+            SettingsSave = NormalizeSave(SettingsData, CloneSettingsSave(Result.save));
+        }
+
+        // Re-apply the values the user actually selected so a delayed/stale
+        // response cannot put the playing audio back at the old level.
+        ApplyAudio({
+            musicVolume: Music,
+            soundVolume: Sound
+        });
+
         Status.textContent = "Settings saved.";
         Status.className = "StorySettingsStatus Good";
     } catch (Error) {
