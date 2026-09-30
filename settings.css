@@ -37,3 +37,4 @@ body.StorySettingsPage{min-height:100vh;background:transparent;color:#f7e7c7}
  .StorySettingsStatusRow{padding-left:20px;padding-right:20px}
  .StorySettingsCog{width:31px;height:31px}.StorySettingsCog svg{width:27px;height:27px}
 }
+.StorySettingsBuild{display:block;text-align:right;align-self:start;margin-top:4px;color:#a17c52;font:900 8px/1.2 system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase}
