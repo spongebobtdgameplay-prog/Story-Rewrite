@@ -5,7 +5,8 @@
   "description": "Story Rewrite multiplayer story puzzle game",
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "node server.js",
+    "check:syntax": "node scripts/check-syntax.js"
   },
   "engines": {
     "node": ">=20"
