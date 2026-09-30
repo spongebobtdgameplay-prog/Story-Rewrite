@@ -143,6 +143,12 @@ function ToggleGamePaused() {
 
 window.addEventListener("StoryShellPauseToggle", ToggleGamePaused);
 
+window.addEventListener("StoryShellResumeGameplay", () => {
+    if (!RoomCode && Stage && IsGameplayPauseEligible()) {
+        SetGamePaused(false, "continue");
+    }
+});
+
 window.addEventListener("StoryShellDeactivate", () => {
     if (!RoomCode && Stage && !GamePaused) {
         SetGamePaused(true, "navigation");
