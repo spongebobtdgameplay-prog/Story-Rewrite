@@ -31,6 +31,7 @@
     let PendingFrame = null;
     let CurrentRoute = "main.html";
     let CurrentMusicName = "";
+    const LastShellStateKey = "StoryRewriteLastShellStateV1";
     let CurrentAudioSettings = {};
     let CurrentHistoryDepth = 0;
     let GameplayAudioPaused = false;
@@ -69,9 +70,38 @@
         return `#${encodeURIComponent(Route)}`;
     }
 
+    function ReadLastShellState() {
+        try {
+            const State = JSON.parse(localStorage.getItem(LastShellStateKey) || "null");
+            const Route = NormalizeRoute(State?.route || "");
+            const BackRoute = NormalizeRoute(State?.backRoute || "");
+            if (!Route) return null;
+            return { route: Route, backRoute: BackRoute || "main.html" };
+        } catch {
+            return null;
+        }
+    }
+
+    function WriteLastShellState(Route, BackRoute = "main.html") {
+        const NormalizedRoute = NormalizeRoute(Route);
+        if (!NormalizedRoute) return;
+
+        const NormalizedBackRoute = NormalizeRoute(BackRoute) || "main.html";
+
+        try {
+            localStorage.setItem(LastShellStateKey, JSON.stringify({
+                route: NormalizedRoute,
+                backRoute: NormalizedBackRoute,
+                savedAt: Date.now()
+            }));
+        } catch {}
+    }
+
     function RouteFromLocation() {
         const Raw = window.location.hash.slice(1);
-        if (!Raw) return "main.html";
+        if (!Raw) {
+            return ReadLastShellState()?.route || "main.html";
+        }
         try {
             return NormalizeRoute(decodeURIComponent(Raw)) || "main.html";
         } catch {
@@ -128,21 +158,29 @@
         const Url = new URL(window.location.href);
         Url.hash = RouteHash(Route);
 
+        const PreviousRoute = CurrentRoute && CurrentRoute !== Route
+            ? CurrentRoute
+            : (ReadLastShellState()?.backRoute || "main.html");
+
         if (Replace) {
             const State = {
                 StoryRewriteRoute: Route,
-                StoryRewriteDepth: CurrentHistoryDepth
+                StoryRewriteDepth: CurrentHistoryDepth,
+                StoryRewriteBackRoute: PreviousRoute
             };
             window.history.replaceState(State, "", Url);
+            WriteLastShellState(Route, PreviousRoute);
             return;
         }
 
         CurrentHistoryDepth += 1;
         const State = {
             StoryRewriteRoute: Route,
-            StoryRewriteDepth: CurrentHistoryDepth
+            StoryRewriteDepth: CurrentHistoryDepth,
+            StoryRewriteBackRoute: PreviousRoute
         };
         window.history.pushState(State, "", Url);
+        WriteLastShellState(Route, PreviousRoute);
     }
 
     function GetAudioHost() {
@@ -420,6 +458,10 @@
         ActiveFrame = Frame;
         if (PendingFrame === Frame) PendingFrame = null;
 
+        if (IsSinglePlayerGameRoute(Route)) {
+            ShellPauseState = false;
+        }
+
         SyncGameplayPauseButton();
         GameplayPauseButton?.removeAttribute("aria-busy");
         UpdateTitle(Frame);
@@ -622,6 +664,8 @@
     window.addEventListener("popstate", Event => {
         CurrentHistoryDepth = Math.max(0, Number(Event.state?.StoryRewriteDepth || 0));
         const Route = NormalizeRoute(Event.state?.StoryRewriteRoute) || RouteFromLocation();
+        const BackRoute = NormalizeRoute(Event.state?.StoryRewriteBackRoute || "") || "main.html";
+        WriteLastShellState(Route, BackRoute);
         LoadRoute(Route, { skipHistory: true });
     });
 
@@ -663,11 +707,25 @@
         InitialFrame.src = RouteUrl("main.html");
     }
 
+    const SavedShellState = ReadLastShellState();
     const InitialRoute = RouteFromLocation();
     CurrentRoute = InitialRoute;
     CurrentHistoryDepth = 0;
     SyncGameplayPauseButton();
-    SetTopHistory(InitialRoute, true);
+
+    if (!window.location.hash && SavedShellState?.route === InitialRoute) {
+        const InitialBackRoute = SavedShellState.backRoute || "main.html";
+        const Url = new URL(window.location.href);
+        Url.hash = RouteHash(InitialRoute);
+        window.history.replaceState({
+            StoryRewriteRoute: InitialRoute,
+            StoryRewriteDepth: 0,
+            StoryRewriteBackRoute: InitialBackRoute
+        }, "", Url);
+        WriteLastShellState(InitialRoute, InitialBackRoute);
+    } else {
+        SetTopHistory(InitialRoute, true);
+    }
     ApplyRouteMusic(InitialRoute);
 
     if (InitialRoute === "main.html") {
