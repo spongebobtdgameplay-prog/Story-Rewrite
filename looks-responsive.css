@@ -94,8 +94,7 @@ html::-webkit-scrollbar-thumb,body::-webkit-scrollbar-thumb,.Sidebar::-webkit-sc
 
 html {
     font-size: clamp(16px, 1.25vw, 18px);
-    text-size-adjust: 100%;
-    -webkit-text-size-adjust: 100%;
+
 }
 
 body {
