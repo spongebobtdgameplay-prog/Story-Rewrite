@@ -22,6 +22,20 @@ window.addEventListener("DOMContentLoaded", () => {
     });
 });
 
+window.addEventListener("pagehide", () => {
+    if (MultiplayerSocket) {
+        MultiplayerSocket.disconnect();
+        MultiplayerSocket = null;
+    }
+});
+
+window.addEventListener("pageshow", Event => {
+    if (!Event.persisted) return;
+    EnsureMultiplayerReady().catch(Error => {
+        ShowLobbyStatus(FriendlyConnectionError(Error), false);
+    });
+});
+
 function ById(Id) {
     return document.getElementById(Id);
 }
