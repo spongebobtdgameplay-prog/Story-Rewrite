@@ -273,7 +273,7 @@ function BindActions() {
     document.getElementById("CompleteSelectButton").addEventListener("click", ReturnToSelectWithTrail);
     document.getElementById("TbcSelectButton").addEventListener("click", () => window.location.href = "levels.html");
     document.getElementById("RestartChapterButton").addEventListener("click", RestartChapter);
-    document.getElementById("ReplayDeathButton").addEventListener("click", ReplayStage);
+    document.getElementById("ReplayDeathButton")?.addEventListener("click", ReplayStage);
     document.getElementById("GameOverMapButton").addEventListener("click", () => window.location.href = RoomCode ? "multiplayer.html" : "levels.html");
     document.getElementById("GameChatForm").addEventListener("submit", SendGameChat);
     document.getElementById("ToggleGameChatButton").addEventListener("click", ToggleGameChat);
