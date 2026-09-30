@@ -1,73 +1,9 @@
-const AccountSnapshotKey = "StoryRewriteAccountSnapshotV1";
-const KeepMusicPlayingKey = "StoryRewriteKeepMusicPlayingV1";
+const AccountSnapshotKey = "StoryRewriteAccountSnapshotV2.46-PROFILE-SEPARATION";
 let AccountProfileResult = null;
 let AccountData = null;
 let AccountSave = null;
 let AccountInitialized = false;
 let AccountStatus = null;
-let AccountMusicSlider = null;
-let AccountSoundSlider = null;
-let AccountMusicValue = null;
-let AccountSoundValue = null;
-let AccountKeepMusicButton = null;
-let AccountKeepMusicState = null;
-
-function ReadKeepMusicPlaying() {
-    return localStorage.getItem(KeepMusicPlayingKey) === "1";
-}
-
-function RenderKeepMusicPlaying() {
-    if (!AccountKeepMusicButton || !AccountKeepMusicState) return;
-    const Enabled = ReadKeepMusicPlaying();
-    AccountKeepMusicButton.setAttribute("aria-checked", Enabled ? "true" : "false");
-    AccountKeepMusicState.textContent = Enabled ? "On" : "Off";
-}
-
-function ApplyKeepMusicPlaying(Enabled) {
-    try {
-        if (window.parent !== window && window.parent.StoryShell?.IsPersistentShell) {
-            window.parent.StoryShell.SetKeepMusicPlaying(Enabled);
-            return;
-        }
-    } catch {}
-
-    if (typeof StoryAudio !== "undefined" && typeof StoryAudio.SetKeepMusicPlaying === "function") {
-        StoryAudio.SetKeepMusicPlaying(Enabled);
-    }
-}
-
-function ToggleKeepMusicPlaying() {
-    const Enabled = !ReadKeepMusicPlaying();
-    localStorage.setItem(KeepMusicPlayingKey, Enabled ? "1" : "0");
-    ApplyKeepMusicPlaying(Enabled);
-    RenderKeepMusicPlaying();
-}
-
-function ApplyAccountAudioSettings(Settings) {
-    StoryAudio.Configure(Settings);
-
-    try {
-        if (window.parent !== window && window.parent.StoryShell?.IsPersistentShell) {
-            window.parent.StoryShell.ConfigureAudio(Settings);
-        }
-    } catch {}
-}
-
-function SetVolumeControl(Slider, ValueElement, Percent) {
-    const NormalizedPercent = Math.max(0, Math.min(100, Math.round(Number(Percent) || 0)));
-    const PercentText = `${NormalizedPercent}%`;
-
-    if (Slider) {
-        Slider.value = NormalizedPercent;
-        Slider.style.setProperty("--VolumePercent", PercentText);
-        Slider.setAttribute("aria-valuetext", PercentText);
-    }
-
-    if (ValueElement) {
-        ValueElement.value = PercentText;
-        ValueElement.textContent = PercentText;
-    }
-}
 
 function GetAccountAuthMarker() {
     const Token = typeof GetAuthToken === "function" ? String(GetAuthToken() || "") : "";
@@ -104,9 +40,7 @@ function WriteAccountSnapshot() {
         stars: TotalStars(AccountSave),
         cleared: ClearedStages(AccountSave),
         totalStages: Object.keys(AccountData.stages || {}).length,
-        deaths: Number(AccountSave.deaths || 0),
-        musicVolume: Number(AccountSave.settings?.musicVolume ?? 0.45),
-        soundVolume: Number(AccountSave.settings?.soundVolume ?? 0.75)
+        deaths: Number(AccountSave.deaths || 0)
     };
 
     try { localStorage.setItem(AccountSnapshotKey, JSON.stringify(Snapshot)); } catch {}
@@ -122,15 +56,7 @@ function RenderAccountSnapshot() {
     document.getElementById("AccountCleared").textContent = `${Snapshot.cleared}/${Snapshot.totalStages}`;
     document.getElementById("AccountDeaths").textContent = Snapshot.deaths;
 
-    const MusicPercent = Math.round(Snapshot.musicVolume * 100);
-    const SoundPercent = Math.round(Snapshot.soundVolume * 100);
-    const MusicSlider = document.getElementById("MusicVolumeSlider");
-    const SoundSlider = document.getElementById("SoundVolumeSlider");
-    const MusicValue = document.getElementById("MusicVolumeValue");
-    const SoundValue = document.getElementById("SoundVolumeValue");
 
-    SetVolumeControl(MusicSlider, MusicValue, MusicPercent);
-    SetVolumeControl(SoundSlider, SoundValue, SoundPercent);
 }
 
 function GetCosmeticCatalog() {
@@ -209,11 +135,7 @@ function RenderAccountState() {
     document.getElementById("AccountCleared").textContent = `${ClearedStages(AccountSave)}/${Object.keys(AccountData.stages).length}`;
     document.getElementById("AccountDeaths").textContent = AccountSave.deaths;
 
-    const MusicPercent = Math.round(Number(AccountSave.settings?.musicVolume ?? 0.45) * 100);
-    const SoundPercent = Math.round(Number(AccountSave.settings?.soundVolume ?? 0.75) * 100);
 
-    SetVolumeControl(AccountMusicSlider, AccountMusicValue, MusicPercent);
-    SetVolumeControl(AccountSoundSlider, AccountSoundValue, SoundPercent);
 
     ApplyStoryCosmetic(AccountSave);
     RenderCosmetics();
@@ -283,16 +205,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     AccountStatus = document.getElementById("AccountStatus");
-    AccountMusicSlider = document.getElementById("MusicVolumeSlider");
-    AccountSoundSlider = document.getElementById("SoundVolumeSlider");
-    AccountMusicValue = document.getElementById("MusicVolumeValue");
-    AccountSoundValue = document.getElementById("SoundVolumeValue");
-    AccountKeepMusicButton = document.getElementById("KeepMusicPlayingButton");
-    AccountKeepMusicState = document.getElementById("KeepMusicPlayingState");
-
-    RenderKeepMusicPlaying();
-    ApplyKeepMusicPlaying(ReadKeepMusicPlaying());
-    AccountKeepMusicButton.addEventListener("click", ToggleKeepMusicPlaying);
 
     try {
         const LoadedState = await LoadAccountState();
@@ -307,45 +219,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         AccountStatus.classList.add("Bad");
         return;
     }
-
-    function UpdateVolumeLabels() {
-        SetVolumeControl(AccountMusicSlider, AccountMusicValue, AccountMusicSlider.value);
-        SetVolumeControl(AccountSoundSlider, AccountSoundValue, AccountSoundSlider.value);
-        ApplyAccountAudioSettings({
-            musicVolume: Number(AccountMusicSlider.value) / 100,
-            soundVolume: Number(AccountSoundSlider.value) / 100
-        });
-    }
-
-    async function SaveVolumes() {
-        UpdateVolumeLabels();
-        AccountStatus.textContent = "Saving settings...";
-        AccountStatus.classList.remove("Bad", "Good");
-
-        try {
-            const Music = Number(AccountMusicSlider.value) / 100;
-            const Sound = Number(AccountSoundSlider.value) / 100;
-            await SaveAudioSettings(Music, Sound);
-
-            AccountSave.settings = {
-                ...(AccountSave.settings || {}),
-                musicVolume: Music,
-                soundVolume: Sound
-            };
-
-            RenderAccountState();
-            AccountStatus.textContent = "Settings saved.";
-            AccountStatus.classList.add("Good");
-        } catch (Error) {
-            AccountStatus.textContent = Error.message;
-            AccountStatus.classList.add("Bad");
-        }
-    }
-
-    AccountMusicSlider.addEventListener("input", UpdateVolumeLabels);
-    AccountSoundSlider.addEventListener("input", UpdateVolumeLabels);
-    AccountMusicSlider.addEventListener("change", SaveVolumes);
-    AccountSoundSlider.addEventListener("change", SaveVolumes);
 
     document.getElementById("ResetProgressButton").addEventListener("click", async () => {
         const Confirmed = await StoryConfirm({
