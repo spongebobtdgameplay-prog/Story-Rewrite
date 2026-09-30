@@ -49,7 +49,13 @@ window.addEventListener("DOMContentLoaded", async () => {
         BindActions();
         RenderStage();
 
-        if (RoomCode) {
+        let ResumeFromContinue = false;
+        try {
+            ResumeFromContinue = sessionStorage.getItem("StoryRewriteResumeContinueV1") === "1";
+            if (ResumeFromContinue) sessionStorage.removeItem("StoryRewriteResumeContinueV1");
+        } catch {}
+
+        if (RoomCode || ResumeFromContinue) {
             SetGamePaused(false);
         }
 
