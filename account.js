@@ -1,4 +1,4 @@
-const AccountSnapshotKey = "StoryRewriteAccountSnapshotV2.46-PROFILE-SEPARATION";
+const AccountSnapshotKey = "StoryRewriteAccountSnapshotV1";
 let AccountProfileResult = null;
 let AccountData = null;
 let AccountSave = null;
