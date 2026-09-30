@@ -313,3 +313,106 @@
         bottom: calc(68px + env(safe-area-inset-bottom));
     }
 }
+
+
+/* Fluid mobile control sizing: no device-specific fixed coordinates. */
+@media (max-width: 900px), (pointer: coarse) and (max-width: 1200px) {
+    html {
+        scroll-padding-bottom: calc(clamp(76px, 15vw, 104px) + env(safe-area-inset-bottom));
+    }
+
+    body.GamePage {
+        padding-bottom: calc(clamp(76px, 15vw, 94px) + env(safe-area-inset-bottom));
+    }
+
+    .MobileGameControls {
+        left: max(clamp(7px, 1.8vw, 16px), env(safe-area-inset-left));
+        right: max(clamp(7px, 1.8vw, 16px), env(safe-area-inset-right));
+        bottom: max(clamp(6px, 1.5vw, 14px), env(safe-area-inset-bottom));
+        gap: clamp(5px, 1.25vw, 8px);
+        padding: clamp(6px, 1.3vw, 9px);
+        border-radius: clamp(14px, 1.9vw, 18px);
+    }
+
+    .MobileControlButton {
+        min-height: clamp(50px, 14vw, 64px);
+        padding: clamp(6px, 1.5vw, 8px) clamp(3px, 1vw, 6px);
+        gap: clamp(4px, 1vw, 6px);
+        border-radius: clamp(10px, 1.5vw, 13px);
+        font-size: clamp(8.5px, 1.35vw, 10px);
+        letter-spacing: clamp(.02em, .06vw, .055em);
+    }
+
+    .MobileControlIcon,
+    .MobileControlIcon svg {
+        width: clamp(20px, 2.7vw, 23px);
+        height: clamp(20px, 2.7vw, 23px);
+    }
+
+    .MobileControlBadge {
+        top: clamp(-7px, -1vw, -5px);
+        right: clamp(-9px, -1.25vw, -6px);
+        min-width: clamp(18px, 2.4vw, 20px);
+        height: clamp(18px, 2.4vw, 20px);
+    }
+
+    .MobilePowerTray {
+        bottom: calc(clamp(64px, 17vw, 92px) + env(safe-area-inset-bottom));
+        width: min(88vw, 520px);
+        padding: clamp(6px, 1vw, 8px);
+        gap: clamp(6px, 1.15vw, 8px);
+        border-radius: clamp(13px, 1.7vw, 16px);
+    }
+
+    .MobilePowerAction {
+        min-height: clamp(50px, 11vw, 56px);
+    }
+
+    .MultiplayerDock {
+        right: max(clamp(7px, 1.8vw, 16px), env(safe-area-inset-right));
+        bottom: calc(clamp(76px, 15vw, 94px) + env(safe-area-inset-bottom));
+        max-height: calc(100dvh - clamp(100px, 19vw, 118px) - env(safe-area-inset-bottom));
+    }
+
+    .MultiplayerDock:not(.IsCollapsed) {
+        left: max(clamp(7px, 1.8vw, 16px), env(safe-area-inset-left));
+    }
+}
+
+@media (max-width: 620px) {
+    .MobileGameControls {
+        gap: clamp(4px, 1.4vw, 6px);
+        padding: clamp(5px, 1.6vw, 7px);
+    }
+
+    .MobileControlButton {
+        min-height: clamp(48px, 15vw, 58px);
+    }
+}
+
+@media (orientation: landscape) and (max-height: 560px) and (pointer: coarse) {
+    body.GamePage {
+        padding-bottom: calc(clamp(58px, 12vh, 70px) + env(safe-area-inset-bottom));
+    }
+
+    .MobileGameControls {
+        left: 50%;
+        right: auto;
+        width: min(82vw, 820px);
+        bottom: max(clamp(5px, 1.6vw, 10px), env(safe-area-inset-bottom));
+    }
+
+    .MobilePowerTray {
+        bottom: calc(clamp(58px, 12vh, 70px) + env(safe-area-inset-bottom));
+        width: min(72vw, 520px);
+    }
+
+    .MobileControlButton {
+        min-height: clamp(46px, 13vh, 54px);
+        gap: clamp(5px, 1vw, 8px);
+    }
+
+    .MultiplayerDock {
+        bottom: calc(clamp(58px, 12vh, 70px) + env(safe-area-inset-bottom));
+    }
+}
