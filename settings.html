@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="cache-guard.js?v=20260930-79"></script>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Story Rewrite — Settings</title>
+<link rel="icon" type="image/x-icon" href="favicon_io/favicon.ico?v=1000001">
+<link rel="stylesheet" href="looks.css?v=20260822-66">
+<link rel="stylesheet" href="shell-ui.css">
+<link rel="stylesheet" href="settings.css?v=20260930-1">
+<script>
+const SettingsFreshToken = Date.now().toString(36);
+</script>
+</head>
+<body class="StorySettingsPage">
+<main class="StorySettingsShell">
+    <header class="StorySettingsHeader">
+        <button class="IconBackButton" type="button" data-story-back="main.html" aria-label="Go back"></button>
+        <div class="StorySettingsHeading">
+            <div class="StorySettingsIcon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M12 3.4 13.2 6l2.8.4-2 2 .5 2.8-2.5-1.4-2.5 1.4.5-2.8-2-2 2.8-.4L12 3.4Zm0 9.1a4.3 4.3 0 1 0 0 8.6 4.3 4.3 0 0 0 0-8.6Z"></path></svg>
+            </div>
+            <div>
+                <div class="Kicker">Player options</div>
+                <h1>Settings</h1>
+                <p>Control how Story Rewrite sounds and behaves between chapters.</p>
+            </div>
+        </div>
+        <div class="StorySettingsBuild" id="SettingsBuild">Build</div>
+    </header>
+
+    <section class="StorySettingsGrid">
+        <div class="StorySettingsCard">
+            <div class="StorySettingsCardHead">
+                <div><span class="StorySettingsEyebrow">Audio</span><h2>Sound & music</h2></div>
+            </div>
+
+            <div class="StorySettingRow">
+                <div>
+                    <label for="MusicVolumeSlider">Music volume</label>
+                    <p>Controls menu and story music.</p>
+                </div>
+                <div class="StorySettingControl">
+                    <input id="MusicVolumeSlider" type="range" min="0" max="100" step="1" value="45">
+                    <output id="MusicVolumeValue" for="MusicVolumeSlider">45%</output>
+                </div>
+            </div>
+
+            <div class="StorySettingRow">
+                <div>
+                    <label for="SoundVolumeSlider">Sound effects</label>
+                    <p>Controls clicks, alerts, and gameplay sounds.</p>
+                </div>
+                <div class="StorySettingControl">
+                    <input id="SoundVolumeSlider" type="range" min="0" max="100" step="1" value="75">
+                    <output id="SoundVolumeValue" for="SoundVolumeSlider">75%</output>
+                </div>
+            </div>
+
+            <div class="StorySettingRow">
+                <div>
+                    <label for="KeepMusicPlayingButton">Keep music playing</label>
+                    <p>Continue music when the tab is hidden or inactive.</p>
+                </div>
+                <button id="KeepMusicPlayingButton" class="StorySwitch" type="button" role="switch" aria-checked="false" aria-label="Keep music playing">
+                    <span></span><strong id="KeepMusicPlayingState">Off</strong>
+                </button>
+            </div>
+        </div>
+
+        <aside class="StorySettingsCard StorySettingsNotes">
+            <span class="StorySettingsEyebrow">About</span>
+            <h2>Settings are separate from your profile.</h2>
+            <p>Your profile contains your identity, progress, cosmetics, and account actions. These options only control how the game feels on this device and account.</p>
+            <div class="StorySettingsRule"></div>
+            <div class="StorySettingsMini"><span>PROFILE</span><strong>Account, progress, cosmetics</strong></div>
+            <div class="StorySettingsMini"><span>SETTINGS</span><strong>Audio and playback</strong></div>
+        </aside>
+    </section>
+
+    <div id="SettingsStatus" class="StorySettingsStatus" aria-live="polite"></div>
+</main>
+
+<script>
+for (const ScriptName of ["server-config.js", "network.js", "app.js", "audio.js", "real-audio.js", "shell-ui.js", "build-version.js", "settings.js"]) {
+    document.write(`<script src="${ScriptName}?fresh=${SettingsFreshToken}"></script>`);
+}
+</script>
+</body>
+</html>
