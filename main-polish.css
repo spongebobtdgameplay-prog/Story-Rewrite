@@ -173,6 +173,8 @@ body {
     display: inline-flex;
     align-items: center;
     gap: 8px;
+    position: relative;
+    top: -4px;
 }
 .SettingsMainButton:hover svg {
     transform: rotate(24deg);
