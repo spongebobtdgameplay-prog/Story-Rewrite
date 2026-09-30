@@ -654,45 +654,9 @@ function RefreshStoryDangerUiV12() {
 }
 
 function EnsureStoryDangerLoopV12() {
-    if (!Stage || StoryDangerExpiredV12) return;
-
-    if (!StoryDangerTimerV12) {
-        StoryDangerTimerV12 = setInterval(() => {
-            RefreshStoryDangerUiV12();
-        }, 250);
-    }
-
-    RefreshStoryDangerUiV12();
+    if (StoryDangerTimerV12) return;
+    StoryDangerTimerV12 = setInterval(RefreshStoryDangerUiV12, 250);
 }
-
-function RestartStoryDangerAfterReturnV12() {
-    if (!Stage) return;
-
-    if (RoomCode) {
-        EnsureStoryDangerLoopV12();
-        RefreshStoryDangerUiV12();
-        return;
-    }
-
-    if (StoryGamePausedV12) {
-        RefreshStoryDangerUiV12();
-        return;
-    }
-
-    if (!StorySingleDangerEndV12 || StorySingleDangerStageIdV12 !== Stage.id) {
-        StartSingleStoryDangerV12();
-        return;
-    }
-
-    EnsureStoryDangerLoopV12();
-    RefreshStoryDangerUiV12();
-}
-
-window.addEventListener("StoryShellActivate", RestartStoryDangerAfterReturnV12);
-window.addEventListener("pageshow", RestartStoryDangerAfterReturnV12);
-window.addEventListener("visibilitychange", () => {
-    if (!document.hidden) RestartStoryDangerAfterReturnV12();
-});
 
 function StartSingleStoryDangerV12(Force = false) {
     if (RoomCode || !Stage || StoryGamePausedV12) return;
@@ -772,11 +736,9 @@ if (typeof RenderStage === "function" && !RenderStage.V12Wrapped) {
         RenderStoryPowerUiV12();
 
         if (RoomCode) {
+            RefreshStoryDangerUiV12();
             EnsureStoryDangerLoopV12();
-        } else {
-            StartSingleStoryDangerV12();
-        }
-        RefreshStoryDangerUiV12();
+        } else StartSingleStoryDangerV12();
 
         return Result;
     };
