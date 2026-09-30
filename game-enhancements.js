@@ -632,51 +632,6 @@ function RefreshStoryDangerUiV12() {
     if (Value) Value.textContent = `${Math.floor(Seconds / 60)}:${String(Seconds % 60).padStart(2, "0")}`;
     if (Fill) Fill.style.width = `${Math.max(0, Math.min(100, Remaining / (Total * 10)))}%`;
 
-    if (Value) Value.textContent = "--:--";
-    if (Fill) Fill.style.width = "0%";
-}
-
-function ClearStoryDangerTimerV12() {
-    if (StoryDangerTimerV12) {
-        clearInterval(StoryDangerTimerV12);
-        StoryDangerTimerV12 = null;
-    }
-
-    StorySingleDangerEndV12 = 0;
-    document.getElementById("Book")?.classList.remove("StoryDangerActive", "StoryDangerCritical");
-    document.getElementById("Illustration")?.classList.remove("StoryDangerActive", "StoryDangerCritical");
-}
-
-function GetStoryDangerEndV12() {
-    if (RoomCode) return Number(MultiplayerState?.dangerEndsAt || 0);
-    return StorySingleDangerEndV12;
-}
-
-function RefreshStoryDangerUiV12() {
-    if (!Stage) return;
-
-    const Value = document.getElementById("DangerTimerValue");
-    const Fill = document.getElementById("DangerTimerFill");
-    const End = GetStoryDangerEndV12();
-    const Total = GetStoryDangerSecondsV12();
-
-    if (!End) {
-        if (Value) Value.textContent = "--:--";
-        if (Fill) Fill.style.width = "0%";
-        document.getElementById("Book")?.classList.remove("StoryDangerActive", "StoryDangerCritical");
-        document.getElementById("Illustration")?.classList.remove("StoryDangerActive", "StoryDangerCritical");
-        return;
-    }
-
-    const Remaining = StoryGamePausedV12 && !RoomCode && StoryGamePauseStartedAtV12
-        ? Math.max(0, End - StoryGamePauseStartedAtV12)
-        : Math.max(0, End - Date.now());
-    const Seconds = Math.ceil(Remaining / 1000);
-    const Critical = Remaining > 0 && Remaining <= Math.min(15000, Total * 250);
-
-    if (Value) Value.textContent = `${Math.floor(Seconds / 60)}:${String(Seconds % 60).padStart(2, "0")}`;
-    if (Fill) Fill.style.width = `${Math.max(0, Math.min(100, Remaining / (Total * 10)))}%`;
-
     if (!StoryGamePausedV12 && !RoomCode && Remaining > 0) {
         if (Seconds <= 10 && !StoryDangerBell10V12) {
             StoryDangerBell10V12 = true;
@@ -699,9 +654,45 @@ function RefreshStoryDangerUiV12() {
 }
 
 function EnsureStoryDangerLoopV12() {
-    if (StoryDangerTimerV12) return;
-    StoryDangerTimerV12 = setInterval(RefreshStoryDangerUiV12, 250);
+    if (!Stage || StoryDangerExpiredV12) return;
+
+    if (!StoryDangerTimerV12) {
+        StoryDangerTimerV12 = setInterval(() => {
+            RefreshStoryDangerUiV12();
+        }, 250);
+    }
+
+    RefreshStoryDangerUiV12();
 }
+
+function RestartStoryDangerAfterReturnV12() {
+    if (!Stage) return;
+
+    if (RoomCode) {
+        EnsureStoryDangerLoopV12();
+        RefreshStoryDangerUiV12();
+        return;
+    }
+
+    if (StoryGamePausedV12) {
+        RefreshStoryDangerUiV12();
+        return;
+    }
+
+    if (!StorySingleDangerEndV12 || StorySingleDangerStageIdV12 !== Stage.id) {
+        StartSingleStoryDangerV12();
+        return;
+    }
+
+    EnsureStoryDangerLoopV12();
+    RefreshStoryDangerUiV12();
+}
+
+window.addEventListener("StoryShellActivate", RestartStoryDangerAfterReturnV12);
+window.addEventListener("pageshow", RestartStoryDangerAfterReturnV12);
+window.addEventListener("visibilitychange", () => {
+    if (!document.hidden) RestartStoryDangerAfterReturnV12();
+});
 
 function StartSingleStoryDangerV12(Force = false) {
     if (RoomCode || !Stage || StoryGamePausedV12) return;
@@ -781,9 +772,11 @@ if (typeof RenderStage === "function" && !RenderStage.V12Wrapped) {
         RenderStoryPowerUiV12();
 
         if (RoomCode) {
-            RefreshStoryDangerUiV12();
             EnsureStoryDangerLoopV12();
-        } else StartSingleStoryDangerV12();
+        } else {
+            StartSingleStoryDangerV12();
+        }
+        RefreshStoryDangerUiV12();
 
         return Result;
     };
