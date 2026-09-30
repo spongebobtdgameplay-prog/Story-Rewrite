@@ -115,6 +115,33 @@ body {
     }
 }
 
+
+/* Fluid shell control sizing; offsets follow viewport + safe-area instead of fixed device coordinates. */
+#StoryShellPauseButton {
+    inset-block-start: max(env(safe-area-inset-top), clamp(10px, 2vw, 22px));
+    inset-inline-start: max(env(safe-area-inset-left), clamp(10px, 2vw, 22px));
+    width: clamp(38px, 3.25vw, 46px);
+    height: clamp(38px, 3.25vw, 46px);
+    min-width: 38px;
+    min-height: 38px;
+}
+
+#StoryShellPauseButton svg {
+    width: clamp(19px, 1.65vw, 23px);
+    height: clamp(19px, 1.65vw, 23px);
+}
+
+@media (pointer: coarse) {
+    #StoryShellPauseButton {
+        width: clamp(39px, 10vw, 46px);
+        height: clamp(39px, 10vw, 46px);
+    }
+
+    #StoryShellPauseButton svg {
+        width: clamp(20px, 5.2vw, 23px);
+        height: clamp(20px, 5.2vw, 23px);
+    }
+}
 </style>
 <script>
 const AuthKey = "StoryRewriteAuthToken";
