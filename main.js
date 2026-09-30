@@ -132,6 +132,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             MainSave = await EnterServerStage(StageId);
             RenderMainPlayerState();
             StoryAudio.PlaySound("click");
+            try { sessionStorage.setItem("StoryRewriteResumeContinueV1", "1"); } catch {}
             GoStage(StageId);
         });
     } catch (Error) {
