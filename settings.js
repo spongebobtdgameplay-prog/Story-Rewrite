@@ -1,5 +1,6 @@
 const KeepMusicPlayingKey = "StoryRewriteKeepMusicPlayingV1";
 let SettingsSave = null;
+let SettingsData = null;
 let MusicSlider = null;
 let SoundSlider = null;
 let MusicValue = null;
@@ -74,7 +75,7 @@ async function SaveVolumes() {
     Status.className = "StorySettingsStatus";
     try {
         const Result = await SaveAudioSettings(Music, Sound);
-        SettingsSave = NormalizeSave(await LoadStoryData(), CloneSettingsSave(Result?.save || {
+        SettingsSave = NormalizeSave(SettingsData, CloneSettingsSave(Result?.save || {
             ...SettingsSave,
             settings: { ...(SettingsSave.settings || {}), musicVolume: Music, soundVolume: Sound }
         }));
@@ -116,7 +117,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         ]);
         const CachedSave = typeof GetLastKnownServerSave === "function" ? GetLastKnownServerSave() : null;
         const Save = CachedSave || await FetchServerSave();
-        SettingsSave = NormalizeSave(Data, CloneSettingsSave(Save));
+        SettingsData = Data;
+        SettingsSave = NormalizeSave(SettingsData, CloneSettingsSave(Save));
         RenderSettings();
 
         MusicSlider.addEventListener("input", () => SetVolumeControl(MusicSlider, MusicValue, Number(MusicSlider.value) / 100));
