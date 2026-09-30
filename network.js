@@ -24,7 +24,8 @@ const STORY_PROTECTED_PAGES = new Set([
     "multiplayer.html",
     "tutorial.html",
     "rules.html",
-    "account.html"
+    "account.html",
+    "settings.html"
 ]);
 
 let AccountProfileRequestPromise = null;
