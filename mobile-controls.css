@@ -187,6 +187,7 @@
     .MultiplayerDock {
         right: max(8px, env(safe-area-inset-right));
         bottom: calc(88px + env(safe-area-inset-bottom));
+        max-height: calc(100vh - 112px);
         max-height: calc(100dvh - 112px - env(safe-area-inset-bottom));
     }
 
@@ -371,6 +372,7 @@
     .MultiplayerDock {
         right: max(clamp(7px, 1.8vw, 16px), env(safe-area-inset-right));
         bottom: calc(clamp(76px, 15vw, 94px) + env(safe-area-inset-bottom));
+        max-height: calc(100vh - clamp(100px, 19vw, 118px));
         max-height: calc(100dvh - clamp(100px, 19vw, 118px) - env(safe-area-inset-bottom));
     }
 
