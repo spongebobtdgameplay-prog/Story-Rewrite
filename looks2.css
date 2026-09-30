@@ -188,6 +188,7 @@
 .Sidebar {
     width: 100%;
     min-width: 0;
+    max-height: calc(100vh - 32px);
     max-height: calc(100dvh - 32px);
     padding: 17px;
     position: sticky;
@@ -327,6 +328,7 @@
     display: none;
     place-items: center;
     background: rgba(24,12,6,.74);
+    -webkit-backdrop-filter: blur(5px);
     backdrop-filter: blur(5px);
 }
 
