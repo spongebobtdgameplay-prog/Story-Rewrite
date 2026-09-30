@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<script src="cache-guard.js?v=20260930-79"></script>
+<script src="cache-guard.js?v=20260930-80"></script>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -11,7 +11,7 @@
 <link rel="icon" type="image/x-icon" href="favicon_io/favicon.ico?v=1000001">
 <link rel="stylesheet" href="looks.css?v=20260822-66">
 <link rel="stylesheet" href="shell-ui.css">
-<link rel="stylesheet" href="settings.css?v=20260930-1">
+<link rel="stylesheet" href="settings.css?v=20260930-2">
 <script>
 const SettingsFreshToken = Date.now().toString(36);
 </script>
@@ -19,75 +19,101 @@ const SettingsFreshToken = Date.now().toString(36);
 <body class="StorySettingsPage">
 <main class="StorySettingsShell">
     <header class="StorySettingsHeader">
-        <button class="IconBackButton" type="button" data-story-back="main.html" aria-label="Go back"></button>
-        <div class="StorySettingsHeading">
-            <div class="StorySettingsIcon" aria-hidden="true">
-                <svg viewBox="0 0 24 24"><path d="M12 3.4 13.2 6l2.8.4-2 2 .5 2.8-2.5-1.4-2.5 1.4.5-2.8-2-2 2.8-.4L12 3.4Zm0 9.1a4.3 4.3 0 1 0 0 8.6 4.3 4.3 0 0 0 0-8.6Z"></path></svg>
+        <button class="IconBackButton StorySettingsBack" type="button" data-story-back="main.html" aria-label="Back to main menu"></button>
+
+        <div class="StorySettingsTitleBlock">
+            <div class="StorySettingsCog" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M9.35 3.45 10.4 2.3h3.2l1.05 1.15 1.55.65 1.5-.18 2.25 2.25-.18 1.5.65 1.55L21.6 10.4v3.2l-1.18 1.05-.65 1.55.18 1.5-2.25 2.25-1.5-.18-1.55.65-1.05 1.18h-3.2L9.35 20.42l-1.55-.65-1.5.18-2.25-2.25.18-1.5-.65-1.55L2.4 13.6v-3.2l1.18-1.05.65-1.55-.18-1.5L6.3 4.05l1.5.18 1.55-.78ZM12 8.4a3.6 3.6 0 1 0 0 7.2 3.6 3.6 0 0 0 0-7.2Z"></path></svg>
             </div>
             <div>
-                <div class="Kicker">Player options</div>
+                <div class="StorySettingsKicker">PLAYER SETTINGS</div>
                 <h1>Settings</h1>
-                <p>Control how Story Rewrite sounds and behaves between chapters.</p>
+                <p>Fine-tune the sound and playback experience for Story Rewrite.</p>
             </div>
         </div>
-        <div class="StorySettingsBuild" id="SettingsBuild">Build</div>
+
+        <button class="StorySettingsProfile" type="button" data-story-go="account.html">
+            <span class="StorySettingsProfileIcon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.4"></circle><path d="M5.5 20c.7-4 3-6 6.5-6s5.8 2 6.5 6"></path></svg>
+            </span>
+            <span><small>PROFILE</small><strong>View profile</strong></span>
+        </button>
     </header>
 
-    <section class="StorySettingsGrid">
-        <div class="StorySettingsCard">
-            <div class="StorySettingsCardHead">
-                <div><span class="StorySettingsEyebrow">Audio</span><h2>Sound & music</h2></div>
+    <div class="StorySettingsBody">
+        <nav class="StorySettingsRail" aria-label="Settings categories">
+            <div class="StorySettingsRailLabel">SETTINGS</div>
+            <div class="StorySettingsRailItem Active">
+                <span class="RailDot"></span>
+                <span>Audio & playback</span>
+            </div>
+            <div class="StorySettingsRailItem">
+                <span class="RailDot"></span>
+                <span>More options</span>
+                <small>Coming later</small>
+            </div>
+            <div class="StorySettingsRailFoot">Your profile and account actions live separately.</div>
+        </nav>
+
+        <section class="StorySettingsCard">
+            <div class="StorySettingsCardTop">
+                <div>
+                    <span class="StorySettingsEyebrow">Audio & playback</span>
+                    <h2>Make the story sound right.</h2>
+                </div>
+                <div class="StorySettingsLive">
+                    <span></span>
+                    LIVE
+                </div>
             </div>
 
             <div class="StorySettingRow">
-                <div>
-                    <label for="MusicVolumeSlider">Music volume</label>
-                    <p>Controls menu and story music.</p>
+                <div class="StorySettingCopy">
+                    <div class="StorySettingTitle">Music volume</div>
+                    <p>Menu, lobby, and chapter music.</p>
                 </div>
                 <div class="StorySettingControl">
-                    <input id="MusicVolumeSlider" type="range" min="0" max="100" step="1" value="45">
+                    <input id="MusicVolumeSlider" type="range" min="0" max="100" step="1" value="45" aria-label="Music volume">
                     <output id="MusicVolumeValue" for="MusicVolumeSlider">45%</output>
                 </div>
             </div>
 
             <div class="StorySettingRow">
-                <div>
-                    <label for="SoundVolumeSlider">Sound effects</label>
-                    <p>Controls clicks, alerts, and gameplay sounds.</p>
+                <div class="StorySettingCopy">
+                    <div class="StorySettingTitle">Sound effects</div>
+                    <p>Clicks, alerts, confirmations, and gameplay sounds.</p>
                 </div>
                 <div class="StorySettingControl">
-                    <input id="SoundVolumeSlider" type="range" min="0" max="100" step="1" value="75">
+                    <input id="SoundVolumeSlider" type="range" min="0" max="100" step="1" value="75" aria-label="Sound effects volume">
                     <output id="SoundVolumeValue" for="SoundVolumeSlider">75%</output>
                 </div>
             </div>
 
-            <div class="StorySettingRow">
-                <div>
-                    <label for="KeepMusicPlayingButton">Keep music playing</label>
-                    <p>Continue music when the tab is hidden or inactive.</p>
+            <div class="StorySettingRow StorySettingRowToggle">
+                <div class="StorySettingCopy">
+                    <div class="StorySettingTitle">Keep music playing</div>
+                    <p>Keep the soundtrack running when the tab is hidden or inactive.</p>
                 </div>
                 <button id="KeepMusicPlayingButton" class="StorySwitch" type="button" role="switch" aria-checked="false" aria-label="Keep music playing">
-                    <span></span><strong id="KeepMusicPlayingState">Off</strong>
+                    <span class="StorySwitchTrack"><i></i></span>
+                    <strong id="KeepMusicPlayingState">OFF</strong>
                 </button>
             </div>
-        </div>
 
-        <aside class="StorySettingsCard StorySettingsNotes">
-            <span class="StorySettingsEyebrow">About</span>
-            <h2>Settings are separate from your profile.</h2>
-            <p>Your profile contains your identity, progress, cosmetics, and account actions. These options only control how the game feels on this device and account.</p>
-            <div class="StorySettingsRule"></div>
-            <div class="StorySettingsMini"><span>PROFILE</span><strong>Account, progress, cosmetics</strong></div>
-            <div class="StorySettingsMini"><span>SETTINGS</span><strong>Audio and playback</strong></div>
-        </aside>
-    </section>
-
-    <div id="SettingsStatus" class="StorySettingsStatus" aria-live="polite"></div>
+            <div class="StorySettingsFooter">
+                <div>
+                    <span class="StorySettingsSavedDot"></span>
+                    <span>Changes save to your Story Rewrite account.</span>
+                </div>
+                <span id="SettingsStatus" aria-live="polite"></span>
+            </div>
+        </section>
+    </div>
 </main>
 
 <script>
 for (const ScriptName of ["server-config.js", "network.js", "app.js", "audio.js", "real-audio.js", "shell-ui.js", "build-version.js", "settings.js"]) {
-    document.write(`<script src="${ScriptName}?fresh=${SettingsFreshToken}"></script>`);
+    document.write(`<script src="${ScriptName}?fresh=${SettingsFreshToken}"><\/script>`);
 }
 </script>
 </body>
