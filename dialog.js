@@ -51,8 +51,6 @@ window.addEventListener("DOMContentLoaded", async () => {
 
         if (RoomCode) {
             SetGamePaused(false);
-        } else if (document.hidden) {
-            SetGamePaused(true, "inactive");
         }
 
         if (RoomCode) StartMultiplayer();
