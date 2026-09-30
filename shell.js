@@ -472,10 +472,6 @@
         ActiveFrame = Frame;
         if (PendingFrame === Frame) PendingFrame = null;
 
-        if (IsSinglePlayerGameRoute(Route)) {
-            ShellPauseState = false;
-        }
-
         SyncGameplayPauseButton();
         GameplayPauseButton?.removeAttribute("aria-busy");
         UpdateTitle(Frame);
@@ -667,7 +663,8 @@
             return;
         }
 
-        const NormalizedFallback = NormalizeRoute(Fallback) || "main.html";
+        const SavedBackRoute = ReadLastShellState()?.backRoute;
+        const NormalizedFallback = NormalizeRoute(SavedBackRoute || Fallback) || "main.html";
         LoadRoute(NormalizedFallback, { replace: true });
     }
 
