@@ -154,13 +154,13 @@
         }
     }
 
-    function SetTopHistory(Route, Replace = false) {
+    function SetTopHistory(Route, Replace = false, PreviousRouteOverride = "") {
         const Url = new URL(window.location.href);
         Url.hash = RouteHash(Route);
 
-        const PreviousRoute = CurrentRoute && CurrentRoute !== Route
-            ? CurrentRoute
-            : (ReadLastShellState()?.backRoute || "main.html");
+        const PreviousRoute = NormalizeRoute(PreviousRouteOverride)
+            || (CurrentRoute && CurrentRoute !== Route ? CurrentRoute : "")
+            || (ReadLastShellState()?.backRoute || "main.html");
 
         if (Replace) {
             const State = {
@@ -584,13 +584,14 @@
         const Replace = Boolean(Options.replace);
         const SkipHistory = Boolean(Options.skipHistory);
         const Frame = GetFrameForRoute(Normalized);
+        const PreviousRoute = CurrentRoute;
 
         CurrentRoute = Normalized;
         GameplayPauseButton?.setAttribute("aria-busy", "true");
         SyncGameplayPauseButton();
         ApplyRouteMusic(Normalized);
 
-        if (!SkipHistory) SetTopHistory(Normalized, Replace);
+        if (!SkipHistory) SetTopHistory(Normalized, Replace, PreviousRoute);
 
         if (Frame.dataset.storyLoaded === "1") {
             PendingFrame = null;
