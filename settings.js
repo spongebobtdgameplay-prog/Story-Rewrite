@@ -118,8 +118,18 @@ document.addEventListener("DOMContentLoaded", async () => {
         SettingsSave = NormalizeSave(SettingsData, CloneSettingsSave(Save));
         RenderSettings();
 
-        MusicSlider.addEventListener("input", () => SetVolumeControl(MusicSlider, MusicValue, Number(MusicSlider.value) / 100));
-        SoundSlider.addEventListener("input", () => SetVolumeControl(SoundSlider, SoundValue, Number(SoundSlider.value) / 100));
+        MusicSlider.addEventListener("input", () => {
+            const Music = Number(MusicSlider.value) / 100;
+            const Sound = Number(SoundSlider.value) / 100;
+            SetVolumeControl(MusicSlider, MusicValue, Music);
+            ApplyAudio({ musicVolume: Music, soundVolume: Sound });
+        });
+        SoundSlider.addEventListener("input", () => {
+            const Music = Number(MusicSlider.value) / 100;
+            const Sound = Number(SoundSlider.value) / 100;
+            SetVolumeControl(SoundSlider, SoundValue, Sound);
+            ApplyAudio({ musicVolume: Music, soundVolume: Sound });
+        });
         MusicSlider.addEventListener("change", SaveVolumes);
         SoundSlider.addEventListener("change", SaveVolumes);
     } catch (Error) {
