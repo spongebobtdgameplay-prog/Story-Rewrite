@@ -186,3 +186,81 @@ body {
 @media (prefers-reduced-motion: reduce) {
     .SettingsNavButton svg { animation: none; }
 }
+
+
+/* Fluid home composition for narrow and short viewports. */
+@media (max-width: 820px) {
+    .HomeHero {
+        padding: clamp(22px, 5vw, 34px);
+        gap: clamp(18px, 5vw, 32px);
+    }
+
+    .HomeTitle {
+        font-size: clamp(38px, 11.5vw, 58px);
+        line-height: .94;
+    }
+
+    .HomeText {
+        font-size: clamp(15px, 4.4vw, 18px);
+        line-height: 1.52;
+    }
+
+    .HomeActions {
+        margin-top: clamp(17px, 4vw, 24px);
+        gap: clamp(7px, 2vw, 11px);
+    }
+
+    .HomeActions a,
+    .HomeActions button {
+        min-height: clamp(44px, 12vw, 48px);
+        padding: 10px clamp(10px, 3.5vw, 18px);
+        font-size: clamp(13px, 3.6vw, 15px);
+    }
+
+    .HomeStats {
+        gap: clamp(7px, 1.8vw, 11px);
+    }
+
+    .StatCard {
+        padding: clamp(13px, 3vw, 19px);
+    }
+
+    .StatNumber {
+        font-size: clamp(27px, 8vw, 33px);
+    }
+}
+
+@media (max-height: 700px) {
+    .HomeHero {
+        gap: clamp(16px, 3vw, 26px);
+        padding-block: clamp(18px, 3vw, 28px);
+    }
+
+    .HomeActions {
+        margin-top: clamp(14px, 2.8vw, 21px);
+    }
+}
+
+@media (max-width: 390px) {
+    .HomeHero {
+        padding-inline: 18px;
+    }
+
+    .HomeTitle {
+        font-size: clamp(35px, 11vw, 48px);
+    }
+
+    .HomeText {
+        font-size: 15px;
+    }
+
+    .HomeActions {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .HomeActions a,
+    .HomeActions button {
+        min-height: 42px;
+        padding-inline: 8px;
+    }
+}
