@@ -146,23 +146,41 @@ body {
     padding: 0 !important;
     display: inline-grid;
     place-items: center;
+    position: relative;
 }
 .SettingsNavButton svg,
 .SettingsMainButton svg {
-    width: 18px;
-    height: 18px;
+    width: 19px;
+    height: 19px;
     fill: none;
     stroke: currentColor;
-    stroke-width: 1.7;
+    stroke-width: 1.65;
     stroke-linecap: round;
     stroke-linejoin: round;
+    transform-origin: 50% 50%;
 }
-.SettingsNavButton:hover svg,
-.SettingsMainButton:hover svg {
-    transform: rotate(14deg);
+.SettingsNavButton svg {
+    animation: StorySettingsCogTurn 10s linear infinite;
+}
+.SettingsNavButton:hover svg {
+    animation-duration: 1.2s;
+}
+.SettingsNavButton:focus-visible {
+    outline: 2px solid rgba(224, 178, 106, .72);
+    outline-offset: 3px;
 }
 .SettingsMainButton {
     display: inline-flex;
     align-items: center;
     gap: 8px;
+}
+.SettingsMainButton:hover svg {
+    transform: rotate(24deg);
+    transition: transform .28s ease;
+}
+@keyframes StorySettingsCogTurn {
+    to { transform: rotate(360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+    .SettingsNavButton svg { animation: none; }
 }
