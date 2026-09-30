@@ -138,3 +138,31 @@ body {
         margin-top: 22px;
     }
 }
+
+.SettingsNavButton {
+    min-width: 46px !important;
+    width: 46px !important;
+    min-height: 46px !important;
+    padding: 0 !important;
+    display: inline-grid;
+    place-items: center;
+}
+.SettingsNavButton svg,
+.SettingsMainButton svg {
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+.SettingsNavButton:hover svg,
+.SettingsMainButton:hover svg {
+    transform: rotate(14deg);
+}
+.SettingsMainButton {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
