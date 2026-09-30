@@ -82,12 +82,13 @@ const StoryAudio = (() => {
 
         const StartTime = Context.currentTime;
         const MasterGain = Context.createGain();
+        MasterGain.gain.setValueAtTime(0.76, StartTime);
         MasterGain.connect(Context.destination);
 
         const Partials = [
-            { frequency: 880, gain: 0.42 },
-            { frequency: 1320, gain: 0.2 },
-            { frequency: 1760, gain: 0.11 }
+            { frequency: 880, gain: 0.76 },
+            { frequency: 1320, gain: 0.36 },
+            { frequency: 1760, gain: 0.2 }
         ];
 
         for (const Partial of Partials) {
@@ -98,7 +99,7 @@ const StoryAudio = (() => {
             Oscillator.frequency.setValueAtTime(Partial.frequency, StartTime);
             Oscillator.frequency.exponentialRampToValueAtTime(Partial.frequency * 0.94, StartTime + 0.75);
 
-            const Peak = Math.max(0.0001, Partial.gain * SoundVolume);
+            const Peak = Math.max(0.0001, Math.min(0.95, Partial.gain * SoundVolume));
             PartialGain.gain.setValueAtTime(0.0001, StartTime);
             PartialGain.gain.exponentialRampToValueAtTime(Peak, StartTime + 0.008);
             PartialGain.gain.exponentialRampToValueAtTime(Math.max(0.0001, Peak * 0.45), StartTime + 0.18);
