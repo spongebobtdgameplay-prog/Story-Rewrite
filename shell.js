@@ -372,6 +372,18 @@
         } catch {}
     }
 
+    function ConsumeContinueResumeRequest(Route) {
+        if (!IsSinglePlayerGameRoute(Route)) return false;
+
+        try {
+            if (sessionStorage.getItem("StoryRewriteResumeContinueV1") !== "1") return false;
+            sessionStorage.removeItem("StoryRewriteResumeContinueV1");
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
     function IsSinglePlayerGameRoute(Route = CurrentRoute) {
         try {
             const Url = new URL(Route, GetBaseUrl());
@@ -475,7 +487,18 @@
         SyncGameplayPauseButton();
         GameplayPauseButton?.removeAttribute("aria-busy");
         UpdateTitle(Frame);
+
+        const ResumeContinue = ConsumeContinueResumeRequest(Route);
+        if (ResumeContinue) {
+            ShellPauseState = false;
+        }
+
         DispatchFrameEvent(Frame, "StoryShellActivate", Route);
+
+        if (ResumeContinue) {
+            DispatchFrameEvent(Frame, "StoryShellResumeGameplay", Route);
+        }
+
         return true;
     }
 
