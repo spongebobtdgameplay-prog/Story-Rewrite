@@ -278,7 +278,7 @@ function AddStoryVersionBadge() {
     Badge.textContent = `Build ${STORY_FRONTEND_VERSION}`;
     Badge.title = "Loaded frontend version";
 
-    const AccountTitle = document.querySelector(".AccountSettingsHeader h1");
+    const AccountTitle = document.querySelector("body.ProfilePage .AccountSettingsHeader h1");
     if (AccountTitle) {
         AccountTitle.appendChild(Badge);
         return;
