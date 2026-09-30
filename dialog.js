@@ -5,6 +5,7 @@ let World;
 let Profile;
 let RemovedSentences = new Set();
 let LastCheckFailed = false;
+let LastFailureResult = null;
 let TransitionBusy = false;
 let MultiplayerSocket = null;
 let MultiplayerState = null;
@@ -323,6 +324,7 @@ function RenderSentences() {
 
 function ToggleSentence(Index) {
     LastCheckFailed = false;
+    LastFailureResult = null;
     document.getElementById("Aftermath").classList.add("Hidden");
 
     if (RoomCode) {
@@ -377,7 +379,9 @@ function RenderLives() {
 }
 
 function GetSceneMessage(Mode) {
-    if (Mode === "failure") return Stage.aftermath;
+    if (Mode === "failure") return LastFailureResult?.timedOut
+        ? String(LastFailureResult.deathDetails || Stage.aftermath)
+        : Stage.aftermath;
     if (Mode === "chapter") return World.chapterEnding;
     if (RemovedSentences.size === 0) return "The original account is still intact. The danger has not been rewritten yet.";
     if (RemovedSentences.size === 1) return "One event has been removed. The route is changing, but survival has not been checked.";
@@ -450,6 +454,8 @@ async function CheckStage() {
         }
 
         LastCheckFailed = false;
+
+        LastFailureResult = null;
         StoryAudio.PlaySound("success");
         Status.className = "StatusText Good";
         Status.textContent = "The rewritten account satisfies the objective and survival rule.";
@@ -462,28 +468,47 @@ async function CheckStage() {
     }
 }
 
+function BuildTimeoutSolutionMarkup(Result) {
+    const Solution = Array.isArray(Result?.solutionSentences) ? Result.solutionSentences : [];
+    if (!Solution.length) return "";
+    const Items = Solution.map(Item => {
+        const Index = Number(Item?.index);
+        const Sentence = String(Item?.sentence || "").trim();
+        if (!Number.isInteger(Index) || !Sentence) return "";
+        return `<li><strong>Sentence ${Index + 1}:</strong> ${EscapeText(Sentence)}</li>`;
+    }).filter(Boolean).join("");
+    if (!Items) return "";
+    return `<div class="TimeoutSolution"><strong>Winning rewrite — events that should have been removed</strong><ol>${Items}</ol></div>`;
+}
+
 function ApplyFailureOutcome(Result) {
+    const TimedOut = Boolean(Result?.timedOut);
     LastCheckFailed = true;
-    StoryAudio.PlaySound(Result.gameOver ? "life" : "fail");
+    LastFailureResult = Result;
+    StoryAudio.PlaySound(TimedOut ? "fail" : (Result.gameOver ? "life" : "fail"));
     StoryAudio.PlayMusic("danger");
 
-    const FailureReason = Result?.timedOut
-        ? "The danger timer ran out."
+    const FailureReason = TimedOut
+        ? String(Result?.deathDetails || "The threat reached you when the timer expired.")
         : String(Result?.reason || "The rewrite failed.");
 
     const Status = document.getElementById("StatusText");
     Status.className = "StatusText Bad";
-    Status.textContent = `${FailureReason} Life lost.`;
+    Status.textContent = TimedOut ? `You died. ${FailureReason}` : `${FailureReason} Life lost.`;
 
     const Aftermath = document.getElementById("Aftermath");
     Aftermath.classList.remove("Hidden");
-    Aftermath.innerHTML = `<strong>Bad outcome</strong>${EscapeText(Result.aftermath)}`;
+    Aftermath.innerHTML = TimedOut
+        ? `<strong>Death</strong>${EscapeText(FailureReason)}${BuildTimeoutSolutionMarkup(Result)}`
+        : `<strong>Bad outcome</strong>${EscapeText(Result.aftermath)}`;
     RenderIllustration();
     RenderLives();
     ShakeBook();
 
-    if (Result.gameOver) {
-        document.getElementById("GameOverText").textContent = `${FailureReason} ${Result.aftermath} No lives remain. Restart the chapter to continue.`;
+    if (Result.gameOver || TimedOut) {
+        document.getElementById("GameOverText").textContent = TimedOut
+            ? `${FailureReason} The timer expired before the rewrite was checked. Restart the chapter to try again.`
+            : `${FailureReason} ${Result.aftermath} No lives remain. Restart the chapter to continue.`;
         document.getElementById("GameOverOverlay").classList.add("Show");
     }
 }
@@ -507,6 +532,7 @@ function RestoreStage() {
 
     RemovedSentences.clear();
     LastCheckFailed = false;
+    LastFailureResult = null;
     StoryAudio.PlaySound("restore");
     document.getElementById("Aftermath").classList.add("Hidden");
     document.getElementById("StatusText").className = "StatusText";
@@ -612,6 +638,7 @@ function ReplayStage() {
 
     RemovedSentences.clear();
     LastCheckFailed = false;
+    LastFailureResult = null;
     document.getElementById("Aftermath").classList.add("Hidden");
     document.getElementById("StatusText").className = "StatusText";
     document.getElementById("StatusText").textContent = "The page has been reset.";
@@ -661,6 +688,7 @@ function StartMultiplayer() {
     MultiplayerSocket.on("game:retry", () => {
         RemovedSentences.clear();
         LastCheckFailed = false;
+        LastFailureResult = null;
         document.getElementById("CompleteOverlay").classList.remove("Show");
         document.getElementById("GameOverOverlay")?.classList.remove("Show");
         if (typeof ResetStoryDangerAfterReviveV12 === "function") ResetStoryDangerAfterReviveV12();
@@ -713,6 +741,8 @@ function HandleMultiplayerOutcome(Result) {
     }
 
     LastCheckFailed = false;
+
+    LastFailureResult = null;
     NextStageOverride = Result.nextStage || "";
     StoryAudio.PlaySound("success");
     document.getElementById("StatusText").className = "StatusText Good";
