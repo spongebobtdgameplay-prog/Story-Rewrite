@@ -125,6 +125,18 @@ def FetchWebKnowledge(Context):
         return []
 
 
+def ChooseResponseStyle(Context):
+    Question = str((Context or {}).get("question", "")).strip()
+    Score = sum((Index + 1) * ord(Character) for Index, Character in enumerate(Question[:80]))
+    Styles = (
+        "answer directly in a natural conversational tone",
+        "lead with the most useful fact, then add a brief explanation",
+        "give a compact explanation in your own words",
+        "respond casually but precisely, focusing on the player's exact question",
+    )
+    return Styles[Score % len(Styles)]
+
+
 def BuildPrompt(Context):
     ContextCopy = dict(Context or {})
     WebKnowledge = ContextCopy.pop("webKnowledge", None)
@@ -144,6 +156,8 @@ def BuildPrompt(Context):
         "the web notes are part of the live game state. "
         "Write an original response instead of repeating a canned StoryBot line. "
         "Do not begin every answer with the player's name, 'Yes', or 'I can confirm'. "
+        "Vary the wording and sentence structure; never reuse a previous answer verbatim. "
+        + ChooseResponseStyle(Context) + ". "
         "Mention a concrete relevant name, stage, objective, threat, vote, player, or fact when one is available. "
         "Rephrase the answer naturally so two different questions produce clearly different wording. "
         "Do not copy the question back to the player. "
@@ -208,8 +222,8 @@ def GenerateReply(Model, Context):
         "actual question. You are not a scripted dialogue box. You may rephrase, explain, compare, or summarize "
         "facts differently depending on the question. "
         "For live gameplay, only use room, stage, vote, and recent chat information supplied in LIVE_CONTEXT. "
-        "For lobby status, say that the host has not started the game yet and do not invent story events, votes, "
-        "threats, or outcomes. "
+        "For lobby status, use the room status as a fact but phrase the answer naturally around the player's "
+        "specific question; do not reuse a fixed lobby sentence. Never invent story events, votes, threats, or outcomes. "
         "WEB_KNOWLEDGE is optional background retrieved for the player's general-knowledge question; do not use it "
         "to override live game state, and do not claim you personally browsed the web. "
         "Avoid canned openings and avoid repeating the same sentence across answers. "
@@ -240,7 +254,7 @@ def GenerateReply(Model, Context):
     if any(Pattern in LowerReply for Pattern in GenericPatterns):
         RewritePrompt = (
             "Rewrite the previous answer so it directly answers the player's question using the concrete facts "
-            "in LIVE_CONTEXT or WEB_KNOWLEDGE. Do not use a generic StoryBot fallback. Do not start with 'Yes' or "
+            "in LIVE_CONTEXT or WEB_KNOWLEDGE. Do not use a generic fallback or a fixed lobby sentence. Do not start with 'Yes' or "
             "'I can confirm'. Use different wording and include at least one specific relevant fact. Keep it to "
             "2-4 concise sentences.\n\n" + BuildPrompt(Context)
         )
