@@ -187,7 +187,8 @@ function RenderStoryBotDialog(Container, Message) {
     Meta.className = "StoryBotDialogMeta";
     const AskingName = String(Message?.askingUsername || "");
     const LocalName = GetStoryBotCurrentUsername();
-    Meta.textContent = AskingName && AskingName === LocalName
+    const IsForCurrentPlayer = !AskingName || !LocalName || AskingName === LocalName;
+    Meta.textContent = AskingName && IsForCurrentPlayer
         ? "This question box is for you."
         : AskingName
             ? `Responding to ${AskingName}`
@@ -204,11 +205,14 @@ function RenderStoryBotDialog(Container, Message) {
     Input.autocomplete = "off";
     Input.spellcheck = true;
     Input.setAttribute("aria-label", "Ask StoryBot a question");
+    Input.disabled = !IsForCurrentPlayer;
+    if (!IsForCurrentPlayer) Input.placeholder = "Waiting for " + AskingName + "...";
 
     const Send = document.createElement("button");
     Send.type = "button";
     Send.className = "StoryBotDialogSend";
     Send.setAttribute("aria-label", "Send question to StoryBot");
+    Send.disabled = !IsForCurrentPlayer;
     Send.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 12 16-7-4 14-4-6-8-1Z"></path><path d="m12 13 4-8"></path></svg>';
     Send.addEventListener("click", () => SubmitStoryBotDialogQuestion(Input));
 
