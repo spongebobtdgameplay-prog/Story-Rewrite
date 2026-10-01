@@ -24,11 +24,19 @@ async function ClearLegacyCaches() {
 }
 
 function ScheduleLegacyCacheCleanup() {
-    const Run = () => ClearLegacyCaches().catch(() => {});
-    if (typeof window.requestIdleCallback === "function") {
-        window.requestIdleCallback(Run, { timeout: 4000 });
+    const Schedule = () => {
+        const Run = () => ClearLegacyCaches().catch(() => {});
+        if (typeof window.requestIdleCallback === "function") {
+            window.requestIdleCallback(Run, { timeout: 10000 });
+        } else {
+            window.setTimeout(Run, 3000);
+        }
+    };
+
+    if (document.readyState === "complete") {
+        window.setTimeout(Schedule, 1500);
     } else {
-        window.setTimeout(Run, 2000);
+        window.addEventListener("load", () => window.setTimeout(Schedule, 1500), { once: true });
     }
 }
 
