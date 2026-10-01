@@ -1,3 +1,57 @@
+function EnsureStoryLifeHeartVisuals() {
+    if (document.head.querySelector('style[data-story-life-hearts="1"]')) return;
+
+    const Style = document.createElement("style");
+    Style.setAttribute("data-story-life-hearts", "1");
+    Style.textContent = `
+        .LifeHeart.StoryHeartActive {
+            color: #ff1738 !important;
+            transform-origin: center;
+            animation: StoryRewriteLifeHeartPulse .86s cubic-bezier(.34,1.56,.64,1) infinite !important;
+            will-change: transform, filter;
+        }
+        .LifeHeart.StoryHeartActive svg,
+        .LifeHeart.StoryHeartActive path {
+            fill: #ff1738 !important;
+            color: #ff1738 !important;
+        }
+        .LifeHeart.StoryHeartEmpty,
+        .LifeHeart.StoryHeartEmpty svg,
+        .LifeHeart.StoryHeartEmpty path {
+            color: #6d625d !important;
+        }
+        .LifeHeart.StoryHeartEmpty svg,
+        .LifeHeart.StoryHeartEmpty path {
+            fill: #6d625d !important;
+        }
+        .LifeHeart.StoryHeartEmpty {
+            animation: none !important;
+            filter: none !important;
+        }
+        .LifeHeart.StoryHeartActive svg {
+            filter:
+                drop-shadow(0 0 3px rgba(255, 23, 56, .9))
+                drop-shadow(0 0 8px rgba(255, 23, 56, .7))
+                drop-shadow(0 0 16px rgba(255, 23, 56, .45));
+        }
+        .LivesHearts .LifeHeart.StoryHeartActive:nth-child(2) {
+            animation-delay: .14s !important;
+        }
+        .LivesHearts .LifeHeart.StoryHeartActive:nth-child(3) {
+            animation-delay: .28s !important;
+        }
+        @keyframes StoryRewriteLifeHeartPulse {
+            0%, 100% { transform: scale(1); filter: brightness(1); }
+            10% { transform: scale(1.06); filter: brightness(1.08); }
+            20% { transform: scale(1.24); filter: brightness(1.34); }
+            32% { transform: scale(1.03); filter: brightness(1.05); }
+            43% { transform: scale(1.14); filter: brightness(1.2); }
+            56% { transform: scale(1); filter: brightness(1); }
+        }
+    `;
+    document.head.appendChild(Style);
+}
+
 let MultiplayerSocket = null;
 let MultiplayerState = null;
 let CurrentProfile = null;
