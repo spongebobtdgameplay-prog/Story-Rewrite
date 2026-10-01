@@ -45,6 +45,7 @@ body {
     position: absolute;
     inset: 0;
     display: block;
+    visibility: hidden;
     border: 0;
     background: transparent;
 }
@@ -169,7 +170,7 @@ if (!Token) window.location.replace("auth.html");
             <rect x="13.5" y="5.5" width="3.5" height="13" rx="1"></rect>
         </svg>
     </button>
-    <iframe id="StoryShellFrame" class="StoryShellFrame" title="Story Rewrite"></iframe>
+    <iframe id="StoryShellFrame" class="StoryShellFrame" scrolling="auto" title="Story Rewrite"></iframe>
 </div>
 <script src="cache-guard.js?v=20261001-1"></script>
 <script src="shell.js?v=20261001-1"></script>
