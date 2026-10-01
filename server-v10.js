@@ -20,6 +20,7 @@ ReplaceWrapperRequired(
 
 const AIConstantsSearch = "const JoinRequestLifetime = 45000;";
 const AIConstantsReplacement = `const JoinRequestLifetime = 45000;
+const OpenAIApiKey = "";
 const StoryBotName = "StoryBot";
 const StoryBotCooldown = 4000;
 const StoryBotTimeout = 20000;
