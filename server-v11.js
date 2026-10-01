@@ -20,7 +20,7 @@ ReplaceWrapperRequired(
 
 const V11ConstantsSearch = `const StoryBotContextMessages = 12;`;
 const V11ConstantsReplacement = `const StoryBotContextMessages = 12;
-const ChatSafetyModel = String(process.env.OPENAI_CHAT_FILTER_MODEL || OpenAIModel).trim();
+const ChatSafetyModel = "local-storybot";
 const ChatSafetyTimeout = 15000;
 const MaxRevives = 3;
 const ReviveEarnEvery = 5;`;
