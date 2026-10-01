@@ -1,5 +1,5 @@
 (() => {
-    const FrontendVersion = "20260930.3";
+    const FrontendVersion = "20261001.1";
     const Root = document.getElementById("StoryShellRoot");
     const InitialFrame = document.getElementById("StoryShellFrame");
     if (!Root || !InitialFrame) return;
@@ -465,6 +465,7 @@
 
     function HideFrame(Frame) {
         Frame.style.display = "none";
+        Frame.style.visibility = "hidden";
         Frame.style.pointerEvents = "none";
         Frame.setAttribute("aria-hidden", "true");
     }
@@ -479,6 +480,7 @@
         for (const Child of Root.querySelectorAll("iframe.StoryShellFrame")) HideFrame(Child);
 
         Frame.style.display = "block";
+        Frame.style.visibility = "visible";
         Frame.style.pointerEvents = "auto";
         Frame.removeAttribute("aria-hidden");
         ActiveFrame = Frame;
@@ -560,10 +562,12 @@
 
         if (!KeepVisible) {
             Frame.style.display = "none";
+            Frame.style.visibility = "hidden";
             Frame.style.pointerEvents = "none";
             Frame.setAttribute("aria-hidden", "true");
         } else {
             Frame.style.display = "block";
+            Frame.style.visibility = "hidden";
             Frame.style.pointerEvents = "auto";
             Frame.removeAttribute("aria-hidden");
         }
@@ -731,6 +735,7 @@
     });
 
     const InitialFrameHadSource = Boolean(InitialFrame.getAttribute("src"));
+    InitialFrame.style.visibility = "hidden";
     PrepareFrame(InitialFrame, "main.html", true);
     PersistentFrames.set("main.html", InitialFrame);
     ActiveFrame = InitialFrame;
