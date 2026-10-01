@@ -1,4 +1,5 @@
 window.STORY_REWRITE_SERVER_URL = "https://story-rewrite-backend.onrender.com";
+window.STORY_REWRITE_CANONICAL_URL = "https://story-rewrite-iota.vercel.app";
 
 (() => {
     if (window.top !== window.self) return;
