@@ -2,7 +2,6 @@ import json
 import os
 import sys
 import tempfile
-import time
 import urllib.parse
 import urllib.request
 from pathlib import Path
@@ -130,12 +129,12 @@ def BuildPrompt(Context):
     ContextCopy = dict(Context or {})
     WebKnowledge = ContextCopy.pop("webKnowledge", None)
     ContextText = json.dumps(ContextCopy, ensure_ascii=False, separators=(",", ":"))
-    if len(ContextText) > 6800:
-        ContextText = ContextText[:3600] + "...[context trimmed]..." + ContextText[-3000:]
+    if len(ContextText) > 3300:
+        ContextText = ContextText[:1900] + "...[context trimmed]..." + ContextText[-1200:]
 
     WebText = json.dumps(WebKnowledge or [], ensure_ascii=False, separators=(",", ":"))
-    if len(WebText) > 4200:
-        WebText = WebText[:4200]
+    if len(WebText) > 2200:
+        WebText = WebText[:2200]
 
     return (
         "Read the live game context first, then answer the asking player's exact question. "
@@ -157,7 +156,7 @@ def BuildPrompt(Context):
 def LoadModel():
     return Llama(
         model_path=str(ModelPath),
-        n_ctx=int(os.environ.get("STORYBOT_CONTEXT_SIZE", "1536")),
+        n_ctx=int(os.environ.get("STORYBOT_CONTEXT_SIZE", "2048")),
         n_threads=max(1, int(os.environ.get("STORYBOT_THREADS", "1"))),
         n_batch=128,
         use_mmap=True,
