@@ -6,6 +6,10 @@ import urllib.parse
 import urllib.request
 from pathlib import Path
 
+LocalStoryBotPython = Path(__file__).parent / ".storybot-python"
+if LocalStoryBotPython.exists():
+    sys.path.insert(0, str(LocalStoryBotPython))
+
 from llama_cpp import Llama
 
 ModelFileName = "SmolLM2-360M-Instruct-Q4_0.gguf"
