@@ -71,3 +71,201 @@
     0%, 70%, 100% { opacity: .28; transform: translateY(0); }
     35% { opacity: 1; transform: translateY(-2px); }
 }
+
+
+.StoryBotCommandPopup {
+    position: relative;
+    z-index: 20;
+    margin: 0 0 7px;
+    border: 1px solid rgba(221, 177, 100, .28);
+    border-radius: 12px;
+    background: rgba(28, 18, 11, .98);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, .35);
+    overflow: hidden;
+}
+
+.StoryBotCommandItem {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 0;
+    background: transparent;
+    color: #f1dec3;
+    text-align: left;
+    cursor: pointer;
+    font: inherit;
+}
+
+.StoryBotCommandItem:hover,
+.StoryBotCommandItem:focus-visible {
+    background: rgba(221, 177, 100, .12);
+    outline: none;
+}
+
+.StoryBotCommandIcon {
+    width: 30px;
+    height: 30px;
+    display: grid;
+    place-items: center;
+    flex: 0 0 30px;
+    border: 1px solid rgba(221, 177, 100, .3);
+    border-radius: 9px;
+    background: rgba(221, 177, 100, .08);
+    color: #f0c77d;
+}
+
+.StoryBotCommandIcon .StoryBotRobotIcon {
+    width: 20px;
+    height: 20px;
+}
+
+.StoryBotCommandCopy {
+    min-width: 0;
+    display: grid;
+    gap: 2px;
+}
+
+.StoryBotCommandCopy strong {
+    color: #ffe0a3;
+    font-size: 13px;
+}
+
+.StoryBotCommandCopy small {
+    color: #a9947a;
+    font-size: 11px;
+}
+
+.StoryBotDialog {
+    padding: 11px 12px !important;
+    border-color: rgba(221, 177, 100, .4) !important;
+}
+
+.StoryBotDialogHeader {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin-bottom: 8px;
+}
+
+.StoryBotDialogRobot {
+    width: 34px;
+    height: 34px;
+    display: grid;
+    place-items: center;
+    flex: 0 0 34px;
+    border: 1px solid rgba(221, 177, 100, .34);
+    border-radius: 10px;
+    background: rgba(221, 177, 100, .08);
+    color: #f0c77d;
+}
+
+.StoryBotRobotIcon {
+    width: 22px;
+    height: 22px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.StoryBotDialogHeading {
+    display: grid;
+    gap: 1px;
+}
+
+.StoryBotDialogHeading strong {
+    color: #ffe0a3;
+    font-size: 13px;
+}
+
+.StoryBotDialogHeading span,
+.StoryBotDialogMeta {
+    color: #a9947a;
+    font-size: 10px;
+}
+
+.StoryBotDialogText {
+    color: #f1dec3;
+    line-height: 1.45;
+    margin-bottom: 7px;
+}
+
+.StoryBotDialogMeta {
+    margin-bottom: 8px;
+}
+
+.StoryBotDialogField {
+    display: flex;
+    align-items: stretch;
+    gap: 7px;
+}
+
+.StoryBotDialogInput {
+    min-width: 0;
+    flex: 1;
+    height: 38px;
+    padding: 0 11px;
+    border: 1px solid rgba(221, 177, 100, .24);
+    border-radius: 9px;
+    background: rgba(14, 10, 7, .7);
+    color: #f7ead7;
+    outline: none;
+    font: 600 12px/1 system-ui, sans-serif;
+}
+
+.StoryBotDialogInput:focus {
+    border-color: rgba(240, 199, 125, .62);
+    box-shadow: 0 0 0 2px rgba(240, 199, 125, .1);
+}
+
+.StoryBotDialogSend {
+    width: 38px;
+    height: 38px;
+    display: grid;
+    place-items: center;
+    flex: 0 0 38px;
+    border: 1px solid rgba(221, 177, 100, .3);
+    border-radius: 9px;
+    background: rgba(221, 177, 100, .12);
+    color: #f0c77d;
+    cursor: pointer;
+}
+
+.StoryBotDialogSend:hover {
+    background: rgba(221, 177, 100, .2);
+}
+
+.StoryBotDialogSend:disabled,
+.StoryBotDialogInput:disabled {
+    opacity: .55;
+    cursor: default;
+}
+
+.StoryBotDialogSend svg {
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.65;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+@media (max-width: 640px) {
+    .StoryBotCommandPopup {
+        margin-bottom: 5px;
+    }
+
+    .StoryBotDialogInput {
+        height: 42px;
+    }
+
+    .StoryBotDialogSend {
+        width: 42px;
+        height: 42px;
+        flex-basis: 42px;
+    }
+}
