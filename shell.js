@@ -528,6 +528,9 @@
         }
 
         Frame.dataset.storyLoaded = "1";
+        // The initial frame is deliberately hidden while it loads to prevent FOUC.
+        // Reveal it as soon as its load event confirms the document is ready.
+        if (Frame === ActiveFrame) Frame.style.visibility = "visible";
         WireFrameInteractionBridge(Frame);
         if (Frame !== ActiveFrame) SyncGameplayPauseButton({ paused: false });
         if (Frame === InitialFrame) FlushAudioHost();
