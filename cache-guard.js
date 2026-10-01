@@ -1,8 +1,7 @@
 (() => {
-                    const CleanupVersion = "20260928-77";
-    const ReloadedKey = `StoryRewriteCacheCleanup-${CleanupVersion}-reloaded`;
+const CleanupVersion = "20261001-1";
 
-    async function ClearLegacyCaches() {
+async function ClearLegacyCaches() {
         let Changed = false;
 
         try {
@@ -19,13 +18,17 @@
             }
         } catch {}
 
-        if (Changed && window.top === window && sessionStorage.getItem(ReloadedKey) !== "1") {
-            sessionStorage.setItem(ReloadedKey, "1");
-            const ReloadUrl = new URL(window.location.href);
-            ReloadUrl.searchParams.set("fresh", Date.now().toString(36));
-            window.location.replace(ReloadUrl.href);
-        }
-    }
+    return Changed;
+}
 
-    ClearLegacyCaches();
+function ScheduleLegacyCacheCleanup() {
+    const Run = () => ClearLegacyCaches().catch(() => {});
+    if (typeof window.requestIdleCallback === "function") {
+        window.requestIdleCallback(Run, { timeout: 4000 });
+    } else {
+        window.setTimeout(Run, 2000);
+    }
+}
+
+ScheduleLegacyCacheCleanup();
 })();
