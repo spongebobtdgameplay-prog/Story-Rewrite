@@ -78,39 +78,17 @@ function SetStoryBotTyping(Typing) {
 }
 
 function ShowStoryBotError(Message) {
-    const RoomState = (() => {
-        try { return typeof MultiplayerState !== "undefined" ? MultiplayerState : null; }
-        catch { return null; }
-    })();
-    const Name = GetStoryBotCurrentUsername() || "there";
-    const IsPlaying = String(RoomState?.status || "") === "playing";
-    const Text = IsPlaying
-        ? `Yes, ${Name}. I cannot safely read the model response right now, so I will not invent what is happening. Ask again in a moment and I will use the live game state.`
-        : `Yes, ${Name}? The host has not started the game yet, so I will not make up story events, votes, threats, or outcomes. Ask me again after the game starts.`;
-
+    const ErrorText = String(Message || "").trim();
+    if (!ErrorText) return;
     const Container = GetStoryBotChatContainer();
-    if (Container) {
-        RemoveQuietChatState(Container);
-        RenderStoryBotDialog(Container, {
-            id: `storybot-fallback-${Date.now()}`,
-            text: Text,
-            askingUsername: Name,
-            bot: true,
-            botDialog: true
-        });
-        return;
-    }
-
-    if (typeof ShowRoomStatus === "function") {
-        ShowRoomStatus(Text, false);
-        return;
-    }
-
-    const Status = document.getElementById("StatusText");
-    if (Status) {
-        Status.className = "StatusText Bad";
-        Status.textContent = Text;
-    }
+    if (!Container) return;
+    RemoveQuietChatState(Container);
+    const ErrorElement = document.createElement("div");
+    ErrorElement.className = "StoryBotRequestError";
+    ErrorElement.textContent = ErrorText;
+    Container.appendChild(ErrorElement);
+    while (Container.childElementCount > 30) Container.firstElementChild?.remove();
+    Container.scrollTop = Container.scrollHeight;
 }
 function MarkLastChatMessage(ContainerId, Message) {
     const Container = document.getElementById(ContainerId);
@@ -201,7 +179,7 @@ function RenderStoryBotDialog(Container, Message) {
 
     const Text = document.createElement("div");
     Text.className = "StoryBotDialogText";
-    Text.textContent = String(Message?.text || "Yes. What would you like to know?");
+    Text.textContent = String(Message?.text || "");
 
     const Meta = document.createElement("div");
     Meta.className = "StoryBotDialogMeta";
