@@ -34,7 +34,7 @@ def EnsureModel():
 def BuildPrompt(Context):
     ContextText = json.dumps(Context, ensure_ascii=False, separators=(",", ":"))
     if len(ContextText) > 5200:
-        ContextText = ContextText[-5200:]
+        ContextText = ContextText[:2800] + "...[context trimmed]..." + ContextText[-2400:]
     return (
         "Use the live JSON context below. Answer the asking player's question naturally. "
         "Help with the current story, votes, danger, objective, or multiplayer discussion. "
@@ -89,8 +89,10 @@ def GenerateReply(Model, Context):
             {
                 "role": "system",
                 "content": (
-                    "You are StoryBot, the cooperative AI assistant inside Story Rewrite. "
-                    "Use only the supplied room and stage context. You are not a human player."
+                    "You are StoryBot, the cooperative AI teammate inside Story Rewrite. "
+                    "Use only the supplied live room, stage, vote, and recent chat context. "
+                    "Answer the player's actual question directly, stay grounded in the context, "
+                    "and never invent hidden game state or claim to be a human player."
                 ),
             },
             {"role": "user", "content": BuildPrompt(Context)},
