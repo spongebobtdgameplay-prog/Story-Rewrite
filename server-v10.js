@@ -21,6 +21,7 @@ ReplaceWrapperRequired(
 const AIConstantsSearch = "const JoinRequestLifetime = 45000;";
 const AIConstantsReplacement = `const JoinRequestLifetime = 45000;
 const OpenAIApiKey = "";
+const OpenAIModel = String(process.env.OPENAI_MODEL || "gpt-5.6").trim();
 const StoryBotName = "StoryBot";
 const StoryBotCooldown = 4000;
 const StoryBotTimeout = 20000;
