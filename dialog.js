@@ -18,17 +18,26 @@ let GamePaused = false;
 let GamePauseReason = "";
 const LevelLeaveReminderKey = "StoryRewriteSkipLevelLeaveWarningV1";
 
-window.addEventListener("DOMContentLoaded", async () => {
-    try {
-        const ProfileResult = await RequireAccount();
-        Profile = ProfileResult.profile;
-        Data = await LoadStoryData();
-        Save = await LoadSave(Data);
-        ApplyStoryCosmetic(Save);
+window.addEventListener("DOMContentLoaded", InitDialogPage, { once: true });
 
+let StageEntryPromise = Promise.resolve(true);
+
+async function InitDialogPage() {
+    try {
         const Params = new URLSearchParams(window.location.search);
-        const StageId = Params.get("stage") || Save.currentStage;
         RoomCode = String(Params.get("room") || "").trim().toUpperCase();
+
+        Data = await LoadStoryData();
+
+        const CachedSaveData = typeof GetLastKnownServerSave === "function"
+            ? GetLastKnownServerSave()
+            : null;
+        Save = NormalizeSave(
+            Data,
+            CachedSaveData || DefaultSave(Data)
+        );
+
+        const StageId = Params.get("stage") || Save.currentStage;
         Stage = Data.stages[StageId];
 
         if (!Stage) {
@@ -36,19 +45,56 @@ window.addEventListener("DOMContentLoaded", async () => {
             return;
         }
 
-        if (!RoomCode && !IsStageUnlocked(Save, StageId)) {
-            window.location.href = "levels.html";
-            return;
-        }
-
         World = GetWorld(Data, Stage.worldId);
 
-        if (!RoomCode) Save = await EnterServerStage(Stage.id);
-
+        ApplyStoryCosmetic(Save);
         StoryAudio.Configure(Save.settings);
         StoryAudio.PlayMusic(World.theme || "menu");
         BindActions();
         RenderStage();
+
+        const CheckButton = document.getElementById("CheckButton");
+        const Status = document.getElementById("StatusText");
+
+        if (!RoomCode) {
+            CheckButton.disabled = true;
+            Status.className = "StatusText";
+            Status.textContent = "Opening this page…";
+
+            StageEntryPromise = EnterServerStage(Stage.id)
+                .then(EntrySave => {
+                    Save = NormalizeSave(Data, EntrySave);
+                    ApplyStoryCosmetic(Save);
+                    StoryAudio.Configure(Save.settings);
+                    StoryAudio.PlayMusic(World.theme || "menu");
+                    RenderLives();
+                    CheckButton.disabled = false;
+                    Status.className = "StatusText";
+                    Status.textContent = "Rewrite the page, then check whether the objective and survival rule both hold.";
+                    return Save;
+                })
+                .catch(Error => {
+                    CheckButton.disabled = true;
+                    Status.className = "StatusText Bad";
+                    Status.textContent = Error?.status === 403
+                        ? "This level is locked on the server. Return to the chapter map."
+                        : "Could not open this level: " + (Error?.message || "server unavailable");
+                    return null;
+                });
+        } else {
+            StageEntryPromise = RequireAccount()
+                .then(ProfileResult => {
+                    Profile = ProfileResult.profile;
+                    StartMultiplayer();
+                    return Save;
+                })
+                .catch(Error => {
+                    const Message = Error?.message || "Could not authenticate this multiplayer session.";
+                    document.getElementById("GameRoot").innerHTML =
+                        '<div class="Panel" style="padding:28px">' + EscapeText(Message) + '</div>';
+                    return null;
+                });
+        }
 
         let ResumeFromContinue = false;
         try {
@@ -59,12 +105,11 @@ window.addEventListener("DOMContentLoaded", async () => {
         if (RoomCode || ResumeFromContinue) {
             SetGamePaused(false);
         }
-
-        if (RoomCode) StartMultiplayer();
     } catch (Error) {
-        document.getElementById("GameRoot").innerHTML = `<div class="Panel" style="padding:28px">${EscapeText(Error.message)}</div>`;
+        document.getElementById("GameRoot").innerHTML =
+            '<div class="Panel" style="padding:28px">' + EscapeText(Error.message) + '</div>';
     }
-});
+}
 
 function IsGameplayPauseEligible() {
     if (RoomCode || !Stage) return false;
@@ -425,6 +470,11 @@ function RenderIllustration() {
 
 async function CheckStage() {
     const Status = document.getElementById("StatusText");
+
+    if (!RoomCode) {
+        const ReadySave = await StageEntryPromise;
+        if (!ReadySave) return;
+    }
     document.getElementById("CheckButton").disabled = true;
 
     try {
