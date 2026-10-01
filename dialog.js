@@ -365,7 +365,6 @@ function BindActions() {
     document.getElementById("ReplayButton").addEventListener("click", ReplayStage);
     document.getElementById("CompleteSelectButton").addEventListener("click", ReturnToSelectWithTrail);
     document.getElementById("TbcSelectButton").addEventListener("click", () => window.location.href = "levels.html");
-    document.getElementById("RestartChapterButton").addEventListener("click", RestartChapter);
     document.getElementById("ReplayDeathButton")?.addEventListener("click", ReplayStage);
     document.getElementById("GameOverMapButton").addEventListener("click", () => window.location.href = RoomCode ? "multiplayer.html" : "levels.html");
     document.getElementById("GameChatForm").addEventListener("submit", SendGameChat);
@@ -616,8 +615,8 @@ function ApplyFailureOutcome(Result) {
 
     if (Result.gameOver || TimedOut) {
         document.getElementById("GameOverText").textContent = TimedOut
-            ? `${FailureReason} The timer expired before the rewrite was checked. Restart the chapter to try again.`
-            : `${FailureReason} ${Result.aftermath} No lives remain. Restart the chapter to continue.`;
+            ? `${FailureReason} The timer expired before the rewrite was checked. Replay the level to try again.`
+            : `${FailureReason} ${Result.aftermath} No lives remain. Replay the level to try again.`;
         document.getElementById("GameOverOverlay").classList.add("Show");
     }
 }
@@ -738,35 +737,41 @@ async function ReturnToSelectWithTrail() {
 }
 
 function ReplayStage() {
-    document.getElementById("CompleteOverlay").classList.remove("Show");
+    if (TransitionBusy || !Stage) return;
+    TransitionBusy = true;
 
-    if (RoomCode) {
-        if (MultiplayerState?.hostUsername === Profile.username) MultiplayerSocket.emit("game:retry");
-        return;
-    }
+    document.getElementById("CompleteOverlay")?.classList.remove("Show");
+    document.getElementById("GameOverOverlay")?.classList.remove("Show");
+    document.getElementById("TbcOverlay")?.classList.remove("Show");
+    document.getElementById("ChapterOverlay")?.classList.remove("Show");
+    document.getElementById("TravelOverlay")?.classList.remove("Show");
 
     RemovedSentences.clear();
     LastCheckFailed = false;
     LastFailureResult = null;
-    document.getElementById("Aftermath").classList.add("Hidden");
-    document.getElementById("StatusText").className = "StatusText";
-    document.getElementById("StatusText").textContent = "The page has been reset.";
-    StoryAudio.PlayMusic(World.theme || "menu");
-    RenderStage();
-}
+    NextStageOverride = "";
 
-async function RestartChapter() {
-    if (RoomCode) {
-        if (MultiplayerState?.hostUsername !== Profile.username) return;
-        document.getElementById("GameOverOverlay").classList.remove("Show");
-        MultiplayerSocket.emit("game:restartChapter");
-        return;
+    try {
+        GamePaused = false;
+        GamePauseReason = "";
+    } catch {}
+
+    if (typeof ResetStoryAttemptV12 === "function") {
+        ResetStoryAttemptV12();
+    } else if (typeof ResetStoryDangerAfterReviveV12 === "function") {
+        ResetStoryDangerAfterReviveV12();
     }
 
-    Save = await RestartServerChapter(World.id);
-    ApplyStoryCosmetic(Save);
-    document.getElementById("GameOverOverlay").classList.remove("Show");
-    GoStage(GetWorld(Data, World.id).entryStage);
+    document.getElementById("Aftermath")?.classList.add("Hidden");
+    document.getElementById("StatusText").className = "StatusText";
+    document.getElementById("StatusText").textContent = "Level replayed. The page is reset and ready.";
+    StoryAudio.PlayMusic(World.theme || "menu");
+    RenderStage();
+    RenderGamePauseState();
+
+    requestAnimationFrame(() => {
+        TransitionBusy = false;
+    });
 }
 
 function StartMultiplayer() {
