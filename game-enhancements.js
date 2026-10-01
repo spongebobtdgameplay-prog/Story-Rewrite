@@ -568,6 +568,23 @@ async function UseStoryPowerV12(Name) {
     RenderStoryPowerUiV12();
 }
 
+function ResetStoryAttemptV12() {
+    StoryPowerChargesV12 = { reveal: 1, undo: 1, seal: 1 };
+    StoryPowerHistoryV12 = [];
+    StoryPowerSealedV12 = new Set();
+    StoryPowerRevealedV12 = new Set();
+    StoryBranchIdV12 = "";
+
+    StoryGamePausedV12 = false;
+    StoryGamePauseStartedAtV12 = 0;
+
+    ResetStoryDangerAfterReviveV12();
+
+    RenderStoryBranchUiV12();
+    RenderStoryPowerUiV12();
+    RefreshStoryDangerUiV12();
+}
+
 function ResetStoryDangerAfterReviveV12() {
     StoryDangerExpiredV12 = false;
     StoryDangerBell10V12 = false;
