@@ -14,7 +14,7 @@ body {
 body {
     min-height: 100vh;
     overflow-x: hidden;
-    overflow-y: hidden;
+    overflow-y: auto;
     overscroll-behavior-y: none;
 }
 
@@ -53,10 +53,11 @@ body {
 .Main {
     margin-top: 20px;
     margin-bottom: 34px;
+    padding-bottom: 8px;
 }
 
 .HomeHero {
-    min-height: min(700px, calc(100vh - 150px));
+    min-height: min(700px, calc(100svh - 150px));
     padding: clamp(30px, 4.2vw, 56px);
     gap: clamp(34px, 4vw, 54px);
     align-items: center;
@@ -74,7 +75,7 @@ body {
 }
 
 .HomeActions {
-    margin-top: 28px;
+    margin-top: 18px;
     padding-bottom: 4px;
     display: flex;
     flex-wrap: wrap;
