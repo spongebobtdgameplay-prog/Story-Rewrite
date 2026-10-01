@@ -78,7 +78,28 @@ function SetStoryBotTyping(Typing) {
 }
 
 function ShowStoryBotError(Message) {
-    const Text = String(Message || "StoryBot could not answer right now.");
+    const RoomState = (() => {
+        try { return typeof MultiplayerState !== "undefined" ? MultiplayerState : null; }
+        catch { return null; }
+    })();
+    const Name = GetStoryBotCurrentUsername() || "there";
+    const IsPlaying = String(RoomState?.status || "") === "playing";
+    const Text = IsPlaying
+        ? `Yes, ${Name}. I cannot safely read the model response right now, so I will not invent what is happening. Ask again in a moment and I will use the live game state.`
+        : `Yes, ${Name}? The host has not started the game yet, so I will not make up story events, votes, threats, or outcomes. Ask me again after the game starts.`;
+
+    const Container = GetStoryBotChatContainer();
+    if (Container) {
+        RemoveQuietChatState(Container);
+        RenderStoryBotDialog(Container, {
+            id: `storybot-fallback-${Date.now()}`,
+            text: Text,
+            askingUsername: Name,
+            bot: true,
+            botDialog: true
+        });
+        return;
+    }
 
     if (typeof ShowRoomStatus === "function") {
         ShowRoomStatus(Text, false);
@@ -91,7 +112,6 @@ function ShowStoryBotError(Message) {
         Status.textContent = Text;
     }
 }
-
 function MarkLastChatMessage(ContainerId, Message) {
     const Container = document.getElementById(ContainerId);
     const Last = Container?.lastElementChild;
