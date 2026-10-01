@@ -1,4 +1,6 @@
 (() => {
+if (window.top !== window.self) return;
+
 const CleanupVersion = "20261001-1";
 
 async function ClearLegacyCaches() {
