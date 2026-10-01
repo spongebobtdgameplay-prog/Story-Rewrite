@@ -82,7 +82,7 @@ def FetchWebKnowledge(Context):
         for Item in (Data.get("query", {}) or {}).get("search", [])[:3]:
             Title = str(Item.get("title", "")).strip()
             PageId = Item.get("pageid")
-            Snippet = str(Item.get("snippet", "")).replace("<span class="searchmatch">", "").replace("</span>", "").strip()
+            Snippet = str(Item.get("snippet", "")).replace('<span class="searchmatch">', "").replace("</span>", "").strip()
             if Title:
                 Results.append({"title": Title, "pageid": PageId, "snippet": Snippet})
 
