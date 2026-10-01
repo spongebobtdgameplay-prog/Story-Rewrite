@@ -47,7 +47,6 @@ async function InitLevelsPage() {
             const Node = document.querySelector(`[data-stage-node="${CSS.escape(LevelPageState.AutoStartStageId)}"]`);
             if (Node) Node.classList.add("Unlocking");
             await Delay(1450);
-            await EnterServerStage(LevelPageState.AutoStartStageId);
             GoStage(LevelPageState.AutoStartStageId);
         }
     } catch (Error) {
@@ -167,10 +166,10 @@ function RenderSelectedWorld() {
 
     const PlayButton = Mount.querySelector(".BriefingPlay[data-stage-id]");
     if (PlayButton) {
-        PlayButton.addEventListener("click", async () => {
+        PlayButton.addEventListener("click", () => {
+            const StageId = PlayButton.dataset.stageId;
             StoryAudio.PlaySound("click");
-            await EnterServerStage(PlayButton.dataset.stageId);
-            GoStage(PlayButton.dataset.stageId);
+            GoStage(StageId);
         });
     }
 }
