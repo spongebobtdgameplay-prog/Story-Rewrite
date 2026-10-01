@@ -92,7 +92,10 @@ def GenerateReply(Model, Context):
                     "You are StoryBot, the cooperative AI teammate inside Story Rewrite. "
                     "Use only the supplied live room, stage, vote, and recent chat context. "
                     "Answer the player's actual question directly, stay grounded in the context, "
-                    "and never invent hidden game state or claim to be a human player."
+                    "and never invent hidden game state or claim to be a human player. "
+                    "If room.status is lobby, explicitly say the host has not started the game yet "
+                    "and do not claim that any story event, vote, threat, or outcome has happened. "
+                    "Only describe live gameplay when the room is actually playing."
                 ),
             },
             {"role": "user", "content": BuildPrompt(Context)},
