@@ -265,3 +265,69 @@ if (typeof StartMultiplayer === "function" && document.body.classList.contains("
 StartChatModerationBindings();
 const ChatModerationBindTimer = setInterval(StartChatModerationBindings, 500);
 setTimeout(() => clearInterval(ChatModerationBindTimer), 30000);
+
+
+(function InstallStoryTermsWarning() {
+    const StyleId = "StoryTermsWarningModalStyles";
+    if (!document.getElementById(StyleId)) {
+        const Style = document.createElement("style");
+        Style.id = StyleId;
+        Style.textContent = `
+.StoryTermsWarningOverlay{position:fixed;inset:0;z-index:2147483000;display:grid;place-items:center;padding:22px;background:rgba(10,8,12,.78);backdrop-filter:blur(8px)}
+.StoryTermsWarningCard{width:min(620px,calc(100vw - 34px));max-height:min(720px,calc(100vh - 44px));overflow:auto;box-sizing:border-box;padding:28px 30px 24px;border:1px solid rgba(221,169,108,.34);border-radius:22px;background:linear-gradient(180deg,#241d17,#17130f);box-shadow:0 28px 90px rgba(0,0,0,.58);color:#f8ecd7}
+.StoryTermsWarningEyebrow{font:900 11px/1 system-ui,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#d9a765;margin-bottom:9px}
+.StoryTermsWarningCard h2{margin:0;color:#fff2d9;font:900 28px/1.05 Georgia,"Times New Roman",serif}
+.StoryTermsWarningLead{margin:12px 0 18px;color:#dfceb5;font:600 14px/1.55 system-ui,sans-serif}
+.StoryTermsWarningCard h3{margin:18px 0 7px;color:#ffd89d;font:900 15px/1.2 system-ui,sans-serif}
+.StoryTermsWarningCard p{margin:0;color:#d7c7b0;font:550 13px/1.55 system-ui,sans-serif}
+.StoryTermsWarningRule{margin:18px 0;padding:13px 14px;border:1px solid rgba(221,169,108,.2);border-radius:13px;background:rgba(255,255,255,.035)}
+.StoryTermsWarningRule strong{color:#fff0d2}
+.StoryTermsWarningActions{display:flex;justify-content:flex-end;margin-top:22px}
+.StoryTermsWarningAcknowledge{min-width:140px;border:0;border-radius:12px;padding:11px 17px;background:#d19a54;color:#1c130a;font:900 13px/1 system-ui,sans-serif;cursor:pointer}
+`;
+        document.head.appendChild(Style);
+    }
+
+    window.ShowAbuseContentWarning = function(Payload = {}) {
+        if (Payload?.aiDetected !== true || Payload?.contentWarning !== true) return;
+
+        let Overlay = document.getElementById("StoryTermsWarningOverlay");
+        if (!Overlay) {
+            Overlay = document.createElement("div");
+            Overlay.id = "StoryTermsWarningOverlay";
+            Overlay.className = "StoryTermsWarningOverlay";
+            Overlay.setAttribute("role", "dialog");
+            Overlay.setAttribute("aria-modal", "true");
+            Overlay.setAttribute("aria-labelledby", "StoryTermsWarningTitle");
+            Overlay.innerHTML = `
+                <div class="StoryTermsWarningCard">
+                    <div class="StoryTermsWarningEyebrow">Story Rewrite multiplayer</div>
+                    <h2 id="StoryTermsWarningTitle">Chat warning</h2>
+                    <div class="StoryTermsWarningLead">The multiplayer moderation AI detected abusive content in your chat message.</div>
+                    <h3>Terms &amp; Conditions</h3>
+                    <p>By using Story Rewrite multiplayer chat, you agree to communicate without targeted harassment, threats, personal attacks, or other abusive conduct toward other players.</p>
+                    <div class="StoryTermsWarningRule"><strong>Important:</strong> Swearing or profanity by itself does not create a warning. A warning is shown only when the moderation AI confirms that the message is actually abusive in context.</div>
+                    <h3>What happens next</h3>
+                    <p>Confirmed abuse can be removed from chat. Repeated confirmed abuse can result in a temporary chat timeout or additional game moderation.</p>
+                    <div class="StoryTermsWarningActions">
+                        <button class="StoryTermsWarningAcknowledge" id="StoryTermsWarningAcknowledge" type="button">I Understand</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(Overlay);
+
+            const Close = () => {
+                Overlay?.remove();
+                document.removeEventListener("keydown", Escape);
+            };
+            const Escape = Event => {
+                if (Event.key === "Escape") Close();
+            };
+            Overlay.querySelector("#StoryTermsWarningAcknowledge")?.addEventListener("click", Close);
+            document.addEventListener("keydown", Escape);
+        }
+
+        const Lead = Overlay.querySelector(".StoryTermsWarningLead");
+        if (Lead) Lead.textContent = String(Payload?.detected || "Abusive content detected.") + " The multiplayer moderation AI confirmed the violation.";
+    };
+})();
