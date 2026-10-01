@@ -408,6 +408,7 @@ function RenderRemainingStory() {
 }
 
 function RenderLives() {
+    EnsureStoryLifeHeartVisuals();
     const Lives = RoomCode ? Number(MultiplayerState?.lives ?? 3) : Number(Save?.lives ?? 3);
     const MaxLives = RoomCode ? Number(MultiplayerState?.maxLives ?? 3) : Number(Save?.maxLives ?? 3);
     document.getElementById("LivesLabel").textContent = RoomCode ? "Team lives" : "Lives";
@@ -417,10 +418,12 @@ function RenderLives() {
     const HeartPath = "M12 20.7 3.5 12.8C.9 10.4 1.1 6.5 3.9 4.5c2.45-1.77 5.73-1.32 8.1.86 2.37-2.18 5.65-2.63 8.1-.86 2.8 2 3 5.9.4 8.3L12 20.7Z";
 
     for (let Index = 0; Index < MaxLives; Index += 1) {
+        const Active = Index < Lives;
         const Heart = document.createElement("span");
-        Heart.className = `LifeHeart ${Index < Lives ? "" : "Empty"}`;
+        Heart.className = `LifeHeart ${Active ? "StoryHeartActive" : "StoryHeartEmpty Empty"}`;
         Heart.setAttribute("aria-hidden", "true");
-        Heart.innerHTML = `<svg viewBox="0 0 24 24" focusable="false"><path d="${HeartPath}"></path></svg>`;
+        Heart.style.setProperty("color", Active ? "#ff1738" : "#6d625d", "important");
+        Heart.innerHTML = `<svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="${HeartPath}" style="fill:${Active ? "#ff1738" : "#6d625d"}"></path></svg>`;
         Container.appendChild(Heart);
     }
 }
