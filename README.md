@@ -48,7 +48,7 @@ The browser does not use `localStorage` for progress. The login token is kept on
 
 ## Lives
 
-Each account starts with three lives. A failed survival check removes one life and shows the stage's bad aftermath. At zero lives the player must restart the current chapter. Multiplayer uses three shared team lives.
+Each account starts with three lives. A failed survival check removes one life and shows the stage's bad aftermath. At zero lives the player can revive when available or return to the chapter map. Multiplayer uses three shared team lives.
 
 ## Multiplayer
 
