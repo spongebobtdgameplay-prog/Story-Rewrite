@@ -20,8 +20,8 @@ ReplaceWrapperRequired(
 
 const AIConstantsSearch = "const JoinRequestLifetime = 45000;";
 const AIConstantsReplacement = `const JoinRequestLifetime = 45000;
-const OpenAIApiKey = String(process.env.OPENAI_API_KEY || "").trim();
-const OpenAIModel = String(process.env.OPENAI_MODEL || "gpt-5.6").trim();
+const OpenAIApiKey = String(process.env.GROQ_API_KEY || "").trim();
+const OpenAIModel = String(process.env.GROQ_MODEL || "openai/gpt-oss-120b").trim();
 const StoryBotName = "StoryBot";
 const StoryBotCooldown = 4000;
 const StoryBotTimeout = 20000;
@@ -62,17 +62,22 @@ async function GenerateStoryBotReply(Room, Username, Question) {
 
     const Stage = StagesData.stages[Room.stageId] || null;
     const VoteState = GetVoteState(Room);
-    const RecentChat = Room.messages.slice(-StoryBotContextMessages).map(Message => ({
+    const RecentChat = Room.messages.slice(-20).map(Message => ({
         username: Message.username,
         text: Message.text
     }));
 
     const Context = {
         room: {
+            code: Room.code,
             status: Room.status,
             lives: Room.lives,
             maxLives: Room.maxLives,
-            players: [...Room.players.values()].map(Player => Player.username)
+            hostUsername: Room.hostUsername,
+            players: [...Room.players.values()].map(Player => ({
+                username: Player.username,
+                ready: Boolean(Player.ready)
+            }))
         },
         stage: Stage ? {
             id: Stage.id,
@@ -81,7 +86,7 @@ async function GenerateStoryBotReply(Room, Username, Question) {
             threat: Stage.threat,
             survivalRule: Stage.survivalRule,
             hint: Stage.hint,
-            sentences: Stage.sentences,
+            sentences: Array.isArray(Stage.sentences) ? Stage.sentences : [],
             selectedIndexes: VoteState.selectedIndexes,
             voteThreshold: VoteState.threshold
         } : null,
@@ -94,7 +99,7 @@ async function GenerateStoryBotReply(Room, Username, Question) {
     const Timeout = setTimeout(() => Controller.abort(), StoryBotTimeout);
 
     try {
-        const ApiResponse = await fetch("https://api.openai.com/v1/responses", {
+        const ApiResponse = await fetch("https://api.groq.com/openai/v1/chat/completions", {
             method: "POST",
             headers: {
                 "Authorization": "Bearer " + OpenAIApiKey,
@@ -102,23 +107,34 @@ async function GenerateStoryBotReply(Room, Username, Question) {
             },
             body: JSON.stringify({
                 model: OpenAIModel,
-                store: false,
-                instructions: "You are StoryBot, an in-game cooperative assistant for Story Rewrite. Reply naturally to the players using only the supplied live game context. Be concise enough for group chat, usually one or two short sentences. Help reason about causes, consequences, voting, survival, multiplayer controls, or the current discussion. Do not invent room state that is not supplied. Do not claim to be a human player. If the players ask for the direct puzzle solution, you may explain your reasoning instead of using canned answers.",
-                input: JSON.stringify(Context),
-                max_output_tokens: 140
+                messages: [
+                    {
+                        role: "system",
+                        content: "You are StoryBot, the in-game cooperative AI assistant for Story Rewrite multiplayer. Use only the supplied live room and stage context. Reason carefully about the current objective, threat, sentence choices, votes, consequences, and what players have said. Do not invent hidden room state, player actions, or story facts. Distinguish what is known from what is uncertain. When players ask for help, explain the reasoning briefly and concretely. Do not pretend to be a player. Keep replies natural and concise, usually two or three sentences."
+                    },
+                    {
+                        role: "user",
+                        content: JSON.stringify(Context)
+                    }
+                ],
+                temperature: 0.55,
+                top_p: 0.9,
+                max_tokens: 220
             }),
             signal: Controller.signal
         });
 
         const ResponseData = await ApiResponse.json().catch(() => ({}));
         if (!ApiResponse.ok) {
-            const ErrorMessage = ResponseData?.error?.message || "OpenAI request failed.";
-            throw new Error(ErrorMessage);
+            throw new Error(ResponseData?.error?.message || "Groq StoryBot request failed.");
         }
 
-        const Reply = ReadOpenAIOutput(ResponseData);
+        const Reply = String(ResponseData?.choices?.[0]?.message?.content || "").trim();
         if (!Reply) throw new Error("StoryBot returned an empty response.");
-        return CensorChatText(Reply);
+
+        return typeof NormalizeChatText === "function"
+            ? NormalizeChatText(Reply).slice(0, 500)
+            : Reply.slice(0, 500);
     } finally {
         clearTimeout(Timeout);
     }
