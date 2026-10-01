@@ -64,10 +64,14 @@ def GenerateModerationDecision(Model, Context):
             {
                 "role": "system",
                 "content": (
-                    "Classify multiplayer chat abuse. Return exactly ABUSE or SAFE. "
-                    "Direct insults, harassment, threats, unprovoked name-calling, and calling a player "
-                    "stupid, dumb, an idiot, worthless, or similar are ABUSE. "
-                    "Normal disagreement or criticism of the game and story is SAFE."
+                    "Classify the reported multiplayer message using the surrounding conversation. "
+                    "Return exactly ABUSE or SAFE. Decide from meaning, target, intent, and context rather than "
+                    "single swear words. Swearing, profanity, frustration, jokes, game criticism, or story "
+                    "criticism is SAFE when it is not targeted abusive conduct. ABUSE is targeted harassment, "
+                    "repeated demeaning personal attacks, threats of harm, targeted slurs, intimidation, or "
+                    "severe abusive conduct aimed at another player. Examples: \"this timer is fucking awful\" "
+                    "= SAFE; \"fuck this game\" = SAFE; \"you are worthless, get out of here\" = ABUSE; "
+                    "\"I am going to hurt you\" = ABUSE. Do not treat the number of swear words as evidence by itself."
                 ),
             },
             {"role": "user", "content": ContextText},
