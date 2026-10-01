@@ -1,4 +1,10 @@
 const STORY_BOT_NAME = "StoryBot";
+const STORY_BOT_COMMAND = "@StoryBot";
+const STORY_BOT_COMMANDS = [{
+    name: "StoryBot",
+    command: "@StoryBot",
+    description: "Ask the AI about the current story"
+}];
 const BoundBotSockets = new WeakSet();
 
 function GetStoryBotChatContainer() {
@@ -100,16 +106,243 @@ function MarkLastChatMessage(ContainerId, Message) {
     }
 }
 
+function GetStoryBotCurrentUsername() {
+    try {
+        if (typeof CurrentProfile !== "undefined" && CurrentProfile?.username) return String(CurrentProfile.username);
+    } catch {}
+    try {
+        if (typeof Profile !== "undefined" && Profile?.username) return String(Profile.username);
+    } catch {}
+    return "";
+}
+
+function GetConnectedStoryBotSocket() {
+    try {
+        if (typeof MultiplayerSocket !== "undefined" && MultiplayerSocket?.connected) return MultiplayerSocket;
+    } catch {}
+    return null;
+}
+
+function StoryBotRobotIconMarkup() {
+    return `<svg class="StoryBotRobotIcon" viewBox="0 0 24 24" aria-hidden="true">
+        <rect x="5" y="7" width="14" height="11" rx="3"></rect>
+        <path d="M12 4v3M8.5 11h.01M15.5 11h.01M8.5 14.5h7M3 12h2M19 12h2"></path>
+    </svg>`;
+}
+
+function SubmitStoryBotDialogQuestion(InputElement) {
+    const Text = String(InputElement?.value || "").trim();
+    if (!Text) {
+        InputElement?.focus();
+        return;
+    }
+
+    const Socket = GetConnectedStoryBotSocket();
+    if (!Socket) return;
+
+    const Button = InputElement.closest(".StoryBotDialog")?.querySelector(".StoryBotDialogSend");
+    if (InputElement) InputElement.disabled = true;
+    if (Button) Button.disabled = true;
+
+    Socket.emit("room:chat", { text: `@StoryBot ${Text}` });
+
+    if (InputElement) {
+        InputElement.value = "";
+        InputElement.disabled = false;
+        InputElement.focus();
+    }
+    if (Button) Button.disabled = false;
+}
+
+function RenderStoryBotDialog(Container, Message) {
+    if (!Container) return;
+
+    const Element = document.createElement("div");
+    Element.className = "ChatMessage StoryBotMessage StoryBotDialog";
+    Element.dataset.storyBotDialogId = String(Message?.id || Message?.sentAt || Date.now());
+
+    const Header = document.createElement("div");
+    Header.className = "StoryBotDialogHeader";
+
+    const Robot = document.createElement("span");
+    Robot.className = "StoryBotDialogRobot";
+    Robot.innerHTML = StoryBotRobotIconMarkup();
+
+    const Heading = document.createElement("div");
+    Heading.className = "StoryBotDialogHeading";
+
+    const Name = document.createElement("strong");
+    Name.textContent = "StoryBot";
+    const Role = document.createElement("span");
+    Role.textContent = "AI teammate";
+    Heading.append(Name, Role);
+
+    Header.append(Robot, Heading);
+
+    const Text = document.createElement("div");
+    Text.className = "StoryBotDialogText";
+    Text.textContent = String(Message?.text || "Yes. What would you like to know?");
+
+    const Meta = document.createElement("div");
+    Meta.className = "StoryBotDialogMeta";
+    const AskingName = String(Message?.askingUsername || "");
+    const LocalName = GetStoryBotCurrentUsername();
+    Meta.textContent = AskingName && AskingName === LocalName
+        ? "This question box is for you."
+        : AskingName
+            ? `Responding to ${AskingName}`
+            : "Ask about the current story";
+
+    const Field = document.createElement("div");
+    Field.className = "StoryBotDialogField";
+
+    const Input = document.createElement("input");
+    Input.className = "StoryBotDialogInput";
+    Input.type = "text";
+    Input.maxLength = 180;
+    Input.placeholder = "Ask StoryBot...";
+    Input.autocomplete = "off";
+    Input.spellcheck = true;
+    Input.setAttribute("aria-label", "Ask StoryBot a question");
+
+    const Send = document.createElement("button");
+    Send.type = "button";
+    Send.className = "StoryBotDialogSend";
+    Send.setAttribute("aria-label", "Send question to StoryBot");
+    Send.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 12 16-7-4 14-4-6-8-1Z"></path><path d="m12 13 4-8"></path></svg>';
+    Send.addEventListener("click", () => SubmitStoryBotDialogQuestion(Input));
+
+    Input.addEventListener("keydown", Event => {
+        if (Event.key === "Enter") {
+            Event.preventDefault();
+            SubmitStoryBotDialogQuestion(Input);
+        }
+    });
+
+    Field.append(Input, Send);
+    Element.append(Header, Text, Meta, Field);
+    Container.appendChild(Element);
+
+    while (Container.childElementCount > 30) Container.firstElementChild?.remove();
+    Container.scrollTop = Container.scrollHeight;
+
+    if (AskingName && AskingName === LocalName) {
+        requestAnimationFrame(() => Input.focus());
+    }
+}
+
+function GetActiveMentionText(Input) {
+    const Value = String(Input?.value || "");
+    const Selection = Number.isInteger(Input?.selectionStart) ? Input.selectionStart : Value.length;
+    const BeforeCursor = Value.slice(0, Selection);
+    const Match = BeforeCursor.match(/(^|\s)(@[A-Za-z0-9_]*)$/);
+    return Match ? Match[2] : "";
+}
+
+function BuildStoryBotCommandPopup(Input) {
+    if (!Input || Input.dataset.storyBotPopupBound === "1") return;
+    const Form = Input.closest(".ChatForm");
+    if (!Form) return;
+    Input.dataset.storyBotPopupBound = "1";
+
+    let Popup = Form.parentElement?.querySelector(".StoryBotCommandPopup");
+    if (!Popup) {
+        Popup = document.createElement("div");
+        Popup.className = "StoryBotCommandPopup";
+        Popup.setAttribute("role", "listbox");
+        Popup.hidden = true;
+        Form.before(Popup);
+    }
+
+    const ClosePopup = () => {
+        Popup.hidden = true;
+        Popup.innerHTML = "";
+    };
+
+    const RenderPopup = () => {
+        const Mention = GetActiveMentionText(Input).toLowerCase();
+        if (!Mention.startsWith("@")) {
+            ClosePopup();
+            return;
+        }
+
+        const Matches = STORY_BOT_COMMANDS.filter(Command =>
+            Command.command.toLowerCase().startsWith(Mention)
+        );
+        if (!Matches.length) {
+            ClosePopup();
+            return;
+        }
+
+        Popup.innerHTML = "";
+        Matches.forEach((Command, Index) => {
+            const Button = document.createElement("button");
+            Button.className = "StoryBotCommandItem";
+            Button.type = "button";
+            Button.setAttribute("role", "option");
+
+            const Icon = document.createElement("span");
+            Icon.className = "StoryBotCommandIcon";
+            Icon.innerHTML = StoryBotRobotIconMarkup();
+
+            const Copy = document.createElement("span");
+            Copy.className = "StoryBotCommandCopy";
+            const Name = document.createElement("strong");
+            Name.textContent = Command.command;
+            const Description = document.createElement("small");
+            Description.textContent = Command.description;
+            Copy.append(Name, Description);
+
+            Button.append(Icon, Copy);
+            Button.addEventListener("mousedown", Event => Event.preventDefault());
+            Button.addEventListener("click", () => {
+                const Value = Input.value;
+                const Selection = Number.isInteger(Input.selectionStart) ? Input.selectionStart : Value.length;
+                const Before = Value.slice(0, Selection);
+                const After = Value.slice(Selection);
+                const Match = Before.match(/(^|\s)(@[A-Za-z0-9_]*)$/);
+                const Start = Match ? Selection - Match[2].length : Selection;
+
+                Input.value = Value.slice(0, Start) + Command.command + " " + After;
+                Input.focus();
+                const Caret = Start + Command.command.length + 1;
+                Input.setSelectionRange(Caret, Caret);
+                ClosePopup();
+            });
+
+            Popup.appendChild(Button);
+        });
+
+        Popup.hidden = false;
+    };
+
+    Input.addEventListener("input", RenderPopup);
+    Input.addEventListener("focus", RenderPopup);
+    Input.addEventListener("blur", () => setTimeout(ClosePopup, 120));
+    Input.addEventListener("keydown", Event => {
+        if (Event.key === "Escape") ClosePopup();
+    });
+}
+
+function BindStoryBotCommandPopups() {
+    document.querySelectorAll(".ChatInput").forEach(BuildStoryBotCommandPopup);
+}
+
 function WrapStoryBotRenderers() {
     if (typeof AppendChat === "function" && !AppendChat.StoryBotWrapped) {
         const BaseAppendChat = AppendChat;
         const WrappedAppendChat = function(Message, ...Rest) {
             const Container = document.getElementById("ChatMessages");
             RemoveQuietChatState(Container);
-            const Result = BaseAppendChat(Message, ...Rest);
-            MarkLastChatMessage("ChatMessages", Message);
+
+            if (Message?.botDialog) {
+                RenderStoryBotDialog(Container, Message);
+            } else {
+                BaseAppendChat(Message, ...Rest);
+                MarkLastChatMessage("ChatMessages", Message);
+            }
+
             RefreshQuietChatState(Container);
-            return Result;
         };
         WrappedAppendChat.StoryBotWrapped = true;
         AppendChat = WrappedAppendChat;
@@ -120,10 +353,15 @@ function WrapStoryBotRenderers() {
         const WrappedAppendGameChat = function(Message, ...Rest) {
             const Container = document.getElementById("GameChatMessages");
             RemoveQuietChatState(Container);
-            const Result = BaseAppendGameChat(Message, ...Rest);
-            MarkLastChatMessage("GameChatMessages", Message);
+
+            if (Message?.botDialog) {
+                RenderStoryBotDialog(Container, Message);
+            } else {
+                BaseAppendGameChat(Message, ...Rest);
+                MarkLastChatMessage("GameChatMessages", Message);
+            }
+
             RefreshQuietChatState(Container);
-            return Result;
         };
         WrappedAppendGameChat.StoryBotWrapped = true;
         AppendGameChat = WrappedAppendGameChat;
@@ -224,6 +462,7 @@ function InitializeStoryBotUi() {
     WrapStoryBotRenderers();
     WrapStoryBotSocketHooks();
     ConfigureStoryBotInputs();
+    BindStoryBotCommandPopups();
     RefreshQuietChatState();
 }
 
