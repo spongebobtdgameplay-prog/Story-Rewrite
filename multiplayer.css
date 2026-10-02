@@ -279,6 +279,32 @@
     gap: 12px;
 }
 
+.MultiplayerConnectionBadge {
+    margin-left: auto;
+    padding: 5px 8px;
+    border: 1px solid #6f4c32;
+    border-radius: 999px;
+    background: #1b100b;
+    color: #a99577;
+    font: 900 9px/1 system-ui, sans-serif;
+    letter-spacing: .08em;
+}
+
+.MultiplayerConnectionBadge[data-state="online"] {
+    color: #9fd8a7;
+    border-color: #4c7957;
+}
+
+.MultiplayerConnectionBadge[data-state="reconnecting"] {
+    color: #e5bd7e;
+    border-color: #85663d;
+}
+
+.MultiplayerConnectionBadge[data-state="offline"] {
+    color: #c58d82;
+    border-color: #75453c;
+}
+
 .ChatPanelHeader h2 {
     margin: 0;
 }
