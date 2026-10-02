@@ -176,7 +176,7 @@ def LoadModel():
         model_path=str(ModelPath),
         n_ctx=int(os.environ.get("STORYBOT_CONTEXT_SIZE", "2048")),
         n_threads=max(1, int(os.environ.get("STORYBOT_THREADS", "1"))),
-        n_batch=128,
+        n_batch=256,
         use_mmap=True,
         use_mlock=False,
         verbose=False,
@@ -241,7 +241,7 @@ def GenerateReply(Model, Context):
         ],
         temperature=0.82,
         top_p=0.92,
-        max_tokens=150,
+        max_tokens=max(48, int(os.environ.get("STORYBOT_MAX_TOKENS", "72"))),
         repeat_penalty=1.18,
         frequency_penalty=0.35,
     )
@@ -269,7 +269,7 @@ def GenerateReply(Model, Context):
             ],
             temperature=0.9,
             top_p=0.94,
-            max_tokens=150,
+            max_tokens=max(48, int(os.environ.get("STORYBOT_MAX_TOKENS", "72"))),
             repeat_penalty=1.2,
             frequency_penalty=0.4,
         )
