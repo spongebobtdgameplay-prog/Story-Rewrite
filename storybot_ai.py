@@ -37,7 +37,7 @@ def EnsureModel():
 
 
 def WebKnowledgeEnabled():
-    return str(os.environ.get("STORYBOT_WEB_KNOWLEDGE", "true")).strip().lower() not in {"0", "false", "no", "off"}
+    return str(os.environ.get("STORYBOT_WEB_KNOWLEDGE", "false")).strip().lower() not in {"0", "false", "no", "off"}
 
 
 def ShouldSearchWeb(Context):
