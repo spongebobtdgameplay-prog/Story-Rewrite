@@ -128,7 +128,7 @@ function StoryBotRobotIconMarkup() {
     </svg>`;
 }
 
-async async function SubmitStoryBotDialogQuestion(InputElement) {
+async function SubmitStoryBotDialogQuestion(InputElement) {
     const Text = String(InputElement?.value || "").trim();
     if (!Text) {
         InputElement?.focus();
