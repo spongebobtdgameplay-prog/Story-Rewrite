@@ -1,19 +1,19 @@
 {
-  "name": "story-rewrite",
-  "version": "2.11.4",
-  "private": true,
-  "description": "Story Rewrite multiplayer story puzzle game",
-  "scripts": {
-    "start": "node server.js",
-    "dev": "node server.js",
-    "check:syntax": "node scripts/check-syntax.js",
-    "postinstall": "node scripts/install-storybot-runtime.js"
-  },
-  "engines": {
-    "node": ">=20"
-  },
-  "dependencies": {
-    "pg": "8.16.3",
-    "socket.io": "4.8.3"
-  }
+    "name": "story-rewrite",
+    "version": "2.11.5",
+    "private": true,
+    "description": "Story Rewrite multiplayer story puzzle game",
+    "scripts": {
+        "start": "node server.js",
+        "dev": "node server.js",
+        "check:syntax": "node scripts/check-syntax.js",
+        "postinstall": "node scripts/install-storybot-runtime.js"
+    },
+    "engines": {
+        "node": ">=20"
+    },
+    "dependencies": {
+        "pg": "8.16.3",
+        "socket.io": "4.8.3"
+    }
 }
