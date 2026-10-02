@@ -144,6 +144,10 @@ function SubmitStoryBotDialogQuestion(InputElement) {
 
     Socket.emit("room:chat", { text: `@StoryBot ${Text}` });
 
+    const Dialog = InputElement?.closest(".StoryBotDialog");
+    Dialog?.remove();
+    Dialog?.parentElement?.replaceChildren();
+
     if (InputElement) {
         InputElement.value = "";
         InputElement.disabled = false;
