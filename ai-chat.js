@@ -128,7 +128,7 @@ function StoryBotRobotIconMarkup() {
     </svg>`;
 }
 
-async function SubmitStoryBotDialogQuestion(InputElement) {
+async async function SubmitStoryBotDialogQuestion(InputElement) {
     const Text = String(InputElement?.value || "").trim();
     if (!Text) {
         InputElement?.focus();
@@ -155,9 +155,7 @@ async function SubmitStoryBotDialogQuestion(InputElement) {
                             Resolve();
                         };
 
-                        const OnError = () => {
-                            // Socket.IO may retry automatically; keep waiting until the timeout.
-                        };
+                        const OnError = () => {};
 
                         const Cleanup = () => {
                             clearTimeout(Timer);
@@ -181,27 +179,46 @@ async function SubmitStoryBotDialogQuestion(InputElement) {
     }
 
     if (!Socket?.connected) {
-        ShowStoryBotError("Multiplayer is reconnecting. Your StoryBot question was not sent.");
+        ShowStoryBotError("Multiplayer is offline. Reconnect to the room before asking StoryBot.");
+        SetStoryBotConnectionBadge("offline");
         return;
     }
 
-    const Dialog = InputElement.closest(".StoryBotDialog");
+    const Dialog = InputElement?.closest(".StoryBotDialog");
     const PromptHost = Dialog?.closest(".StoryBotPromptHost");
     const Button = Dialog?.querySelector(".StoryBotDialogSend");
 
     if (InputElement) InputElement.disabled = true;
     if (Button) Button.disabled = true;
+    SetStoryBotTyping(true);
 
-    Socket.emit("room:chat", { text: `@StoryBot ${Text}` });
+    try {
+        const Result = await new Promise((Resolve) => {
+            Socket.timeout(90000).emit(
+                "storybot:ask",
+                { question: Text },
+                (Error, Reply) => Resolve(Error ? { ok: false, error: "StoryBot did not answer in time." } : (Reply || { ok: false }))
+            );
+        });
 
-    Dialog?.remove();
-    PromptHost?.replaceChildren();
+        if (!Result?.ok) {
+            SetStoryBotTyping(false);
+            ShowStoryBotError(Result?.error || "StoryBot could not answer right now.");
+            if (InputElement) InputElement.disabled = false;
+            if (Button) Button.disabled = false;
+            return;
+        }
 
-    if (InputElement) {
-        InputElement.value = "";
-        InputElement.disabled = false;
+        Dialog?.remove();
+        PromptHost?.replaceChildren();
+    } catch (Error) {
+        SetStoryBotTyping(false);
+        ShowStoryBotError(String(Error?.message || "StoryBot could not answer right now."));
+        if (InputElement) InputElement.disabled = false;
+        if (Button) Button.disabled = false;
     }
 }
+
 function EnsureStoryBotConnectionBadge() {
     const Header = document.querySelector(".ChatPanel .ChatPanelHeader");
     if (!Header || Header.querySelector(".StoryBotConnectionBadge")) return;
