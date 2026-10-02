@@ -137,6 +137,40 @@
     font-size: 11px;
 }
 
+.StoryBotConnectionBadge {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+    padding: 4px 9px;
+    border: 1px solid rgba(221, 177, 100, .28);
+    border-radius: 999px;
+    color: #9b8a74;
+    background: rgba(20, 12, 8, .7);
+    font: 900 9px/1 system-ui, sans-serif;
+    letter-spacing: .08em;
+}
+
+.StoryBotConnectionBadge::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    margin-right: 5px;
+    border-radius: 50%;
+    background: currentColor;
+    box-shadow: 0 0 6px currentColor;
+}
+
+.StoryBotConnectionBadge[data-connection-state="online"] {
+    color: #9ad9a3;
+    border-color: rgba(125, 205, 137, .28);
+}
+
+.StoryBotConnectionBadge[data-connection-state="reconnecting"] {
+    color: #e7bd72;
+    border-color: rgba(231, 189, 114, .28);
+}
+
 .StoryBotPromptHost {
     width: 100%;
     min-width: 0;
