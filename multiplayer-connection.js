@@ -290,6 +290,7 @@ BindSocket = function(Socket) {
     if (typeof BindChatModerationSocket === "function") BindChatModerationSocket(Socket);
 
     Socket.on("connect", () => {
+        if (typeof SetMultiplayerConnectionBadge === "function") SetMultiplayerConnectionBadge("online");
         MultiplayerReconnectAttempts = 0;
         if (MultiplayerReconnectTimer) {
             clearTimeout(MultiplayerReconnectTimer);
@@ -304,6 +305,7 @@ BindSocket = function(Socket) {
     });
 
     Socket.on("disconnect", Reason => {
+        if (typeof SetMultiplayerConnectionBadge === "function") SetMultiplayerConnectionBadge("reconnecting");
         if (Reason === "io client disconnect") return;
 
         const Target = MultiplayerState ? "room" : "lobby";
@@ -316,6 +318,7 @@ BindSocket = function(Socket) {
     });
 
     Socket.on("connect_error", Error => {
+        if (typeof SetMultiplayerConnectionBadge === "function") SetMultiplayerConnectionBadge("reconnecting");
         if (IsFatalMultiplayerError(Error)) {
             const Target = MultiplayerState ? "room" : "lobby";
             SetMultiplayerConnectionStatus("Your sign-in expired. Sign in again.", Target, "bad");
@@ -345,6 +348,7 @@ BindSocket = function(Socket) {
     });
 
     Socket.io.on("reconnect", () => {
+        if (typeof SetMultiplayerConnectionBadge === "function") SetMultiplayerConnectionBadge("online");
         MultiplayerReconnectAttempts = 0;
         if (MultiplayerState?.code) RejoinMultiplayerRoom(Socket);
         else SetMultiplayerConnectionStatus("", "lobby");
