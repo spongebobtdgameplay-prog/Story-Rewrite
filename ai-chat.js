@@ -152,8 +152,32 @@ function SubmitStoryBotDialogQuestion(InputElement) {
     if (Button) Button.disabled = false;
 }
 
+function GetStoryBotPromptHost(Container) {
+    if (!Container) return null;
+
+    const Parent = Container.parentElement;
+    if (!Parent) return null;
+
+    let Host = [...Parent.children].find(Element =>
+        Element.classList?.contains("StoryBotPromptHost")
+    );
+
+    if (!Host) {
+        Host = document.createElement("div");
+        Host.className = "StoryBotPromptHost";
+        Container.after(Host);
+    }
+
+    return Host;
+}
+
 function RenderStoryBotDialog(Container, Message) {
     if (!Container) return;
+
+    const Host = GetStoryBotPromptHost(Container);
+    if (!Host) return;
+
+    Host.replaceChildren();
 
     const Element = document.createElement("div");
     Element.className = "ChatMessage StoryBotMessage StoryBotDialog";
@@ -223,10 +247,7 @@ function RenderStoryBotDialog(Container, Message) {
 
     Field.append(Input, Send);
     Element.append(Header, Text, Meta, Field);
-    Container.appendChild(Element);
-
-    while (Container.childElementCount > 30) Container.firstElementChild?.remove();
-    Container.scrollTop = Container.scrollHeight;
+    Host.appendChild(Element);
 
     if (AskingName && AskingName === LocalName) {
         requestAnimationFrame(() => Input.focus());
