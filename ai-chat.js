@@ -128,32 +128,102 @@ function StoryBotRobotIconMarkup() {
     </svg>`;
 }
 
-function SubmitStoryBotDialogQuestion(InputElement) {
+async function SubmitStoryBotDialogQuestion(InputElement) {
     const Text = String(InputElement?.value || "").trim();
     if (!Text) {
         InputElement?.focus();
         return;
     }
 
-    const Socket = GetConnectedStoryBotSocket();
-    if (!Socket) return;
+    let Socket = GetConnectedStoryBotSocket();
 
-    const Button = InputElement.closest(".StoryBotDialog")?.querySelector(".StoryBotDialogSend");
+    if (!Socket) {
+        try {
+            if (typeof MultiplayerSocket !== "undefined" && MultiplayerSocket) {
+                Socket = MultiplayerSocket;
+
+                if (!Socket.connected) {
+                    Socket.connect();
+                    await new Promise((Resolve, Reject) => {
+                        let Timer = setTimeout(() => {
+                            Cleanup();
+                            Reject(new Error("STORYBOT_CONNECTION_TIMEOUT"));
+                        }, 15000);
+
+                        const OnConnect = () => {
+                            Cleanup();
+                            Resolve();
+                        };
+
+                        const OnError = () => {
+                            // Socket.IO may retry automatically; keep waiting until the timeout.
+                        };
+
+                        const Cleanup = () => {
+                            clearTimeout(Timer);
+                            Socket.off("connect", OnConnect);
+                            Socket.off("connect_error", OnError);
+                        };
+
+                        Socket.on("connect", OnConnect);
+                        Socket.on("connect_error", OnError);
+
+                        if (Socket.connected) {
+                            Cleanup();
+                            Resolve();
+                        }
+                    });
+                }
+            }
+        } catch (Error) {
+            Socket = null;
+        }
+    }
+
+    if (!Socket?.connected) {
+        ShowStoryBotError("Multiplayer is reconnecting. Your StoryBot question was not sent.");
+        return;
+    }
+
+    const Dialog = InputElement.closest(".StoryBotDialog");
+    const PromptHost = Dialog?.closest(".StoryBotPromptHost");
+    const Button = Dialog?.querySelector(".StoryBotDialogSend");
+
     if (InputElement) InputElement.disabled = true;
     if (Button) Button.disabled = true;
 
     Socket.emit("room:chat", { text: `@StoryBot ${Text}` });
 
-    const Dialog = InputElement?.closest(".StoryBotDialog");
     Dialog?.remove();
-    Dialog?.parentElement?.replaceChildren();
+    PromptHost?.replaceChildren();
 
     if (InputElement) {
         InputElement.value = "";
         InputElement.disabled = false;
-        InputElement.focus();
     }
-    if (Button) Button.disabled = false;
+}
+function EnsureStoryBotConnectionBadge() {
+    const Header = document.querySelector(".ChatPanel .ChatPanelHeader");
+    if (!Header || Header.querySelector(".StoryBotConnectionBadge")) return;
+
+    const Badge = document.createElement("span");
+    Badge.className = "StoryBotConnectionBadge";
+    Badge.textContent = "OFFLINE";
+    Badge.dataset.connectionState = "offline";
+    Header.appendChild(Badge);
+}
+
+function SetStoryBotConnectionBadge(State) {
+    EnsureStoryBotConnectionBadge();
+    const Badge = document.querySelector(".StoryBotConnectionBadge");
+    if (!Badge) return;
+
+    const Normalized = String(State || "offline").toLowerCase();
+    Badge.dataset.connectionState = Normalized;
+    Badge.textContent =
+        Normalized === "online" ? "ONLINE" :
+        Normalized === "reconnecting" ? "RECONNECTING" :
+        "OFFLINE";
 }
 
 function GetStoryBotPromptHost(Container) {
@@ -421,6 +491,10 @@ function BindStoryBotSocket(Socket) {
     if (!Socket || BoundBotSockets.has(Socket)) return;
     BoundBotSockets.add(Socket);
 
+    Socket.on("connect", () => SetStoryBotConnectionBadge("online"));
+    Socket.on("disconnect", () => SetStoryBotConnectionBadge("reconnecting"));
+    Socket.on("connect_error", () => SetStoryBotConnectionBadge("reconnecting"));
+
     Socket.on("room:botTyping", Payload => {
         SetStoryBotTyping(Boolean(Payload?.typing));
     });
@@ -490,6 +564,7 @@ function InitializeStoryBotUi() {
     WrapStoryBotSocketHooks();
     ConfigureStoryBotInputs();
     BindStoryBotCommandPopups();
+    EnsureStoryBotConnectionBadge();
     RefreshQuietChatState();
 }
 
