@@ -137,6 +137,16 @@
     font-size: 11px;
 }
 
+.StoryBotPromptHost {
+    width: 100%;
+    min-width: 0;
+    margin-top: 8px;
+}
+
+.StoryBotPromptHost:empty {
+    display: none;
+}
+
 .StoryBotDialog {
     width: 100%;
     max-width: 100%;
