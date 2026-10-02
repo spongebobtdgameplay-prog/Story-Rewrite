@@ -93,7 +93,33 @@ function SetText(Id, Text) {
     if (Element) Element.textContent = Text;
 }
 
+function EnsureMultiplayerConnectionBadge() {
+    const Header = document.querySelector(".ChatPanelHeader");
+    if (!Header || Header.querySelector(".MultiplayerConnectionBadge")) return;
+
+    const Badge = document.createElement("span");
+    Badge.className = "MultiplayerConnectionBadge";
+    Badge.id = "MultiplayerConnectionBadge";
+    Badge.dataset.state = "offline";
+    Badge.textContent = "OFFLINE";
+    Header.appendChild(Badge);
+}
+
+function SetMultiplayerConnectionBadge(State) {
+    EnsureMultiplayerConnectionBadge();
+    const Badge = document.getElementById("MultiplayerConnectionBadge");
+    if (!Badge) return;
+
+    const Normalized = String(State || "offline").toLowerCase();
+    Badge.dataset.state = Normalized;
+    Badge.textContent =
+        Normalized === "online" ? "ONLINE" :
+        Normalized === "reconnecting" ? "RECONNECTING" :
+        "OFFLINE";
+}
+
 function EnsureLobbyEnhancements() {
+    EnsureMultiplayerConnectionBadge();
     const PlayerList = ById("PlayerList");
 
     if (PlayerList && !ById("PlayerCount")) {
@@ -285,15 +311,18 @@ function BindSocket(Socket) {
     if (typeof BindChatModerationSocket === "function") BindChatModerationSocket(Socket);
 
     Socket.on("connect", () => {
+        SetMultiplayerConnectionBadge("online");
         if (!MultiplayerState) HideLobbyStatus();
     });
 
     Socket.on("disconnect", () => {
+        SetMultiplayerConnectionBadge("reconnecting");
         if (MultiplayerState) ShowRoomStatus("Connection lost. Reconnecting...", false);
         else ShowLobbyStatus("Connection lost. Reconnecting...", false);
     });
 
     Socket.on("connect_error", Error => {
+        SetMultiplayerConnectionBadge("reconnecting");
         const Message = FriendlyConnectionError(Error);
         if (MultiplayerState) ShowRoomStatus(Message, false);
         else ShowLobbyStatus(Message, false);
