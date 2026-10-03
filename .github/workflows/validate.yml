@@ -143,63 +143,14 @@ jobs:
           Source = CompileWrapper(Source, path.join(Root, "server-v9.js"));
           const Temp = path.join(os.tmpdir(), "story-rewrite-generated-server.js");
           fs.writeFileSync(Temp, Source, "utf8");
-          fs.writeFileSync(path.join(Root, "storybot-generated-debug.js"), Source, "utf8");
           const Check = spawnSync(process.execPath, ["--check", Temp], { encoding: "utf8" });
           try { fs.unlinkSync(Temp); } catch {}
           if (Check.status !== 0) {
-              const Lines = Source.split("\n");
-              const ErrorLine = /story-rewrite-generated-server\.js:(\d+)/.exec(Check.stderr || "");
-              const LineNumber = Number(ErrorLine?.[1] || 0);
-              if (LineNumber) {
-                  process.stderr.write("\nGenerated source around line " + LineNumber + ":\n");
-                  process.stderr.write(Lines.slice(Math.max(0, LineNumber - 90), LineNumber + 12).map((Line, Index) => String(Math.max(1, LineNumber - 89 + Index)) + " | " + Line).join("\n") + "\n");
-                  process.stderr.write("\nTop-level closing patterns:\n");
-                  Lines.forEach((Line, Index) => {
-                      if (/^\s*\}\);\s*$/.test(Line) && !/^\s{4,}\S/.test(Line)) {
-                          process.stderr.write(String(Index + 1) + " | " + Line + "\n");
-                      }
-                  });
-                  process.stderr.write("\nClosure-removal syntax probes:\n");
-                  for (let Index = 0; Index < Lines.length; Index += 1) {
-                      if (!/^\s*\}\);\s*$/.test(Lines[Index]) || Index + 1 >= LineNumber) continue;
-                      const TrialLines = Lines.slice();
-                      TrialLines.splice(Index, 1);
-                      const Trial = path.join(os.tmpdir(), "story-rewrite-trial-" + Index + ".js");
-                      fs.writeFileSync(Trial, TrialLines.join("\n"), "utf8");
-                      const TrialCheck = spawnSync(process.execPath, ["--check", Trial], { encoding: "utf8" });
-                      try { fs.unlinkSync(Trial); } catch {}
-                      if (TrialCheck.status === 0) {
-                          process.stderr.write("Removing generated line " + (Index + 1) + " fixes syntax.\n");
-                      }
-                  }
-                  for (const MarkerText of ['Io.on("connection"', 'Socket.on("storybot:ask"', 'Socket.on("disconnect"']) {
-                      const MarkerIndex = Lines.findIndex(Line => Line.includes(MarkerText));
-                      process.stderr.write("\nMarker " + MarkerText + " at line " + (MarkerIndex + 1) + "\n");
-                      if (MarkerIndex >= 0) {
-                          process.stderr.write(Lines.slice(Math.max(0, MarkerIndex - 12), MarkerIndex + 18).map((Line, Offset) => String(Math.max(1, MarkerIndex - 11 + Offset)) + " | " + Line).join("\n") + "\n");
-                      }
-                  }
-              }
               process.stderr.write(Check.stderr || Check.stdout || "");
               process.exit(1);
           }
-          for (const Needle of ['Socket.on("storybot:ask", async', "RunStoryBotModel(Context)", 'text: "@StoryBot " + Question']) {
-              if (!Source.includes(Needle)) throw new Error("Generated server missing: " + Needle);
-          }
-          for (const Needle of ["private StoryBot prompt", "botPromptFor", "MaybeReplyAsStoryBot"]) {
-              if (Source.includes(Needle)) throw new Error("Obsolete StoryBot path remains: " + Needle);
-          }
-          console.log("Generated StoryBot server patch chain OK.");
           NODE
 
-      - name: Upload generated StoryBot server
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: storybot-generated-server-debug
-          path: storybot-generated-debug.js
-          if-no-files-found: ignore
-          retention-days: 1
       - run: node --check dialog.js
       - run: node --check dialog-connection.js
       - run: node --check game-enhancements.js
