@@ -16,7 +16,7 @@ COPY . .
 RUN python3 storybot_ai.py --download-only
 
 ENV NODE_ENV=production
-ENV STORYBOT_THREADS=2
-ENV STORYBOT_CONTEXT_SIZE=1024
+ENV STORYBOT_THREADS=1
+ENV STORYBOT_CONTEXT_SIZE=768
 
 CMD ["npm", "start"]
