@@ -19,7 +19,7 @@
 <link rel="stylesheet" href="shell-ui.css?v=20260930-1">
 <link rel="stylesheet" href="mobile-controls.css?v=20260930-1">
 <link rel="stylesheet" href="host-controls.css?v=20260930-1">
-<link rel="stylesheet" href="chat-ai.css?v=20261003-12">
+<link rel="stylesheet" href="chat-ai.css?v=20261003-13">
 <link rel="stylesheet" href="game-enhancements.css?v=20260930-1">    <style>
         .ReplayDeathButton { display:inline-flex; align-items:center; justify-content:center; gap:8px; }
         .ReplayVectorIcon { width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round; }
@@ -104,22 +104,8 @@
     </div>
     <div class="GameChatBody" id="GameChatBody">
         <div class="ChatMessages" id="GameChatMessages">
-                <div class="ChatMessage StoryBotMessage StoryBotComposer" id="GameStoryBotComposer">
-    <div class="StoryBotComposerHeader">
-        <div class="StoryBotComposerTitle">
-            <span class="StoryBotComposerIcon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="5" y="7" width="14" height="11" rx="3"></rect><path d="M9 7V5h6v2M8 12h.01M16 12h.01M9 15h6"></path></svg></span>
-            <span>Ask StoryBot</span>
         </div>
-        <span class="StoryBotComposerCount" id="GameStoryBotComposerCount">0/1200</span>
-    </div>
-    <div class="StoryBotComposerRow">
-        <textarea class="StoryBotQuestionInput" id="GameStoryBotQuestion" maxlength="1200" rows="1" placeholder="Type your message to StoryBot..." autocomplete="off" spellcheck="true"></textarea>
-        <button class="StoryBotSendButton" id="GameStoryBotSendButton" type="button">Send</button>
-    </div>
-    <div class="StoryBotComposerStatus" id="GameStoryBotComposerStatus" aria-live="polite">Type your question here. You can also use @StoryBot from the normal chat box.</div>
-</div>
-        </div>
-        <form class="ChatForm" id="GameChatForm"><input class="ChatInput" id="GameChatInput" maxlength="180" placeholder="Message, type #3 to vote, or use @StoryBot followed by a question..." autocomplete="off" enterkeyhint="send"><button class="PrimaryButton" type="submit">Send</button></form>
+        <form class="ChatForm" id="GameChatForm"><input class="ChatInput" id="GameChatInput" maxlength="180" placeholder="Message, type #3 to vote, or ask @StoryBot..." autocomplete="off" enterkeyhint="send"><button class="PrimaryButton" type="submit">Send</button></form>
     </div>
 </div>
 
@@ -157,7 +143,7 @@
 <script src="host-controls.js?v=20260930-1"></script>
 <script src="host-moderation-v20.js?v=20260930-1"></script>
 <script src="mobile-controls.js?v=20260930-1"></script>
-<script src="ai-chat.js?v=20261003-12"></script>
+<script src="ai-chat.js?v=20261003-13"></script>
 <script src="reporting.js?v=20260930-1"></script>
 </body>
 </html>
