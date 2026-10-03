@@ -277,26 +277,45 @@
 
 .StoryBotDialogField {
     display: flex;
-    align-items: stretch;
+    align-items: flex-end;
     gap: 7px;
 }
 
-.StoryBotDialogInput {
+.StoryBotDialogInputWrap {
     min-width: 0;
     flex: 1;
-    height: 38px;
-    padding: 0 11px;
+}
+
+.StoryBotDialogInput {
+    width: 100%;
+    min-width: 0;
+    min-height: 40px;
+    max-height: 180px;
+    margin: 0;
+    padding: 9px 11px;
     border: 1px solid rgba(221, 177, 100, .24);
     border-radius: 9px;
     background: rgba(14, 10, 7, .7);
     color: #f7ead7;
     outline: none;
-    font: 600 12px/1 system-ui, sans-serif;
+    resize: none;
+    overflow-y: hidden;
+    font: 600 12px/1.4 system-ui, sans-serif;
 }
 
 .StoryBotDialogInput:focus {
     border-color: rgba(240, 199, 125, .62);
     box-shadow: 0 0 0 2px rgba(240, 199, 125, .1);
+}
+
+.StoryBotDialogCounter {
+    display: block;
+    margin-top: 4px;
+    padding-inline: 2px;
+    color: rgba(225, 199, 162, .6);
+    text-align: right;
+    font: 600 10px/1 system-ui, sans-serif;
+    user-select: none;
 }
 
 .StoryBotDialogSend {
@@ -338,7 +357,8 @@
     }
 
     .StoryBotDialogInput {
-        height: 42px;
+        min-height: 42px;
+        max-height: 190px;
     }
 
     .StoryBotDialogSend {
