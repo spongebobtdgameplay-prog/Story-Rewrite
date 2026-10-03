@@ -321,7 +321,9 @@ function BuildStoryBotCommandPopup(Input) {
     };
 
     const HandleMentionTrigger = () => {
-        return false;
+        const Value = NormalizeStoryBotMentionText(Input.value || "");
+        if (!/^@story\s*bot\b/i.test(Value.trim())) return false;
+        return MoveMentionToStoryBotComposer(Input);
     };
 
     Input.addEventListener("input", () => {
@@ -358,64 +360,152 @@ function BindStoryBotCommandPopups() {
     document.querySelectorAll(".ChatInput").forEach(BuildStoryBotCommandPopup);
 }
 
+function GetStoryBotComposerForInput(Input) {
+    if (!Input) return null;
+    const Root = Input.closest(".ChatPanelBody, .GameChatBody") || document;
+    return Root.querySelector(".StoryBotComposer");
+}
+
+function SetStoryBotComposerStatus(Composer, Message, State = "") {
+    const Status = Composer?.querySelector(".StoryBotComposerStatus");
+    if (!Status) return;
+    Status.textContent = Message || "";
+    if (State) Status.dataset.state = State;
+    else delete Status.dataset.state;
+}
+
+function UpdateStoryBotDedicatedComposer(Composer) {
+    const Input = Composer?.querySelector(".StoryBotQuestionInput");
+    const Count = Composer?.querySelector(".StoryBotComposerCount");
+    if (!Input) return;
+    if (Count) Count.textContent = String(Input.value.length) + "/1200";
+    Input.style.height = "auto";
+    Input.style.height = Math.min(120, Math.max(38, Input.scrollHeight)) + "px";
+}
+
+function FocusStoryBotDedicatedComposer(Input, Question = "") {
+    const Composer = GetStoryBotComposerForInput(Input);
+    const QuestionInput = Composer?.querySelector(".StoryBotQuestionInput");
+    if (!Composer || !QuestionInput) return false;
+
+    QuestionInput.value = NormalizeStoryBotQuestionText(Question);
+    UpdateStoryBotDedicatedComposer(Composer);
+    SetStoryBotComposerStatus(Composer, "Your message goes directly to StoryBot.");
+    QuestionInput.focus();
+    const End = QuestionInput.value.length;
+    try { QuestionInput.setSelectionRange(End, End); } catch {}
+    return true;
+}
+
+function MoveMentionToStoryBotComposer(Input) {
+    const Value = NormalizeStoryBotMentionText(Input?.value || "");
+    const Match = Value.match(/@story\s*bot\b/i);
+    if (!Match) return false;
+
+    const Question = NormalizeStoryBotQuestionText(
+        Value.slice(Match.index + Match[0].length)
+    );
+
+    Input.value = "";
+    Input.maxLength = 180;
+    if (Input.dataset.storyBotNormalPlaceholder) {
+        Input.placeholder = Input.dataset.storyBotNormalPlaceholder;
+    }
+
+    return FocusStoryBotDedicatedComposer(Input, Question);
+}
+
+async function SubmitStoryBotDedicated(Composer) {
+    const Input = Composer?.querySelector(".StoryBotQuestionInput");
+    const Send = Composer?.querySelector(".StoryBotSendButton");
+    if (!Input || !Send) return;
+
+    const Question = NormalizeStoryBotQuestionText(Input.value);
+    if (!Question) {
+        SetStoryBotComposerStatus(Composer, "Please enter at least one character.", "error");
+        Input.focus();
+        return;
+    }
+
+    const Socket = GetConnectedStoryBotSocket();
+    if (!Socket?.connected) {
+        SetStoryBotComposerStatus(Composer, "Multiplayer is offline. Reconnect to the room first.", "error");
+        SetStoryBotConnectionState("offline");
+        return;
+    }
+
+    const Container = GetStoryBotContainerForInput(
+        Composer.closest(".ChatPanelBody, .GameChatBody")?.querySelector(".ChatInput")
+    );
+    const ContainerId = Container?.id || "ChatMessages";
+
+    Send.disabled = true;
+    Input.disabled = true;
+    SetStoryBotTyping(true);
+    SetStoryBotComposerStatus(Composer, "StoryBot is thinking...", "thinking");
+
+    const Result = await new Promise(resolve => {
+        let Finished = false;
+        const Complete = Value => {
+            if (Finished) return;
+            Finished = true;
+            resolve(Value || { ok: false, error: "StoryBot could not answer right now." });
+        };
+
+        try {
+            Socket.timeout(STORY_BOT_REQUEST_TIMEOUT).emit(
+                "storybot:ask",
+                { question: Question },
+                (Error, Reply) => Complete(
+                    Error
+                        ? { ok: false, error: "StoryBot did not answer in time." }
+                        : Reply
+                )
+            );
+        } catch (Error) {
+            Complete({ ok: false, error: String(Error?.message || "StoryBot request failed.") });
+        }
+    });
+
+    SetStoryBotTyping(false);
+    Send.disabled = false;
+    Input.disabled = false;
+
+    if (!Result?.ok) {
+        SetStoryBotComposerStatus(
+            Composer,
+            Result?.error || "StoryBot could not answer right now.",
+            "error"
+        );
+        Input.focus();
+        return;
+    }
+
+    Input.value = "";
+    UpdateStoryBotDedicatedComposer(Composer);
+    SetStoryBotComposerStatus(Composer, "Message sent. Ask another question anytime.");
+
+    if (Result.message) {
+        RenderStoryBotReplyMessage(Result.message, ContainerId);
+    }
+
+    Input.focus();
+}
+
 async function SubmitStoryBotFromChat(Form) {
     const Input = Form?.querySelector(".ChatInput");
-    const Container = GetStoryBotContainerForInput(Input);
-    const ContainerId = Container?.id || "ChatMessages";
-    const Normalized = NormalizeStoryBotMentionText(Input?.value).trim();
+    const Normalized = NormalizeStoryBotMentionText(Input?.value || "").trim();
     const MentionMatch = Normalized.match(/@story\s*bot\b/i);
     if (!MentionMatch) return false;
 
     const Question = NormalizeStoryBotQuestionText(
         Normalized.slice(MentionMatch.index + MentionMatch[0].length)
     );
-
-    if (!Question) {
-        PrepareStoryBotComposer(Input);
-        return true;
-    }
-
-    const Socket = GetConnectedStoryBotSocket();
-    if (!Socket?.connected) {
-        ShowStoryBotError("Multiplayer is offline. Reconnect to the room before asking StoryBot.");
-        SetStoryBotConnectionState("offline");
-        return true;
-    }
-
-    Input.disabled = true;
     Input.value = "";
-    Input.maxLength = 180;
-    SetStoryBotTyping(true);
-
-    const Result = await new Promise(resolve => {
-        Socket.timeout(STORY_BOT_REQUEST_TIMEOUT).emit(
-            "storybot:ask",
-            { question: Question },
-            (Error, Reply) => resolve(
-                Error
-                    ? { ok: false, error: "StoryBot did not answer in time." }
-                    : (Reply || { ok: false, error: "StoryBot could not answer right now." })
-            )
-        );
-    });
-
-    SetStoryBotTyping(false);
-
-    if (!Result?.ok) {
-        ShowStoryBotError(Result?.error || "StoryBot could not answer right now.");
-    } else if (Result.message) {
-        RenderStoryBotReplyMessage(Result.message, ContainerId);
-    }
-
-    Input.disabled = false;
-    Input.value = "";
-    Input.maxLength = 180;
-    if (Input.dataset.storyBotNormalPlaceholder) {
-        Input.placeholder = Input.dataset.storyBotNormalPlaceholder;
-    }
-    Input.focus();
+    FocusStoryBotDedicatedComposer(Input, Question);
     return true;
 }
+
 function BindStoryBotMentionNormalization() {
     document.querySelectorAll(".ChatForm").forEach(Form => {
         if (!Form || Form.dataset.storyBotMentionNormalizationBound === "1") return;
@@ -547,19 +637,36 @@ function ConfigureStoryBotInputs() {
     const GameInput = document.getElementById("GameChatInput");
     const JoinInput = document.getElementById("JoinCodeInput");
 
-    if (LobbyInput) {
-        LobbyInput.placeholder = "Message, type a vote number, or use @StoryBot followed by a question...";
-        LobbyInput.dataset.storyBotNormalPlaceholder = LobbyInput.placeholder;
-        LobbyInput.autocapitalize = "sentences";
-        LobbyInput.enterKeyHint = "send";
-    }
+    [LobbyInput, GameInput].forEach(Input => {
+        if (!Input) return;
+        Input.placeholder = Input === LobbyInput
+            ? "Message, type a vote number, or use @StoryBot..."
+            : "Message, type #3 to vote, or use @StoryBot...";
+        Input.dataset.storyBotNormalPlaceholder = Input.placeholder;
+        Input.autocapitalize = "sentences";
+        Input.enterKeyHint = "send";
+    });
 
-    if (GameInput) {
-        GameInput.placeholder = "Message, type #3 to vote, or use @StoryBot followed by a question...";
-        GameInput.dataset.storyBotNormalPlaceholder = GameInput.placeholder;
-        GameInput.autocapitalize = "sentences";
-        GameInput.enterKeyHint = "send";
-    }
+    document.querySelectorAll(".StoryBotComposer").forEach(Composer => {
+        const Input = Composer.querySelector(".StoryBotQuestionInput");
+        const Send = Composer.querySelector(".StoryBotSendButton");
+        if (!Input || !Send || Composer.dataset.storyBotBound === "1") return;
+
+        Composer.dataset.storyBotBound = "1";
+        Input.addEventListener("input", () => {
+            UpdateStoryBotDedicatedComposer(Composer);
+            if (Input.value.trim()) SetStoryBotComposerStatus(Composer, "Ready to send to StoryBot.");
+            else SetStoryBotComposerStatus(Composer, "Your message goes directly to StoryBot.");
+        });
+        Input.addEventListener("keydown", Event => {
+            if (Event.key === "Enter" && !Event.shiftKey) {
+                Event.preventDefault();
+                SubmitStoryBotDedicated(Composer);
+            }
+        });
+        Send.addEventListener("click", () => SubmitStoryBotDedicated(Composer));
+        UpdateStoryBotDedicatedComposer(Composer);
+    });
 
     if (JoinInput) {
         JoinInput.autocapitalize = "characters";
