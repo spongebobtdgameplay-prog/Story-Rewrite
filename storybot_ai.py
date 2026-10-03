@@ -141,16 +141,34 @@ def ChooseResponseStyle(Context):
     return Styles[Score % len(Styles)]
 
 
+def IsCasualConversation(Context):
+    Question = str((Context or {}).get("question", "")).strip().lower()
+    if not Question:
+        return True
+    return Question in {
+        "hi", "hello", "hey", "yo", "sup", "thanks", "thank you",
+        "thx", "goodbye", "bye", "good morning", "good afternoon", "good evening"
+    }
+
+
 def BuildPrompt(Context):
     ContextCopy = dict(Context or {})
     WebKnowledge = ContextCopy.pop("webKnowledge", None)
+
+    if IsCasualConversation(ContextCopy):
+        ContextCopy = {
+            "roomStatus": str((Context or {}).get("room", {}).get("status", "")),
+            "askingPlayer": str((Context or {}).get("askingPlayer", "")),
+            "question": str((Context or {}).get("question", "")),
+        }
+
     ContextText = json.dumps(ContextCopy, ensure_ascii=False, separators=(",", ":"))
-    if len(ContextText) > 2200:
-        ContextText = ContextText[:1500] + "...[context trimmed]..." + ContextText[-700:]
+    if len(ContextText) > 1800:
+        ContextText = ContextText[:1300] + "...[context trimmed]..." + ContextText[-500:]
 
     WebText = json.dumps(WebKnowledge or [], ensure_ascii=False, separators=(",", ":"))
-    if len(WebText) > 1000:
-        WebText = WebText[:1000]
+    if len(WebText) > 700:
+        WebText = WebText[:700]
 
     return (
         "Read the live game context first, then answer the asking player's exact question. "
@@ -233,6 +251,11 @@ def GenerateReply(Model, Context):
         "Be natural, specific, and concise."
     )
 
+    MaxTokens = max(20, int(os.environ.get(
+        "STORYBOT_MAX_TOKENS",
+        "32" if IsCasualConversation(Context) else "48"
+    )))
+
     Result = Model.create_chat_completion(
         messages=[
             {"role": "system", "content": SystemPrompt},
@@ -240,7 +263,7 @@ def GenerateReply(Model, Context):
         ],
         temperature=0.78,
         top_p=0.9,
-        max_tokens=max(24, int(os.environ.get("STORYBOT_MAX_TOKENS", "48"))),
+        max_tokens=MaxTokens,
         repeat_penalty=1.12,
         frequency_penalty=0.2,
     )
