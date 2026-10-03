@@ -68,7 +68,7 @@ jobs:
           }
 
           for (const [Text, Pattern, Label] of [
-              [AI, /@story\\s*bot\\b/, "StoryBot mention detection"],
+              [AI, /@story\s*bot\b/, "StoryBot mention detection"],
               [AI, /Event\.stopImmediatePropagation\(\)/, "normal composer submit interception"]
           ]) {
               if (!Pattern.test(Text)) throw new Error("Missing " + Label + ".");
