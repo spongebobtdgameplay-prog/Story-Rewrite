@@ -7,7 +7,7 @@ const STORY_BOT_COMMANDS = [{
 }];
 const BoundBotSockets = new WeakSet();
 const StoryBotRenderedMessageIds = new Set();
-const STORY_BOT_MAX_QUESTION_LENGTH = 1200;\nconst STORY_BOT_REQUEST_TIMEOUT = 125000;
+const STORY_BOT_MAX_QUESTION_LENGTH = 1200;
 
 function GetStoryBotChatContainer() {
     return document.getElementById("GameChatMessages") || document.getElementById("ChatMessages");
@@ -360,6 +360,7 @@ function BindStoryBotCommandPopups() {
     document.querySelectorAll(".ChatInput").forEach(BuildStoryBotCommandPopup);
 }
 
+
 function GetStoryBotComposerForInput(Input) {
     if (!Input) return null;
     const Root = Input.closest(".ChatPanelBody, .GameChatBody") || document;
@@ -472,11 +473,7 @@ async function SubmitStoryBotDedicated(Composer) {
     Input.disabled = false;
 
     if (!Result?.ok) {
-        SetStoryBotComposerStatus(
-            Composer,
-            Result?.error || "StoryBot could not answer right now.",
-            "error"
-        );
+        SetStoryBotComposerStatus(Composer, Result?.error || "StoryBot could not answer right now.", "error");
         Input.focus();
         return;
     }
@@ -501,6 +498,7 @@ async function SubmitStoryBotFromChat(Form) {
     const Question = NormalizeStoryBotQuestionText(
         Normalized.slice(MentionMatch.index + MentionMatch[0].length)
     );
+
     Input.value = "";
     FocusStoryBotDedicatedComposer(Input, Question);
     return true;
@@ -637,15 +635,19 @@ function ConfigureStoryBotInputs() {
     const GameInput = document.getElementById("GameChatInput");
     const JoinInput = document.getElementById("JoinCodeInput");
 
-    [LobbyInput, GameInput].forEach(Input => {
-        if (!Input) return;
-        Input.placeholder = Input === LobbyInput
-            ? "Message, type a vote number, or use @StoryBot..."
-            : "Message, type #3 to vote, or use @StoryBot...";
-        Input.dataset.storyBotNormalPlaceholder = Input.placeholder;
-        Input.autocapitalize = "sentences";
-        Input.enterKeyHint = "send";
-    });
+    if (LobbyInput) {
+        LobbyInput.placeholder = "Message, type a vote number, or use @StoryBot...";
+        LobbyInput.dataset.storyBotNormalPlaceholder = LobbyInput.placeholder;
+        LobbyInput.autocapitalize = "sentences";
+        LobbyInput.enterKeyHint = "send";
+    }
+
+    if (GameInput) {
+        GameInput.placeholder = "Message, type #3 to vote, or use @StoryBot...";
+        GameInput.dataset.storyBotNormalPlaceholder = GameInput.placeholder;
+        GameInput.autocapitalize = "sentences";
+        GameInput.enterKeyHint = "send";
+    }
 
     document.querySelectorAll(".StoryBotComposer").forEach(Composer => {
         const Input = Composer.querySelector(".StoryBotQuestionInput");
@@ -655,8 +657,11 @@ function ConfigureStoryBotInputs() {
         Composer.dataset.storyBotBound = "1";
         Input.addEventListener("input", () => {
             UpdateStoryBotDedicatedComposer(Composer);
-            if (Input.value.trim()) SetStoryBotComposerStatus(Composer, "Ready to send to StoryBot.");
-            else SetStoryBotComposerStatus(Composer, "Your message goes directly to StoryBot.");
+            if (Input.value.trim()) {
+                SetStoryBotComposerStatus(Composer, "Ready to send to StoryBot.");
+            } else {
+                SetStoryBotComposerStatus(Composer, "Your message goes directly to StoryBot.");
+            }
         });
         Input.addEventListener("keydown", Event => {
             if (Event.key === "Enter" && !Event.shiftKey) {
