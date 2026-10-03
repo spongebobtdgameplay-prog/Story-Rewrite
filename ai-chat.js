@@ -186,6 +186,28 @@ function GetStoryBotContainerForInput(Input) {
         || null;
 }
 
+function UpdateStoryBotComposerLength(Input) {
+    if (!Input) return;
+
+    const Value = NormalizeStoryBotMentionText(Input.value);
+    const IsStoryBot = /@story\s*bot\b/i.test(Value);
+    const Limit = IsStoryBot ? STORY_BOT_MAX_QUESTION_LENGTH : 180;
+
+    if (Input.maxLength !== Limit) Input.maxLength = Limit;
+    if (Input.value.length > Limit) {
+        Input.value = Input.value.slice(0, Limit);
+    }
+
+    if (IsStoryBot) {
+        if (!Input.dataset.storyBotNormalPlaceholder) {
+            Input.dataset.storyBotNormalPlaceholder = Input.placeholder || "Message...";
+        }
+        Input.placeholder = "Type your question after @StoryBot...";
+    } else if (Input.dataset.storyBotNormalPlaceholder) {
+        Input.placeholder = Input.dataset.storyBotNormalPlaceholder;
+    }
+}
+
 function PrepareStoryBotComposer(Input) {
     if (!Input) return;
 
