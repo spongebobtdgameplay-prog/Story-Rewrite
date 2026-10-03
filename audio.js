@@ -158,11 +158,60 @@ const StoryAudio = (() => {
         return ResumeAudio();
     }
 
+
+    let NotificationAudio = null;
+    let NotificationPlaying = false;
+
+    function GetNotificationAudio() {
+        if (NotificationAudio) return NotificationAudio;
+        try {
+            NotificationAudio = new Audio(new URL("sounds/ui/discord-notification.mp3", document.baseURI).href);
+            NotificationAudio.preload = "auto";
+            NotificationAudio.addEventListener("ended", () => {
+                NotificationPlaying = false;
+            });
+            NotificationAudio.addEventListener("error", () => {
+                NotificationPlaying = false;
+            });
+        } catch {
+            NotificationAudio = null;
+        }
+        return NotificationAudio;
+    }
+
+    function PlayNotificationSound() {
+        if (SoundsPaused || !SoundSettingsReady || SoundVolume <= 0 || NotificationPlaying) {
+            return Promise.resolve(false);
+        }
+
+        const AudioElement = GetNotificationAudio();
+        if (!AudioElement) return Promise.resolve(false);
+
+        NotificationPlaying = true;
+        AudioElement.volume = Math.max(0, Math.min(1, SoundVolume));
+
+        try {
+            const PlayPromise = AudioElement.play();
+            if (!PlayPromise?.then) return Promise.resolve(true);
+            return PlayPromise.catch(() => {
+                NotificationPlaying = false;
+                return false;
+            });
+        } catch {
+            NotificationPlaying = false;
+            return Promise.resolve(false);
+        }
+    }
+
     function PlaySound(Name = "click") {
         if (SoundsPaused || !SoundSettingsReady || SoundVolume <= 0) return Promise.resolve(false);
 
         if (String(Name) === "timerBell") {
             return ResumeAudio().then(Context => DrawBell(Context));
+        }
+
+        if (String(Name) === "message") {
+            return PlayNotificationSound();
         }
 
         return PlayClick();
@@ -215,6 +264,7 @@ const StoryAudio = (() => {
         ShutdownLegacyAudio,
         PauseSounds,
         ResumeSounds,
-        GetSoundState
+        GetSoundState,
+        PlayNotificationSound
     };
 })();
