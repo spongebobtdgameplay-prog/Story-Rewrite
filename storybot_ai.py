@@ -145,12 +145,12 @@ def BuildPrompt(Context):
     ContextCopy = dict(Context or {})
     WebKnowledge = ContextCopy.pop("webKnowledge", None)
     ContextText = json.dumps(ContextCopy, ensure_ascii=False, separators=(",", ":"))
-    if len(ContextText) > 3300:
-        ContextText = ContextText[:1900] + "...[context trimmed]..." + ContextText[-1200:]
+    if len(ContextText) > 2200:
+        ContextText = ContextText[:1500] + "...[context trimmed]..." + ContextText[-700:]
 
     WebText = json.dumps(WebKnowledge or [], ensure_ascii=False, separators=(",", ":"))
-    if len(WebText) > 2200:
-        WebText = WebText[:2200]
+    if len(WebText) > 1000:
+        WebText = WebText[:1000]
 
     return (
         "Read the live game context first, then answer the asking player's exact question. "
@@ -174,9 +174,9 @@ def BuildPrompt(Context):
 def LoadModel():
     return Llama(
         model_path=str(ModelPath),
-        n_ctx=int(os.environ.get("STORYBOT_CONTEXT_SIZE", "2048")),
-        n_threads=max(1, int(os.environ.get("STORYBOT_THREADS", "1"))),
-        n_batch=256,
+        n_ctx=int(os.environ.get("STORYBOT_CONTEXT_SIZE", "1024")),
+        n_threads=max(1, int(os.environ.get("STORYBOT_THREADS", "2"))),
+        n_batch=128,
         use_mmap=True,
         use_mlock=False,
         verbose=False,
@@ -222,64 +222,29 @@ def GenerateReply(Model, Context):
 
     SystemPrompt = (
         "You are StoryBot, a conversational AI teammate inside Story Rewrite. "
-        "Use the live context to understand what is happening, then formulate a fresh answer to the player's "
-        "actual question. You are not a scripted dialogue box. You may rephrase, explain, compare, or summarize "
-        "facts differently depending on the question. "
-        "For live gameplay, only use room, stage, vote, and recent chat information supplied in LIVE_CONTEXT. "
-        "For lobby status, use the room status as a fact but phrase the answer naturally around the player's "
-        "specific question; do not reuse a fixed lobby sentence. Never invent story events, votes, threats, or outcomes. "
-        "WEB_KNOWLEDGE is optional background retrieved for the player's general-knowledge question; do not use it "
-        "to override live game state, and do not claim you personally browsed the web. "
-        "Avoid canned openings and avoid repeating the same sentence across answers. "
-        "Be concise, natural, and specific."
+        "Answer the player's exact question using the live game context. "
+        "For gameplay, use only the supplied room, stage, votes, and recent chat facts. "
+        "For general knowledge, use WEB_KNOWLEDGE only as supporting background. "
+        "Never invent missing game state. Do not repeat the question or use a canned opening. "
+        "Be natural, specific, and concise."
     )
 
-    FirstResult = Model.create_chat_completion(
+    Result = Model.create_chat_completion(
         messages=[
             {"role": "system", "content": SystemPrompt},
             {"role": "user", "content": BuildPrompt(Context)},
         ],
-        temperature=0.82,
-        top_p=0.92,
-        max_tokens=max(48, int(os.environ.get("STORYBOT_MAX_TOKENS", "72"))),
-        repeat_penalty=1.18,
-        frequency_penalty=0.35,
+        temperature=0.78,
+        top_p=0.9,
+        max_tokens=max(24, int(os.environ.get("STORYBOT_MAX_TOKENS", "32"))),
+        repeat_penalty=1.12,
+        frequency_penalty=0.2,
     )
-    Reply = str(FirstResult["choices"][0]["message"]["content"] or "").strip()
-
-    GenericPatterns = (
-        "i cannot safely read the current story state",
-        "i will not make up story events",
-        "i can confirm the live game state",
-        "ask me again after the host starts the game",
-        "what would you like to know"
-    )
-    LowerReply = Reply.lower()
-    if any(Pattern in LowerReply for Pattern in GenericPatterns):
-        RewritePrompt = (
-            "Rewrite the previous answer so it directly answers the player's question using the concrete facts "
-            "in LIVE_CONTEXT or WEB_KNOWLEDGE. Do not use a generic fallback or a fixed lobby sentence. Do not start with 'Yes' or "
-            "'I can confirm'. Use different wording and include at least one specific relevant fact. Keep it to "
-            "2-4 concise sentences.\n\n" + BuildPrompt(Context)
-        )
-        SecondResult = Model.create_chat_completion(
-            messages=[
-                {"role": "system", "content": SystemPrompt},
-                {"role": "user", "content": RewritePrompt},
-            ],
-            temperature=0.9,
-            top_p=0.94,
-            max_tokens=max(48, int(os.environ.get("STORYBOT_MAX_TOKENS", "72"))),
-            repeat_penalty=1.2,
-            frequency_penalty=0.4,
-        )
-        Candidate = str(SecondResult["choices"][0]["message"]["content"] or "").strip()
-        if Candidate:
-            Reply = Candidate
+    Reply = str(Result["choices"][0]["message"]["content"] or "").strip()
 
     if not Reply:
         raise RuntimeError("The local model returned an empty response.")
-    return Reply[:700]
+    return Reply[:400]
 
 
 def Send(Message):
