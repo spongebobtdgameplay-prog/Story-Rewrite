@@ -73,6 +73,13 @@ jobs:
                           process.stderr.write(String(Index + 1) + " | " + Line + "\n");
                       }
                   });
+                  for (const MarkerText of ['Io.on("connection"', 'Socket.on("storybot:ask"', 'Socket.on("disconnect"']) {
+                      const MarkerIndex = Lines.findIndex(Line => Line.includes(MarkerText));
+                      process.stderr.write("\nMarker " + MarkerText + " at line " + (MarkerIndex + 1) + "\n");
+                      if (MarkerIndex >= 0) {
+                          process.stderr.write(Lines.slice(Math.max(0, MarkerIndex - 12), MarkerIndex + 18).map((Line, Offset) => String(Math.max(1, MarkerIndex - 11 + Offset)) + " | " + Line).join("\n") + "\n");
+                      }
+                  }
               }
               process.stderr.write(Check.stderr || Check.stdout || "");
               process.exit(1);
