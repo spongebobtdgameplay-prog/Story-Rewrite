@@ -174,9 +174,9 @@ def BuildPrompt(Context):
 def LoadModel():
     return Llama(
         model_path=str(ModelPath),
-        n_ctx=int(os.environ.get("STORYBOT_CONTEXT_SIZE", "1024")),
-        n_threads=max(1, int(os.environ.get("STORYBOT_THREADS", "2"))),
-        n_batch=128,
+        n_ctx=int(os.environ.get("STORYBOT_CONTEXT_SIZE", "768")),
+        n_threads=1,
+        n_batch=32,
         use_mmap=True,
         use_mlock=False,
         verbose=False,
@@ -236,7 +236,7 @@ def GenerateReply(Model, Context):
         ],
         temperature=0.78,
         top_p=0.9,
-        max_tokens=max(24, int(os.environ.get("STORYBOT_MAX_TOKENS", "32"))),
+        max_tokens=max(16, int(os.environ.get("STORYBOT_MAX_TOKENS", "24"))),
         repeat_penalty=1.12,
         frequency_penalty=0.2,
     )
@@ -244,7 +244,7 @@ def GenerateReply(Model, Context):
 
     if not Reply:
         raise RuntimeError("The local model returned an empty response.")
-    return Reply[:400]
+    return Reply[:500]
 
 
 def Send(Message):
