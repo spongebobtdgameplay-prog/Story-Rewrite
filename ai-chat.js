@@ -482,7 +482,7 @@ function GetActiveMentionText(Input) {
 function UpdateStoryBotComposerLength(Input) {
     if (!Input) return;
     const Value = NormalizeStoryBotMentionText(Input.value);
-    const IsStoryBot = /^@story\s*bot\b/i.test(Value.trim());
+    const IsStoryBot = /@story\s*bot\b/i.test(Value.trim());
     const Limit = IsStoryBot ? STORY_BOT_MAX_QUESTION_LENGTH : 180;
     if (Input.maxLength !== Limit) Input.maxLength = Limit;
     if (!IsStoryBot && Input.value.length > Limit) {
@@ -567,7 +567,9 @@ function BuildStoryBotCommandPopup(Input) {
         Popup.hidden = false;
     };
 
-    const HandleMentionTrigger = () => false;
+    const HandleMentionTrigger = () => {
+        return false;
+    };
 
     Input.addEventListener("input", () => {
         UpdateStoryBotComposerLength(Input);
@@ -608,10 +610,13 @@ async function SubmitStoryBotFromChat(Form) {
     const Container = GetStoryBotContainerForInput(Input);
     const ContainerId = Container?.id || "ChatMessages";
     const Normalized = NormalizeStoryBotMentionText(Input?.value).trim();
-    const Match = Normalized.match(/^@story\s*bot\b\s*(.*)$/i);
-    if (!Match) return false;
+    const MentionMatch = Normalized.match(/@story\s*bot\b/i);
+    if (!MentionMatch) return false;
 
-    const Question = NormalizeStoryBotQuestionText(Match[1]);
+    const Question = NormalizeStoryBotQuestionText(
+        Normalized.slice(MentionMatch.index + MentionMatch[0].length)
+    );
+
     if (!Question) {
         ShowStoryBotMentionPrompt(Input);
         return true;
@@ -655,7 +660,6 @@ async function SubmitStoryBotFromChat(Form) {
     Input.focus();
     return true;
 }
-
 function BindStoryBotMentionNormalization() {
     document.querySelectorAll(".ChatForm").forEach(Form => {
         if (!Form || Form.dataset.storyBotMentionNormalizationBound === "1") return;
