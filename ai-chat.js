@@ -230,6 +230,19 @@ function PrepareStoryBotComposer(Input) {
     try { Input.setSelectionRange(Caret, Caret); } catch {}
 }
 
+function GetActiveMentionText(Input) {
+    if (!Input) return "";
+
+    const Value = String(Input.value || "");
+    const Selection = Number.isInteger(Input.selectionStart)
+        ? Input.selectionStart
+        : Value.length;
+    const Before = Value.slice(0, Selection);
+    const Match = Before.match(/(^|\s)(@[A-Za-z0-9_]*)$/);
+
+    return Match ? Match[2] : "";
+}
+
 function BuildStoryBotCommandPopup(Input) {
     if (!Input || Input.dataset.storyBotPopupBound === "1") return;
     const Form = Input.closest(".ChatForm");
