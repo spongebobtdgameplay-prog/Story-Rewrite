@@ -12,17 +12,17 @@ if LocalStoryBotPython.exists():
 
 from llama_cpp import Llama
 
-ModelFileName = "SmolLM2-360M-Instruct-Q4_0.gguf"
+ModelFileName = "SmolLM2-135M-Instruct-Q4_K_M.gguf"
 ModelUrl = os.environ.get(
     "STORYBOT_MODEL_URL",
-    "https://huggingface.co/bartowski/SmolLM2-360M-Instruct-GGUF/resolve/main/SmolLM2-360M-Instruct-Q4_0.gguf?download=true",
+    "https://huggingface.co/bartowski/SmolLM2-135M-Instruct-GGUF/resolve/main/SmolLM2-135M-Instruct-Q4_K_M.gguf?download=true",
 )
 ModelDirectory = Path(os.environ.get("STORYBOT_MODEL_DIRECTORY", Path(__file__).parent / ".storybot-model"))
 ModelPath = Path(os.environ.get("STORYBOT_MODEL_PATH", ModelDirectory / ModelFileName))
 
 
 def EnsureModel():
-    if ModelPath.exists() and ModelPath.stat().st_size > 200_000_000:
+    if ModelPath.exists() and ModelPath.stat().st_size > 70_000_000:
         return
     ModelPath.parent.mkdir(parents=True, exist_ok=True)
     FileDescriptor, TemporaryName = tempfile.mkstemp(prefix="storybot-", suffix=".gguf", dir=ModelPath.parent)
