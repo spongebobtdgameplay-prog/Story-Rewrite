@@ -133,7 +133,8 @@ function ShowStoryBotDialogValidation(InputElement, Message = "Please enter at l
         Validation = document.createElement("small");
         Validation.className = "StoryBotDialogValidation";
         const Field = Dialog.querySelector(".StoryBotDialogField");
-        (Field || Dialog).appendChild(Validation);
+        const InputWrap = Field?.querySelector(".StoryBotDialogInputWrap");
+        (InputWrap || Field || Dialog).appendChild(Validation);
     }
 
     Validation.textContent = Message;
@@ -147,7 +148,9 @@ function ClearStoryBotDialogValidation(InputElement) {
 
 function RenderStoryBotReplyMessage(Message, ContainerId) {
     if (!Message || !Message.bot || Message.botDialog) return;
-    if (RememberStoryBotRenderedMessage(Message)) return;
+
+    const Id = String(Message.id || "").trim();
+    if (Id && StoryBotRenderedMessageIds.has(Id)) return;
 
     if (ContainerId === "ChatMessages" && typeof AppendChat === "function") {
         AppendChat(Message);
