@@ -72,7 +72,6 @@
     35% { opacity: 1; transform: translateY(-2px); }
 }
 
-
 .StoryBotCommandPopup {
     position: relative;
     z-index: 20;
@@ -143,56 +142,9 @@
     min-height: 0;
 }
 
-.StoryBotPromptHost {
-    flex: 0 0 auto;
-    order: -1;
-    width: 100%;
-    min-width: 0;
-    margin: 0 0 8px;
-}
-
 .ChatPanelBody > .ChatForm {
     flex: 0 0 auto;
     order: 3;
-}
-
-.StoryBotPromptHost:empty {
-    display: none;
-}
-
-.StoryBotDialog {
-    width: 100%;
-    max-width: 100%;
-    min-width: 0;
-    align-self: stretch;
-    box-sizing: border-box;
-    padding: 18px !important;
-    margin: 4px 0 !important;
-    overflow: hidden;
-    white-space: normal;
-}
-
-.StoryBotDialog,
-.StoryBotDialog * {
-    box-sizing: border-box;
-}
-.StoryBotDialogHeader {
-    display: flex;
-    align-items: center;
-    gap: 9px;
-    margin-bottom: 8px;
-}
-
-.StoryBotDialogRobot {
-    width: 34px;
-    height: 34px;
-    display: grid;
-    place-items: center;
-    flex: 0 0 34px;
-    border: 1px solid rgba(221, 177, 100, .34);
-    border-radius: 10px;
-    background: rgba(221, 177, 100, .08);
-    color: #f0c77d;
 }
 
 .StoryBotRobotIcon {
@@ -205,142 +157,12 @@
     stroke-linejoin: round;
 }
 
-.StoryBotDialogHeading {
-    display: grid;
-    gap: 1px;
-}
-
-.StoryBotDialogHeading strong {
-    color: #ffe0a3;
-    font-size: 13px;
-}
-
-.StoryBotDialogHeading span,
-.StoryBotDialogMeta {
-    color: #a9947a;
-    font-size: 10px;
-}
-
-.StoryBotDialogText {
-    min-width: 0;
-    color: #f1dec3;
-    line-height: 1.5;
-    margin-bottom: 10px;
-    white-space: pre-wrap;
-    overflow-wrap: anywhere;
-    word-break: break-word;
-}
-
-.StoryBotDialogMeta {
-    margin-bottom: 8px;
-}
-
-.StoryBotDialogField {
-    display: flex;
-    align-items: flex-start;
-    gap: 8px;
-    width: 100%;
-    min-width: 0;
-}
-
-.StoryBotDialogInputWrap {
-    min-width: 0;
-    flex: 1 1 auto;
-    width: 0;
-}
-
-.StoryBotDialogInput {
-    width: 100%;
-    min-width: 0;
-    min-height: 40px;
-    max-height: 180px;
-    margin: 0;
-    padding: 9px 11px;
-    border: 1px solid rgba(221, 177, 100, .24);
-    border-radius: 9px;
-    background: rgba(14, 10, 7, .7);
-    color: #f7ead7;
-    outline: none;
-    resize: none;
-    overflow-y: hidden;
-    font: 600 12px/1.4 system-ui, sans-serif;
-}
-
-.StoryBotDialogInput:focus {
-    border-color: rgba(240, 199, 125, .62);
-    box-shadow: 0 0 0 2px rgba(240, 199, 125, .1);
-}
-
-.StoryBotDialogCounter {
-    display: block;
-    margin-top: 4px;
-    padding-inline: 2px;
-    color: rgba(225, 199, 162, .6);
-    text-align: right;
-    font: 600 10px/1 system-ui, sans-serif;
-    user-select: none;
-}
-
-.StoryBotDialogValidation {
-    display: block;
-    margin-top: 6px;
-    color: #e5aa93;
-    font: 600 10px/1.3 system-ui, sans-serif;
-}
-
-
-.StoryBotDialogSend {
-    width: 40px;
-    height: 40px;
-    display: grid;
-    place-items: center;
-    flex: 0 0 40px;
-    margin-top: 0;
-    padding: 0;
-    border: 1px solid rgba(221, 177, 100, .3);
-    border-radius: 9px;
-    background: rgba(221, 177, 100, .12);
-    color: #f0c77d;
-    cursor: pointer;
-}
-
-.StoryBotDialogSend:hover {
-    background: rgba(221, 177, 100, .2);
-}
-
-.StoryBotDialogSend:disabled,
-.StoryBotDialogInput:disabled {
-    opacity: .55;
-    cursor: default;
-}
-
-.StoryBotDialogSend svg {
-    width: 18px;
-    height: 18px;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 1.65;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-}
-
 @media (max-width: 640px) {
     .StoryBotCommandPopup {
         margin-bottom: 5px;
     }
 
-    .StoryBotDialogInput {
-        min-height: 42px;
-        max-height: 190px;
     }
-
-    .StoryBotDialogSend {
-        width: 42px;
-        height: 42px;
-        flex-basis: 42px;
-    }
-}
-
 
 .StoryBotRequestError {
     width: 100%;
