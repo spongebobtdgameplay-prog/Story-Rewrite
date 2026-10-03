@@ -683,7 +683,47 @@ const V28PatchCode = "ReplaceRequired(\"const BackendVersion = 27;\", \"const Ba
 
 const V29PatchCode = "";
 
-const V30PatchCode = "ReplaceRequired(\"const BackendVersion = 28;\", \"const BackendVersion = 32;\", \"backend version 32\");\n\nReplaceRequired(\n    \"const StoryBotModelTimeout = Math.max(5000, Math.min(12000, Number(process.env.STORYBOT_REQUEST_TIMEOUT_MS || 7000)));\",\n    \"const StoryBotModelTimeout = Math.max(10000, Math.min(20000, Number(process.env.STORYBOT_REQUEST_TIMEOUT_MS || 15000)));\",\n    \"StoryBot model timeout\"\n);\n\nReplaceRequired(\n    \"const Io = new SocketServer(HttpServer, {\\n    cors:\",\n    \"const Io = new SocketServer(HttpServer, {\\n    transports: [\\\"polling\\\"],\\n    allowUpgrades: false,\\n    cors:\",\n    \"stable polling Socket.IO transport\"\n);\n\nconst StoryBotDirectPatternV32 = /async function GenerateStoryBotReply\\\\(Room, Username, Question\\\\) \\\\{[\\\\s\\\\S]*?\\\\n\\\\}/;\nconst StoryBotDirectReplacementV32 = `async function GenerateStoryBotReply(Room, Username, Question) {\n    const Reply = await RunStoryBotModel(BuildStoryBotContext(Room, Username, Question));\n    const Text = String(Reply || '').trim();\n    if (!Text) throw new Error('The StoryBot model returned an empty response.');\n    return Text.slice(0, 700);\n}`;\nif (!StoryBotDirectPatternV32.test(Source)) throw new Error(\"v32 patch failed: StoryBot reply generator\");\nSource = Source.replace(StoryBotDirectPatternV32, StoryBotDirectReplacementV32);";
+const V30PatchCode = String.raw\`
+ReplaceRequired("const BackendVersion = 28;", "const BackendVersion = 32;", "backend version 32");
+
+ReplaceRequired(
+    "const StoryBotModelTimeout = Math.max(5000, Math.min(12000, Number(process.env.STORYBOT_REQUEST_TIMEOUT_MS || 7000)));",
+    "const StoryBotModelTimeout = Math.max(15000, Math.min(60000, Number(process.env.STORYBOT_REQUEST_TIMEOUT_MS || 45000)));",
+    "StoryBot model timeout"
+);
+
+const SocketConstructorStart = "const Io = new SocketServer(HttpServer, {\\n";
+if (!Source.includes(SocketConstructorStart)) {
+    throw new Error("v32 patch failed: Socket.IO constructor");
+}
+if (!/transports:\\s*\\[\\s*["']polling["']\\s*\\]/.test(Source)) {
+    Source = Source.replace(
+        SocketConstructorStart,
+        SocketConstructorStart +
+        "    transports: [\\\"polling\\\"],\\n" +
+        "    allowUpgrades: false,\\n"
+    );
+}
+
+const StoryBotReplyStartText = "async function GenerateStoryBotReply(Room, Username, Question) {";
+const StoryBotReplyStart = Source.indexOf(StoryBotReplyStartText);
+if (StoryBotReplyStart < 0) throw new Error("v32 patch failed: StoryBot reply generator");
+
+const StoryBotReplyEnd = Source.indexOf("\\n}", StoryBotReplyStart);
+if (StoryBotReplyEnd < 0) throw new Error("v32 patch failed: StoryBot reply generator end");
+
+const StoryBotDirectReplacement = \`async function GenerateStoryBotReply(Room, Username, Question) {
+    const Reply = await RunStoryBotModel(BuildStoryBotContext(Room, Username, Question));
+    const Text = String(Reply || "").trim();
+    if (!Text) throw new Error("The StoryBot model returned an empty response.");
+    return Text.slice(0, 700);
+}\`;
+
+Source =
+    Source.slice(0, StoryBotReplyStart) +
+    StoryBotDirectReplacement +
+    Source.slice(StoryBotReplyEnd + 2);
+\`;
 
 const InjectionSearch = `ExtraPatches + "\\n\\nconst RuntimeModule = new Module(SourcePath, module);",`;
 const InjectionReplacement = `ExtraPatches + "\\n\\n" + ${JSON.stringify(V11PatchCode)} + "\\n\\n" + ${JSON.stringify(V12PatchCode)} + "\\n\\n" + ${JSON.stringify(V13PatchCode)} + "\\n\\n" + ${JSON.stringify(V17PatchCode)} + "\\n\\n" + ${JSON.stringify(V18PatchCode)} + "\\n\\n" + ${JSON.stringify(V19PatchCode)} + "\\n\\n" + ${JSON.stringify(V20PatchCode)} + "\\n\\n" + ${JSON.stringify(V25PatchCode)} + "\\n\\n" + ${JSON.stringify(V26PatchCode)} + "\\n\\n" + ${JSON.stringify(V27PatchCode)} + "\\n\\n" + ${JSON.stringify(V28PatchCode)} + "\\n\\n" + ${JSON.stringify(V29PatchCode)} + "\\n\\n" + ${JSON.stringify(V30PatchCode)} + "\\n\\nconst RuntimeModule = new Module(SourcePath, module);",`;
