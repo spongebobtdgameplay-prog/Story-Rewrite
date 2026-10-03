@@ -176,7 +176,7 @@ def BuildPrompt(Context):
 def LoadModel():
     return Llama(
         model_path=str(ModelPath),
-        n_ctx=int(os.environ.get("STORYBOT_CONTEXT_SIZE", "512")),
+        n_ctx=int(os.environ.get("STORYBOT_CONTEXT_SIZE", "768")),
         n_threads=max(1, min(2, int(os.environ.get("STORYBOT_THREADS", "2")))),
         n_batch=64,
         use_mmap=True,
