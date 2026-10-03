@@ -149,6 +149,34 @@ jobs:
               process.stderr.write(Check.stderr || Check.stdout || "");
               process.exit(1);
           }
+          const Required = [
+              ['Socket.on("storybot:ask", async', "direct StoryBot ask handler"],
+              ["RunStoryBotModel(Context)", "local StoryBot model call"],
+              ['text: "@StoryBot " + Question', "StoryBot question chat message"],
+              ['username: StoryBotName', "StoryBot response identity"]
+          ];
+          for (const [Needle, Label] of Required) {
+              if (!Source.includes(Needle)) throw new Error("Generated server is missing " + Label + ".");
+          }
+
+          const Forbidden = [
+              ["private StoryBot prompt", "obsolete private StoryBot prompt patch"],
+              ["botPromptFor", "obsolete StoryBot prompt state"],
+              ["MaybeReplyAsStoryBot", "obsolete automatic StoryBot response path"]
+          ];
+          for (const [Needle, Label] of Forbidden) {
+              if (Source.includes(Needle)) throw new Error("Generated server still contains " + Label + ".");
+          }
+
+          const ConnectionStart = Source.indexOf('Io.on("connection", Socket => {');
+          const StoryBotHandler = Source.indexOf('    Socket.on("storybot:ask", async');
+          const ChatHandler = Source.indexOf('    Socket.on("room:chat", async');
+          const ConnectionEnd = Source.indexOf('\n});\n\nHttpServer.listen', StoryBotHandler);
+          if (!(ConnectionStart >= 0 && ConnectionStart < StoryBotHandler && StoryBotHandler < ChatHandler && ChatHandler < ConnectionEnd)) {
+              throw new Error("StoryBot or normal chat handler is outside the Socket.IO connection scope.");
+          }
+
+          console.log("Generated StoryBot server patch chain OK.");
           NODE
 
       - run: node --check dialog.js
