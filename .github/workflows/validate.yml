@@ -61,6 +61,13 @@ jobs:
           const Check = spawnSync(process.execPath, ["--check", Temp], { encoding: "utf8" });
           try { fs.unlinkSync(Temp); } catch {}
           if (Check.status !== 0) {
+              const Lines = Source.split("\n");
+              const ErrorLine = /:(\d+)\s*$/.exec(Check.stderr || "");
+              const LineNumber = Number(ErrorLine?.[1] || 0);
+              if (LineNumber) {
+                  process.stderr.write("\nGenerated source around line " + LineNumber + ":\n");
+                  process.stderr.write(Lines.slice(Math.max(0, LineNumber - 8), LineNumber + 8).map((Line, Index) => String(Math.max(1, LineNumber - 7 + Index)) + " | " + Line).join("\n") + "\n");
+              }
               process.stderr.write(Check.stderr || Check.stdout || "");
               process.exit(1);
           }
