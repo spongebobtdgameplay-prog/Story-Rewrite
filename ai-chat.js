@@ -397,7 +397,8 @@ function CreateStoryBotComposer(Input) {
             <textarea class="StoryBotQuestionInput" maxlength="1200" rows="1"
                 placeholder="Type your question to StoryBot..." autocomplete="off" spellcheck="true"
                 aria-label="Type your question to StoryBot"></textarea>
-            <button class="StoryBotSendButton" type="button">Send</button>
+            <button class="StoryBotSendButton" type="button">Ask</button>
+            <button class="StoryBotCloseButton" type="button" aria-label="Close StoryBot question">×</button>
         </div>
         <div class="StoryBotComposerStatus" aria-live="polite">Your message goes directly to StoryBot.</div>
     `;
@@ -406,8 +407,9 @@ function CreateStoryBotComposer(Input) {
 
     const QuestionInput = Composer.querySelector(".StoryBotQuestionInput");
     const Send = Composer.querySelector(".StoryBotSendButton");
+    const Close = Composer.querySelector(".StoryBotCloseButton");
 
-    if (!QuestionInput || !Send) {
+    if (!QuestionInput || !Send || !Close) {
         Composer.remove();
         return null;
     }
@@ -439,6 +441,13 @@ function CreateStoryBotComposer(Input) {
 
     Send.addEventListener("click", () => {
         void SubmitStoryBotDedicated(Composer);
+    });
+
+    Close.addEventListener("click", () => {
+        Composer.remove();
+        Input.dataset.storyBotComposerActive = "0";
+        Input.hidden = false;
+        Input.focus();
     });
 
     UpdateStoryBotDedicatedComposer(Composer);
