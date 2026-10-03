@@ -62,7 +62,7 @@ jobs:
           try { fs.unlinkSync(Temp); } catch {}
           if (Check.status !== 0) {
               const Lines = Source.split("\n");
-              const ErrorLine = /:(\d+)\s*$/.exec(Check.stderr || "");
+              const ErrorLine = /story-rewrite-generated-server\.js:(\d+)/.exec(Check.stderr || "");
               const LineNumber = Number(ErrorLine?.[1] || 0);
               if (LineNumber) {
                   process.stderr.write("\nGenerated source around line " + LineNumber + ":\n");
