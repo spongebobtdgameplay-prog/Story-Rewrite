@@ -33,6 +33,45 @@ jobs:
       - run: node --check moderation-version.js
       - run: node --check host-controls.js
       - run: node --check ai-chat.js
+      - name: Validate generated StoryBot server
+        run: |
+          node <<'NODE'
+          const fs = require("fs");
+          const os = require("os");
+          const path = require("path");
+          const Module = require("module");
+          const { spawnSync } = require("child_process");
+          const Root = process.cwd();
+          function CompileWrapper(Source, Filename) {
+              const Marker = /\nconst RuntimeModule = new Module\([^\n]+\);[\s\S]*?RuntimeModule\._compile\([^\n]+\);\s*$/;
+              if (!Marker.test(Source)) throw new Error("Missing wrapper compile marker: " + Filename);
+              const Exported = Source.replace(Marker, "\nmodule.exports = typeof WrapperSource !== \"undefined\" ? WrapperSource : Source;");
+              const Test = new Module(Filename, module);
+              Test.filename = Filename;
+              Test.paths = Module._nodeModulePaths(path.dirname(Filename));
+              Test._compile(Exported, Filename);
+              return Test.exports;
+          }
+          let Source = fs.readFileSync(path.join(Root, "server-v11.js"), "utf8");
+          Source = CompileWrapper(Source, path.join(Root, "server-v11.js"));
+          Source = CompileWrapper(Source, path.join(Root, "server-v10.js"));
+          Source = CompileWrapper(Source, path.join(Root, "server-v9.js"));
+          const Temp = path.join(os.tmpdir(), "story-rewrite-generated-server.js");
+          fs.writeFileSync(Temp, Source, "utf8");
+          const Check = spawnSync(process.execPath, ["--check", Temp], { encoding: "utf8" });
+          try { fs.unlinkSync(Temp); } catch {}
+          if (Check.status !== 0) {
+              process.stderr.write(Check.stderr || Check.stdout || "");
+              process.exit(1);
+          }
+          for (const Needle of ['Socket.on("storybot:ask", async', "RunStoryBotModel(Context)", 'text: "@StoryBot " + Question']) {
+              if (!Source.includes(Needle)) throw new Error("Generated server missing: " + Needle);
+          }
+          for (const Needle of ["private StoryBot prompt", "botPromptFor", "MaybeReplyAsStoryBot"]) {
+              if (Source.includes(Needle)) throw new Error("Obsolete StoryBot path remains: " + Needle);
+          }
+          console.log("Generated StoryBot server patch chain OK.");
+          NODE
       - run: node --check dialog.js
       - run: node --check dialog-connection.js
       - run: node --check game-enhancements.js
