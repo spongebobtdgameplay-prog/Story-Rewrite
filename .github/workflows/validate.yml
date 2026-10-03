@@ -33,6 +33,91 @@ jobs:
       - run: node --check moderation-version.js
       - run: node --check host-controls.js
       - run: node --check ai-chat.js
+      - name: Validate StoryBot browser composer
+        run: |
+          node <<'NODE'
+          const fs = require("fs");
+          const AI = fs.readFileSync("ai-chat.js", "utf8");
+          const Lobby = fs.readFileSync("multiplayer.html", "utf8");
+          const Game = fs.readFileSync("dialog.html", "utf8");
+          const CSS = fs.readFileSync("chat-ai.css", "utf8");
+
+          const Must = [
+              [AI, "function PrepareStoryBotComposer", "composer preparation helper"],
+              [AI, "function UpdateStoryBotComposerLength", "composer length helper"],
+              [AI, "function GetActiveMentionText", "mention lookup helper"],
+              [AI, "async function SubmitStoryBotFromChat", "normal chat submit path"],
+              [AI, "storybot:ask", "direct StoryBot socket event"],
+              [Lobby, 'id="ChatInput"', "lobby chat composer"],
+              [Lobby, "@StoryBot", "lobby StoryBot instruction"],
+              [Game, 'id="GameChatInput"', "game chat composer"],
+              [Game, "@StoryBot", "game StoryBot instruction"],
+              [CSS, ".StoryBotTyping", "StoryBot typing indicator"],
+              [CSS, ".StoryBotCommandPopup", "StoryBot command popup"]
+          ];
+          for (const [Text, Needle, Label] of Must) {
+              if (!Text.includes(Needle)) throw new Error("Missing " + Label + ".");
+          }
+
+          for (const [Text, Needle, Label] of [
+              [AI, "StoryBotDialog", "separate StoryBot dialog code"],
+              [AI, "StoryBotPromptHost", "separate StoryBot prompt host"],
+              [AI, "storybot:prompt", "separate StoryBot prompt socket"]
+          ]) {
+              if (Text.includes(Needle)) throw new Error("Obsolete " + Label + " remains.");
+          }
+
+          for (const [Text, Pattern, Label] of [
+              [AI, /@story\\s*bot\\b/, "StoryBot mention detection"],
+              [AI, /Event\.stopImmediatePropagation\(\)/, "normal composer submit interception"]
+          ]) {
+              if (!Pattern.test(Text)) throw new Error("Missing " + Label + ".");
+          }
+
+          console.log("StoryBot browser composer contract OK.");
+          NODE
+
+      - name: Validate StoryBot Python runtime
+        run: |
+          python -m py_compile storybot_ai.py
+          python <<'PY'
+          import os
+          import sys
+          import types
+
+          os.environ["STORYBOT_WEB_KNOWLEDGE"] = "0"
+          os.environ["STORYBOT_MAX_TOKENS"] = "32"
+
+          fake_llama = types.ModuleType("llama_cpp")
+          class FakeLlama:
+              def create_chat_completion(self, **kwargs):
+                  assert kwargs["max_tokens"] == 32
+                  return {"choices": [{"message": {"content": "Mock StoryBot response."}}]}
+          fake_llama.Llama = FakeLlama
+          sys.modules["llama_cpp"] = fake_llama
+
+          import storybot_ai
+
+          calls = {"count": 0}
+          class SmokeModel:
+              def create_chat_completion(self, **kwargs):
+                  calls["count"] += 1
+                  assert kwargs["messages"][0]["role"] == "system"
+                  assert kwargs["messages"][1]["role"] == "user"
+                  return {"choices": [{"message": {"content": "Mock StoryBot response."}}]}
+
+          reply = storybot_ai.GenerateReply(SmokeModel(), {
+              "askingPlayer": "Tester",
+              "question": "What is happening in the current stage?",
+              "room": {"status": "playing", "players": []},
+              "stage": {"name": "Smoke Test", "objective": "Survive"},
+              "recentChat": []
+          })
+
+          assert reply == "Mock StoryBot response."
+          assert calls["count"] == 1
+          print("StoryBot Python runtime smoke test OK.")
+          PY
       - name: Validate generated StoryBot server
         run: |
           node <<'NODE'
