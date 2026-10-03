@@ -212,6 +212,20 @@
                     <input class="ChatInput" id="ChatInput" maxlength="180" placeholder="Message, type a vote number, or use @StoryBot followed by a question..." autocomplete="off" autocapitalize="sentences" enterkeyhint="send">
                     <button class="PrimaryButton" type="submit">Send</button>
                 </form>
+                <div class="StoryBotComposer" id="StoryBotComposer">
+    <div class="StoryBotComposerHeader">
+        <div class="StoryBotComposerTitle">
+            <span class="StoryBotComposerIcon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="5" y="7" width="14" height="11" rx="3"></rect><path d="M9 7V5h6v2M8 12h.01M16 12h.01M9 15h6"></path></svg></span>
+            <span>Ask StoryBot</span>
+        </div>
+        <span class="StoryBotComposerCount" id="StoryBotComposerCount">0/1200</span>
+    </div>
+    <div class="StoryBotComposerRow">
+        <textarea class="StoryBotQuestionInput" id="StoryBotQuestion" maxlength="1200" rows="1" placeholder="Type your message to StoryBot..." autocomplete="off" spellcheck="true"></textarea>
+        <button class="StoryBotSendButton" id="StoryBotSendButton" type="button">Send</button>
+    </div>
+    <div class="StoryBotComposerStatus" id="StoryBotComposerStatus" aria-live="polite">Use @StoryBot in normal chat to open this box with your question.</div>
+</div>
             </div>
         </div>
     </section>
