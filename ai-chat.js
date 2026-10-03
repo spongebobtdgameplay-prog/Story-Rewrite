@@ -395,7 +395,6 @@ function ShowStoryBotMentionPrompt(Input, MessageOverride = null) {
     if (!Host) return;
 
     Input.value = "";
-    CloseStoryBotCommandPopup(Input);
 
     if (Host.querySelector(".StoryBotDialog")) return;
 
@@ -437,8 +436,6 @@ function BuildStoryBotCommandPopup(Input) {
         Popup.hidden = true;
         Popup.innerHTML = "";
     };
-
-    Input._storyBotClosePopup = ClosePopup;
 
     const RenderPopup = () => {
         const Mention = GetActiveMentionText(Input).toLowerCase();
