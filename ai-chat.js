@@ -359,6 +359,8 @@ function CreateStoryBotComposer(Input) {
     const Existing = GetStoryBotComposerForInput(Input);
     if (Existing) return Existing;
 
+    RemoveQuietChatState(Container);
+
     const Composer = document.createElement("div");
     Composer.className = "ChatMessage StoryBotMessage StoryBotComposer";
     Composer.setAttribute("role", "group");
