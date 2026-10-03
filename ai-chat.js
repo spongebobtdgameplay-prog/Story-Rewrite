@@ -6,6 +6,7 @@ const STORY_BOT_COMMANDS = [{
     description: "Ask the AI about the current story"
 }];
 const BoundBotSockets = new WeakSet();
+const STORY_BOT_MAX_QUESTION_LENGTH = 1200;
 
 function GetStoryBotChatContainer() {
     return document.getElementById("GameChatMessages") || document.getElementById("ChatMessages");
@@ -121,6 +122,32 @@ function GetConnectedStoryBotSocket() {
     return null;
 }
 
+function NormalizeStoryBotMentionText(Value) {
+    return String(Value || "").replace(/@story\s*bot\b/gi, STORY_BOT_COMMAND);
+}
+
+function NormalizeStoryBotQuestionText(Value) {
+    return String(Value || "")
+        .replace(/[\u0000-\u001F\u007F]/g, " ")
+        .replace(/\s+/g, " ")
+        .trim()
+        .slice(0, STORY_BOT_MAX_QUESTION_LENGTH);
+}
+
+function ResizeStoryBotDialogInput(Input) {
+    if (!Input) return;
+    const MaxHeight = 180;
+    Input.style.height = "auto";
+    const NextHeight = Math.min(Math.max(Input.scrollHeight, 40), MaxHeight);
+    Input.style.height = NextHeight + "px";
+    Input.style.overflowY = Input.scrollHeight > MaxHeight ? "auto" : "hidden";
+}
+
+function UpdateStoryBotDialogCounter(Input, Counter) {
+    if (!Input || !Counter) return;
+    Counter.textContent = `${String(Input.value || "").length.toLocaleString()} / ${STORY_BOT_MAX_QUESTION_LENGTH.toLocaleString()}`;
+}
+
 function StoryBotRobotIconMarkup() {
     return `<svg class="StoryBotRobotIcon" viewBox="0 0 24 24" aria-hidden="true">
         <rect x="5" y="7" width="14" height="11" rx="3"></rect>
@@ -128,8 +155,8 @@ function StoryBotRobotIconMarkup() {
     </svg>`;
 }
 
-async async function SubmitStoryBotDialogQuestion(InputElement) {
-    const Text = String(InputElement?.value || "").trim();
+async function SubmitStoryBotDialogQuestion(InputElement) {
+    const Text = NormalizeStoryBotQuestionText(InputElement?.value);
     if (!Text) {
         InputElement?.focus();
         return;
@@ -310,16 +337,23 @@ function RenderStoryBotDialog(Container, Message) {
     const Field = document.createElement("div");
     Field.className = "StoryBotDialogField";
 
-    const Input = document.createElement("input");
+    const InputWrap = document.createElement("div");
+    InputWrap.className = "StoryBotDialogInputWrap";
+
+    const Input = document.createElement("textarea");
     Input.className = "StoryBotDialogInput";
-    Input.type = "text";
-    Input.maxLength = 180;
+    Input.rows = 1;
+    Input.maxLength = STORY_BOT_MAX_QUESTION_LENGTH;
     Input.placeholder = "Ask StoryBot...";
     Input.autocomplete = "off";
     Input.spellcheck = true;
     Input.setAttribute("aria-label", "Ask StoryBot a question");
+    Input.setAttribute("maxlength", String(STORY_BOT_MAX_QUESTION_LENGTH));
     Input.disabled = !IsForCurrentPlayer;
     if (!IsForCurrentPlayer) Input.placeholder = "Waiting for " + AskingName + "...";
+
+    const Counter = document.createElement("small");
+    Counter.className = "StoryBotDialogCounter";
 
     const Send = document.createElement("button");
     Send.type = "button";
@@ -329,16 +363,30 @@ function RenderStoryBotDialog(Container, Message) {
     Send.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 12 16-7-4 14-4-6-8-1Z"></path><path d="m12 13 4-8"></path></svg>';
     Send.addEventListener("click", () => SubmitStoryBotDialogQuestion(Input));
 
+    Input.addEventListener("input", () => {
+        ResizeStoryBotDialogInput(Input);
+        UpdateStoryBotDialogCounter(Input, Counter);
+    });
+
     Input.addEventListener("keydown", Event => {
-        if (Event.key === "Enter") {
+        if (Event.key === "Enter" && !Event.shiftKey) {
             Event.preventDefault();
+            Input.value = NormalizeStoryBotQuestionText(Input.value);
             SubmitStoryBotDialogQuestion(Input);
+            return;
+        }
+        if (Event.key === "Escape") {
+            Event.preventDefault();
+            Input.blur();
         }
     });
 
-    Field.append(Input, Send);
+    InputWrap.append(Input, Counter);
+    Field.append(InputWrap, Send);
     Element.append(Header, Text, Meta, Field);
     Host.appendChild(Element);
+    ResizeStoryBotDialogInput(Input);
+    UpdateStoryBotDialogCounter(Input, Counter);
 
     if (AskingName && AskingName === LocalName) {
         requestAnimationFrame(() => Input.focus());
@@ -434,12 +482,27 @@ function BuildStoryBotCommandPopup(Input) {
     Input.addEventListener("focus", RenderPopup);
     Input.addEventListener("blur", () => setTimeout(ClosePopup, 120));
     Input.addEventListener("keydown", Event => {
+        if (Event.key === "Enter" && !Event.shiftKey) {
+            Input.value = NormalizeStoryBotMentionText(Input.value);
+            ClosePopup();
+        }
         if (Event.key === "Escape") ClosePopup();
     });
 }
 
 function BindStoryBotCommandPopups() {
     document.querySelectorAll(".ChatInput").forEach(BuildStoryBotCommandPopup);
+}
+
+function BindStoryBotMentionNormalization() {
+    document.querySelectorAll(".ChatForm").forEach(Form => {
+        if (!Form || Form.dataset.storyBotMentionNormalizationBound === "1") return;
+        Form.dataset.storyBotMentionNormalizationBound = "1";
+        Form.addEventListener("submit", () => {
+            const Input = Form.querySelector(".ChatInput");
+            if (Input) Input.value = NormalizeStoryBotMentionText(Input.value);
+        }, true);
+    });
 }
 
 function WrapStoryBotRenderers() {
@@ -581,6 +644,7 @@ function InitializeStoryBotUi() {
     WrapStoryBotSocketHooks();
     ConfigureStoryBotInputs();
     BindStoryBotCommandPopups();
+    BindStoryBotMentionNormalization();
     EnsureStoryBotConnectionBadge();
     RefreshQuietChatState();
 }
