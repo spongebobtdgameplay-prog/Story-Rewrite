@@ -789,8 +789,8 @@ function InitializeStoryBotUi() {
     WrapStoryBotRenderers();
     WrapStoryBotSocketHooks();
     ConfigureStoryBotInputs();
-    BindStoryBotCommandPopups();
     BindStoryBotMentionNormalization();
+    BindStoryBotCommandPopups();
     SetStoryBotConnectionState("offline");
     RefreshQuietChatState();
 }
