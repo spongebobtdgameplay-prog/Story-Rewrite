@@ -73,6 +73,19 @@ jobs:
                           process.stderr.write(String(Index + 1) + " | " + Line + "\n");
                       }
                   });
+                  process.stderr.write("\nClosure-removal syntax probes:\n");
+                  for (let Index = 0; Index < Lines.length; Index += 1) {
+                      if (!/^\s*\}\);\s*$/.test(Lines[Index]) || Index + 1 >= LineNumber) continue;
+                      const TrialLines = Lines.slice();
+                      TrialLines.splice(Index, 1);
+                      const Trial = path.join(os.tmpdir(), "story-rewrite-trial-" + Index + ".js");
+                      fs.writeFileSync(Trial, TrialLines.join("\n"), "utf8");
+                      const TrialCheck = spawnSync(process.execPath, ["--check", Trial], { encoding: "utf8" });
+                      try { fs.unlinkSync(Trial); } catch {}
+                      if (TrialCheck.status === 0) {
+                          process.stderr.write("Removing generated line " + (Index + 1) + " fixes syntax.\n");
+                      }
+                  }
                   for (const MarkerText of ['Io.on("connection"', 'Socket.on("storybot:ask"', 'Socket.on("disconnect"']) {
                       const MarkerIndex = Lines.findIndex(Line => Line.includes(MarkerText));
                       process.stderr.write("\nMarker " + MarkerText + " at line " + (MarkerIndex + 1) + "\n");
