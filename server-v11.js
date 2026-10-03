@@ -471,6 +471,9 @@ const OldChatHandlerPrefix = `    Socket.on("room:chat", Payload => {
         Room.messages.push(Message);
         Room.messages = Room.messages.slice(-ChatHistoryLimit);
         Io.to(Room.code).emit("room:chat", Message);
+        MaybeReplyAsStoryBot(Room, Socket, Message).catch(Error => {
+            console.error("StoryBot background failure", Error);
+        });
     });`;
 
 const NewChatHandlerPrefix = `    Socket.on("room:chat", async Payload => {
