@@ -251,9 +251,9 @@ def GenerateReply(Model, Context):
         "Be natural, specific, and concise."
     )
 
-    MaxTokens = max(20, int(os.environ.get(
+    MaxTokens = max(8, int(os.environ.get(
         "STORYBOT_MAX_TOKENS",
-"12" if IsCasualConversation(Context) else "32"
+        "12" if IsCasualConversation(Context) else "32"
     )))
 
     Result = Model.create_chat_completion(
