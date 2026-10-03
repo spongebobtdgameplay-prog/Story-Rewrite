@@ -67,11 +67,11 @@ jobs:
               if (Text.includes(Needle)) throw new Error("Obsolete " + Label + " remains.");
           }
 
-          for (const [Text, Pattern, Label] of [
+          for (const [Text, Needle, Label] of [
               [AI, "/@story\\s*bot\\b/i", "StoryBot mention detection"],
-              [AI, /Event\.stopImmediatePropagation\(\)/, "normal composer submit interception"]
+              [AI, "Event.stopImmediatePropagation()", "normal composer submit interception"]
           ]) {
-              if (!Pattern.test(Text)) throw new Error("Missing " + Label + ".");
+              if (!Text.includes(Needle)) throw new Error("Missing " + Label + ".");
           }
 
           console.log("StoryBot browser composer contract OK.");
