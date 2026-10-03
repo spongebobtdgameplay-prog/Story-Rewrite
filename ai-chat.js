@@ -380,27 +380,17 @@ function CreateStoryBotComposer(Input) {
     Composer.setAttribute("aria-label", "StoryBot question");
 
     Composer.innerHTML = `
-        <div class="StoryBotComposerHeader">
-            <div class="StoryBotComposerTitle">
-                <span class="StoryBotComposerIcon" aria-hidden="true">
-                    <svg viewBox="0 0 24 24">
-                        <rect x="5" y="7" width="14" height="11" rx="3"></rect>
-                        <path d="M9 7V5h6v2M8 12h.01M16 12h.01M9 15h6"></path>
-                    </svg>
-                </span>
-                <span>Ask StoryBot</span>
-            </div>
-            <span class="StoryBotComposerCount">0/1200</span>
+        <div class="StoryBotInlineIcon" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+                <rect x="5" y="7" width="14" height="11" rx="3"></rect>
+                <path d="M9 7V5h6v2M8 12h.01M16 12h.01M9 15h6"></path>
+            </svg>
         </div>
-        <div class="StoryBotComposerPrompt">What would you like to ask me?</div>
-        <div class="StoryBotComposerRow">
-            <textarea class="StoryBotQuestionInput" maxlength="1200" rows="1"
-                placeholder="Type your question to StoryBot..." autocomplete="off" spellcheck="true"
-                aria-label="Type your question to StoryBot"></textarea>
-            <button class="StoryBotSendButton" type="button">Ask</button>
-            <button class="StoryBotCloseButton" type="button" aria-label="Close StoryBot question">×</button>
-        </div>
-        <div class="StoryBotComposerStatus" aria-live="polite">Your message goes directly to StoryBot.</div>
+        <input class="StoryBotQuestionInput" maxlength="1200" type="text"
+            placeholder="Ask StoryBot..." autocomplete="off" spellcheck="true"
+            aria-label="Ask StoryBot a question">
+        <button class="StoryBotSendButton" type="button">Ask</button>
+        <button class="StoryBotCloseButton" type="button" aria-label="Close StoryBot question">×</button>
     `;
 
     Slot.appendChild(Composer);
@@ -478,8 +468,7 @@ function UpdateStoryBotDedicatedComposer(Composer) {
     const Count = Composer?.querySelector(".StoryBotComposerCount");
     if (!Input) return;
     if (Count) Count.textContent = String(Input.value.length) + "/1200";
-    Input.style.height = "auto";
-    Input.style.height = Math.min(120, Math.max(38, Input.scrollHeight)) + "px";
+    Input.style.height = "28px";
 }
 
 function FocusStoryBotDedicatedComposer(Input, Question = "") {
