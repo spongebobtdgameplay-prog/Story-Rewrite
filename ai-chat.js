@@ -186,6 +186,28 @@ function GetStoryBotContainerForInput(Input) {
         || null;
 }
 
+function PrepareStoryBotComposer(Input) {
+    if (!Input) return;
+
+    const Value = NormalizeStoryBotMentionText(Input.value).trim();
+    const MentionMatch = Value.match(/@story\s*bot\b/i);
+    const Question = MentionMatch
+        ? NormalizeStoryBotQuestionText(Value.slice(MentionMatch.index + MentionMatch[0].length))
+        : "";
+
+    Input.value = STORY_BOT_COMMAND + (Question ? " " + Question : " ");
+    Input.maxLength = STORY_BOT_MAX_QUESTION_LENGTH;
+
+    if (!Input.dataset.storyBotNormalPlaceholder) {
+        Input.dataset.storyBotNormalPlaceholder = Input.placeholder || "Message...";
+    }
+    Input.placeholder = "Type your question after @StoryBot...";
+    Input.focus();
+
+    const Caret = Input.value.length;
+    try { Input.setSelectionRange(Caret, Caret); } catch {}
+}
+
 function BuildStoryBotCommandPopup(Input) {
     if (!Input || Input.dataset.storyBotPopupBound === "1") return;
     const Form = Input.closest(".ChatForm");
@@ -286,7 +308,7 @@ function BuildStoryBotCommandPopup(Input) {
             const NormalizedValue = NormalizeStoryBotMentionText(Input.value).trim();
             if (/^@story\s*bot$/i.test(NormalizedValue)) {
                 Event.preventDefault();
-                ShowStoryBotMentionPrompt(Input);
+                PrepareStoryBotComposer(Input);
                 ClosePopup();
                 return;
             }
@@ -314,7 +336,7 @@ async function SubmitStoryBotFromChat(Form) {
     );
 
     if (!Question) {
-        ShowStoryBotMentionPrompt(Input);
+        PrepareStoryBotComposer(Input);
         return true;
     }
 
@@ -353,6 +375,9 @@ async function SubmitStoryBotFromChat(Form) {
     Input.disabled = false;
     Input.value = "";
     Input.maxLength = 180;
+    if (Input.dataset.storyBotNormalPlaceholder) {
+        Input.placeholder = Input.dataset.storyBotNormalPlaceholder;
+    }
     Input.focus();
     return true;
 }
@@ -366,7 +391,7 @@ function BindStoryBotMentionNormalization() {
             if (!Input) return;
 
             const Normalized = NormalizeStoryBotMentionText(Input.value);
-            if (!/^@story\s*bot\b/i.test(Normalized.trim())) {
+            if (!/@story\s*bot\b/i.test(Normalized.trim())) {
                 Input.value = Normalized;
                 return;
             }
@@ -488,13 +513,15 @@ function ConfigureStoryBotInputs() {
     const JoinInput = document.getElementById("JoinCodeInput");
 
     if (LobbyInput) {
-        LobbyInput.placeholder = "Message, type a vote number, or ask @StoryBot...";
+        LobbyInput.placeholder = "Message, type a vote number, or use @StoryBot followed by a question...";
+        LobbyInput.dataset.storyBotNormalPlaceholder = LobbyInput.placeholder;
         LobbyInput.autocapitalize = "sentences";
         LobbyInput.enterKeyHint = "send";
     }
 
     if (GameInput) {
-        GameInput.placeholder = "Message, type #3 to vote, or ask @StoryBot...";
+        GameInput.placeholder = "Message, type #3 to vote, or use @StoryBot followed by a question...";
+        GameInput.dataset.storyBotNormalPlaceholder = GameInput.placeholder;
         GameInput.autocapitalize = "sentences";
         GameInput.enterKeyHint = "send";
     }
