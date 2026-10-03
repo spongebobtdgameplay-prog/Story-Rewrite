@@ -256,20 +256,29 @@ function SetStoryBotConnectionState(State) {
 function GetStoryBotPromptHost(Container) {
     if (!Container) return null;
 
-    const Parent = Container.parentElement;
-    if (!Parent) return null;
-
-    let Host = [...Parent.children].find(Element =>
-        Element.classList?.contains("StoryBotPromptHost")
-    );
-
+    let Host = Container.querySelector(":scope > .StoryBotPromptHost");
     if (!Host) {
         Host = document.createElement("div");
         Host.className = "StoryBotPromptHost";
-        Container.after(Host);
+        Container.appendChild(Host);
     }
 
     return Host;
+}
+
+function GetStoryBotContainerForInput(Input) {
+    const Form = Input?.closest(".ChatForm");
+    if (!Form) return null;
+
+    return Form.parentElement?.querySelector(".ChatMessages")
+        || Form.closest(".ChatPanelBody")?.querySelector(".ChatMessages")
+        || null;
+}
+
+function GetStoryBotActiveChatInput() {
+    return document.getElementById("GameChatInput")
+        || document.getElementById("ChatInput")
+        || null;
 }
 
 function RenderStoryBotDialog(Container, Message) {
@@ -376,32 +385,29 @@ function RenderStoryBotDialog(Container, Message) {
     }
 }
 
-function ShowStoryBotMentionPrompt(Input) {
+function ShowStoryBotMentionPrompt(Input, MessageOverride = null) {
     if (!Input) return;
 
-    const Form = Input.closest(".ChatForm");
-    const Container = Form?.parentElement?.querySelector(".ChatMessages");
+    const Container = GetStoryBotContainerForInput(Input);
     if (!Container) return;
 
     const Host = GetStoryBotPromptHost(Container);
     if (!Host) return;
 
-    if (Host.querySelector(".StoryBotDialog")) {
-        Input.value = "";
-        return;
-    }
+    Input.value = "";
+    CloseStoryBotCommandPopup(Input);
+
+    if (Host.querySelector(".StoryBotDialog")) return;
 
     const Username = GetStoryBotCurrentUsername();
     RenderStoryBotDialog(Container, {
-        id: "local-storybot-prompt-" + Date.now(),
-        text: "What would you like to ask StoryBot?",
-        askingUsername: Username,
+        id: MessageOverride?.id || ("local-storybot-prompt-" + Date.now()),
+        text: MessageOverride?.text || "What would you like to ask StoryBot?",
+        askingUsername: MessageOverride?.askingUsername || Username,
         bot: true,
         botDialog: true,
         localPrompt: true
     });
-
-    Input.value = "";
 }
 
 function GetActiveMentionText(Input) {
@@ -431,6 +437,8 @@ function BuildStoryBotCommandPopup(Input) {
         Popup.hidden = true;
         Popup.innerHTML = "";
     };
+
+    Input._storyBotClosePopup = ClosePopup;
 
     const RenderPopup = () => {
         const Mention = GetActiveMentionText(Input).toLowerCase();
@@ -489,14 +497,24 @@ function BuildStoryBotCommandPopup(Input) {
         Popup.hidden = false;
     };
 
-    Input.addEventListener("input", () => {
-        RenderPopup();
-
+    const HandleMentionTrigger = () => {
         const NormalizedValue = NormalizeStoryBotMentionText(Input.value).trim();
-        if (/^@story\s*bot$/i.test(NormalizedValue)) {
-            ShowStoryBotMentionPrompt(Input);
-            ClosePopup();
-        }
+        if (!/^@story\s*bot$/i.test(NormalizedValue)) return false;
+
+        ShowStoryBotMentionPrompt(Input);
+        ClosePopup();
+        return true;
+    };
+
+    Input.addEventListener("input", () => {
+        if (HandleMentionTrigger()) return;
+        RenderPopup();
+    });
+
+    Input.addEventListener("paste", () => {
+        setTimeout(() => {
+            if (!HandleMentionTrigger()) RenderPopup();
+        }, 0);
     });
     Input.addEventListener("focus", RenderPopup);
     Input.addEventListener("blur", () => setTimeout(ClosePopup, 120));
@@ -600,6 +618,12 @@ function BindStoryBotSocket(Socket) {
     Socket.on("connect", () => SetStoryBotConnectionState("online"));
     Socket.on("disconnect", () => SetStoryBotConnectionState("reconnecting"));
     Socket.on("connect_error", () => SetStoryBotConnectionState("reconnecting"));
+
+    Socket.on("storybot:prompt", Payload => {
+        const Input = GetStoryBotActiveChatInput();
+        if (!Input) return;
+        ShowStoryBotMentionPrompt(Input, Payload || null);
+    });
 
     Socket.on("room:botTyping", Payload => {
         SetStoryBotTyping(Boolean(Payload?.typing));
