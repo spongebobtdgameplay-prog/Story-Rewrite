@@ -145,7 +145,8 @@ function ResizeStoryBotDialogInput(Input) {
 
 function UpdateStoryBotDialogCounter(Input, Counter) {
     if (!Input || !Counter) return;
-    Counter.textContent = `${String(Input.value || "").length.toLocaleString()} / ${STORY_BOT_MAX_QUESTION_LENGTH.toLocaleString()}`;
+    const Remaining = Math.max(0, STORY_BOT_MAX_QUESTION_LENGTH - String(Input.value || "").length);
+    Counter.textContent = `${Remaining.toLocaleString()} characters left`;
 }
 
 function StoryBotRobotIconMarkup() {
@@ -207,7 +208,7 @@ async function SubmitStoryBotDialogQuestion(InputElement) {
 
     if (!Socket?.connected) {
         ShowStoryBotError("Multiplayer is offline. Reconnect to the room before asking StoryBot.");
-        SetStoryBotConnectionBadge("offline");
+        SetStoryBotConnectionState("offline");
         return;
     }
 
@@ -246,28 +247,10 @@ async function SubmitStoryBotDialogQuestion(InputElement) {
     }
 }
 
-function EnsureStoryBotConnectionBadge() {
-    const Header = document.querySelector(".ChatPanel .ChatPanelHeader");
-    if (!Header || Header.querySelector(".StoryBotConnectionBadge")) return;
-
-    const Badge = document.createElement("span");
-    Badge.className = "StoryBotConnectionBadge";
-    Badge.textContent = "OFFLINE";
-    Badge.dataset.connectionState = "offline";
-    Header.appendChild(Badge);
-}
-
-function SetStoryBotConnectionBadge(State) {
-    EnsureStoryBotConnectionBadge();
-    const Badge = document.querySelector(".StoryBotConnectionBadge");
-    if (!Badge) return;
-
-    const Normalized = String(State || "offline").toLowerCase();
-    Badge.dataset.connectionState = Normalized;
-    Badge.textContent =
-        Normalized === "online" ? "ONLINE" :
-        Normalized === "reconnecting" ? "RECONNECTING" :
-        "OFFLINE";
+function SetStoryBotConnectionState(State) {
+    if (typeof SetMultiplayerConnectionBadge === "function") {
+        SetMultiplayerConnectionBadge(State);
+    }
 }
 
 function GetStoryBotPromptHost(Container) {
@@ -393,6 +376,34 @@ function RenderStoryBotDialog(Container, Message) {
     }
 }
 
+function ShowStoryBotMentionPrompt(Input) {
+    if (!Input) return;
+
+    const Form = Input.closest(".ChatForm");
+    const Container = Form?.parentElement?.querySelector(".ChatMessages");
+    if (!Container) return;
+
+    const Host = GetStoryBotPromptHost(Container);
+    if (!Host) return;
+
+    if (Host.querySelector(".StoryBotDialog")) {
+        Input.value = "";
+        return;
+    }
+
+    const Username = GetStoryBotCurrentUsername();
+    RenderStoryBotDialog(Container, {
+        id: "local-storybot-prompt-" + Date.now(),
+        text: "What would you like to ask StoryBot?",
+        askingUsername: Username,
+        bot: true,
+        botDialog: true,
+        localPrompt: true
+    });
+
+    Input.value = "";
+}
+
 function GetActiveMentionText(Input) {
     const Value = String(Input?.value || "");
     const Selection = Number.isInteger(Input?.selectionStart) ? Input.selectionStart : Value.length;
@@ -478,11 +489,26 @@ function BuildStoryBotCommandPopup(Input) {
         Popup.hidden = false;
     };
 
-    Input.addEventListener("input", RenderPopup);
+    Input.addEventListener("input", () => {
+        RenderPopup();
+
+        const NormalizedValue = NormalizeStoryBotMentionText(Input.value).trim();
+        if (/^@story\s*bot$/i.test(NormalizedValue)) {
+            ShowStoryBotMentionPrompt(Input);
+            ClosePopup();
+        }
+    });
     Input.addEventListener("focus", RenderPopup);
     Input.addEventListener("blur", () => setTimeout(ClosePopup, 120));
     Input.addEventListener("keydown", Event => {
         if (Event.key === "Enter" && !Event.shiftKey) {
+            const NormalizedValue = NormalizeStoryBotMentionText(Input.value).trim();
+            if (/^@story\s*bot$/i.test(NormalizedValue)) {
+                Event.preventDefault();
+                ShowStoryBotMentionPrompt(Input);
+                ClosePopup();
+                return;
+            }
             Input.value = NormalizeStoryBotMentionText(Input.value);
             ClosePopup();
         }
@@ -571,9 +597,9 @@ function BindStoryBotSocket(Socket) {
     if (!Socket || BoundBotSockets.has(Socket)) return;
     BoundBotSockets.add(Socket);
 
-    Socket.on("connect", () => SetStoryBotConnectionBadge("online"));
-    Socket.on("disconnect", () => SetStoryBotConnectionBadge("reconnecting"));
-    Socket.on("connect_error", () => SetStoryBotConnectionBadge("reconnecting"));
+    Socket.on("connect", () => SetStoryBotConnectionState("online"));
+    Socket.on("disconnect", () => SetStoryBotConnectionState("reconnecting"));
+    Socket.on("connect_error", () => SetStoryBotConnectionState("reconnecting"));
 
     Socket.on("room:botTyping", Payload => {
         SetStoryBotTyping(Boolean(Payload?.typing));
@@ -645,7 +671,7 @@ function InitializeStoryBotUi() {
     ConfigureStoryBotInputs();
     BindStoryBotCommandPopups();
     BindStoryBotMentionNormalization();
-    EnsureStoryBotConnectionBadge();
+    SetStoryBotConnectionState("offline");
     RefreshQuietChatState();
 }
 
