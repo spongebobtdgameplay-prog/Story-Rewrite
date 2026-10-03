@@ -679,23 +679,27 @@ const V25PatchCode = "const StoryBotSourceBlock = \"function IsStoryBotMention(T
 const V26PatchCode = String.raw`ReplaceRequired("const BackendVersion = 25;", "const BackendVersion = 26;", "backend version 26");
 
 ReplaceRequired(
-    'const Question = NormalizeChatText(Payload?.question).trim();',
-    'const Question = String(Payload?.question || "").replace(/[\\u0000-\\u001F\\u007F]/g, " ").replace(/\\s+/g, " ").trim().slice(0, 1200);',
+    "const Question = NormalizeChatText(Payload?.question).trim();",
+    "const Question = String(Payload?.question || \"\").replace(/[\\u0000-\\u001F\\u007F]/g, \" \").replace(/\\s+/g, \" \").trim().slice(0, 1200);",
     "StoryBot question length"
 );
 
+const StoryBotPromptSearch =
+    "            text: \"Hey \" + Username + \", what would you like to ask me?\",\\n" +
+    "            sentAt: Date.now(),\\n" +
+    "            bot: true,\\n" +
+    "            askingUsername: Username\\n";
+
+const StoryBotPromptReplacement =
+    "            text: \"What would you like to ask StoryBot?\",\\n" +
+    "            sentAt: Date.now(),\\n" +
+    "            bot: true,\\n" +
+    "            botDialog: true,\\n" +
+    "            askingUsername: Username\\n";
+
 ReplaceRequired(
-    '            text: "Hey " + Username + ", what would you like to ask me?",
-            sentAt: Date.now(),
-            bot: true,
-            askingUsername: Username
-',
-    '            text: "What would you like to ask StoryBot?",
-            sentAt: Date.now(),
-            bot: true,
-            botDialog: true,
-            askingUsername: Username
-',
+    StoryBotPromptSearch,
+    StoryBotPromptReplacement,
     "private StoryBot prompt"
 );`;
 
