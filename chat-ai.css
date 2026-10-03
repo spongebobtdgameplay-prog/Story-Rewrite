@@ -392,3 +392,43 @@
         height: 26px;
     }
 }
+
+/* StoryBot inline composer: the normal large Send button is a duplicate while active. */
+.ChatForm:has(.StoryBotComposer) > .PrimaryButton[type="submit"] {
+    display: none !important;
+}
+
+.StoryBotInputSlot > .StoryBotComposer .StoryBotComposerRow {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+}
+
+.StoryBotInputSlot > .StoryBotComposer .StoryBotSendButton {
+    min-width: 42px;
+    padding-inline: 9px;
+}
+
+.StoryBotInputSlot > .StoryBotComposer .StoryBotCloseButton {
+    width: 36px;
+    min-width: 36px;
+    height: 30px;
+    padding: 0;
+    border: 1px solid rgba(223, 180, 106, .42);
+    border-radius: 7px;
+    color: #f0d1a1;
+    background: linear-gradient(180deg, #6e4b2b, #52331f);
+    font: 800 18px/1 Georgia, "Times New Roman", serif;
+    cursor: pointer;
+}
+
+.StoryBotInputSlot > .StoryBotComposer .StoryBotCloseButton:hover {
+    border-color: rgba(233, 188, 112, .72);
+    background: linear-gradient(180deg, #875f35, #644222);
+}
+
+@media (max-width: 520px) {
+    .StoryBotInputSlot > .StoryBotComposer .StoryBotCloseButton {
+        width: 34px;
+        min-width: 34px;
+        height: 28px;
+    }
+}
