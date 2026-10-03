@@ -240,7 +240,7 @@ def GenerateReply(Model, Context):
         ],
         temperature=0.78,
         top_p=0.9,
-        max_tokens=max(16, int(os.environ.get("STORYBOT_MAX_TOKENS", "24"))),
+        max_tokens=max(24, int(os.environ.get("STORYBOT_MAX_TOKENS", "48"))),
         repeat_penalty=1.12,
         frequency_penalty=0.2,
     )
