@@ -176,41 +176,13 @@
     font: 600 11px/1.45 system-ui, sans-serif;
     overflow-wrap: anywhere;
 }
-.ChatInput {
-    box-sizing: border-box;
-    min-height: 46px;
-    border: 1px solid rgba(128, 82, 43, .78) !important;
-    border-radius: 10px;
-    background: linear-gradient(180deg, rgba(83, 52, 31, .96), rgba(57, 35, 21, .96)) !important;
-    color: #f5e2c5 !important;
-    caret-color: #f0c77d;
-    box-shadow: inset 0 1px 0 rgba(255, 219, 166, .06), 0 2px 8px rgba(0, 0, 0, .18);
-}
-
-.ChatInput::placeholder {
-    color: rgba(224, 198, 164, .68);
-}
-
-.ChatInput:hover {
-    border-color: rgba(154, 101, 55, .9) !important;
-}
-
-.ChatInput:focus {
-    border-color: rgba(215, 163, 90, .92) !important;
-    background: linear-gradient(180deg, rgba(89, 57, 34, .98), rgba(61, 38, 23, .98)) !important;
-    box-shadow: inset 0 1px 0 rgba(255, 219, 166, .08), 0 0 0 3px rgba(215, 163, 90, .14), 0 4px 12px rgba(0, 0, 0, .2);
-}
-
-.ChatInput:disabled {
-    opacity: .72;
-}
-
 .StoryBotComposer {
-    margin-top: 8px;
+    width: 100%;
+    margin: 0 !important;
     padding: 10px;
     border: 1px solid rgba(173, 123, 70, .34);
     border-radius: 12px;
-    background: linear-gradient(180deg, rgba(77, 50, 28, .96), rgba(57, 37, 22, .98));
+    background: linear-gradient(180deg, rgba(78, 50, 29, .98), rgba(57, 36, 22, .98));
     box-shadow: inset 0 1px rgba(255, 224, 170, .05), 0 5px 16px rgba(0, 0, 0, .18);
 }
 

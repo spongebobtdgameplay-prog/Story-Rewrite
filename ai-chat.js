@@ -8,6 +8,7 @@ const STORY_BOT_COMMANDS = [{
 const BoundBotSockets = new WeakSet();
 const StoryBotRenderedMessageIds = new Set();
 const STORY_BOT_MAX_QUESTION_LENGTH = 1200;
+const STORY_BOT_REQUEST_TIMEOUT = 150000;
 
 function GetStoryBotChatContainer() {
     return document.getElementById("GameChatMessages") || document.getElementById("ChatMessages");
@@ -94,7 +95,13 @@ function ShowStoryBotError(Message) {
 }
 function MarkLastChatMessage(ContainerId, Message) {
     const Container = document.getElementById(ContainerId);
-    const Last = Container?.lastElementChild;
+    const Last = Container
+        ? [...Container.children].reverse().find(Element =>
+            !Element.classList.contains("StoryBotComposer") &&
+            !Element.classList.contains("StoryBotTyping") &&
+            !Element.classList.contains("StoryBotRequestError")
+        )
+        : null;
     if (!Last) return;
 
     if (Message?.bot || Message?.username === STORY_BOT_NAME) {
@@ -367,6 +374,17 @@ function GetStoryBotComposerForInput(Input) {
     return Root.querySelector(".StoryBotComposer");
 }
 
+function DetachStoryBotComposer(Container) {
+    const Composer = Container?.querySelector(".StoryBotComposer");
+    Composer?.remove();
+    return Composer || null;
+}
+
+function RestoreStoryBotComposer(Container, Composer) {
+    if (!Container || !Composer || Container.contains(Composer)) return;
+    Container.appendChild(Composer);
+}
+
 function SetStoryBotComposerStatus(Composer, Message, State = "") {
     const Status = Composer?.querySelector(".StoryBotComposerStatus");
     if (!Status) return;
@@ -531,6 +549,7 @@ function WrapStoryBotRenderers() {
         const BaseAppendChat = AppendChat;
         const WrappedAppendChat = function(Message, ...Rest) {
             const Container = document.getElementById("ChatMessages");
+            const Composer = DetachStoryBotComposer(Container);
             RemoveQuietChatState(Container);
 
             if (!RememberStoryBotRenderedMessage(Message)) {
@@ -538,6 +557,7 @@ function WrapStoryBotRenderers() {
                 MarkLastChatMessage("ChatMessages", Message);
             }
 
+            RestoreStoryBotComposer(Container, Composer);
             RefreshQuietChatState(Container);
         };
         WrappedAppendChat.StoryBotWrapped = true;
@@ -548,6 +568,7 @@ function WrapStoryBotRenderers() {
         const BaseAppendGameChat = AppendGameChat;
         const WrappedAppendGameChat = function(Message, ...Rest) {
             const Container = document.getElementById("GameChatMessages");
+            const Composer = DetachStoryBotComposer(Container);
             RemoveQuietChatState(Container);
 
             if (!RememberStoryBotRenderedMessage(Message)) {
@@ -555,6 +576,7 @@ function WrapStoryBotRenderers() {
                 MarkLastChatMessage("GameChatMessages", Message);
             }
 
+            RestoreStoryBotComposer(Container, Composer);
             RefreshQuietChatState(Container);
         };
         WrappedAppendGameChat.StoryBotWrapped = true;
@@ -564,8 +586,11 @@ function WrapStoryBotRenderers() {
     if (typeof RenderRoom === "function" && !RenderRoom.StoryBotWrapped) {
         const BaseRenderRoom = RenderRoom;
         const WrappedRenderRoom = function(...Arguments) {
+            const Container = document.getElementById("ChatMessages");
+            const Composer = DetachStoryBotComposer(Container);
             const Result = BaseRenderRoom(...Arguments);
-            queueMicrotask(() => RefreshQuietChatState(document.getElementById("ChatMessages")));
+            RestoreStoryBotComposer(Container, Composer);
+            queueMicrotask(() => RefreshQuietChatState(Container));
             return Result;
         };
         WrappedRenderRoom.StoryBotWrapped = true;
@@ -575,8 +600,11 @@ function WrapStoryBotRenderers() {
     if (typeof ApplyRoomState === "function" && !ApplyRoomState.StoryBotChatWrapped) {
         const BaseApplyRoomState = ApplyRoomState;
         const WrappedApplyRoomState = function(...Arguments) {
+            const Container = document.getElementById("GameChatMessages");
+            const Composer = DetachStoryBotComposer(Container);
             const Result = BaseApplyRoomState(...Arguments);
-            queueMicrotask(() => RefreshQuietChatState(document.getElementById("GameChatMessages")));
+            RestoreStoryBotComposer(Container, Composer);
+            queueMicrotask(() => RefreshQuietChatState(Container));
             return Result;
         };
         WrappedApplyRoomState.StoryBotChatWrapped = true;
