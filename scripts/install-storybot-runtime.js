@@ -7,6 +7,11 @@ if (String(process.env.RENDER || "").toLowerCase() !== "true") {
     process.exit(0);
 }
 
+if (String(process.env.STORYBOT_LOCAL_FALLBACK || "").toLowerCase() !== "true") {
+    console.log("StoryBot local CPU fallback disabled; using Vercel AI Gateway.");
+    process.exit(0);
+}
+
 const Root = path.resolve(__dirname, "..");
 const Python = process.env.PYTHON || "python3";
 const PackageDirectory = path.join(Root, ".storybot-python");
