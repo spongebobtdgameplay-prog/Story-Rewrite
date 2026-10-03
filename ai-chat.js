@@ -6,6 +6,7 @@ const STORY_BOT_COMMANDS = [{
     description: "Ask the AI about the current story"
 }];
 const BoundBotSockets = new WeakSet();
+const StoryBotRenderedMessageIds = new Set();
 const STORY_BOT_MAX_QUESTION_LENGTH = 1200;
 
 function GetStoryBotChatContainer() {
@@ -105,6 +106,58 @@ function MarkLastChatMessage(ContainerId, Message) {
     }
 }
 
+function RememberStoryBotRenderedMessage(Message) {
+    const Id = String(Message?.id || "").trim();
+    if (!Message?.bot || Message?.botDialog || !Id) return false;
+    if (StoryBotRenderedMessageIds.has(Id)) return true;
+
+    StoryBotRenderedMessageIds.add(Id);
+    while (StoryBotRenderedMessageIds.size > 100) {
+        const Oldest = StoryBotRenderedMessageIds.values().next().value;
+        if (Oldest === undefined) break;
+        StoryBotRenderedMessageIds.delete(Oldest);
+    }
+    return false;
+}
+
+function ShowStoryBotDialogValidation(InputElement, Message = "Please enter at least one character.") {
+    const Dialog = InputElement?.closest(".StoryBotDialog");
+    if (!Dialog) {
+        ShowStoryBotError(Message);
+        InputElement?.focus();
+        return;
+    }
+
+    let Validation = Dialog.querySelector(".StoryBotDialogValidation");
+    if (!Validation) {
+        Validation = document.createElement("small");
+        Validation.className = "StoryBotDialogValidation";
+        const Field = Dialog.querySelector(".StoryBotDialogField");
+        (Field || Dialog).appendChild(Validation);
+    }
+
+    Validation.textContent = Message;
+    Validation.hidden = false;
+    InputElement.focus();
+}
+
+function ClearStoryBotDialogValidation(InputElement) {
+    InputElement?.closest(".StoryBotDialog")?.querySelector(".StoryBotDialogValidation")?.remove();
+}
+
+function RenderStoryBotReplyMessage(Message, ContainerId) {
+    if (!Message || !Message.bot || Message.botDialog) return;
+    if (RememberStoryBotRenderedMessage(Message)) return;
+
+    if (ContainerId === "ChatMessages" && typeof AppendChat === "function") {
+        AppendChat(Message);
+        return;
+    }
+
+    if (ContainerId === "GameChatMessages" && typeof AppendGameChat === "function") {
+        AppendGameChat(Message);
+    }
+}
 function GetStoryBotCurrentUsername() {
     try {
         if (typeof CurrentProfile !== "undefined" && CurrentProfile?.username) return String(CurrentProfile.username);
@@ -159,9 +212,16 @@ function StoryBotRobotIconMarkup() {
 async function SubmitStoryBotDialogQuestion(InputElement) {
     const Text = NormalizeStoryBotQuestionText(InputElement?.value);
     if (!Text) {
-        InputElement?.focus();
+        ShowStoryBotDialogValidation(InputElement);
         return;
     }
+
+    const Dialog = InputElement?.closest(".StoryBotDialog");
+    const PromptHost = Dialog?.closest(".StoryBotPromptHost");
+    const Container = PromptHost?.closest(".ChatMessages");
+    const ContainerId = Container?.id || "GameChatMessages";
+
+    ClearStoryBotDialogValidation(InputElement);
 
     let Socket = GetConnectedStoryBotSocket();
 
@@ -212,12 +272,15 @@ async function SubmitStoryBotDialogQuestion(InputElement) {
         return;
     }
 
-    const Dialog = InputElement?.closest(".StoryBotDialog");
-    const PromptHost = Dialog?.closest(".StoryBotPromptHost");
-    const Button = Dialog?.querySelector(".StoryBotDialogSend");
+    if (InputElement) {
+        InputElement.disabled = true;
+        InputElement.value = "";
+        ResizeStoryBotDialogInput(InputElement);
+        UpdateStoryBotDialogCounter(InputElement, InputElement.parentElement?.querySelector(".StoryBotDialogCounter"));
+    }
 
-    if (InputElement) InputElement.disabled = true;
-    if (Button) Button.disabled = true;
+    Dialog?.remove();
+    PromptHost?.replaceChildren();
     SetStoryBotTyping(true);
 
     try {
@@ -225,28 +288,27 @@ async function SubmitStoryBotDialogQuestion(InputElement) {
             Socket.timeout(90000).emit(
                 "storybot:ask",
                 { question: Text },
-                (Error, Reply) => Resolve(Error ? { ok: false, error: "StoryBot did not answer in time." } : (Reply || { ok: false }))
+                (Error, Reply) => Resolve(
+                    Error
+                        ? { ok: false, error: "StoryBot did not answer in time." }
+                        : (Reply || { ok: false })
+                )
             );
         });
 
         if (!Result?.ok) {
             SetStoryBotTyping(false);
             ShowStoryBotError(Result?.error || "StoryBot could not answer right now.");
-            if (InputElement) InputElement.disabled = false;
-            if (Button) Button.disabled = false;
             return;
         }
 
-        Dialog?.remove();
-        PromptHost?.replaceChildren();
+        SetStoryBotTyping(false);
+        RenderStoryBotReplyMessage(Result.message, ContainerId);
     } catch (Error) {
         SetStoryBotTyping(false);
         ShowStoryBotError(String(Error?.message || "StoryBot could not answer right now."));
-        if (InputElement) InputElement.disabled = false;
-        if (Button) Button.disabled = false;
     }
 }
-
 function SetStoryBotConnectionState(State) {
     if (typeof SetMultiplayerConnectionBadge === "function") {
         SetMultiplayerConnectionBadge(State);
@@ -358,6 +420,15 @@ function RenderStoryBotDialog(Container, Message) {
     Input.addEventListener("input", () => {
         ResizeStoryBotDialogInput(Input);
         UpdateStoryBotDialogCounter(Input, Counter);
+        ClearStoryBotDialogValidation(Input);
+    });
+
+    Input.addEventListener("paste", () => {
+        setTimeout(() => {
+            ResizeStoryBotDialogInput(Input);
+            UpdateStoryBotDialogCounter(Input, Counter);
+            ClearStoryBotDialogValidation(Input);
+        }, 0);
     });
 
     Input.addEventListener("keydown", Event => {
@@ -555,7 +626,7 @@ function WrapStoryBotRenderers() {
 
             if (Message?.botDialog) {
                 RenderStoryBotDialog(Container, Message);
-            } else {
+            } else if (!RememberStoryBotRenderedMessage(Message)) {
                 BaseAppendChat(Message, ...Rest);
                 MarkLastChatMessage("ChatMessages", Message);
             }
@@ -574,7 +645,7 @@ function WrapStoryBotRenderers() {
 
             if (Message?.botDialog) {
                 RenderStoryBotDialog(Container, Message);
-            } else {
+            } else if (!RememberStoryBotRenderedMessage(Message)) {
                 BaseAppendGameChat(Message, ...Rest);
                 MarkLastChatMessage("GameChatMessages", Message);
             }
