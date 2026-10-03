@@ -162,7 +162,9 @@ def BuildPrompt(Context):
         "Do not begin every answer with the player's name, 'Yes', or 'I can confirm'. "
         "Vary the wording and sentence structure; never reuse a previous answer verbatim. "
         + ChooseResponseStyle(Context) + ". "
-        "Mention a concrete relevant name, stage, objective, threat, vote, player, or fact when one is available. "
+        "For simple greetings, thanks, goodbyes, or casual conversation, respond naturally and do not force game facts into the reply. "
+        "If the room status is lobby or not started, never describe the stage objective as though the game is already underway; mention the lobby state when it matters. "
+        "Mention a concrete relevant name, stage, objective, threat, vote, player, or fact only when it actually helps answer the question. "
         "Rephrase the answer naturally so two different questions produce clearly different wording. "
         "Do not copy the question back to the player. "
         "Never invent missing state. Keep the answer to 2-4 concise sentences.\n\n"
@@ -226,6 +228,8 @@ def GenerateReply(Model, Context):
         "For gameplay, use only the supplied room, stage, votes, and recent chat facts. "
         "For general knowledge, use WEB_KNOWLEDGE only as supporting background. "
         "Never invent missing game state. Do not repeat the question or use a canned opening. "
+        "For a greeting or casual message, answer conversationally without forcing stage facts. "
+        "When the room is still in the lobby, do not present the objective as if the story has started. "
         "Be natural, specific, and concise."
     )
 
