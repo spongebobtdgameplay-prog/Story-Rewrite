@@ -8,7 +8,7 @@ const STORY_BOT_COMMANDS = [{
 const BoundBotSockets = new WeakSet();
 const StoryBotRenderedMessageIds = new Set();
 const STORY_BOT_MAX_QUESTION_LENGTH = 1200;
-const STORY_BOT_REQUEST_TIMEOUT = 12000;
+const STORY_BOT_REQUEST_TIMEOUT = 20000;
 
 function GetStoryBotChatContainer() {
     return document.getElementById("GameChatMessages") || document.getElementById("ChatMessages");
