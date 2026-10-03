@@ -33,6 +33,152 @@ jobs:
       - run: node --check moderation-version.js
       - run: node --check host-controls.js
       - run: node --check ai-chat.js
+      - name: Validate StoryBot browser composer
+        run: |
+          node <<'NODE'
+          const fs = require("fs");
+          const AI = fs.readFileSync("ai-chat.js", "utf8");
+          const Lobby = fs.readFileSync("multiplayer.html", "utf8");
+          const Game = fs.readFileSync("dialog.html", "utf8");
+          const CSS = fs.readFileSync("chat-ai.css", "utf8");
+
+          const Must = [
+              [AI, "function PrepareStoryBotComposer", "composer preparation helper"],
+              [AI, "function UpdateStoryBotComposerLength", "composer length helper"],
+              [AI, "function GetActiveMentionText", "mention lookup helper"],
+              [AI, "async function SubmitStoryBotFromChat", "normal chat submit path"],
+              [AI, "storybot:ask", "direct StoryBot socket event"],
+              [Lobby, 'id="ChatInput"', "lobby chat composer"],
+              [Lobby, "@StoryBot", "lobby StoryBot instruction"],
+              [Game, 'id="GameChatInput"', "game chat composer"],
+              [Game, "@StoryBot", "game StoryBot instruction"],
+              [CSS, ".StoryBotTyping", "StoryBot typing indicator"],
+              [CSS, ".StoryBotCommandPopup", "StoryBot command popup"]
+          ];
+          for (const [Text, Needle, Label] of Must) {
+              if (!Text.includes(Needle)) throw new Error("Missing " + Label + ".");
+          }
+
+          for (const [Text, Needle, Label] of [
+              [AI, "StoryBotDialog", "separate StoryBot dialog code"],
+              [AI, "StoryBotPromptHost", "separate StoryBot prompt host"],
+              [AI, "storybot:prompt", "separate StoryBot prompt socket"]
+          ]) {
+              if (Text.includes(Needle)) throw new Error("Obsolete " + Label + " remains.");
+          }
+
+          for (const [Text, Needle, Label] of [
+              [AI, "/@story\\s*bot\\b/i", "StoryBot mention detection"],
+              [AI, "Event.stopImmediatePropagation()", "normal composer submit interception"]
+          ]) {
+              if (!Text.includes(Needle)) throw new Error("Missing " + Label + ".");
+          }
+
+          console.log("StoryBot browser composer contract OK.");
+          NODE
+
+      - name: Validate StoryBot Python runtime
+        run: |
+          python -m py_compile storybot_ai.py
+          python <<'PY'
+          import os
+          import sys
+          import types
+
+          os.environ["STORYBOT_WEB_KNOWLEDGE"] = "0"
+          os.environ["STORYBOT_MAX_TOKENS"] = "32"
+
+          fake_llama = types.ModuleType("llama_cpp")
+          class FakeLlama:
+              def create_chat_completion(self, **kwargs):
+                  assert kwargs["max_tokens"] == 32
+                  return {"choices": [{"message": {"content": "Mock StoryBot response."}}]}
+          fake_llama.Llama = FakeLlama
+          sys.modules["llama_cpp"] = fake_llama
+
+          import storybot_ai
+
+          calls = {"count": 0}
+          class SmokeModel:
+              def create_chat_completion(self, **kwargs):
+                  calls["count"] += 1
+                  assert kwargs["messages"][0]["role"] == "system"
+                  assert kwargs["messages"][1]["role"] == "user"
+                  return {"choices": [{"message": {"content": "Mock StoryBot response."}}]}
+
+          reply = storybot_ai.GenerateReply(SmokeModel(), {
+              "askingPlayer": "Tester",
+              "question": "What is happening in the current stage?",
+              "room": {"status": "playing", "players": []},
+              "stage": {"name": "Smoke Test", "objective": "Survive"},
+              "recentChat": []
+          })
+
+          assert reply == "Mock StoryBot response."
+          assert calls["count"] == 1
+          print("StoryBot Python runtime smoke test OK.")
+          PY
+      - name: Validate generated StoryBot server
+        run: |
+          node <<'NODE'
+          const fs = require("fs");
+          const os = require("os");
+          const path = require("path");
+          const Module = require("module");
+          const { spawnSync } = require("child_process");
+          const Root = process.cwd();
+          function CompileWrapper(Source, Filename) {
+              const Marker = /\nconst RuntimeModule = new Module\([^\n]+\);[\s\S]*?RuntimeModule\._compile\([^\n]+\);\s*$/;
+              if (!Marker.test(Source)) throw new Error("Missing wrapper compile marker: " + Filename);
+              const Exported = Source.replace(Marker, "\nmodule.exports = typeof WrapperSource !== \"undefined\" ? WrapperSource : Source;");
+              const Test = new Module(Filename, module);
+              Test.filename = Filename;
+              Test.paths = Module._nodeModulePaths(path.dirname(Filename));
+              Test._compile(Exported, Filename);
+              return Test.exports;
+          }
+          let Source = fs.readFileSync(path.join(Root, "server-v11.js"), "utf8");
+          Source = CompileWrapper(Source, path.join(Root, "server-v11.js"));
+          Source = CompileWrapper(Source, path.join(Root, "server-v10.js"));
+          Source = CompileWrapper(Source, path.join(Root, "server-v9.js"));
+          const Temp = path.join(os.tmpdir(), "story-rewrite-generated-server.js");
+          fs.writeFileSync(Temp, Source, "utf8");
+          const Check = spawnSync(process.execPath, ["--check", Temp], { encoding: "utf8" });
+          try { fs.unlinkSync(Temp); } catch {}
+          if (Check.status !== 0) {
+              process.stderr.write(Check.stderr || Check.stdout || "");
+              process.exit(1);
+          }
+          const Required = [
+              ['Socket.on("storybot:ask", async', "direct StoryBot ask handler"],
+              ["RunStoryBotModel(Context)", "local StoryBot model call"],
+              ['text: "@StoryBot " + Question', "StoryBot question chat message"],
+              ['username: StoryBotName', "StoryBot response identity"]
+          ];
+          for (const [Needle, Label] of Required) {
+              if (!Source.includes(Needle)) throw new Error("Generated server is missing " + Label + ".");
+          }
+
+          const Forbidden = [
+              ["private StoryBot prompt", "obsolete private StoryBot prompt patch"],
+              ["botPromptFor", "obsolete StoryBot prompt state"],
+              ["MaybeReplyAsStoryBot", "obsolete automatic StoryBot response path"]
+          ];
+          for (const [Needle, Label] of Forbidden) {
+              if (Source.includes(Needle)) throw new Error("Generated server still contains " + Label + ".");
+          }
+
+          const ConnectionStart = Source.indexOf('Io.on("connection", Socket => {');
+          const StoryBotHandler = Source.indexOf('    Socket.on("storybot:ask", async');
+          const ChatHandler = Source.indexOf('    Socket.on("room:chat", async');
+          const ConnectionEnd = Source.indexOf('\n});\n\nHttpServer.listen', StoryBotHandler);
+          if (!(ConnectionStart >= 0 && ConnectionStart < StoryBotHandler && StoryBotHandler < ChatHandler && ChatHandler < ConnectionEnd)) {
+              throw new Error("StoryBot or normal chat handler is outside the Socket.IO connection scope.");
+          }
+
+          console.log("Generated StoryBot server patch chain OK.");
+          NODE
+
       - run: node --check dialog.js
       - run: node --check dialog-connection.js
       - run: node --check game-enhancements.js
