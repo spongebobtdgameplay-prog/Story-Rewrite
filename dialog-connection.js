@@ -98,7 +98,7 @@ StartMultiplayer = function() {
         ApplyRoomState(State);
     });
 
-    MultiplayerSocket.on("room:chat", Message => AppendGameChat(Message));
+    MultiplayerSocket.on("room:chat", Message => {\n        StoryAudio?.PlaySound?.("message");\n        AppendGameChat(Message);\n    });
     MultiplayerSocket.on("room:chatError", Payload => {
         SetGameConnectionStatus(Payload?.error || "Chat message was blocked.", "bad");
     });
