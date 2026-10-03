@@ -194,9 +194,9 @@ def BuildPrompt(Context):
 def LoadModel():
     return Llama(
         model_path=str(ModelPath),
-        n_ctx=int(os.environ.get("STORYBOT_CONTEXT_SIZE", "768")),
-        n_threads=max(1, min(2, int(os.environ.get("STORYBOT_THREADS", "2")))),
-        n_batch=64,
+        n_ctx=int(os.environ.get("STORYBOT_CONTEXT_SIZE", "384")),
+        n_threads=max(1, min(1, int(os.environ.get("STORYBOT_THREADS", "1")))),
+        n_batch=32,
         use_mmap=True,
         use_mlock=False,
         verbose=False,
@@ -251,9 +251,9 @@ def GenerateReply(Model, Context):
         "Be natural, specific, and concise."
     )
 
-    MaxTokens = max(20, int(os.environ.get(
+    MaxTokens = max(8, int(os.environ.get(
         "STORYBOT_MAX_TOKENS",
-        "32" if IsCasualConversation(Context) else "48"
+        "12" if IsCasualConversation(Context) else "32"
     )))
 
     Result = Model.create_chat_completion(
