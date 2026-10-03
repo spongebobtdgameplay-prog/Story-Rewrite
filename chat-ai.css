@@ -204,3 +204,131 @@
 .ChatInput:disabled {
     opacity: .72;
 }
+
+.StoryBotComposer {
+    margin-top: 8px;
+    padding: 10px;
+    border: 1px solid rgba(173, 123, 70, .34);
+    border-radius: 12px;
+    background: linear-gradient(180deg, rgba(77, 50, 28, .96), rgba(57, 37, 22, .98));
+    box-shadow: inset 0 1px rgba(255, 224, 170, .05), 0 5px 16px rgba(0, 0, 0, .18);
+}
+
+.StoryBotComposerHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 7px;
+}
+
+.StoryBotComposerTitle {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    color: #f0c989;
+    font: 800 12px/1.2 system-ui, sans-serif;
+}
+
+.StoryBotComposerIcon {
+    width: 22px;
+    height: 22px;
+    display: grid;
+    place-items: center;
+    color: #e6b86d;
+}
+
+.StoryBotComposerIcon svg {
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.StoryBotComposerCount {
+    color: #a98d6d;
+    font: 600 10px/1.2 system-ui, sans-serif;
+}
+
+.StoryBotComposerRow {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 7px;
+    align-items: end;
+}
+
+.StoryBotQuestionInput {
+    width: 100%;
+    min-height: 38px;
+    max-height: 120px;
+    box-sizing: border-box;
+    resize: none;
+    overflow-y: auto;
+    padding: 9px 10px;
+    border: 1px solid rgba(201, 151, 88, .3);
+    border-radius: 9px;
+    outline: none;
+    background: linear-gradient(180deg, rgba(91, 60, 33, .72), rgba(67, 43, 25, .82));
+    color: #f7e4c5;
+    caret-color: #f0c989;
+    font: 600 12px/1.4 system-ui, sans-serif;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, .22);
+}
+
+.StoryBotQuestionInput::placeholder {
+    color: #aa8f70;
+}
+
+.StoryBotQuestionInput:focus {
+    border-color: rgba(225, 178, 105, .58);
+    box-shadow: 0 0 0 2px rgba(197, 143, 75, .1), inset 0 1px 2px rgba(0, 0, 0, .22);
+}
+
+.StoryBotSendButton {
+    min-height: 38px;
+    padding: 0 13px;
+    border: 1px solid rgba(221, 177, 100, .38);
+    border-radius: 9px;
+    background: linear-gradient(180deg, #8a6237, #684522);
+    color: #ffe5b4;
+    font: 800 11px/1 system-ui, sans-serif;
+    cursor: pointer;
+}
+
+.StoryBotSendButton:hover {
+    background: linear-gradient(180deg, #986f41, #724d28);
+}
+
+.StoryBotSendButton:disabled,
+.StoryBotQuestionInput:disabled {
+    opacity: .58;
+    cursor: not-allowed;
+}
+
+.StoryBotComposerStatus {
+    min-height: 15px;
+    margin-top: 6px;
+    color: #a98d6d;
+    font: 600 10px/1.35 system-ui, sans-serif;
+}
+
+.StoryBotComposerStatus[data-state="error"] {
+    color: #d6a69a;
+}
+
+.StoryBotComposerStatus[data-state="thinking"] {
+    color: #e0b978;
+}
+
+@media (max-width: 520px) {
+    .StoryBotComposerRow {
+        grid-template-columns: 1fr;
+    }
+
+    .StoryBotSendButton {
+        width: 100%;
+    }
+}
