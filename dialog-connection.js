@@ -124,7 +124,11 @@ ConnectStorySocket = function() {
     if (!ServerUrl) throw new Error("Multiplayer server is not configured.");
 
     return io(ServerUrl, {
-        auth: { token: GetAuthToken() },
+        auth: {
+            token: GetAuthToken(),
+            deviceSignature: typeof GetStoryDeviceSignature === "function" ? GetStoryDeviceSignature() : "",
+            tabId: typeof GetStoryTabId === "function" ? GetStoryTabId() : ""
+        },
         transports: ["polling", "websocket"],
         upgrade: true,
         rememberUpgrade: true,
