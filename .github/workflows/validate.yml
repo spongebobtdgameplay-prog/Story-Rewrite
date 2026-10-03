@@ -58,6 +58,7 @@ jobs:
           Source = CompileWrapper(Source, path.join(Root, "server-v9.js"));
           const Temp = path.join(os.tmpdir(), "story-rewrite-generated-server.js");
           fs.writeFileSync(Temp, Source, "utf8");
+          fs.writeFileSync(path.join(Root, "storybot-generated-debug.js"), Source, "utf8");
           const Check = spawnSync(process.execPath, ["--check", Temp], { encoding: "utf8" });
           try { fs.unlinkSync(Temp); } catch {}
           if (Check.status !== 0) {
@@ -105,6 +106,15 @@ jobs:
           }
           console.log("Generated StoryBot server patch chain OK.");
           NODE
+
+      - name: Upload generated StoryBot server
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: storybot-generated-server-debug
+          path: storybot-generated-debug.js
+          if-no-files-found: ignore
+          retention-days: 1
       - run: node --check dialog.js
       - run: node --check dialog-connection.js
       - run: node --check game-enhancements.js
