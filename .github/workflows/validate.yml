@@ -170,7 +170,7 @@ jobs:
 
           const ConnectionStart = Source.indexOf('Io.on("connection", Socket => {');
           const StoryBotHandler = Source.indexOf('    Socket.on("storybot:ask", async');
-          const ChatHandler = Source.indexOf('    Socket.on("room:chat", async');
+          const ChatHandler = Source.indexOf('    Socket.on("room:chat", Payload =>');
           const ConnectionEnd = Source.indexOf('\n});\n\nHttpServer.listen', StoryBotHandler);
           if (!(ConnectionStart >= 0 && ConnectionStart < StoryBotHandler && StoryBotHandler < ChatHandler && ChatHandler < ConnectionEnd)) {
               throw new Error("StoryBot or normal chat handler is outside the Socket.IO connection scope.");

@@ -163,8 +163,9 @@ ConnectStorySocket = function() {
             tabId: typeof GetStoryTabId === "function" ? GetStoryTabId() : ""
         },
         transports: ["polling", "websocket"],
+        tryAllTransports: true,
         upgrade: true,
-        rememberUpgrade: true,
+        rememberUpgrade: false,
         reconnection: true,
         reconnectionAttempts: Infinity,
         reconnectionDelay: 700,
