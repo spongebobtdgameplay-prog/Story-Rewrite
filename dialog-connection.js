@@ -129,9 +129,10 @@ ConnectStorySocket = function() {
             deviceSignature: typeof GetStoryDeviceSignature === "function" ? GetStoryDeviceSignature() : "",
             tabId: typeof GetStoryTabId === "function" ? GetStoryTabId() : ""
         },
-        transports: ["polling", "websocket"],
+        transports: ["websocket", "polling"],
+        tryAllTransports: true,
         upgrade: true,
-        rememberUpgrade: true,
+        rememberUpgrade: false,
         reconnection: true,
         reconnectionAttempts: Infinity,
         reconnectionDelay: 700,
