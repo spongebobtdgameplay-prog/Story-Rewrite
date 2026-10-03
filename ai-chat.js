@@ -196,45 +196,19 @@ function GetStoryBotContainerForInput(Input) {
 function UpdateStoryBotComposerLength(Input) {
     if (!Input) return;
 
-    const Value = NormalizeStoryBotMentionText(Input.value);
-    const IsStoryBot = /@story\s*bot\b/i.test(Value);
-    const Limit = IsStoryBot ? STORY_BOT_MAX_QUESTION_LENGTH : 180;
+    const Normalized = NormalizeStoryBotMentionText(Input.value);
+    if (Input.value !== Normalized) Input.value = Normalized;
 
-    if (Input.maxLength !== Limit) Input.maxLength = Limit;
-    if (Input.value.length > Limit) {
-        Input.value = Input.value.slice(0, Limit);
-    }
+    if (Input.maxLength !== 180) Input.maxLength = 180;
 
-    if (IsStoryBot) {
-        if (!Input.dataset.storyBotNormalPlaceholder) {
-            Input.dataset.storyBotNormalPlaceholder = Input.placeholder || "Message...";
-        }
-        Input.placeholder = "Type your question after @StoryBot...";
-    } else if (Input.dataset.storyBotNormalPlaceholder) {
-        Input.placeholder = Input.dataset.storyBotNormalPlaceholder;
+    if (Input.value.length > 180) {
+        Input.value = Input.value.slice(0, 180);
     }
 }
 
 function PrepareStoryBotComposer(Input) {
     if (!Input) return;
-
-    const Value = NormalizeStoryBotMentionText(Input.value).trim();
-    const MentionMatch = Value.match(/@story\s*bot\b/i);
-    const Question = MentionMatch
-        ? NormalizeStoryBotQuestionText(Value.slice(MentionMatch.index + MentionMatch[0].length))
-        : "";
-
-    Input.value = STORY_BOT_COMMAND + (Question ? " " + Question : " ");
-    Input.maxLength = STORY_BOT_MAX_QUESTION_LENGTH;
-
-    if (!Input.dataset.storyBotNormalPlaceholder) {
-        Input.dataset.storyBotNormalPlaceholder = Input.placeholder || "Message...";
-    }
-    Input.placeholder = "Type your question after @StoryBot...";
-    Input.focus();
-
-    const Caret = Input.value.length;
-    try { Input.setSelectionRange(Caret, Caret); } catch {}
+    MoveMentionToStoryBotComposer(Input);
 }
 
 function GetActiveMentionText(Input) {
@@ -334,15 +308,16 @@ function BuildStoryBotCommandPopup(Input) {
     };
 
     Input.addEventListener("input", () => {
-        UpdateStoryBotComposerLength(Input);
         if (HandleMentionTrigger()) return;
+        UpdateStoryBotComposerLength(Input);
         RenderPopup();
     });
 
     Input.addEventListener("paste", () => {
         setTimeout(() => {
+            if (HandleMentionTrigger()) return;
             UpdateStoryBotComposerLength(Input);
-            if (!HandleMentionTrigger()) RenderPopup();
+            RenderPopup();
         }, 0);
     });
     Input.addEventListener("focus", RenderPopup);
@@ -350,9 +325,10 @@ function BuildStoryBotCommandPopup(Input) {
     Input.addEventListener("keydown", Event => {
         if (Event.key === "Enter" && !Event.shiftKey) {
             const NormalizedValue = NormalizeStoryBotMentionText(Input.value).trim();
-            if (/^@story\s*bot$/i.test(NormalizedValue)) {
+            if (/^@story\s*bot(?:\s|$)/i.test(NormalizedValue)) {
                 Event.preventDefault();
-                PrepareStoryBotComposer(Input);
+                Event.stopImmediatePropagation();
+                MoveMentionToStoryBotComposer(Input);
                 ClosePopup();
                 return;
             }
@@ -372,6 +348,86 @@ function GetStoryBotComposerForInput(Input) {
     if (!Input) return null;
     const Root = Input.closest(".ChatPanelBody, .GameChatBody") || document;
     return Root.querySelector(".StoryBotComposer");
+}
+
+function CreateStoryBotComposer(Input) {
+    if (!Input) return null;
+
+    const Container = GetStoryBotContainerForInput(Input);
+    if (!Container) return null;
+
+    const Existing = GetStoryBotComposerForInput(Input);
+    if (Existing) return Existing;
+
+    const Composer = document.createElement("div");
+    Composer.className = "ChatMessage StoryBotMessage StoryBotComposer";
+    Composer.setAttribute("role", "group");
+    Composer.setAttribute("aria-label", "StoryBot question");
+
+    Composer.innerHTML = `
+        <div class="StoryBotComposerHeader">
+            <div class="StoryBotComposerTitle">
+                <span class="StoryBotComposerIcon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24">
+                        <rect x="5" y="7" width="14" height="11" rx="3"></rect>
+                        <path d="M9 7V5h6v2M8 12h.01M16 12h.01M9 15h6"></path>
+                    </svg>
+                </span>
+                <span>Ask StoryBot</span>
+            </div>
+            <span class="StoryBotComposerCount">0/1200</span>
+        </div>
+        <div class="StoryBotComposerPrompt">What would you like to ask me?</div>
+        <div class="StoryBotComposerRow">
+            <textarea class="StoryBotQuestionInput" maxlength="1200" rows="1"
+                placeholder="Type your question to StoryBot..." autocomplete="off" spellcheck="true"
+                aria-label="Type your question to StoryBot"></textarea>
+            <button class="StoryBotSendButton" type="button">Send</button>
+        </div>
+        <div class="StoryBotComposerStatus" aria-live="polite">Your message goes directly to StoryBot.</div>
+    `;
+
+    Container.appendChild(Composer);
+
+    const QuestionInput = Composer.querySelector(".StoryBotQuestionInput");
+    const Send = Composer.querySelector(".StoryBotSendButton");
+
+    if (!QuestionInput || !Send) {
+        Composer.remove();
+        return null;
+    }
+
+    Input.dataset.storyBotComposerActive = "1";
+
+    QuestionInput.addEventListener("input", () => {
+        UpdateStoryBotDedicatedComposer(Composer);
+        if (QuestionInput.value.trim()) {
+            SetStoryBotComposerStatus(Composer, "Ready to send to StoryBot.");
+        } else {
+            SetStoryBotComposerStatus(Composer, "Your message goes directly to StoryBot.");
+        }
+    });
+
+    QuestionInput.addEventListener("keydown", Event => {
+        if (Event.key === "Enter" && !Event.shiftKey) {
+            Event.preventDefault();
+            void SubmitStoryBotDedicated(Composer);
+        }
+
+        if (Event.key === "Escape") {
+            Event.preventDefault();
+            Composer.remove();
+            Input.dataset.storyBotComposerActive = "0";
+            Input.focus();
+        }
+    });
+
+    Send.addEventListener("click", () => {
+        void SubmitStoryBotDedicated(Composer);
+    });
+
+    UpdateStoryBotDedicatedComposer(Composer);
+    return Composer;
 }
 
 function DetachStoryBotComposer(Container) {
@@ -403,7 +459,7 @@ function UpdateStoryBotDedicatedComposer(Composer) {
 }
 
 function FocusStoryBotDedicatedComposer(Input, Question = "") {
-    const Composer = GetStoryBotComposerForInput(Input);
+    const Composer = CreateStoryBotComposer(Input);
     const QuestionInput = Composer?.querySelector(".StoryBotQuestionInput");
     if (!Composer || !QuestionInput) return false;
 
@@ -500,11 +556,15 @@ async function SubmitStoryBotDedicated(Composer) {
     UpdateStoryBotDedicatedComposer(Composer);
     SetStoryBotComposerStatus(Composer, "Message sent. Ask another question anytime.");
 
+    const NormalChatInput = Composer.closest(".ChatPanelBody, .GameChatBody")?.querySelector(".ChatInput");
+    Composer.remove();
+    if (NormalChatInput) NormalChatInput.dataset.storyBotComposerActive = "0";
+
     if (Result.message) {
         RenderStoryBotReplyMessage(Result.message, ContainerId);
     }
 
-    Input.focus();
+    NormalChatInput?.focus();
 }
 
 async function SubmitStoryBotFromChat(Form) {
