@@ -7,7 +7,7 @@ const STORY_BOT_COMMANDS = [{
 }];
 const BoundBotSockets = new WeakSet();
 const StoryBotRenderedMessageIds = new Set();
-const STORY_BOT_MAX_QUESTION_LENGTH = 1200;
+const STORY_BOT_MAX_QUESTION_LENGTH = 1200;\nconst STORY_BOT_REQUEST_TIMEOUT = 125000;
 
 function GetStoryBotChatContainer() {
     return document.getElementById("GameChatMessages") || document.getElementById("ChatMessages");
@@ -388,7 +388,7 @@ async function SubmitStoryBotFromChat(Form) {
     SetStoryBotTyping(true);
 
     const Result = await new Promise(resolve => {
-        Socket.timeout(75000).emit(
+        Socket.timeout(STORY_BOT_REQUEST_TIMEOUT).emit(
             "storybot:ask",
             { question: Question },
             (Error, Reply) => resolve(
