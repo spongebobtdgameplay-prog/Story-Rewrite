@@ -8,7 +8,7 @@ const STORY_BOT_COMMANDS = [{
 const BoundBotSockets = new WeakSet();
 const StoryBotRenderedMessageIds = new Set();
 const STORY_BOT_MAX_QUESTION_LENGTH = 1200;
-const STORY_BOT_REQUEST_TIMEOUT = 150000;
+const STORY_BOT_REQUEST_TIMEOUT = 12000;
 
 function GetStoryBotChatContainer() {
     return document.getElementById("GameChatMessages") || document.getElementById("ChatMessages");
@@ -350,11 +350,24 @@ function GetStoryBotComposerForInput(Input) {
     return Root.querySelector(".StoryBotComposer");
 }
 
+function EnsureStoryBotInputSlot(Form, Input) {
+    if (!Form || !Input) return null;
+    let Slot = Input.closest(".StoryBotInputSlot");
+    if (!Slot || !Form.contains(Slot)) {
+        Slot = document.createElement("div");
+        Slot.className = "StoryBotInputSlot";
+        Input.parentNode?.insertBefore(Slot, Input);
+        Slot.appendChild(Input);
+    }
+    return Slot;
+}
 function CreateStoryBotComposer(Input) {
     if (!Input) return null;
 
     const Container = GetStoryBotContainerForInput(Input);
-    if (!Container) return null;
+    const Form = Input.closest(".ChatForm");
+    const Slot = EnsureStoryBotInputSlot(Form, Input);
+    if (!Container || !Form || !Slot) return null;
 
     const Existing = GetStoryBotComposerForInput(Input);
     if (Existing) return Existing;
@@ -362,7 +375,7 @@ function CreateStoryBotComposer(Input) {
     RemoveQuietChatState(Container);
 
     const Composer = document.createElement("div");
-    Composer.className = "ChatMessage StoryBotMessage StoryBotComposer";
+    Composer.className = "StoryBotComposer";
     Composer.setAttribute("role", "group");
     Composer.setAttribute("aria-label", "StoryBot question");
 
@@ -389,7 +402,7 @@ function CreateStoryBotComposer(Input) {
         <div class="StoryBotComposerStatus" aria-live="polite">Your message goes directly to StoryBot.</div>
     `;
 
-    Container.appendChild(Composer);
+    Slot.appendChild(Composer);
 
     const QuestionInput = Composer.querySelector(".StoryBotQuestionInput");
     const Send = Composer.querySelector(".StoryBotSendButton");
