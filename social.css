@@ -1,0 +1,55 @@
+.StorySocialShell{width:min(1180px,calc(100% - 28px));margin:0 auto;padding:26px 0 34px}
+.StorySocialHeader{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:14px;margin-bottom:18px}
+.StorySocialHeader h1{margin:2px 0 0}
+.StorySocialLayout{display:grid;grid-template-columns:minmax(260px,330px) minmax(0,1fr);min-height:680px;border:1px solid rgba(145,95,56,.32);border-radius:24px;overflow:hidden;background:rgba(20,15,12,.72);box-shadow:0 24px 70px rgba(0,0,0,.24)}
+.StorySocialSidebar{padding:20px;border-right:1px solid rgba(145,95,56,.22);background:rgba(34,24,19,.5)}
+.StorySocialSearchHead h2{margin:0 0 4px;font-size:19px}
+.StorySocialSearchHead p{margin:0;color:rgba(255,245,233,.68);font-size:13px}
+.StorySocialSearchBox{display:flex;align-items:center;gap:9px;margin-top:18px;padding:11px 13px;border:1px solid rgba(199,148,98,.33);border-radius:13px;background:rgba(8,7,6,.42)}
+.StorySocialSearchBox svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8}
+.StorySocialSearchBox input{min-width:0;width:100%;border:0;outline:0;background:transparent;color:#fff;font:600 14px system-ui,sans-serif}
+.StorySocialSearchBox input::placeholder{color:rgba(255,255,255,.42)}
+.StorySocialStatus{min-height:23px;padding:9px 2px 2px;color:rgba(255,245,233,.58);font-size:12px}
+.StorySocialUserList{display:grid;gap:8px;margin-top:6px;max-height:560px;overflow:auto;padding-right:2px}
+.StorySocialUserButton{width:100%;display:grid;grid-template-columns:42px minmax(0,1fr) auto;gap:11px;align-items:center;padding:11px;border:1px solid transparent;border-radius:15px;background:transparent;color:inherit;text-align:left;cursor:pointer}
+.StorySocialUserButton:hover{background:rgba(199,148,98,.09);border-color:rgba(199,148,98,.16)}
+.StorySocialUserButton.Active{background:rgba(199,148,98,.12);border-color:rgba(199,148,98,.28)}
+.StorySocialAvatar{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;flex:0 0 auto;background:linear-gradient(145deg,rgba(191,143,91,.36),rgba(111,72,46,.22));border:1px solid rgba(255,228,193,.16);font:800 15px Georgia,serif;color:#ffe4c4}
+.StorySocialUserCopy{min-width:0}
+.StorySocialUserName{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:800}
+.StorySocialUserMeta{display:block;margin-top:2px;color:rgba(255,245,233,.54);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.StorySocialPresenceDot{width:9px;height:9px;border-radius:50%;background:#7f746c;box-shadow:0 0 0 3px rgba(127,116,108,.12)}
+.StorySocialPresenceDot.online{background:#54d36a;box-shadow:0 0 0 3px rgba(84,211,106,.13)}
+.StorySocialPresenceDot.idle{background:#e9b84c;box-shadow:0 0 0 3px rgba(233,184,76,.13)}
+.StorySocialChat{min-width:0;display:flex;flex-direction:column;min-height:0;background:linear-gradient(180deg,rgba(17,13,11,.46),rgba(11,10,9,.7))}
+.StorySocialChatEmpty{height:100%;min-height:680px;display:grid;place-items:center;align-content:center;text-align:center;padding:30px;color:rgba(255,245,233,.68)}
+.StorySocialChatEmpty h2{margin:16px 0 6px;color:#fff}
+.StorySocialChatEmpty p{max-width:390px;margin:0;line-height:1.55}
+.StorySocialChatIcon{width:66px;height:66px;display:grid;place-items:center;border-radius:22px;background:rgba(199,148,98,.12);border:1px solid rgba(199,148,98,.25)}
+.StorySocialChatIcon svg{width:35px;height:35px;fill:none;stroke:#f1cfaa;stroke-width:1.5}
+.StorySocialChatView{display:flex;flex-direction:column;min-height:680px;height:100%}
+.StorySocialChatHeader{display:flex;justify-content:space-between;gap:18px;align-items:center;padding:17px 19px;border-bottom:1px solid rgba(145,95,56,.2)}
+.StorySocialUserIdentity{display:flex;gap:12px;align-items:center;min-width:0}
+.StorySocialUserIdentity h2{margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.StorySocialUserIdentity p{margin:3px 0 0;color:rgba(255,245,233,.56);font-size:12px;text-transform:capitalize}
+.StorySocialUserId{flex:0 0 auto;color:rgba(255,245,233,.42);font:700 11px ui-monospace,SFMono-Regular,Consolas,monospace}
+.StorySocialProfileCard{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;padding:13px 18px;border-bottom:1px solid rgba(145,95,56,.16)}
+.StorySocialProfileStat{padding:10px 11px;border-radius:12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)}
+.StorySocialProfileStat span{display:block;color:rgba(255,245,233,.45);font-size:10px;text-transform:uppercase;letter-spacing:.08em}
+.StorySocialProfileStat strong{display:block;margin-top:3px;font-size:15px}
+.StorySocialMessages{flex:1;min-height:0;overflow:auto;padding:18px;display:flex;flex-direction:column;gap:9px}
+.StorySocialMessage{max-width:min(74%,560px);padding:10px 12px;border-radius:16px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.06);align-self:flex-start}
+.StorySocialMessage.Sent{align-self:flex-end;background:rgba(181,127,75,.18);border-color:rgba(201,153,92,.22)}
+.StorySocialMessageText{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.45}
+.StorySocialMessageTime{margin-top:5px;color:rgba(255,245,233,.4);font-size:10px}
+.StorySocialComposer{padding:12px 16px;border-top:1px solid rgba(145,95,56,.2)}
+.StorySocialComposer>input{width:100%;box-sizing:border-box;padding:12px 13px;border-radius:12px;border:1px solid rgba(199,148,98,.27);outline:0;background:rgba(8,7,6,.48);color:#fff;font:600 14px system-ui,sans-serif}
+.StorySocialComposerBottom{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:8px}
+.StorySocialComposerBottom span{color:rgba(255,245,233,.4);font-size:11px}
+.StorySocialComposerBottom .PrimaryButton{min-width:88px}
+.StorySocialChatStatus{min-height:18px;padding:0 16px 11px;color:rgba(255,245,233,.56);font-size:12px}
+.StorySocialChatStatus.Bad{color:#ff8c8c}
+.StorySocialChatStatus.Good{color:#7fe28c}
+.StorySocialEmpty{padding:24px 8px;text-align:center;color:rgba(255,245,233,.44);font-size:12px;line-height:1.5}
+@media(max-width:850px){.StorySocialLayout{grid-template-columns:1fr;min-height:0}.StorySocialSidebar{border-right:0;border-bottom:1px solid rgba(145,95,56,.22)}.StorySocialUserList{max-height:250px}.StorySocialChatEmpty,.StorySocialChatView{min-height:610px}.StorySocialProfileCard{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:560px){.StorySocialShell{width:min(100% - 18px,1180px);padding-top:16px}.StorySocialHeader{grid-template-columns:auto 1fr}.StorySocialHeader .SecondaryButton{grid-column:2;justify-self:start}.StorySocialHeader h1{font-size:25px}.StorySocialLayout{border-radius:18px}.StorySocialSidebar{padding:15px}.StorySocialChatHeader{padding:14px}.StorySocialUserId{display:none}.StorySocialMessages{padding:13px}.StorySocialMessage{max-width:86%}.StorySocialProfileCard{padding:10px 12px}}
