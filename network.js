@@ -9,6 +9,7 @@ const STORY_SAVE_GENERATION_KEY = "StoryRewriteSaveGenerationV1";
 const STORY_SAVED_ACCOUNTS_KEY = "StoryRewriteSavedAccountsV1";
 const STORY_SESSION_EVENT_KEY = "StoryRewriteSessionEventV1";
 const STORY_TAB_ID_KEY = "StoryRewriteTabIdV1";
+const STORY_SOCIAL_HEARTBEAT_INTERVAL = 60000;
 const STORY_SWITCH_FROM_USERNAME_KEY = "StoryRewriteSwitchFromUsernameV1";
 const STORY_SESSION_CHANNEL_NAME = "StoryRewriteSessionChannelV1";
 const STORY_CLIENT_SNAPSHOT_KEYS = [
@@ -25,7 +26,8 @@ const STORY_PROTECTED_PAGES = new Set([
     "tutorial.html",
     "rules.html",
     "account.html",
-    "settings.html"
+    "settings.html",
+    "social.html"
 ]);
 
 let AccountProfileRequestPromise = null;
@@ -59,8 +61,53 @@ function GetLastKnownServerSave() {
 }
 
 function StoreLastKnownProfileResult(Result) {
-    if (Result?.profile) WriteStoryLocalJson(STORY_LAST_PROFILE_KEY, Result);
+    if (Result?.profile) {
+        WriteStoryLocalJson(STORY_LAST_PROFILE_KEY, Result);
+        ApplyStoryIdentityTitle(Result.profile);
+    }
     return Result;
+}
+
+function ApplyStoryIdentityTitle(Profile = null) {
+    const Username = String(Profile?.username || "").trim();
+    const UserId = String(Profile?.userId || "").trim();
+    if (!Username || !UserId) return;
+
+    const Title = `Story Rewrite — ${UserId}`;
+    try { document.title = Title; } catch {}
+    try {
+        if (window.parent !== window && window.parent.document) {
+            window.parent.document.title = Title;
+        }
+    } catch {}
+}
+
+let StorySocialHeartbeatTimer = null;
+let StorySocialHeartbeatInFlight = false;
+
+async function TouchStorySocialHeartbeat() {
+    if (StorySocialHeartbeatInFlight || !GetAuthToken()) return;
+    StorySocialHeartbeatInFlight = true;
+    try {
+        await ApiRequest("/api/social/heartbeat", { method: "POST" });
+    } catch {} finally {
+        StorySocialHeartbeatInFlight = false;
+    }
+}
+
+function StartStorySocialHeartbeat() {
+    if (StorySocialHeartbeatTimer) return;
+    if (!GetAuthToken()) return;
+
+    TouchStorySocialHeartbeat();
+    StorySocialHeartbeatTimer = setInterval(() => {
+        if (!GetAuthToken()) {
+            clearInterval(StorySocialHeartbeatTimer);
+            StorySocialHeartbeatTimer = null;
+            return;
+        }
+        TouchStorySocialHeartbeat();
+    }, STORY_SOCIAL_HEARTBEAT_INTERVAL);
 }
 
 function ReadSaveGeneration() {
@@ -653,3 +700,4 @@ function ConnectStorySocket() {
 
 InitializeStorySessionSync();
 GuardProtectedPage();
+StartStorySocialHeartbeat();
