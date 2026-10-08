@@ -153,7 +153,7 @@ async function SavePresenceSettings() {
     }
 }
 
-function SaveVolumes() {
+async function SaveVolumes() {
     const Music = Number(MusicSlider.value) / 100;
     const Sound = Number(SoundSlider.value) / 100;
 
