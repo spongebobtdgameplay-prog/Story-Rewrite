@@ -29,6 +29,26 @@ body.StorySettingsPage{min-height:100vh;background:transparent;color:#f7e7c7}
 .StorySettingsSaved{width:7px;height:7px;flex:0 0 auto;border-radius:50%;background:#91a96f;box-shadow:0 0 8px rgba(145,169,111,.32)}
 #SettingsStatus.Bad{color:#d89589}
 #SettingsStatus.Good{color:#a9c98d}
+
+.StorySettingsPresence{padding:19px 26px 22px;border-top:1px solid rgba(221,169,108,.14)}
+.StorySettingsPresenceIntro{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;margin-bottom:15px}
+.StorySettingsPresenceIntro h2{margin:4px 0 5px;color:#fff0d3;font:900 clamp(1.25rem,3vw,1.65rem)/1.05 Georgia,'Times New Roman',serif}
+.StorySettingsPresenceIntro p{margin:0;color:#b9956e;font-size:.84rem}
+.StoryPresenceChoices{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.StoryPresenceChoice{display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;column-gap:9px;align-items:center;padding:12px;border:1px solid rgba(221,169,108,.14);border-radius:14px;background:rgba(34,20,14,.52);color:#f7e7c7;text-align:left;cursor:pointer}
+.StoryPresenceChoice:hover,.StoryPresenceChoice[aria-checked="true"]{border-color:rgba(231,187,114,.55);background:rgba(96,61,35,.32)}
+.StoryPresenceChoice strong{font-size:.88rem}
+.StoryPresenceChoice small{grid-column:2;color:#b9956e;font:700 11px/1.35 system-ui,sans-serif}
+.StoryPresenceDot{grid-row:1 / span 2;width:10px;height:10px;border-radius:50%;background:#79716b}
+.StoryPresenceDot.Online{background:#54d36a}
+.StoryPresenceDot.Idle{background:#e9b84c}
+.StoryPresenceDot.Ghost{background:#8980a0}
+.StoryPresenceDurationRow{display:flex;align-items:center;justify-content:space-between;gap:15px;margin-top:13px;padding-top:13px;border-top:1px solid rgba(221,169,108,.1)}
+.StoryPresenceDurationRow label{color:#e4c79e;font-size:.82rem;font-weight:800}
+.StoryPresenceDurationRow select{min-width:150px;padding:8px 10px;border:1px solid #765035;border-radius:9px;background:#24130d;color:#f1d19c;font-weight:800}
+.StoryPresenceStatusLine{min-height:18px;margin-top:10px;color:#9d8161;font-size:.74rem}
+.StoryPresenceStatusLine.Bad{color:#d89589}
+.StoryPresenceStatusLine.Good{color:#a9c98d}
 @keyframes StorySettingsCogSpin{to{transform:rotate(360deg)}}
 @media(prefers-reduced-motion:reduce){.StorySettingsCog svg{animation:none}}
 @media(max-width:700px){
@@ -38,7 +58,7 @@ body.StorySettingsPage{min-height:100vh;background:transparent;color:#f7e7c7}
  .StorySettingsApply{white-space:normal}
  .StorySettingRow,.StorySettingsRows .AccountToggleRow{grid-template-columns:1fr;gap:12px;padding:15px 8px}
  .StoryVolumeControl{grid-template-columns:minmax(0,1fr) 58px}
- .StorySettingsStatusRow{padding-left:20px;padding-right:20px}
+.StorySettingsStatusRow{padding-left:20px;padding-right:20px}
  .StorySettingsCog{width:31px;height:31px}.StorySettingsCog svg{width:27px;height:27px}
 }
 
