@@ -12,7 +12,7 @@
 <link rel="stylesheet" href="looks3.css?v=20260930-1">
 <link rel="stylesheet" href="looks4.css?v=20260930-1">
 <link rel="stylesheet" href="shell-ui.css?v=20260930-1">
-<link rel="stylesheet" href="settings.css?v=20260930-4">
+<link rel="stylesheet" href="settings.css?v=20261008-1">
 </head>
 <body class="AccountSettingsPage StorySettingsPage">
 <main class="AccountSettingsShell StorySettingsShell">
@@ -73,6 +73,41 @@
             </div>
         </div>
 
+        <section class="StorySettingsPresence">
+            <div class="StorySettingsPresenceIntro">
+                <div>
+                    <div class="Kicker">Social</div>
+                    <h2>Presence</h2>
+                    <p>Choose how other Story Rewrite players see you.</p>
+                </div>
+                <button class="SecondaryButton" id="OpenSocialButton" type="button">Open Social</button>
+            </div>
+
+            <div class="StoryPresenceChoices" role="radiogroup" aria-label="Presence status">
+                <button class="StoryPresenceChoice" type="button" data-presence-status="online" role="radio" aria-checked="false">
+                    <span class="StoryPresenceDot Online"></span><strong>Online</strong><small>Show that you're available.</small>
+                </button>
+                <button class="StoryPresenceChoice" type="button" data-presence-status="idle" role="radio" aria-checked="false">
+                    <span class="StoryPresenceDot Idle"></span><strong>Idle</strong><small>Show that you're away.</small>
+                </button>
+                <button class="StoryPresenceChoice" type="button" data-presence-status="ghost" role="radio" aria-checked="false">
+                    <span class="StoryPresenceDot Ghost"></span><strong>Ghost</strong><small>Appear offline to other players.</small>
+                </button>
+            </div>
+
+            <div class="StoryPresenceDurationRow">
+                <label for="PresenceDurationSelect">Keep this status for</label>
+                <select id="PresenceDurationSelect">
+                    <option value="0">Infinite</option>
+                    <option value="15">15 minutes</option>
+                    <option value="30">30 minutes</option>
+                    <option value="60">1 hour</option>
+                </select>
+            </div>
+
+            <div id="PresenceStatusLine" class="StoryPresenceStatusLine" aria-live="polite"></div>
+        </section>
+
         <div class="StorySettingsStatusRow">
             <span class="StorySettingsSaved" aria-hidden="true"></span>
             <span id="SettingsStatus" aria-live="polite">Your settings save automatically.</span>
@@ -80,13 +115,13 @@
     </section>
 </main>
 
-<script src="server-config.js?fresh=20260930-83"></script>
-<script src="network.js?fresh=20260930-83"></script>
+<script src="server-config.js?v=20261008-1"></script>
+<script src="network.js?v=20261008-1"></script>
 <script src="app.js?fresh=20260930-83"></script>
 <script src="audio.js?fresh=20260930-83"></script>
 <script src="real-audio.js?fresh=20260930-83"></script>
-<script src="shell-ui.js?fresh=20260930-83"></script>
-<script src="build-version.js?fresh=20261003-91"></script>
-<script src="settings.js?fresh=20260930-85"></script>
+<script src="shell-ui.js?v=20261008-1"></script>
+<script src="build-version.js?v=20261008-1"></script>
+<script src="settings.js?v=20261008-1"></script>
 </body>
 </html>
