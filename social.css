@@ -28,6 +28,7 @@
 .StorySocialChatIcon{width:66px;height:66px;display:grid;place-items:center;border-radius:22px;background:rgba(199,148,98,.12);border:1px solid rgba(199,148,98,.25)}
 .StorySocialChatIcon svg{width:35px;height:35px;fill:none;stroke:#f1cfaa;stroke-width:1.5}
 .StorySocialChatView{display:flex;flex-direction:column;min-height:680px;height:100%}
+.StorySocialPage [hidden]{display:none!important}
 .StorySocialChatHeader{display:flex;justify-content:space-between;gap:18px;align-items:center;padding:17px 19px;border-bottom:1px solid rgba(145,95,56,.2)}
 .StorySocialUserIdentity{display:flex;gap:12px;align-items:center;min-width:0}
 .StorySocialUserIdentity h2{margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
