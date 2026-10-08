@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Story Rewrite — Social</title>
+<link rel="icon" type="image/x-icon" href="favicon_io/favicon.ico?v=1000001">
+<link rel="stylesheet" href="looks1.css?v=20260930-1">
+<link rel="stylesheet" href="looks2.css?v=20260930-1">
+<link rel="stylesheet" href="looks3.css?v=20260930-1">
+<link rel="stylesheet" href="looks4.css?v=20260930-1">
+<link rel="stylesheet" href="shell-ui.css?v=20261008-1">
+<link rel="stylesheet" href="social.css?v=20261008-1">
+</head>
+<body class="AccountSettingsPage StorySocialPage">
+<main class="StorySocialShell">
+    <header class="StorySocialHeader">
+        <button class="IconBackButton" type="button" data-story-back="main.html" aria-label="Go back"></button>
+        <div>
+            <div class="Kicker">Community</div>
+            <h1>Social</h1>
+        </div>
+        <button class="SecondaryButton" id="SocialSettingsButton" type="button">Presence Settings</button>
+    </header>
+
+    <section class="StorySocialLayout">
+        <aside class="StorySocialSidebar" aria-label="Users">
+            <div class="StorySocialSearchHead">
+                <div>
+                    <h2>Find players</h2>
+                    <p>Search existing Story Rewrite accounts.</p>
+                </div>
+            </div>
+
+            <label class="StorySocialSearchBox">
+                <span aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="6.6"></circle><path d="m16 16 5 5"></path></svg>
+                </span>
+                <input id="SocialSearchInput" type="search" maxlength="40" autocomplete="off" placeholder="Search username">
+            </label>
+
+            <div id="SocialSearchStatus" class="StorySocialStatus" aria-live="polite"></div>
+            <div id="SocialUserList" class="StorySocialUserList" aria-live="polite">
+                <div class="StorySocialEmpty">Start typing a username to find a player.</div>
+            </div>
+        </aside>
+
+        <section class="StorySocialChat" aria-label="Direct messages">
+            <div id="SocialChatEmpty" class="StorySocialChatEmpty">
+                <div class="StorySocialChatIcon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="M4.5 5.5h15v11h-8.5l-4.4 3v-3H4.5Z"></path><path d="M8 9h8M8 12h5"></path></svg>
+                </div>
+                <h2>Choose a player</h2>
+                <p>Search for a user on the left to open a private chat.</p>
+            </div>
+
+            <div id="SocialChatView" class="StorySocialChatView" hidden>
+                <header class="StorySocialChatHeader">
+                    <div class="StorySocialUserIdentity">
+                        <div id="SocialChatAvatar" class="StorySocialAvatar" aria-hidden="true"></div>
+                        <div>
+                            <h2 id="SocialChatUsername">Player</h2>
+                            <p id="SocialChatPresence">Offline</p>
+                        </div>
+                    </div>
+                    <div id="SocialChatUserId" class="StorySocialUserId"></div>
+                </header>
+
+                <div id="SocialProfileCard" class="StorySocialProfileCard"></div>
+                <div id="SocialMessages" class="StorySocialMessages" aria-live="polite"></div>
+
+                <form id="SocialMessageForm" class="StorySocialComposer">
+                    <input id="SocialMessageInput" type="text" maxlength="300" autocomplete="off" placeholder="Write a message...">
+                    <div class="StorySocialComposerBottom">
+                        <span id="SocialMessageCount">0 / 300</span>
+                        <button class="PrimaryButton" id="SocialSendButton" type="submit">Send</button>
+                    </div>
+                </form>
+
+                <div id="SocialChatStatus" class="StorySocialChatStatus" aria-live="polite"></div>
+            </div>
+        </section>
+    </section>
+</main>
+
+<script src="server-config.js?v=20261008-1"></script>
+<script src="network.js?v=20261008-1"></script>
+<script src="app.js?v=20261001-2"></script>
+<script src="audio.js?v=20261003-4"></script>
+<script src="real-audio.js?v=20261003-4"></script>
+<script src="shell-ui.js?v=20261008-1"></script>
+<script src="build-version.js?v=20261008-1"></script>
+<script src="social.js?v=20261008-1"></script>
+</body>
+</html>
