@@ -139,6 +139,23 @@
     border-radius: 13px;
 }
 
+.StorySocialSidebar::after {
+    content: "";
+    position: absolute;
+    z-index: 4;
+    top: 0;
+    right: -1px;
+    bottom: 0;
+    width: 54px;
+    pointer-events: none;
+    background: linear-gradient(
+        90deg,
+        rgba(54, 41, 33, 0),
+        rgba(54, 41, 33, .18) 58%,
+        rgba(53, 42, 35, .46)
+    );
+}
+
 .StorySocialPaneHeader {
     position: relative;
     display: flex;
