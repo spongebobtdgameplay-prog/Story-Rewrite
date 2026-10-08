@@ -13,71 +13,129 @@
 <link rel="stylesheet" href="looks3.css?v=20260930-1">
 <link rel="stylesheet" href="looks4.css?v=20260930-1">
 <link rel="stylesheet" href="shell-ui.css?v=20261008-1">
-<link rel="stylesheet" href="social.css?v=20261008-3">
+<link rel="stylesheet" href="social.css?v=20261008-4">
 </head>
 <body class="AccountSettingsPage StorySocialPage">
 <main class="StorySocialShell">
     <header class="StorySocialHeader">
         <button class="IconBackButton" type="button" data-story-back="main.html" aria-label="Go back"></button>
-        <div>
-            <div class="Kicker">Community</div>
-            <h1>Social</h1>
+
+        <div class="StorySocialTitleBlock">
+            <div class="StorySocialTitleMark" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                    <path d="M5 5.5h6.6a2.8 2.8 0 0 1 2.8 2.8v10.2a2.8 2.8 0 0 0-2.8-2.8H5Z"></path>
+                    <path d="M19 5.5h-5a2.8 2.8 0 0 0-2.8 2.8v10.2a2.8 2.8 0 0 1 2.8-2.8H19Z"></path>
+                </svg>
+            </div>
+            <div>
+                <div class="Kicker">Community ledger</div>
+                <h1>Social</h1>
+                <p>Find players, compare progress, and keep the story going together.</p>
+            </div>
         </div>
-        <button class="SecondaryButton" id="SocialSettingsButton" type="button">Presence Settings</button>
+
+        <button class="SecondaryButton StorySocialSettingsButton" id="SocialSettingsButton" type="button">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M9.4 3.6 10.2 2.6h3.6l.8 1 1.4.6 1.3-.2 2.5 2.5-.2 1.3.6 1.4 1 .8v3.6l-1 .8-.6 1.4.2 1.3-2.5 2.5-1.3-.2-1.4.6-.8 1h-3.6l-.8-1-1.4-.6-1.3.2-2.5-2.5.2-1.3-.6-1.4-1-.8v-3.6l1-.8.6-1.4-.2-1.3 2.5-2.5 1.3.2 1.4-.6Z"></path>
+                <circle cx="12" cy="12" r="3.2"></circle>
+            </svg>
+            Presence
+        </button>
     </header>
 
-    <section class="StorySocialLayout">
-        <aside class="StorySocialSidebar" aria-label="Users">
-            <div class="StorySocialSearchHead">
+    <section class="StorySocialLayout" aria-label="Story Rewrite social">
+        <aside class="StorySocialSidebar" aria-label="Players">
+            <div class="StorySocialPaneHeader">
                 <div>
+                    <div class="StorySocialEyebrow">Player index</div>
                     <h2>Find players</h2>
-                    <p>Search existing Story Rewrite accounts.</p>
+                    <p>Search Story Rewrite accounts by username.</p>
                 </div>
+                <span class="StorySocialPaneSeal" aria-hidden="true">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M6 7.5h12v9H6z"></path>
+                        <path d="M8.5 10.5h7M8.5 13.5h4.2"></path>
+                    </svg>
+                </span>
             </div>
 
             <label class="StorySocialSearchBox">
-                <span aria-hidden="true">
+                <span class="StorySocialSearchIcon" aria-hidden="true">
                     <svg viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="6.6"></circle><path d="m16 16 5 5"></path></svg>
                 </span>
                 <input id="SocialSearchInput" type="search" maxlength="40" autocomplete="off" placeholder="Search username">
             </label>
 
-            <div id="SocialSearchStatus" class="StorySocialStatus" aria-live="polite"></div>
+            <div class="StorySocialSearchHint">
+                <span id="SocialSearchStatus" aria-live="polite">Start with a username.</span>
+                <span class="StorySocialIndexRule" aria-hidden="true"></span>
+            </div>
+
             <div id="SocialUserList" class="StorySocialUserList" aria-live="polite">
-                <div class="StorySocialEmpty">Start typing a username to find a player.</div>
+                <div class="StorySocialEmpty">
+                    <div class="StorySocialEmptyGlyph" aria-hidden="true">
+                        <svg viewBox="0 0 24 24">
+                            <circle cx="9" cy="9" r="3"></circle>
+                            <path d="M3.5 19c.6-3 2.4-4.8 5.5-4.8s4.9 1.8 5.5 4.8"></path>
+                            <path d="M15.3 5.6a3 3 0 0 1 0 5.7M16 14.6c2.1.4 3.6 1.8 4.2 4"></path>
+                        </svg>
+                    </div>
+                    <strong>Search the player index</strong>
+                    <span>Choose a player to open their profile and private conversation.</span>
+                </div>
             </div>
         </aside>
 
         <section class="StorySocialChat" aria-label="Direct messages">
             <div id="SocialChatEmpty" class="StorySocialChatEmpty">
-                <div class="StorySocialChatIcon" aria-hidden="true">
-                    <svg viewBox="0 0 24 24"><path d="M4.5 5.5h15v11h-8.5l-4.4 3v-3H4.5Z"></path><path d="M8 9h8M8 12h5"></path></svg>
+                <div class="StorySocialEmptyBook" aria-hidden="true">
+                    <svg viewBox="0 0 52 52">
+                        <path d="M7 11.5h14.2A7.8 7.8 0 0 1 29 19.3v23A7.8 7.8 0 0 0 21.2 34H7Z"></path>
+                        <path d="M45 11.5H30.8A7.8 7.8 0 0 0 23 19.3v23a7.8 7.8 0 0 1 7.8-8.3H45Z"></path>
+                        <path d="M12 17h8M12 22h7M32 17h8M32 22h7"></path>
+                    </svg>
                 </div>
+                <div class="StorySocialEyebrow">Private messages</div>
                 <h2>Choose a player</h2>
-                <p>Search for a user on the left to open a private chat.</p>
+                <p>Search the player index on the left. Their profile, progress, presence, and conversation will appear here.</p>
+                <div class="StorySocialEmptyRule" aria-hidden="true"><span></span><i></i><span></span></div>
             </div>
 
             <div id="SocialChatView" class="StorySocialChatView" hidden>
                 <header class="StorySocialChatHeader">
                     <div class="StorySocialUserIdentity">
                         <div id="SocialChatAvatar" class="StorySocialAvatar" aria-hidden="true"></div>
-                        <div>
+                        <div class="StorySocialUserCopy">
+                            <div class="StorySocialEyebrow">Player profile</div>
                             <h2 id="SocialChatUsername">Player</h2>
-                            <p id="SocialChatPresence">Offline</p>
+                            <div class="StorySocialPresenceLine">
+                                <span class="StorySocialPresenceDot" id="SocialChatPresenceDot"></span>
+                                <p id="SocialChatPresence">Offline</p>
+                            </div>
                         </div>
                     </div>
-                    <div id="SocialChatUserId" class="StorySocialUserId"></div>
+                    <div class="StorySocialIdentityStamp">
+                        <span>User ID</span>
+                        <strong id="SocialChatUserId"></strong>
+                    </div>
                 </header>
 
                 <div id="SocialProfileCard" class="StorySocialProfileCard"></div>
+                <div class="StorySocialConversationLabel">
+                    <span>Conversation</span>
+                    <i aria-hidden="true"></i>
+                </div>
                 <div id="SocialMessages" class="StorySocialMessages" aria-live="polite"></div>
 
                 <form id="SocialMessageForm" class="StorySocialComposer">
-                    <input id="SocialMessageInput" type="text" maxlength="300" autocomplete="off" placeholder="Write a message...">
-                    <div class="StorySocialComposerBottom">
+                    <div class="StorySocialComposerField">
+                        <input id="SocialMessageInput" type="text" maxlength="300" autocomplete="off" placeholder="Write a message...">
                         <span id="SocialMessageCount">0 / 300</span>
-                        <button class="PrimaryButton" id="SocialSendButton" type="submit">Send</button>
                     </div>
+                    <button class="PrimaryButton StorySocialSendButton" id="SocialSendButton" type="submit">
+                        <span>Send</span>
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4.5 11.7 14.8-6-4.9 12.3-2.5-5z"></path><path d="m11.9 13 7.4-7.3"></path></svg>
+                    </button>
                 </form>
 
                 <div id="SocialChatStatus" class="StorySocialChatStatus" aria-live="polite"></div>
@@ -93,6 +151,6 @@
 <script src="real-audio.js?v=20261003-4"></script>
 <script src="shell-ui.js?v=20261008-1"></script>
 <script src="build-version.js?v=20261008-3"></script>
-<script src="social.js?v=20261008-3"></script>
+<script src="social.js?v=20261008-4"></script>
 </body>
 </html>
