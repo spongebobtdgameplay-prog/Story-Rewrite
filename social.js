@@ -304,6 +304,8 @@ async function SocialEnsureSocket() {
         if (SocialSelectedUser && Username === String(SocialSelectedUser.username || "").toLowerCase()) {
             SocialSelectedUser.presence = Payload.presence || "offline";
             SocialById("SocialChatPresence").textContent = SocialPresenceLabel(SocialSelectedUser.presence);
+            const Dot = SocialById("SocialChatPresenceDot");
+            if (Dot) Dot.className = "StorySocialPresenceDot " + String(SocialSelectedUser.presence || "offline");
         }
         const Input = SocialById("SocialSearchInput");
         if (Input && Input.value.trim()) SocialSearchUsers(Input.value.trim());
