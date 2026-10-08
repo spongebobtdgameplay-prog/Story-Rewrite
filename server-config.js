@@ -11,7 +11,8 @@ window.STORY_REWRITE_CANONICAL_URL = "https://story-rewrite-iota.vercel.app";
         "multiplayer.html",
         "tutorial.html",
         "rules.html",
-        "account.html"
+        "account.html",
+        "social.html"
     ]);
 
     const PageName = (window.location.pathname.split("/").pop() || "").trim();
