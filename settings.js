@@ -8,6 +8,11 @@ let SoundValue = null;
 let KeepMusicButton = null;
 let KeepMusicState = null;
 let Status = null;
+let PresenceStatus = "online";
+let PresenceButtons = [];
+let PresenceDurationSelect = null;
+let PresenceStatusLine = null;
+let PresenceSaveInFlight = false;
 
 function CloneSettingsSave(Save) {
     try { return JSON.parse(JSON.stringify(Save)); } catch { return Save; }
@@ -76,7 +81,79 @@ function RenderSettings() {
     RenderKeepMusicPlaying();
 }
 
-async function SaveVolumes() {
+async function RenderPresenceControls(Payload) {
+    const PrivatePresence = Payload?.privatePresence || {};
+    PresenceStatus = ["online", "idle", "ghost"].includes(PrivatePresence.status)
+        ? PrivatePresence.status
+        : "online";
+
+    for (const Button of PresenceButtons) {
+        const Selected = Button.dataset.presenceStatus === PresenceStatus;
+        Button.setAttribute("aria-checked", Selected ? "true" : "false");
+    }
+
+    if (PresenceDurationSelect) {
+        const Remaining = Number(PrivatePresence.expiresAt || 0) - Date.now();
+        const Options = [15, 30, 60];
+        let Duration = 0;
+        for (const Minutes of Options) {
+            if (Remaining > (Minutes * 60000) - 5000 && Remaining <= (Minutes * 60000) + 5000) {
+                Duration = Minutes;
+                break;
+            }
+        }
+        PresenceDurationSelect.value = String(Duration);
+    }
+}
+
+function SetPresenceStatusLine(Text, Kind = "") {
+    if (!PresenceStatusLine) return;
+    PresenceStatusLine.textContent = Text || "";
+    PresenceStatusLine.className = "StoryPresenceStatusLine" + (Kind ? " " + Kind : "");
+}
+
+async function LoadPresenceSettings() {
+    try {
+        const Result = await ApiRequest("/api/social/me");
+        RenderPresenceControls(Result);
+        SetPresenceStatusLine("Presence is saved to your account.");
+    } catch (Error) {
+        SetPresenceStatusLine(Error.message || "Could not load presence.", "Bad");
+    }
+}
+
+async function SavePresenceSettings() {
+    if (PresenceSaveInFlight) return;
+    PresenceSaveInFlight = true;
+
+    const Duration = Number(PresenceDurationSelect?.value || 0);
+    SetPresenceStatusLine("Saving presence...");
+
+    try {
+        const Result = await ApiRequest("/api/social/status", {
+            method: "POST",
+            body: JSON.stringify({
+                status: PresenceStatus,
+                durationMinutes: Duration
+            })
+        });
+        RenderPresenceControls(Result);
+        SetPresenceStatusLine(
+            PresenceStatus === "ghost"
+                ? "Ghost mode is active. Other players will see you as offline."
+                : PresenceStatus === "idle"
+                    ? "Idle status is active."
+                    : "Online status is active.",
+            "Good"
+        );
+    } catch (Error) {
+        SetPresenceStatusLine(Error.message || "Could not save presence.", "Bad");
+    } finally {
+        PresenceSaveInFlight = false;
+    }
+}
+
+function SaveVolumes() {
     const Music = Number(MusicSlider.value) / 100;
     const Sound = Number(SoundSlider.value) / 100;
 
@@ -123,9 +200,27 @@ document.addEventListener("DOMContentLoaded", async () => {
     KeepMusicButton = document.getElementById("KeepMusicPlayingButton");
     KeepMusicState = document.getElementById("KeepMusicPlayingState");
     Status = document.getElementById("SettingsStatus");
+    PresenceButtons = Array.from(document.querySelectorAll("[data-presence-status]"));
+    PresenceDurationSelect = document.getElementById("PresenceDurationSelect");
+    PresenceStatusLine = document.getElementById("PresenceStatusLine");
 
     RenderKeepMusicPlaying();
     ApplyKeepMusicPlaying(ReadKeepMusicPlaying());
+
+    PresenceButtons.forEach(Button => {
+        Button.addEventListener("click", () => {
+            PresenceStatus = Button.dataset.presenceStatus || "online";
+            SavePresenceSettings();
+        });
+    });
+
+    PresenceDurationSelect?.addEventListener("change", SavePresenceSettings);
+    document.getElementById("OpenSocialButton")?.addEventListener("click", () => {
+        if (typeof StoryNavigate === "function") StoryNavigate("social.html");
+        else window.location.href = BuildStoryUrl("social.html");
+    });
+
+    LoadPresenceSettings();
 
     KeepMusicButton.addEventListener("click", () => {
         const Enabled = !ReadKeepMusicPlaying();
