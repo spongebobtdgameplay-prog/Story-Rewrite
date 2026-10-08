@@ -5,6 +5,7 @@ let SocialSocketPromise = null;
 let SocialCurrentUser = null;
 let SocialSelectedUser = null;
 let SocialSearchTimer = null;
+let SocialSearchRequestId = 0;
 const SocialMessageIds = new Set();
 
 function SocialById(Id) {
@@ -44,8 +45,25 @@ function SocialSafeError(Error, Fallback) {
 function SocialShowEmptyState() {
     const Empty = SocialById("SocialChatEmpty");
     const View = SocialById("SocialChatView");
+    const Title = SocialById("SocialChatEmptyTitle");
+    const Text = SocialById("SocialChatEmptyText");
+
     if (Empty) Empty.hidden = false;
     if (View) View.hidden = true;
+    if (Title) Title.textContent = "Choose a player";
+    if (Text) Text.textContent = "Search the player index on the left. Their profile, progress, presence, and conversation will appear here.";
+}
+
+function SocialShowLoadingState() {
+    const Empty = SocialById("SocialChatEmpty");
+    const View = SocialById("SocialChatView");
+    const Title = SocialById("SocialChatEmptyTitle");
+    const Text = SocialById("SocialChatEmptyText");
+
+    if (Empty) Empty.hidden = false;
+    if (View) View.hidden = true;
+    if (Title) Title.textContent = "Loading...";
+    if (Text) Text.textContent = "Opening that player's profile and conversation.";
 }
 
 function SocialRenderStats(User) {
@@ -96,19 +114,30 @@ function SocialRenderUsers(Users) {
 
 async function SocialSearchUsers(Query) {
     const Status = SocialById("SocialSearchStatus");
-    if (!Query) {
+    const Search = String(Query || "").trim();
+    const RequestId = ++SocialSearchRequestId;
+
+    if (!Search) {
         SocialRenderUsers([]);
-        if (Status) Status.textContent = "";
+        if (Status) Status.textContent = "Start with a username.";
         return;
     }
 
     if (Status) Status.textContent = "Searching...";
+
     try {
-        const Result = await ApiRequest("/api/social/search?q=" + encodeURIComponent(Query));
+        const Result = await ApiRequest("/api/social/search?q=" + encodeURIComponent(Search));
+
+        if (RequestId !== SocialSearchRequestId) return;
+
         const Users = Array.isArray(Result.users) ? Result.users : [];
         SocialRenderUsers(Users);
-        if (Status) Status.textContent = Users.length + " result" + (Users.length === 1 ? "" : "s");
+        if (Status) {
+            Status.textContent = Users.length + " result" + (Users.length === 1 ? "" : "s");
+        }
     } catch (Error) {
+        if (RequestId !== SocialSearchRequestId) return;
+
         console.error("Story Social search failed", Error);
         if (Status) Status.textContent = SocialSafeError(Error, "Search is temporarily unavailable.");
         SocialRenderUsers([]);
@@ -146,7 +175,7 @@ async function SocialLoadConversation() {
     if (!Container) return;
 
     SocialMessageIds.clear();
-    Container.innerHTML = '<div class="StorySocialEmpty">Loading messages...</div>';
+    Container.innerHTML = '<div class="StorySocialConversationState">Loading messages...</div>';
 
     try {
         const Result = await ApiRequest(
@@ -156,11 +185,11 @@ async function SocialLoadConversation() {
         const Messages = Array.isArray(Result.messages) ? Result.messages : [];
         Messages.forEach(SocialAddMessage);
         if (!Messages.length) {
-            Container.innerHTML = '<div class="StorySocialEmpty">No messages yet. Say hello.</div>';
+            Container.innerHTML = '<div class="StorySocialConversationState">No messages yet. Say hello.</div>';
         }
     } catch (Error) {
         console.error("Story Social conversation load failed", Error);
-        Container.innerHTML = '<div class="StorySocialEmpty">Chat is temporarily unavailable. Try again in a moment.</div>';
+        Container.innerHTML = '<div class="StorySocialConversationState StorySocialConversationStateBad">Chat is temporarily unavailable. Try again in a moment.</div>';
     }
 }
 
@@ -168,7 +197,7 @@ async function SelectSocialUser(Username) {
     if (!Username) return;
 
     SocialSelectedUser = null;
-    SocialShowEmptyState();
+    SocialShowLoadingState();
 
     try {
         const Result = await ApiRequest("/api/social/profile?username=" + encodeURIComponent(Username));
