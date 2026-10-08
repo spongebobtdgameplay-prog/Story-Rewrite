@@ -261,10 +261,14 @@
     gap: 7px;
     margin-top: 2px;
     max-height: 530px;
-    overflow: auto;
+    overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
     padding: 4px 2px 3px 0;
     scrollbar-width: thin;
     scrollbar-color: #8c6341 transparent;
+    contain: paint;
 }
 
 .StorySocialUserButton {
@@ -496,6 +500,9 @@
     height: 100%;
     display: flex;
     flex-direction: column;
+    background:
+        radial-gradient(circle at 88% 8%, rgba(216,177,117,.13), transparent 24%),
+        linear-gradient(180deg, #352a23, #28201b);
 }
 
 .StorySocialPage [hidden] {
@@ -546,12 +553,16 @@
 }
 
 .StorySocialIdentityStamp {
-    min-width: 106px;
-    padding: 8px 10px;
+    min-width: 122px;
+    min-height: 54px;
+    display: grid;
+    place-items: center;
+    align-content: center;
+    padding: 8px 12px;
     border: 1px solid rgba(223, 186, 124, .18);
     border-radius: 9px;
     background: rgba(25, 17, 13, .35);
-    text-align: right;
+    text-align: center;
 }
 
 .StorySocialIdentityStamp span {
@@ -624,7 +635,10 @@
 .StorySocialMessages {
     flex: 1;
     min-height: 0;
-    overflow: auto;
+    overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
     display: flex;
     flex-direction: column;
     gap: 9px;
@@ -871,4 +885,41 @@
     .StorySocialSendButton {
         transition: none;
     }
+}
+
+.StorySocialConversationState {
+    margin: 4px 0 2px;
+    padding: 8px 2px;
+    color: #a99175;
+    background: transparent;
+    font: 600 12px/1.45 Georgia, "Times New Roman", serif;
+    text-align: center;
+}
+
+.StorySocialConversationStateBad {
+    color: #d5a093;
+}
+
+.StorySocialChatEmpty h2 {
+    transition: opacity .15s ease;
+}
+
+@media (min-width: 761px) {
+    .StorySocialChatView {
+        background:
+            radial-gradient(
+                circle at 88% 8%,
+                rgba(216,177,117,.13),
+                transparent 24%
+            ),
+            linear-gradient(
+                180deg,
+                #352a23,
+                #28201b
+            );
+    }
+}
+
+.StorySocialPage * {
+    overscroll-behavior-x: none;
 }
