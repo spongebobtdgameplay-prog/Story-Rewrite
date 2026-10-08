@@ -698,6 +698,9 @@ function ConnectStorySocket() {
     return Socket;
 }
 
+const CachedStoryProfile = GetLastKnownProfileResult()?.profile || null;
+ApplyStoryIdentityTitle(CachedStoryProfile);
+
 InitializeStorySessionSync();
 GuardProtectedPage();
 
