@@ -700,4 +700,18 @@ function ConnectStorySocket() {
 
 InitializeStorySessionSync();
 GuardProtectedPage();
-StartStorySocialHeartbeat();
+
+window.addEventListener("StoryShellActivate", StartStorySocialHeartbeat);
+window.addEventListener("StoryShellDeactivate", () => {
+    if (StorySocialHeartbeatTimer) {
+        clearInterval(StorySocialHeartbeatTimer);
+        StorySocialHeartbeatTimer = null;
+    }
+});
+document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") StartStorySocialHeartbeat();
+    else if (StorySocialHeartbeatTimer) {
+        clearInterval(StorySocialHeartbeatTimer);
+        StorySocialHeartbeatTimer = null;
+    }
+});
