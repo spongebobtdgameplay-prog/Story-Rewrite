@@ -34,6 +34,20 @@ function SocialSetStatus(Target, Text, Kind) {
     Target.className = "StorySocialChatStatus" + (Kind ? " " + Kind : "");
 }
 
+function SocialSafeError(Error, Fallback) {
+    const Message = String(Error?.message || "");
+    const Internal = /api route|neon|render|server error|http\s*\d{3}|status\s*\d{3}|database|sql/i.test(Message);
+    if (Internal || !Message) return Fallback;
+    return Message;
+}
+
+function SocialShowEmptyState() {
+    const Empty = SocialById("SocialChatEmpty");
+    const View = SocialById("SocialChatView");
+    if (Empty) Empty.hidden = false;
+    if (View) View.hidden = true;
+}
+
 function SocialRenderStats(User) {
     const Card = SocialById("SocialProfileCard");
     if (!Card || !User) return;
@@ -95,7 +109,8 @@ async function SocialSearchUsers(Query) {
         SocialRenderUsers(Users);
         if (Status) Status.textContent = Users.length + " result" + (Users.length === 1 ? "" : "s");
     } catch (Error) {
-        if (Status) Status.textContent = Error.message || "Search failed.";
+        console.error("Story Social search failed", Error);
+        if (Status) Status.textContent = SocialSafeError(Error, "Search is temporarily unavailable.");
         SocialRenderUsers([]);
     }
 }
@@ -144,18 +159,26 @@ async function SocialLoadConversation() {
             Container.innerHTML = '<div class="StorySocialEmpty">No messages yet. Say hello.</div>';
         }
     } catch (Error) {
-        Container.innerHTML = '<div class="StorySocialEmpty">' + String(Error.message || "Could not load chat.") + '</div>';
+        console.error("Story Social conversation load failed", Error);
+        Container.innerHTML = '<div class="StorySocialEmpty">Chat is temporarily unavailable. Try again in a moment.</div>';
     }
 }
 
 async function SelectSocialUser(Username) {
     if (!Username) return;
 
+    SocialSelectedUser = null;
+    SocialShowEmptyState();
+
     try {
         const Result = await ApiRequest("/api/social/profile?username=" + encodeURIComponent(Username));
+        if (!Result?.user?.username) throw new Error("Could not load that player.");
         SocialSelectedUser = Result.user;
     } catch (Error) {
-        SocialSetStatus(SocialById("SocialChatStatus"), Error.message || "Could not load that user.", "Bad");
+        console.error("Story Social profile load failed", Error);
+        SocialSearchUsers(SocialById("SocialSearchInput")?.value.trim() || "");
+        const Status = SocialById("SocialSearchStatus");
+        if (Status) Status.textContent = SocialSafeError(Error, "That player could not be opened.");
         return;
     }
 
@@ -216,7 +239,8 @@ async function SocialSendMessage(Event) {
         SocialUpdateMessageCount();
         SocialSetStatus(SocialById("SocialChatStatus"), "");
     } catch (Error) {
-        SocialSetStatus(SocialById("SocialChatStatus"), Error.message || "Could not send message.", "Bad");
+        console.error("Story Social message send failed", Error);
+        SocialSetStatus(SocialById("SocialChatStatus"), SocialSafeError(Error, "Your message could not be sent right now."), "Bad");
     } finally {
         if (Button) Button.disabled = false;
     }
@@ -307,6 +331,7 @@ document.addEventListener("DOMContentLoaded", async function() {
     const MessageInput = SocialById("SocialMessageInput");
     const Form = SocialById("SocialMessageForm");
 
+    SocialShowEmptyState();
     SocialById("SocialSettingsButton")?.addEventListener("click", SocialOpenSettings);
     Input?.addEventListener("input", function() {
         clearTimeout(SocialSearchTimer);
@@ -318,8 +343,15 @@ document.addEventListener("DOMContentLoaded", async function() {
     Form?.addEventListener("submit", SocialSendMessage);
 
     try {
-        await Promise.all([RequireAccount(), SocialLoadCurrentUser(), SocialEnsureSocket()]);
+        await Promise.all([RequireAccount(), SocialLoadCurrentUser()]);
     } catch (Error) {
-        SocialSetStatus(SocialById("SocialChatStatus"), Error.message || "Could not connect to Social.", "Bad");
+        console.error("Story Social startup failed", Error);
+        const Status = SocialById("SocialSearchStatus");
+        if (Status) Status.textContent = SocialSafeError(Error, "Social is temporarily unavailable. Try again in a moment.");
+        return;
     }
+
+    SocialEnsureSocket().catch(function(Error) {
+        console.warn("Story Social realtime connection unavailable", Error);
+    });
 });
