@@ -154,6 +154,7 @@ jobs:
           const Required = [
               ['Socket.on("storybot:ask", async', "direct StoryBot ask handler"],
               ["GEMINI_API_KEY", "Gemini API key lookup"],
+              ['STORYBOT_LOCAL_FALLBACK || "").toLowerCase() === "true"', "local model warmup environment guard"],
               [":generateContent", "Gemini generation endpoint"],
               ['text: "@StoryBot " + Question', "StoryBot question chat message"],
               ['username: StoryBotName', "StoryBot response identity"]
