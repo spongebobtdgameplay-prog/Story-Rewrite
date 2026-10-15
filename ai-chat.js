@@ -822,78 +822,6 @@ async function AskAI(PromptText) {
 }
 
 
-const StoryBotClientBridgeRequests = new Map();
-let StoryBotGeminiBridgeReady = false;
-const STORY_BOT_GEMINI_BRIDGE_CHANNEL = "story-rewrite-gemini-session-bridge-v1";
-
-function HandleStoryBotGeminiBridgeMessage(Event) {
-    if (Event.source !== window || Event.origin !== window.location.origin) return;
-    const Message = Event.data;
-    if (Message?.channel !== STORY_BOT_GEMINI_BRIDGE_CHANNEL) return;
-    if (Message.source === "StoryRewriteGeminiBridge" && Message.type === "ready") {
-        StoryBotGeminiBridgeReady = true;
-        return;
-    }
-    if (Message.source !== "StoryRewriteGeminiBridge" || Message.type !== "result") return;
-    const RequestId = String(Message.requestId || "");
-    const Pending = StoryBotClientBridgeRequests.get(RequestId);
-    if (!Pending) return;
-    StoryBotClientBridgeRequests.delete(RequestId);
-    window.clearTimeout(Pending.timer);
-
-    Pending.Socket.emit("storybot:clientAnswer", {
-        requestId: RequestId,
-        answer: String(Message.answer || ""),
-        error: String(Message.error || "")
-    }, (ErrorValue, Reply) => {
-        if (ErrorValue) ShowStoryBotError("StoryBot could not submit the Gemini response to the room.");
-        else if (!Reply?.ok && Reply?.error) ShowStoryBotError(Reply.error);
-    });
-}
-
-window.addEventListener("message", HandleStoryBotGeminiBridgeMessage);
-window.postMessage({
-    source: "StoryRewriteApp",
-    channel: STORY_BOT_GEMINI_BRIDGE_CHANNEL,
-    type: "hello"
-}, window.location.origin);
-
-function HandleStoryBotClientGenerate(Socket, Payload) {
-    const RequestId = String(Payload?.requestId || "");
-    const Question = String(Payload?.question || "")
-        .replace(/[\u0000-\u001F\u007F]/g, " ")
-        .replace(/\s+/g, " ").trim().slice(0, 9000);
-    if (!RequestId || !Question) return;
-
-    if (!StoryBotGeminiBridgeReady) {
-        Socket.emit("storybot:clientAnswer", {
-            requestId: RequestId,
-            error: "The Gemini Session Bridge userscript is not installed or enabled on this Story Rewrite page."
-        });
-        return;
-    }
-    if (StoryBotClientBridgeRequests.has(RequestId)) return;
-
-    const Timer = window.setTimeout(() => {
-        const Pending = StoryBotClientBridgeRequests.get(RequestId);
-        if (!Pending) return;
-        StoryBotClientBridgeRequests.delete(RequestId);
-        Pending.Socket.emit("storybot:clientAnswer", {
-            requestId: RequestId,
-            error: "No Gemini tab answered the request. Open Gemini in another tab, sign in, and leave that tab open."
-        });
-    }, STORY_BOT_REQUEST_TIMEOUT);
-
-    StoryBotClientBridgeRequests.set(RequestId, { Socket, timer: Timer });
-    window.postMessage({
-        source: "StoryRewriteApp",
-        channel: STORY_BOT_GEMINI_BRIDGE_CHANNEL,
-        type: "request",
-        requestId: RequestId,
-        prompt: Question
-    }, window.location.origin);
-}
-
 function BindStoryBotSocket(Socket) {
     if (!Socket || BoundBotSockets.has(Socket)) return;
     BoundBotSockets.add(Socket);
@@ -901,7 +829,6 @@ function BindStoryBotSocket(Socket) {
     Socket.on("connect", () => SetStoryBotConnectionState("online"));
     Socket.on("disconnect", () => SetStoryBotConnectionState("reconnecting"));
     Socket.on("connect_error", () => SetStoryBotConnectionState("reconnecting"));
-    Socket.on("storybot:clientGenerate", Payload => HandleStoryBotClientGenerate(Socket, Payload));
     Socket.on("room:chat", LogStoryBotConsoleReply);
 
     Socket.on("room:botTyping", Payload => {
