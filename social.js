@@ -28,9 +28,8 @@ function SocialUpdateActiveUserButtons() {
     });
 }
 
-function SocialFocusAndRevealSmooth(Element) {
+function SocialInterpolateFrameIntoView(Element) {
     if (!Element) return;
-    try { Element.focus({ preventScroll: true }); } catch { Element.focus(); }
     const ReducedMotion = Boolean(window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches);
     try {
         Element.scrollIntoView({
@@ -39,6 +38,11 @@ function SocialFocusAndRevealSmooth(Element) {
             inline: "nearest"
         });
     } catch {}
+}
+
+function SocialFocusAndRevealSmooth(Element) {
+    if (!Element) return;
+    try { Element.focus({ preventScroll: true }); } catch { Element.focus(); }
 }
 
 function SocialPresenceLabel(Presence) {
@@ -226,6 +230,9 @@ async function SelectSocialUser(Username) {
     SocialSelectedUser = null;
     SocialShowLoadingState();
 
+    // Start scrolling on the click, before profile and conversation requests.
+    SocialInterpolateFrameIntoView(document.querySelector(".StorySocialChat"));
+
     try {
         const Result = await ApiRequest("/api/social/profile?username=" + encodeURIComponent(Username));
         if (!Result?.user?.username) throw new Error("Could not load that player.");
@@ -306,7 +313,13 @@ function SocialUpdateMessageCount() {
     const Input = SocialById("SocialMessageInput");
     const Count = SocialById("SocialMessageCount");
     if (!Input || !Count) return;
+    const AtLimit = Input.value.length >= SOCIAL_MAX_MESSAGE_LENGTH;
     Count.textContent = String(Input.value.length) + " / " + SOCIAL_MAX_MESSAGE_LENGTH;
+    Count.classList.toggle("AtLimit", AtLimit);
+    Count.classList.toggle("WithinLimit", !AtLimit);
+    Count.setAttribute("aria-label", AtLimit
+        ? "Character limit reached: " + SOCIAL_MAX_MESSAGE_LENGTH
+        : Input.value.length + " of " + SOCIAL_MAX_MESSAGE_LENGTH + " characters");
 }
 
 async function SocialEnsureSocket() {
@@ -398,6 +411,7 @@ document.addEventListener("DOMContentLoaded", async function() {
         }, 220);
     });
     MessageInput?.addEventListener("input", SocialUpdateMessageCount);
+    SocialUpdateMessageCount();
     Form?.addEventListener("submit", SocialSendMessage);
 
     try {

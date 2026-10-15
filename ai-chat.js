@@ -570,7 +570,7 @@ async function SubmitStoryBotDedicated(Composer) {
     RefreshStoryBotComposerLock();
     SetStoryBotTyping(true);
 
-    const Result = await new Promise(resolve => {
+    const ResultPromise = new Promise(resolve => {
         let Finished = false;
         const Complete = Value => {
             if (Finished) return;
@@ -593,6 +593,13 @@ async function SubmitStoryBotDedicated(Composer) {
         }
     });
 
+    // Hide the question as soon as the socket send has been initiated.
+    Input.value = "";
+    UpdateStoryBotDedicatedComposer(Composer);
+    DismissStoryBotComposer(Composer, NormalChatInput);
+
+    const Result = await ResultPromise;
+
     if (!Result?.ok) {
         StoryBotLocalRequestBusy = false;
         RefreshStoryBotComposerLock();
@@ -601,13 +608,8 @@ async function SubmitStoryBotDedicated(Composer) {
         SetStoryBotComposerStatus(Composer, ErrorText, "error");
         ShowStoryBotError(ErrorText);
         delete Composer.dataset.storyBotSubmitting;
-        try { Input.focus({ preventScroll: true }); } catch { Input.focus({ preventScroll: true }); }
         return;
     }
-
-    Input.value = "";
-    UpdateStoryBotDedicatedComposer(Composer);
-    DismissStoryBotComposer(Composer, NormalChatInput);
 
     // The user message was already broadcast by the server. The bot reply arrives
     // separately via room:chat; keep the lock until the server says typing=false.

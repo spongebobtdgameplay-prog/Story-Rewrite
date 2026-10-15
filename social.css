@@ -1001,3 +1001,30 @@ body.StorySocialPage {
         transition-duration: .01ms;
     }
 }
+
+
+/* Social polish v3: stronger labels, larger player finder, fitted user ID and count. */
+html:has(body.StorySocialPage) { height:auto!important; overflow-y:auto!important; overscroll-behavior-y:auto!important; }
+body.StorySocialPage { height:auto!important; min-height:100vh; overflow-x:hidden!important; overflow-y:auto!important; overscroll-behavior-y:auto!important; touch-action:pan-y; }
+.StorySocialPage .StorySocialTitleBlock .Kicker { color:#fff0d3; font-size:11px; font-weight:900; letter-spacing:.16em; text-shadow:0 1px 3px rgba(25,11,3,.72); }
+.StorySocialPage .StorySocialEyebrow { color:#633b1c; font-size:11px; line-height:1.25; letter-spacing:.14em; text-shadow:0 1px rgba(255,244,219,.42); }
+.StorySocialPage .StorySocialPaneHeader h2 { font-size:clamp(27px,2.2vw,31px); line-height:1.02; letter-spacing:-.025em; }
+.StorySocialLayout { grid-template-columns:minmax(320px,390px) minmax(0,1fr); }
+.StorySocialUserList,.StorySocialMessages { overscroll-behavior:auto!important; overscroll-behavior-y:auto!important; touch-action:pan-y; }
+.StorySocialChatHeader { min-width:0; flex-wrap:wrap; }
+.StorySocialUserIdentity { flex:1 1 180px; }
+.StorySocialIdentityStamp { box-sizing:border-box; flex:0 1 190px; width:min(100%,190px); min-width:0; max-width:190px; padding:9px 11px; gap:2px; border-color:rgba(223,186,124,.38); background:linear-gradient(145deg,rgba(25,17,13,.76),rgba(43,29,20,.9)); box-shadow:inset 0 1px rgba(255,244,219,.08),0 5px 12px rgba(8,4,2,.16); }
+.StorySocialIdentityStamp span { color:#d0b58b; font-size:9px; letter-spacing:.14em; }
+.StorySocialIdentityStamp strong { max-width:100%; overflow-wrap:anywhere; word-break:break-word; color:#ffe0a8; font-size:clamp(10px,.95vw,12px); line-height:1.35; letter-spacing:.015em; }
+.StorySocialComposerField span { color:#9acb83; font-size:12px; font-weight:900; letter-spacing:.015em; text-shadow:0 1px 1px rgba(0,0,0,.28); }
+.StorySocialComposerField span.WithinLimit { color:#9acb83; }
+.StorySocialComposerField span.AtLimit { color:#ff8178; }
+@media (max-width:900px) {
+ .StorySocialLayout { grid-template-columns:minmax(285px,350px) minmax(0,1fr); }
+ .StorySocialPage .StorySocialPaneHeader h2 { font-size:clamp(25px,3.2vw,29px); }
+}
+@media (max-width:520px) {
+ .StorySocialIdentityStamp { display:grid; flex:0 1 124px; width:124px; min-width:0; max-width:124px; padding:7px 8px; }
+ .StorySocialIdentityStamp strong { font-size:10px; }
+ .StorySocialChatHeader { align-items:flex-start; gap:10px; }
+}
