@@ -89,6 +89,8 @@ jobs:
           const ServerWrapper = fs.readFileSync("server-v11.js", "utf8");
           for (const [Text, Needle, Label] of [
               [Bridge, "assistant.lamda.BardFrontendService/StreamGenerate", "Gemini web-session endpoint"],
+              [Bridge, "RequestData[79] = 1;", "tested Gemini request payload"],
+              [Bridge, "let Answer = \"\";", "Gemini answer parser"],
               [Bridge, 'credentials: "include"', "signed-in Gemini browser credentials"],
               [Bridge, "x-goog-ext-525001261-jspb", "Gemini web-session model header"],
               [Bridge, "GM_addValueChangeListener", "cross-tab session bridge"],
@@ -179,7 +181,10 @@ jobs:
               ["storybot:clientAnswer", "browser-session StoryBot response handler"],
               ['STORYBOT_LOCAL_FALLBACK || "").toLowerCase() === "true"', "local model warmup environment guard"],
               ['text: "@StoryBot " + Question', "StoryBot question chat message"],
-              ['username: StoryBotName', "StoryBot response identity"]
+              ['username: StoryBotName', "StoryBot response identity"],
+              ["StoryBotMasterPrompt", "StoryBot master prompt"],
+              ["gameHasStarted: GameHasStarted", "server-authoritative game start state"],
+              ["GAME-STATE HONESTY", "StoryBot truthful game-state rule"]
           ];
           for (const [Needle, Label] of Required) {
               if (!Source.includes(Needle)) throw new Error("Generated server is missing " + Label + ".");
