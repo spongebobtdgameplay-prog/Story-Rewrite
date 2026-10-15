@@ -41,7 +41,7 @@
     async function AddRequestToQueue(Request) {
         const Queue = NormalizeQueue(await GM_getValue(QueueKey, []));
         if (!Queue.some(Item => Item.id === Request.id)) {
-            Queue.push({ id: Request.id, prompt: Request.prompt.slice(0, 1200), createdAt: Date.now() });
+            Queue.push({ id: Request.id, prompt: Request.prompt.slice(0, 9000), createdAt: Date.now() });
             await GM_setValue(QueueKey, Queue.slice(-25));
         }
     }
@@ -95,15 +95,33 @@
         const Prompt = String(PromptText || "").trim();
         if (!Prompt) throw new TypeError("The Gemini prompt is empty.");
         const { AuthorizationToken, BuildLabel } = await ReadGeminiSessionConfig();
-        const DispatchUrl = new URL("https://gemini.google.com/_/BardChatUi/data/assistant.lamda.BardFrontendService/StreamGenerate");
+        const AccountPrefix = location.pathname.match(/^\/u\/\d+/)?.[0] || "";
+        const DispatchUrl = new URL(location.origin + AccountPrefix + "/_/BardChatUi/data/assistant.lamda.BardFrontendService/StreamGenerate");
         DispatchUrl.searchParams.set("bl", BuildLabel);
         DispatchUrl.searchParams.set("hl", "en");
-        DispatchUrl.searchParams.set("pageId", "none");
-        DispatchUrl.searchParams.set("_reqid", String(Math.floor(Math.random() * 90000000) + 10000000));
+        DispatchUrl.searchParams.set("_reqid", String(Date.now() % 1000000));
         DispatchUrl.searchParams.set("rt", "c");
-        const InnerPayload = [[Prompt], null, null];
+        const RequestData = Array(80).fill(null);
+        RequestData[0] = [Prompt, 0, null, null, null, null, 0];
+        RequestData[1] = ["en"];
+        RequestData[2] = ["", "", "", null, null, null, null, null, null, ""];
+        RequestData[6] = [0];
+        RequestData[7] = 1;
+        RequestData[10] = 1;
+        RequestData[11] = 0;
+        RequestData[17] = [[4]];
+        RequestData[18] = 0;
+        RequestData[27] = 1;
+        RequestData[30] = [4];
+        RequestData[41] = [2];
+        RequestData[45] = 1;
+        RequestData[53] = 0;
+        RequestData[59] = crypto.randomUUID();
+        RequestData[61] = [];
+        RequestData[68] = 1;
+        RequestData[79] = 1;
         const BodyParameters = new URLSearchParams();
-        BodyParameters.set("f.req", JSON.stringify([null, JSON.stringify(InnerPayload)]));
+        BodyParameters.set("f.req", JSON.stringify([null, JSON.stringify(RequestData)]));
         BodyParameters.set("at", AuthorizationToken);
         const ModelHeader = '[1,null,null,null,"9ec249fc9ad08861",null,null,0,[4]]';
         const Controller = new AbortController();
@@ -136,19 +154,24 @@
         const CleanedText = ResponseText.replace(/^\)\]\}'\s*/, "");
         const ResponseLines = CleanedText.split(/\r?\n/).map(Line => Line.trim()).filter(Boolean);
         for (const Line of ResponseLines) {
-            const FirstBracket = Line.indexOf("[");
-            if (FirstBracket < 0) continue;
-            let ParsedFrame;
-            try { ParsedFrame = JSON.parse(Line.slice(FirstBracket)); } catch { continue; }
-            if (!Array.isArray(ParsedFrame)) continue;
-            for (const Chunk of ParsedFrame) {
-                if (!Array.isArray(Chunk) || Chunk[0] !== "wrb.fr" || typeof Chunk[2] !== "string") continue;
-                try {
-                    const InnerData = JSON.parse(Chunk[2]);
-                    const Answer = InnerData?.[4]?.[0]?.[1]?.[0];
-                    if (typeof Answer === "string" && Answer.trim()) return Answer.trim().slice(0, 700);
-                } catch {}
-            }
+            if (!Line.includes('"wrb.fr"')) continue;
+            const Start = Line.indexOf('[["wrb.fr"');
+            if (Start < 0) continue;
+            try {
+                const Frame = JSON.parse(Line.slice(Start));
+                const InnerText = Frame?.[0]?.[2];
+                if (typeof InnerText !== "string") continue;
+                const Inner = JSON.parse(InnerText);
+                const Candidates = Inner?.[4];
+                if (!Array.isArray(Candidates)) continue;
+                for (const Candidate of Candidates) {
+                    const CandidateText = Candidate?.[1]?.[0];
+                    if (typeof CandidateText === "string" && CandidateText.trim()) {
+                        Answer = CandidateText;
+                    }
+                }
+                if (Answer) return Answer.trim().slice(0, 700);
+            } catch {}
         }
         console.error("[Story Rewrite Gemini Bridge] No answer found:", ResponseText.slice(0, 1500));
         throw new Error("Gemini returned no extractable answer. The private web response format may have changed.");
