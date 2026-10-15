@@ -12,12 +12,12 @@ From the repository terminal, run:
 
     bash storybot-cloud-browser/start.sh
 
-The first start creates a private token file at storybot-cloud-browser/.env. Copy the printed token somewhere secure; never commit it. The browser profile is stored outside the repository at /workspaces/.storybot-gemini-profile and survives ordinary Codespace stops while the workspace storage remains.
+The first start creates storybot-cloud-browser/.env containing a private API token and a separate password for the remote browser console. The startup log displays those values when the file is first created; you can also read them from that ignored local file inside the Codespace. Never commit the file or paste either secret into chat. The persistent Gemini profile is stored in the ignored repository folder .storybot-gemini-profile and survives ordinary Codespace stops while the workspace storage remains.
 
 ## Port visibility is important
 
 In the Codespaces PORTS tab:
-- Port 6080 is the noVNC browser console. Keep it PRIVATE. Open its forwarded URL and use the browser shown there to sign in to the dedicated Gemini account.
+- Port 6080 is the noVNC browser console. Keep it PRIVATE. Open its forwarded URL and enter STORYBOT_VNC_PASSWORD when prompted, then use the browser shown there to sign in to the dedicated Gemini account.
 - Port 8765 is the worker API. Set this port to PUBLIC so the Render backend can reach it over HTTPS. The API requires the bearer token for every /ask request.
 
 Do not expose port 5900. The VNC listener binds to localhost; noVNC on private port 6080 is the only browser-control route.
