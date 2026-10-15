@@ -17,7 +17,7 @@ The first start creates storybot-cloud-browser/.env containing a private API tok
 ## Port visibility is important
 
 In the Codespaces PORTS tab:
-- Port 6080 is the noVNC browser console. Keep it PRIVATE. Open its forwarded URL and enter STORYBOT_VNC_PASSWORD when prompted, then use the browser shown there to sign in to the dedicated Gemini account.
+- Port 6080 is the noVNC browser console. Keep it PRIVATE. Open the forwarded URL with `/vnc.html?autoconnect=1&resize=remote` appended. Enter STORYBOT_VNC_PASSWORD when prompted, then use the cloud browser shown there to sign in to the dedicated Gemini account.
 - Port 8765 is the worker API. Set this port to PUBLIC so the Render backend can reach it over HTTPS. The API requires the bearer token for every /ask request.
 
 Do not expose port 5900. The VNC listener binds to localhost; noVNC on private port 6080 is the only browser-control route.
