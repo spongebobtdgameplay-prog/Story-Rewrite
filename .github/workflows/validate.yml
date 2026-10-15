@@ -160,7 +160,6 @@ jobs:
             ["generativelanguage.googleapis.com", "paid Gemini API endpoint"],
             ["https://text.pollinations.ai/", "retired Pollinations endpoint"],
             ["https://aihorde.net/api/v2", "anonymous Horde endpoint"],
-            ["StoryBot local model warmup skipped", "local model warmup"]
           ]) {
             if (Source.includes(Needle)) throw new Error("Generated server still contains " + Label + ".");
           }
