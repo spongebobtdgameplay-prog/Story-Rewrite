@@ -4,6 +4,7 @@ let SocialSocket = null;
 let SocialSocketPromise = null;
 let SocialCurrentUser = null;
 let SocialSelectedUser = null;
+let SocialActiveUsername = "";
 let SocialSearchTimer = null;
 let SocialSearchRequestId = 0;
 const SocialMessageIds = new Set();
@@ -15,6 +16,29 @@ function SocialById(Id) {
 function SocialInitial(Name) {
     const Text = String(Name || "?").trim();
     return Text.slice(0, 1).toUpperCase() || "?";
+}
+
+function SocialUpdateActiveUserButtons() {
+    const Selected = String(SocialActiveUsername || "").toLowerCase();
+    const List = SocialById("SocialUserList");
+    List?.querySelectorAll("[data-social-username]").forEach(Button => {
+        const Active = String(Button.dataset.socialUsername || "").toLowerCase() === Selected;
+        Button.classList.toggle("Active", Active);
+        Button.setAttribute("aria-pressed", Active ? "true" : "false");
+    });
+}
+
+function SocialFocusAndRevealSmooth(Element) {
+    if (!Element) return;
+    try { Element.focus({ preventScroll: true }); } catch { Element.focus(); }
+    const ReducedMotion = Boolean(window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches);
+    try {
+        Element.scrollIntoView({
+            behavior: ReducedMotion ? "auto" : "smooth",
+            block: "nearest",
+            inline: "nearest"
+        });
+    } catch {}
 }
 
 function SocialPresenceLabel(Presence) {
@@ -93,9 +117,10 @@ function SocialRenderUsers(Users) {
     }
 
     List.innerHTML = Users.map(function(User) {
-        const Active = SocialSelectedUser && String(SocialSelectedUser.username).toLowerCase() === String(User.username).toLowerCase();
+        const Active = String(SocialActiveUsername || "").toLowerCase() === String(User.username).toLowerCase();
         return '<button class="StorySocialUserButton' + (Active ? ' Active' : '') +
-            '" type="button" data-social-username="' + String(User.username).replace(/"/g, '&quot;') + '">' +
+            '" type="button" aria-pressed="' + (Active ? 'true' : 'false') +
+            '" data-social-username="' + String(User.username).replace(/"/g, '&quot;') + '">' +
             '<span class="StorySocialAvatar" aria-hidden="true">' + SocialInitial(User.username) + '</span>' +
             '<span class="StorySocialUserCopy">' +
                 '<span class="StorySocialUserName">' + String(User.username) + '</span>' +
@@ -196,6 +221,8 @@ async function SocialLoadConversation() {
 async function SelectSocialUser(Username) {
     if (!Username) return;
 
+    SocialActiveUsername = String(Username).toLowerCase();
+    SocialUpdateActiveUserButtons();
     SocialSelectedUser = null;
     SocialShowLoadingState();
 
@@ -220,7 +247,7 @@ async function SelectSocialUser(Username) {
     SocialRenderStats(SocialSelectedUser);
     SocialSetStatus(SocialById("SocialChatStatus"), "");
     await SocialLoadConversation();
-    SocialById("SocialMessageInput")?.focus();
+    SocialFocusAndRevealSmooth(SocialById("SocialMessageInput"));
     const SearchInput = SocialById("SocialSearchInput");
     if (SearchInput && SearchInput.value.trim()) SocialSearchUsers(SearchInput.value.trim());
 }

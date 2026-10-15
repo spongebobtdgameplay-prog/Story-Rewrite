@@ -302,7 +302,7 @@ function BuildStoryBotCommandPopup(Input) {
                 const Start = Match ? Selection - Match[2].length : Selection;
 
                 Input.value = Value.slice(0, Start) + Command.command + " " + After;
-                Input.focus();
+                Input.focus({ preventScroll: true });
                 const Caret = Start + Command.command.length + 1;
                 Input.setSelectionRange(Caret, Caret);
                 ClosePopup();
@@ -438,7 +438,7 @@ function CreateStoryBotComposer(Input) {
             Event.preventDefault();
             Composer.remove();
             Input.dataset.storyBotComposerActive = "0";
-            Input.focus();
+            Input.focus({ preventScroll: true });
         }
     });
 
@@ -450,7 +450,7 @@ function CreateStoryBotComposer(Input) {
         Composer.remove();
         Input.dataset.storyBotComposerActive = "0";
         Input.hidden = false;
-        Input.focus();
+        Input.focus({ preventScroll: true });
     });
 
     UpdateStoryBotDedicatedComposer(Composer);
@@ -492,7 +492,7 @@ function FocusStoryBotDedicatedComposer(Input, Question = "") {
     QuestionInput.value = NormalizeStoryBotQuestionText(Question);
     UpdateStoryBotDedicatedComposer(Composer);
     SetStoryBotComposerStatus(Composer, "Your message goes directly to StoryBot.");
-    QuestionInput.focus();
+    QuestionInput.focus({ preventScroll: true });
     const End = QuestionInput.value.length;
     try { QuestionInput.setSelectionRange(End, End); } catch {}
     return true;
@@ -516,38 +516,59 @@ function MoveMentionToStoryBotComposer(Input) {
     return FocusStoryBotDedicatedComposer(Input, Question);
 }
 
+function DismissStoryBotComposer(Composer, NormalChatInput) {
+    if (!Composer) return;
+    Composer.classList.add("IsSending");
+    Composer.setAttribute("aria-hidden", "true");
+    if (NormalChatInput) {
+        NormalChatInput.dataset.storyBotComposerActive = "0";
+        try { NormalChatInput.focus({ preventScroll: true }); } catch { NormalChatInput.focus({ preventScroll: true }); }
+    }
+    const ReducedMotion = Boolean(window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches);
+    if (ReducedMotion) {
+        Composer.remove();
+        return;
+    }
+    window.setTimeout(() => Composer.remove(), 220);
+}
+
 async function SubmitStoryBotDedicated(Composer) {
     const Input = Composer?.querySelector(".StoryBotQuestionInput");
     const Send = Composer?.querySelector(".StoryBotSendButton");
-    if (!Input || !Send) return;
+    if (!Input || !Send || Composer.dataset.storyBotSubmitting === "1") return;
 
     const Question = NormalizeStoryBotQuestionText(Input.value);
     if (!Question) {
         SetStoryBotComposerStatus(Composer, "Please enter at least one character.", "error");
-        Input.focus();
+        ShowStoryBotError("Type a question for StoryBot before sending.");
+        try { Input.focus({ preventScroll: true }); } catch { Input.focus({ preventScroll: true }); }
         return;
     }
 
     const Socket = GetConnectedStoryBotSocket();
     if (!Socket?.connected) {
-        SetStoryBotComposerStatus(Composer, "Multiplayer is offline. Reconnect to the room first.", "error");
+        const ErrorText = "Multiplayer is offline. Reconnect to the room first.";
+        SetStoryBotComposerStatus(Composer, ErrorText, "error");
+        ShowStoryBotError(ErrorText);
         SetStoryBotConnectionState("offline");
         return;
     }
 
-    const Container = GetStoryBotContainerForInput(
-        Composer.closest(".ChatPanelBody, .GameChatBody")?.querySelector(".ChatInput")
-    );
+    const NormalChatInput = Composer.closest(".ChatPanelBody, .GameChatBody")?.querySelector(".ChatInput");
+    const Container = GetStoryBotContainerForInput(NormalChatInput);
     const ContainerId = Container?.id || "ChatMessages";
 
-    if(IsStoryBotBusy()){
-        SetStoryBotComposerStatus(Composer,"StoryBot is already answering. Please wait for it to finish.","thinking");
+    if (IsStoryBotBusy()) {
+        const ErrorText = "StoryBot is already answering. Please wait for it to finish.";
+        SetStoryBotComposerStatus(Composer, ErrorText, "thinking");
+        ShowStoryBotError(ErrorText);
         return;
     }
-    StoryBotLocalRequestBusy=true;
+
+    Composer.dataset.storyBotSubmitting = "1";
+    StoryBotLocalRequestBusy = true;
     RefreshStoryBotComposerLock();
     SetStoryBotTyping(true);
-    SetStoryBotComposerStatus(Composer,"StoryBot is thinking...","thinking");
 
     const Result = await new Promise(resolve => {
         let Finished = false;
@@ -572,29 +593,25 @@ async function SubmitStoryBotDedicated(Composer) {
         }
     });
 
-    StoryBotLocalRequestBusy=false;
-    RefreshStoryBotComposerLock();
-    SetStoryBotTyping(false);
-
     if (!Result?.ok) {
-        SetStoryBotComposerStatus(Composer, Result?.error || "StoryBot could not answer right now.", "error");
-        Input.focus();
+        StoryBotLocalRequestBusy = false;
+        RefreshStoryBotComposerLock();
+        SetStoryBotTyping(StoryBotRoomBusy);
+        const ErrorText = Result?.error || "StoryBot could not answer right now.";
+        SetStoryBotComposerStatus(Composer, ErrorText, "error");
+        ShowStoryBotError(ErrorText);
+        delete Composer.dataset.storyBotSubmitting;
+        try { Input.focus({ preventScroll: true }); } catch { Input.focus({ preventScroll: true }); }
         return;
     }
 
     Input.value = "";
     UpdateStoryBotDedicatedComposer(Composer);
-    SetStoryBotComposerStatus(Composer, "Message sent. Ask another question anytime.");
+    DismissStoryBotComposer(Composer, NormalChatInput);
 
-    const NormalChatInput = Composer.closest(".ChatPanelBody, .GameChatBody")?.querySelector(".ChatInput");
-    Composer.remove();
-    if (NormalChatInput) NormalChatInput.dataset.storyBotComposerActive = "0";
-
-    if (Result.message) {
-        RenderStoryBotReplyMessage(Result.message, ContainerId);
-    }
-
-    NormalChatInput?.focus();
+    // The user message was already broadcast by the server. The bot reply arrives
+    // separately via room:chat; keep the lock until the server says typing=false.
+    if (Result.message?.bot) RenderStoryBotReplyMessage(Result.message, ContainerId);
 }
 
 async function SubmitStoryBotFromChat(Form) {
@@ -717,6 +734,7 @@ function BindStoryBotSocket(Socket) {
 
     Socket.on("room:botTyping", Payload => {
         StoryBotRoomBusy=Boolean(Payload?.typing);
+        if (!StoryBotRoomBusy) StoryBotLocalRequestBusy=false;
         RefreshStoryBotComposerLock();
         SetStoryBotTyping(StoryBotRoomBusy);
     });
@@ -728,6 +746,7 @@ function BindStoryBotSocket(Socket) {
 
     Socket.on("disconnect", () => {
         StoryBotRoomBusy=false;
+        StoryBotLocalRequestBusy=false;
         RefreshStoryBotComposerLock();
         SetStoryBotTyping(false);
     });
