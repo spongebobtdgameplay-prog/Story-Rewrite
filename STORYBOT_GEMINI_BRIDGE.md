@@ -1,20 +1,24 @@
-# Story Rewrite Gemini Session Bridge
+# Story Rewrite — Gemini website-session helper
 
-This uses the **Gemini website-session method**, not the Gemini Developer API.
+StoryBot uses the signed-in Gemini website session, **not** the paid Gemini Developer API.
 
-## Setup
-1. Install the Tampermonkey browser extension.
-2. Create a new userscript in Tampermonkey and paste the contents of `story-rewrite-gemini-bridge.user.js`, then save and enable it.
-3. Open Story Rewrite at https://story-rewrite-iota.vercel.app and join a multiplayer room.
-4. Open a separate tab to https://gemini.google.com, sign in, and leave that tab open.
-5. Ask StoryBot normally, or run `AskAI("your question")` in the Story Rewrite page's developer console.
+## Current setup
 
-## How it works
-- Story Rewrite sends prompts to the userscript bridge.
-- Tampermonkey local storage relays prompts and answers between the two tabs.
-- The private `StreamGenerate` request runs only on the Gemini website origin, where the signed-in tab's cookies are available.
-- The Gemini session token and cookies are not sent to Render or stored in the Story Rewrite app.
+1. Install and enable the repository file `story-rewrite-gemini-bridge.user.js` in Tampermonkey on the **room host's browser only**.
+2. Open Story Rewrite at https://story-rewrite-iota.vercel.app and create or host a multiplayer room.
+3. In that same browser profile, open https://gemini.google.com/app, sign in, and leave the Gemini tab open.
+4. The host can then handle StoryBot requests for the room. Other players do not need to install the helper or sign into Gemini.
 
-## Limitations
-- Keep at least one signed-in Gemini tab open while using StoryBot.
-- This uses a private, undocumented Gemini web endpoint. Google can change the request/response format at any time.
+## Session security
+
+- The helper reads Gemini's page request token (`SNlM0e`) inside the signed-in Gemini tab. This is **not** a reusable API key and it is not configured in Render.
+- Gemini session cookies and the page token stay in the host's browser. The Story Rewrite backend receives the prompt and generated answer, not the Google session credentials.
+- Do not paste Gemini cookies or page tokens into chat, GitHub, or Render environment variables.
+
+## StoryBot instructions and game-state context
+
+The backend appends StoryBot's role instructions and a server-authoritative room snapshot before forwarding each question. That snapshot includes the room status, whether the game started or ended, players/readiness, stage objective and threats, votes, lives, recent chat, and last outcome. StoryBot is instructed not to invent missing facts or claim the game started unless the server snapshot confirms it.
+
+## Browser limitation
+
+The Gemini website endpoint is private and undocumented. Story Rewrite's normal page cannot make that authenticated request directly: browser same-origin/CORS rules prevent one website from freely executing and reading another website's credentialed fetch. The helper is the current local-browser relay for that reason. Google may change the endpoint or session format without notice.
