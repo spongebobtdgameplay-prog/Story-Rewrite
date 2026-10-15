@@ -184,6 +184,8 @@ jobs:
               ['username: StoryBotName', "StoryBot response identity"],
               ["StoryBotMasterPrompt", "StoryBot master prompt"],
               ["gameHasStarted: GameHasStarted", "server-authoritative game start state"],
+              ["GeminiSocket.emit", "host browser session receives the Gemini prompt"],
+              ["requesterSocketId: Socket.id", "requester identity retained for response errors"],
               ["GAME-STATE HONESTY", "StoryBot truthful game-state rule"]
           ];
           for (const [Needle, Label] of Required) {
