@@ -202,5 +202,28 @@ jobs:
               ["storybot:clientGenerate", "obsolete client-side Gemini relay"],
               ["storybot:clientAnswer", "obsolete browser-session answer event"],
               ["GeminiSocket.emit", "obsolete host-browser relay"],
-              ["generativelanguage.googleapis.com", "paid Gemini Developer API endpoint"]
-          ];undefined
+              ["generativelanguage.googleapis.com", "paid Gemini Developer API endpoint"],
+              ["private StoryBot prompt", "obsolete private StoryBot prompt patch"],
+              ["botPromptFor", "obsolete StoryBot prompt state"],
+              ["MaybeReplyAsStoryBot", "obsolete automatic StoryBot response path"]
+          ];
+          for (const [Needle, Label] of Forbidden) {
+              if (Source.includes(Needle)) throw new Error("Generated server still contains " + Label + ".");
+          }
+
+          const ConnectionStart = Source.indexOf('Io.on("connection", Socket => {');
+          const StoryBotHandler = Source.indexOf('    Socket.on("storybot:ask", async');
+          const ChatHandler = Source.indexOf('    Socket.on("room:chat", async Payload =>');
+          const ConnectionEnd = Source.indexOf('\n});\n\nHttpServer.listen', StoryBotHandler);
+          if (!(ConnectionStart >= 0 && ConnectionStart < StoryBotHandler && StoryBotHandler < ChatHandler && ChatHandler < ConnectionEnd)) {
+              throw new Error("StoryBot or normal chat handler is outside the Socket.IO connection scope.");
+          }
+
+          console.log("Generated StoryBot server patch chain OK.");
+          NODE
+
+      - run: node --check dialog.js
+      - run: node --check dialog-connection.js
+      - run: node --check game-enhancements.js
+      - run: node --check mobile-controls.js
+      - run: node --check tutorial.js
