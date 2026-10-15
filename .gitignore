@@ -1,3 +1,4 @@
 .storybot-model/
 __pycache__/
 *.pyc
+.storybot-gemini-profile/
