@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Story Rewrite Gemini Session Bridge
 // @namespace    https://story-rewrite-iota.vercel.app/
-// @version      1.0.0
+// @version      1.1.0
 // @description  Bridges Story Rewrite StoryBot prompts to the signed-in Gemini web session in another tab.
 // @match        https://gemini.google.com/*
 // @match        https://story-rewrite-iota.vercel.app/*
