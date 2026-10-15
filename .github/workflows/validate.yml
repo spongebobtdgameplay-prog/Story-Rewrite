@@ -18,6 +18,7 @@ jobs:
       - run: node --check server-v9.js
       - run: node --check server-v10.js
       - run: node --check server-v11.js
+      - run: node --check server-v12.js
       - run: node --check server-config.js
       - run: node --check network.js
       - run: node --check app.js
@@ -33,7 +34,7 @@ jobs:
       - run: node --check moderation-version.js
       - run: node --check host-controls.js
       - run: node --check ai-chat.js
-      - run: node --check storybot-gemini-console.js
+      - run: python -m py_compile storybot-cloud-browser/worker.py
       - name: Validate StoryBot browser composer
         run: |
           node <<'NODE'
@@ -49,13 +50,11 @@ jobs:
               [AI, "function GetActiveMentionText", "mention lookup helper"],
               [AI, "async function SubmitStoryBotFromChat", "normal chat submit path"],
               [AI, "storybot:ask", "direct StoryBot socket event"],
-              [AI, "function AskAI(PromptText)", "console AskAI helper"],
-              [AI, "StoryBotGeminiWindow", "Gemini session window"],
-              [AI, "Connect Gemini", "Gemini session connect button"],
-              [AI, 'Socket.on("storybot:clientGenerate", Payload => HandleStoryBotClientGenerate(Socket, Payload))', "host browser generation listener"],
-              [CSS, ".StoryBotGeminiPanel", "Gemini session panel"],
-              [fs.readFileSync("storybot-gemini-console.js", "utf8"), "assistant.lamda.BardFrontendService/StreamGenerate", "Gemini website endpoint"],
-              [fs.readFileSync("storybot-gemini-console.js", "utf8"), "SNlM0e", "local Gemini session token reader"],
+              [AI, "async function AskAI(PromptText)", "AskAI socket helper"],
+              [AI, 'Socket.on("room:chat", LogStoryBotConsoleReply)', "StoryBot response logger"],
+              [fs.readFileSync("storybot-cloud-browser/worker.py", "utf8"), "launch_persistent_context", "isolated persistent Chromium profile"],
+              [fs.readFileSync("storybot-cloud-browser/worker.py", "utf8"), "async def _ask_gemini", "Gemini website interaction"],
+              [fs.readFileSync("storybot-cloud-browser/worker.py", "utf8"), "STORYBOT_WORKER_TOKEN", "worker authentication"],
               [AI, "STORYBOT RESPONSE", "styled StoryBot console reply"],
               [AI, 'Socket.on("room:chat", LogStoryBotConsoleReply)', "StoryBot room response listener"],
               [Lobby, 'id="ChatInput"', "lobby chat composer"],
@@ -111,8 +110,8 @@ jobs:
           for (const [Text, Needle, Label] of [
             [Docker, "python3", "local Python/model installer"],
             [Docker, "storybot_ai.py", "local model download"],
-            [fs.readFileSync("storybot-gemini-console.js", "utf8"), "generativelanguage.googleapis.com", "paid Gemini API dependency"],
-            [fs.readFileSync("storybot-gemini-console.js", "utf8"), "GEMINI_API_KEY", "Gemini API-key dependency"]
+            [fs.readFileSync("storybot-cloud-browser/worker.py", "utf8"), "assistant.lamda.BardFrontendService/StreamGenerate", "private Gemini endpoint dependency"],
+            [fs.readFileSync("storybot-cloud-browser/worker.py", "utf8"), "SNlM0e", "private session-token extraction"]
           ]) {
             if (Text.includes(Needle)) throw new Error("Obsolete " + Label + " remains.");
           }
@@ -128,7 +127,8 @@ jobs:
             return Test.exports;
           }
 
-          let Source = fs.readFileSync("server-v11.js", "utf8");
+          let Source = fs.readFileSync("server-v12.js", "utf8");
+          Source = CompileWrapper(Source, path.resolve("server-v12.js"));
           Source = CompileWrapper(Source, path.resolve("server-v11.js"));
           Source = CompileWrapper(Source, path.resolve("server-v10.js"));
           Source = CompileWrapper(Source, path.resolve("server-v9.js"));
@@ -142,14 +142,13 @@ jobs:
           }
 
           for (const [Needle, Label] of [
-            ['Socket.on("storybot:ask", async', "StoryBot ask handler"],
-            ['Socket.on("storybot:clientAnswer"', "Gemini response handler"],
-            ['GeminiSocket.emit("storybot:clientGenerate"', "host Gemini session routing"],
-            ["StoryBotSystemPrompt", "AI system instructions"],
-            ["AUTHORITATIVE LIVE GAME CONTEXT (JSON)", "full contextual prompt"],
+            ['Socket.on("storybot:ask"', "StoryBot ask handler"],
+            ["STORYBOT_BROWSER_WORKER_URL", "cloud worker URL configuration"],
+            ["STORYBOT_BROWSER_WORKER_TOKEN", "cloud worker authentication"],
+            ["fetch(WorkerUrl", "cloud worker HTTP request"],
             ["recentChat:", "recent conversation history"],
-            ["gameHasStarted: Status === \"playing\" || Status === \"gameover\"", "authoritative game state"],
-            ["STORYBOT_BRIDGE_TIMEOUT_MS", "bounded browser-session request"]
+            ["gameHasStarted", "authoritative game state"],
+            ["Abort.signal.aborted", "bounded worker request timeout"]
           ]) {
             if (!Source.includes(Needle)) throw new Error("Generated server is missing " + Label + ".");
           }
@@ -165,7 +164,7 @@ jobs:
           }
 
           const ConnectionStart = Source.indexOf('Io.on("connection", Socket => {');
-          const StoryBotHandler = Source.indexOf('    Socket.on("storybot:ask", async');
+          const StoryBotHandler = Source.indexOf('    Socket.on("storybot:ask"');
           const ChatHandler = Source.indexOf('    Socket.on("room:chat", async Payload =>');
           const ConnectionEnd = Source.indexOf("\n});\n\nHttpServer.listen", StoryBotHandler);
           if (!(ConnectionStart >= 0 && ConnectionStart < StoryBotHandler && StoryBotHandler < ChatHandler && ChatHandler < ConnectionEnd)) {
