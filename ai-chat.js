@@ -860,7 +860,9 @@ window.postMessage({
 
 function HandleStoryBotClientGenerate(Socket, Payload) {
     const RequestId = String(Payload?.requestId || "");
-    const Question = NormalizeStoryBotQuestionText(Payload?.question || "");
+    const Question = String(Payload?.question || "")
+        .replace(/[\u0000-\u001F\u007F]/g, " ")
+        .replace(/\s+/g, " ").trim().slice(0, 9000);
     if (!RequestId || !Question) return;
 
     if (!StoryBotGeminiBridgeReady) {
