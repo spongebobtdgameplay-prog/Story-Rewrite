@@ -153,6 +153,7 @@
         }
         const CleanedText = ResponseText.replace(/^\)\]\}'\s*/, "");
         const ResponseLines = CleanedText.split(/\r?\n/).map(Line => Line.trim()).filter(Boolean);
+        let Answer = "";
         for (const Line of ResponseLines) {
             if (!Line.includes('"wrb.fr"')) continue;
             const Start = Line.indexOf('[["wrb.fr"');
