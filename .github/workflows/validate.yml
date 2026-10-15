@@ -50,7 +50,7 @@ jobs:
               [AI, "storybot:ask", "direct StoryBot socket event"],
               [AI, "function AskAI(PromptText)", "console AskAI helper"],
               [AI, "STORYBOT RESPONSE", "styled StoryBot console reply"],
-              [AI, "storybot:clientGenerate", "browser-session StoryBot client request"],
+              [AI, 'Socket.on("room:chat", LogStoryBotConsoleReply)', "StoryBot room response listener"],
               [Lobby, 'id="ChatInput"', "lobby chat composer"],
               [Lobby, "@StoryBot", "lobby StoryBot instruction"],
               [Game, 'id="GameChatInput"', "game chat composer"],
