@@ -16,7 +16,13 @@ const V41PatchCode = "if (!Source.includes(\"const BackendVersion = 37;\")) {\n 
 const InjectionTailSearch = String.raw`+ "\\n\\nconst RuntimeModule = new Module(SourcePath, module);",`;
 const InjectionTailReplacement = String.raw`+ "\\n\\n" + ` + JSON.stringify(V41PatchCode) + String.raw` + "\\n\\nconst RuntimeModule = new Module(SourcePath, module);",`;
 
-ReplaceWrapperRequired(InjectionTailSearch, InjectionTailReplacement, "cloud browser patch injection");
+const InjectionTailIndex = WrapperSource.lastIndexOf(InjectionTailSearch);
+if (InjectionTailIndex < 0) {
+    throw new Error("server-v12 patch failed: cloud browser patch injection");
+}
+WrapperSource = WrapperSource.slice(0, InjectionTailIndex)
+    + InjectionTailReplacement
+    + WrapperSource.slice(InjectionTailIndex + InjectionTailSearch.length);
 
 const RuntimeModule = new Module(WrapperPath, module);
 RuntimeModule.filename = WrapperPath;
