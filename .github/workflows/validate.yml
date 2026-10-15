@@ -125,7 +125,12 @@ jobs:
             const Test = new Module(Filename, module);
             Test.filename = Filename;
             Test.paths = Module._nodeModulePaths(path.dirname(Filename));
-            Test._compile(Exported, Filename);
+            try {
+              Test._compile(Exported, Filename);
+            } catch (Error) {
+              console.error("StoryBot generated-server validation failed while compiling " + Filename + ": " + Error.name + ": " + Error.message);
+              process.exit(1);
+            }
             return Test.exports;
           }
 
