@@ -46,76 +46,104 @@
   function ReadGeminiSessionConfig() {
     const Html = document.documentElement?.innerHTML || "";
     const PageData = window.WIZ_global_data || {};
-    let AuthorizationToken = typeof PageData.SNlM0e === "string" ? PageData.SNlM0e : "";
-    let BuildLabel = typeof PageData.cfb2h === "string" ? PageData.cfb2h : "";
 
-    if (!AuthorizationToken) AuthorizationToken = Html.match(/"SNlM0e"\s*:\s*"([^"]+)"/)?.[1] || "";
-    if (!BuildLabel) BuildLabel = Html.match(/"cfb2h"\s*:\s*"([^"]+)"/)?.[1] || "";
+    const ReadPageValue = Key => {
+      const Direct = PageData[Key];
+      if (typeof Direct === "string" && Direct.trim()) return Direct.trim();
+      if ((typeof Direct === "number") && Number.isFinite(Direct)) return String(Direct);
+      return Html.match(new RegExp('"' + Key + '"\\s*:\\s*"([^"]+)"'))?.[1] || "";
+    };
 
-    const ResourceUrls = performance.getEntriesByType("resource").map(Entry => {
-      try { return new URL(Entry.name); } catch { return null; }
-    }).filter(Boolean);
-    const ResourceBuild = ResourceUrls.map(Url => Url.searchParams.get("bl")).find(Boolean);
-    if (ResourceBuild) BuildLabel = ResourceBuild;
-    if (!BuildLabel) BuildLabel = Html.match(/boq_gemini-web-uiserver_[A-Za-z0-9._-]+/)?.[0] || "";
+    const AuthorizationToken = ReadPageValue("SNlM0e");
+    let BuildLabel = ReadPageValue("cfb2h");
+    const FrontEndSessionId = ReadPageValue("FdrFJe");
+    const Locale = Html.match(/<html[^>]*\blang=["']([^"']+)/i)?.[1]
+      || document.documentElement?.lang
+      || "en-US";
 
-    if (!AuthorizationToken || !BuildLabel) {
-      throw new Error("Gemini session token/build label not found. Refresh Gemini while signed in, then paste the helper again.");
+    if (!BuildLabel) {
+      const ResourceUrls = performance.getEntriesByType("resource").map(Entry => {
+        try { return new URL(Entry.name); } catch { return null; }
+      }).filter(Boolean);
+      BuildLabel = ResourceUrls.map(Url => Url.searchParams.get("bl")).find(Boolean) || "";
     }
-    return { AuthorizationToken, BuildLabel };
+    if (!BuildLabel) {
+      BuildLabel = Html.match(/boq_assistant-bard-web-server_[A-Za-z0-9._-]+/)?.[0] || "";
+    }
+
+    if (!AuthorizationToken || !BuildLabel || !FrontEndSessionId) {
+      throw new Error(
+        "Gemini session values are incomplete. Refresh Gemini while signed in, then paste the latest helper again."
+      );
+    }
+    return { AuthorizationToken, BuildLabel, FrontEndSessionId, Locale };
   }
 
   async function AskAI(PromptText) {
     const Prompt = String(PromptText || "").trim().slice(0, 9000);
     if (!Prompt) throw new TypeError("AskAI needs a non-empty prompt.");
 
-    const { AuthorizationToken, BuildLabel } = ReadGeminiSessionConfig();
-    const AccountPrefix = location.pathname.match(/^\/u\/\d+/)?.[0] || "";
+    const {
+      AuthorizationToken,
+      BuildLabel,
+      FrontEndSessionId,
+      Locale
+    } = ReadGeminiSessionConfig();
+
+    const AccountIndex = location.pathname.match(/^\/u\/(\d+)/)?.[1] || "0";
+    const AccountPrefix = AccountIndex !== "0" ? "/u/" + AccountIndex : "";
     const Endpoint = location.origin + AccountPrefix +
       "/_/BardChatUi/data/assistant.lamda.BardFrontendService/StreamGenerate";
+
+    const RequestId = crypto.randomUUID();
     const Query = new URLSearchParams({
       bl: BuildLabel,
-      hl: "en",
-      _reqid: String(Date.now() % 1000000),
+      "f.sid": FrontEndSessionId,
+      hl: Locale,
+      _reqid: String(100000 + Math.floor(Math.random() * 900000)),
       rt: "c"
     });
 
-    const RequestData = Array(80).fill(null);
-    RequestData[0] = [Prompt, 0, null, null, null, null, 0];
-    RequestData[1] = ["en"];
-    RequestData[2] = ["", "", "", null, null, null, null, null, null, ""];
-    RequestData[6] = [0];
-    RequestData[7] = 1;
-    RequestData[10] = 1;
-    RequestData[11] = 0;
-    RequestData[17] = [[4]];
-    RequestData[18] = 0;
-    RequestData[27] = 1;
-    RequestData[30] = [4];
-    RequestData[41] = [2];
-    RequestData[45] = 1;
-    RequestData[53] = 0;
-    RequestData[59] = crypto.randomUUID();
-    RequestData[61] = [];
-    RequestData[68] = 1;
-    RequestData[79] = 1;
+    // Current Gemini Web sends this model/mode metadata in headers. An old
+    // 80-slot body without these headers can be rejected with HTTP 400.
+    const ModelHeader = [];
+    ModelHeader[0] = 1;
+    ModelHeader[4] = "56fdd199312815e2"; // Gemini 3.8 Flash
+    ModelHeader[7] = 0; // Temporary chat disabled.
+    ModelHeader[8] = [4, 5, 6, 8, 4, 5, 6, 8];
+    ModelHeader[11] = 2; // Legacy mode retained by the current web client.
+    ModelHeader[14] = 1; // Native mode.
+    ModelHeader[15] = 1; // Standard thinking level.
+    ModelHeader[16] = RequestId;
 
+    // Current text-only request shape: [null, JSON.stringify([message, null, emptyContextIds]).
+    // FdrFJe is the f.sid session value; it is not the rpcids operation name.
+    const MessageStruct = [Prompt];
+    const RequestPayload = [MessageStruct, null, ["", "", ""]];
     const Body = new URLSearchParams({
       at: AuthorizationToken,
-      "f.req": JSON.stringify([null, JSON.stringify(RequestData)])
+      "f.req": JSON.stringify([null, JSON.stringify(RequestPayload)])
     });
+
+    const Headers = {
+      "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+      "X-Same-Domain": "1",
+      "x-goog-ext-525001261-jspb": JSON.stringify(ModelHeader),
+      "x-goog-ext-525005358-jspb": JSON.stringify([RequestId, 1]),
+      "x-goog-ext-73010989-jspb": "[0]",
+      "x-goog-ext-73010990-jspb": "[0,0,0]"
+    };
+    if (AccountIndex !== "0") Headers["X-Goog-AuthUser"] = AccountIndex;
+
     const Controller = new AbortController();
     const Timeout = setTimeout(() => Controller.abort(), 60000);
     let Response;
-    let ResponseText;
+    let ResponseText = "";
     try {
       Response = await fetch(Endpoint + "?" + Query.toString(), {
         method: "POST",
         credentials: "include",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
-          "X-Same-Domain": "1"
-        },
+        headers: Headers,
         body: Body.toString(),
         signal: Controller.signal
       });
@@ -128,8 +156,14 @@
     }
 
     if (!Response.ok) {
-      console.error("[StoryBot Gemini] HTTP " + Response.status + " response preview:", ResponseText.slice(0, 1200));
-      throw new Error("Gemini web-session request rejected (HTTP " + Response.status + ").");
+      console.error(
+        "[StoryBot Gemini] HTTP " + Response.status + " response preview:",
+        ResponseText.slice(0, 1200)
+      );
+      throw new Error(
+        "Gemini web-session request rejected (HTTP " + Response.status +
+        "). Refresh the signed-in Gemini page and reconnect; Google may have changed the private request format."
+      );
     }
 
     const Lines = ResponseText.replace(/^\)\]\}'\s*/, "")
@@ -150,14 +184,25 @@
           const Text = Candidate?.[1]?.[0];
           if (typeof Text === "string" && Text.trim()) Answer = Text;
         }
-      } catch {}
-    }
-    if (!Answer) {
-      console.error("[StoryBot Gemini] No answer found; response preview:", ResponseText.slice(0, 1800));
-      throw new Error("Gemini returned no extractable answer. Its private response format may have changed.");
+      } catch {
+        // Ignore metadata and partial frames that do not contain a candidate.
+      }
     }
 
-    console.log("%c🤖 STORYBOT GEMINI RESPONSE", "background:#22e65b;color:#000;border:4px solid #000;border-radius:8px;padding:12px 16px;font-size:16px;font-weight:800;white-space:pre-wrap;");
+    if (!Answer.trim()) {
+      console.error(
+        "[StoryBot Gemini] No answer found; response preview:",
+        ResponseText.slice(0, 1800)
+      );
+      throw new Error(
+        "Gemini returned no extractable answer. Its private response format may have changed."
+      );
+    }
+
+    console.log(
+      "%c🤖 STORYBOT GEMINI RESPONSE",
+      "background:#22e65b;color:#000;border:4px solid #000;border-radius:8px;padding:12px 16px;font-size:16px;font-weight:800;white-space:pre-wrap;"
+    );
     console.log(Answer.trim());
     return Answer.trim().slice(0, 700);
   }

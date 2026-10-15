@@ -83,6 +83,7 @@ jobs:
       - name: Validate StoryBot Gemini console session
         run: |
           node --check storybot-gemini-console.js
+          node scripts/check-storybot-gemini-console.js
           node <<'NODE'
           const fs = require("fs");
           const AI = fs.readFileSync("ai-chat.js", "utf8");
@@ -98,6 +99,12 @@ jobs:
               [ConsoleHelper, 'credentials: "include"', "signed-in Gemini browser session"],
               [ConsoleHelper, "window.AskAI = AskAI", "console AskAI helper"],
               [ConsoleHelper, "window.opener.postMessage", "opener relay"],
+              [ConsoleHelper, "FrontEndSessionId", "FdrFJe frontend session identifier"],
+              [ConsoleHelper, '"f.sid": FrontEndSessionId', "Gemini f.sid query value"],
+              [ConsoleHelper, "x-goog-ext-525001261-jspb", "current Gemini model/config header"],
+              [ConsoleHelper, "x-goog-ext-525005358-jspb", "current Gemini request metadata header"],
+              [ConsoleHelper, "x-goog-ext-73010989-jspb", "current Gemini side-channel header 1"],
+              [ConsoleHelper, "x-goog-ext-73010990-jspb", "current Gemini side-channel header 2"],
               [ServerWrapper, "StoryBotMasterPrompt", "StoryBot master prompt"],
               [ServerWrapper, "gameHasStarted: GameHasStarted", "authoritative game start state"],
               [ServerWrapper, "GeminiSocket.emit", "host receives Gemini request"],
