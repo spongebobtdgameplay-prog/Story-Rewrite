@@ -7,7 +7,7 @@ SERVICE_DIR="$ROOT_DIR/storybot-cloud-browser"
 VENV_DIR="$HOME/.venvs/storybot-cloud-browser"
 
 sudo apt-get update
-sudo apt-get install -y xvfb x11vnc novnc websockify xauth
+sudo apt-get install -y python3-venv xvfb x11vnc novnc websockify xauth
 mkdir -p "$(dirname "$VENV_DIR")"
 python3 -m venv "$VENV_DIR"
 "$VENV_DIR/bin/python" -m pip install --upgrade pip
