@@ -940,3 +940,41 @@
 .StorySocialPage * {
     overscroll-behavior-x: none;
 }
+
+/* Social polish v2: fixed viewport backdrop prevents scrolling from moving the gradient. */
+html:has(body.StorySocialPage){min-height:100%;background:#4d301f!important}
+body.StorySocialPage{position:relative;isolation:isolate;min-height:100vh;background:transparent!important}
+body.StorySocialPage::before{
+ content:"";display:block!important;position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:1;
+ background:radial-gradient(circle at 15% 7%,rgba(255,240,207,.24),transparent 24%),radial-gradient(circle at 84% 16%,rgba(60,30,14,.19),transparent 28%),linear-gradient(155deg,#b38b61 0%,#8b6848 42%,#6e4c33 72%,#4d301f 100%);
+ background-repeat:no-repeat;background-size:100% 100%;transform:translateZ(0);will-change:auto
+}
+/* Bold Story Rewrite parchment, leather, and gold styling. */
+.StorySocialTitleMark{border-width:2px;border-color:rgba(245,216,168,.42);box-shadow:inset 0 1px rgba(255,255,255,.1),0 12px 30px rgba(20,9,3,.3)}
+.StorySocialTitleBlock h1{font-weight:900;text-shadow:0 2px 0 rgba(39,20,9,.28),0 6px 20px rgba(23,10,4,.2)}
+.StorySocialTitleBlock p{color:#f0d6ae;font-weight:700}
+.StorySocialLayout{border:2px solid #2b1a10;box-shadow:0 30px 84px rgba(24,10,3,.46),inset 0 1px rgba(255,245,222,.12)}
+.StorySocialSidebar{border-right-width:2px;border-right-color:rgba(47,27,14,.38)}
+.StorySocialPaneHeader{border-bottom-width:2px;border-bottom-color:rgba(86,53,28,.32)}
+.StorySocialPaneHeader h2{font-weight:900;text-shadow:0 1px rgba(255,248,228,.36)}
+.StorySocialSearchBox{border-width:2px;border-color:rgba(102,68,36,.62);box-shadow:inset 0 1px rgba(255,255,255,.72),0 7px 18px rgba(60,32,13,.14)}
+.StorySocialSearchBox input{font-weight:800}
+.StorySocialSearchBox input::placeholder{color:#765537;opacity:1}
+.StorySocialUserButton{border-width:1.5px;border-color:rgba(105,71,37,.32);box-shadow:inset 0 1px rgba(255,255,255,.42),0 3px 8px rgba(65,36,14,.1)}
+.StorySocialUserButton.Active{border-width:2px;border-color:#70451f;box-shadow:0 0 0 3px rgba(161,105,48,.21),0 10px 22px rgba(55,29,10,.2)}
+.StorySocialUserName{font-weight:900}
+.StorySocialUserMeta{color:#68472b;font-weight:800}
+.StorySocialChatHeader{border-bottom-width:2px;border-bottom-color:rgba(227,188,122,.24)}
+.StorySocialUserIdentity h2,.StorySocialChatEmpty h2{font-weight:900;text-shadow:0 2px rgba(18,10,5,.28)}
+.StorySocialProfileStat{border-color:rgba(224,185,121,.22);box-shadow:inset 0 1px rgba(255,233,193,.06),0 4px 12px rgba(10,6,3,.1)}
+.StorySocialProfileStat span{color:#b09a7e;font-weight:900}
+.StorySocialProfileStat strong{font-weight:900}
+.StorySocialMessages{border-bottom:1px solid rgba(12,7,4,.3)}
+.StorySocialMessage{border-width:1.5px;border-color:rgba(225,190,132,.2);box-shadow:0 6px 16px rgba(7,4,2,.22)}
+.StorySocialMessageText{color:#fff0d7;font-weight:700}
+.StorySocialMessage.Sent{border-color:rgba(234,196,126,.48);background:linear-gradient(155deg,#895b33,#5d371c)}
+.StorySocialComposer{border-top-width:2px;border-top-color:rgba(225,187,124,.25)}
+.StorySocialComposerField input{border-width:2px;border-color:rgba(217,178,116,.4);font-weight:700}
+.StorySocialComposerField input:focus{border-color:#d4a15e;box-shadow:0 0 0 3px rgba(208,154,91,.16)}
+.StorySocialSendButton{font-weight:900;letter-spacing:.035em;box-shadow:0 7px 18px rgba(12,6,2,.25),inset 0 1px rgba(255,239,210,.14)}
+.StorySocialSettingsButton{font-weight:900}

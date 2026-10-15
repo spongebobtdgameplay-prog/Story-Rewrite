@@ -8,7 +8,20 @@ const STORY_BOT_COMMANDS = [{
 const BoundBotSockets = new WeakSet();
 const StoryBotRenderedMessageIds = new Set();
 const STORY_BOT_MAX_QUESTION_LENGTH = 1200;
-const STORY_BOT_REQUEST_TIMEOUT = 15000;
+const STORY_BOT_REQUEST_TIMEOUT = 150000;
+let StoryBotRoomBusy = false;
+let StoryBotLocalRequestBusy = false;
+function IsStoryBotBusy(){return StoryBotRoomBusy||StoryBotLocalRequestBusy}
+function RefreshStoryBotComposerLock(){
+ const Busy=IsStoryBotBusy();
+ document.querySelectorAll(".StoryBotComposer").forEach(Composer=>{
+  const Input=Composer.querySelector(".StoryBotQuestionInput");
+  const Send=Composer.querySelector(".StoryBotSendButton");
+  if(Input)Input.disabled=Busy;
+  if(Send)Send.disabled=Busy;
+  Composer.classList.toggle("IsBusy",Busy);
+ });
+}
 
 function GetStoryBotChatContainer() {
     return document.getElementById("GameChatMessages") || document.getElementById("ChatMessages");
@@ -527,10 +540,14 @@ async function SubmitStoryBotDedicated(Composer) {
     );
     const ContainerId = Container?.id || "ChatMessages";
 
-    Send.disabled = true;
-    Input.disabled = true;
+    if(IsStoryBotBusy()){
+        SetStoryBotComposerStatus(Composer,"StoryBot is already answering. Please wait for it to finish.","thinking");
+        return;
+    }
+    StoryBotLocalRequestBusy=true;
+    RefreshStoryBotComposerLock();
     SetStoryBotTyping(true);
-    SetStoryBotComposerStatus(Composer, "StoryBot is thinking...", "thinking");
+    SetStoryBotComposerStatus(Composer,"StoryBot is thinking...","thinking");
 
     const Result = await new Promise(resolve => {
         let Finished = false;
@@ -555,9 +572,9 @@ async function SubmitStoryBotDedicated(Composer) {
         }
     });
 
+    StoryBotLocalRequestBusy=false;
+    RefreshStoryBotComposerLock();
     SetStoryBotTyping(false);
-    Send.disabled = false;
-    Input.disabled = false;
 
     if (!Result?.ok) {
         SetStoryBotComposerStatus(Composer, Result?.error || "StoryBot could not answer right now.", "error");
@@ -586,6 +603,11 @@ async function SubmitStoryBotFromChat(Form) {
     const MentionMatch = Normalized.match(/@story\s*bot\b/i);
     if (!MentionMatch) return false;
 
+    if(IsStoryBotBusy()){
+        Input.value="";
+        ShowStoryBotError("StoryBot is already answering. Please wait for it to finish.");
+        return true;
+    }
     const Question = NormalizeStoryBotQuestionText(
         Normalized.slice(MentionMatch.index + MentionMatch[0].length)
     );
@@ -694,7 +716,9 @@ function BindStoryBotSocket(Socket) {
     Socket.on("connect_error", () => SetStoryBotConnectionState("reconnecting"));
 
     Socket.on("room:botTyping", Payload => {
-        SetStoryBotTyping(Boolean(Payload?.typing));
+        StoryBotRoomBusy=Boolean(Payload?.typing);
+        RefreshStoryBotComposerLock();
+        SetStoryBotTyping(StoryBotRoomBusy);
     });
 
     Socket.on("room:botError", Payload => {
@@ -702,7 +726,11 @@ function BindStoryBotSocket(Socket) {
         ShowStoryBotError(Payload?.error);
     });
 
-    Socket.on("disconnect", () => SetStoryBotTyping(false));
+    Socket.on("disconnect", () => {
+        StoryBotRoomBusy=false;
+        RefreshStoryBotComposerLock();
+        SetStoryBotTyping(false);
+    });
 }
 
 function WrapStoryBotSocketHooks() {
@@ -790,6 +818,7 @@ function InitializeStoryBotUi() {
     BindStoryBotMentionNormalization();
     BindStoryBotCommandPopups();
     SetStoryBotConnectionState("offline");
+    RefreshStoryBotComposerLock();
     RefreshQuietChatState();
 }
 
