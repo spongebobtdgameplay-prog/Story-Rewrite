@@ -80,28 +80,35 @@ jobs:
           console.log("StoryBot browser composer contract OK.");
           NODE
 
-      - name: Validate StoryBot Gemini browser-session bridge
+      - name: Validate StoryBot server-side Gemini session path
         run: |
-          node --check story-rewrite-gemini-bridge.user.js
+          node --check server-v11.js
           node <<'NODE'
           const fs = require("fs");
-          const Bridge = fs.readFileSync("story-rewrite-gemini-bridge.user.js", "utf8");
           const ServerWrapper = fs.readFileSync("server-v11.js", "utf8");
+          const AI = fs.readFileSync("ai-chat.js", "utf8");
           for (const [Text, Needle, Label] of [
-              [Bridge, "assistant.lamda.BardFrontendService/StreamGenerate", "Gemini web-session endpoint"],
-              [Bridge, "RequestData[79] = 1;", "tested Gemini request payload"],
-              [Bridge, "let Answer = \"\";", "Gemini answer parser"],
-              [Bridge, 'credentials: "include"', "signed-in Gemini browser credentials"],
-              [Bridge, "x-goog-ext-525001261-jspb", "Gemini web-session model header"],
-              [Bridge, "GM_addValueChangeListener", "cross-tab session bridge"],
-              [ServerWrapper, "storybot:clientAnswer", "StoryBot room answer event"]
+              [ServerWrapper, "authTokenForGemini", "Render-only Gemini session token"],
+              [ServerWrapper, "GEMINI_SESSION_COOKIE", "Render-only Gemini session cookie"],
+              [ServerWrapper, "GEMINI_BUILD_LABEL", "Render-only Gemini build label"],
+              [ServerWrapper, "StreamGenerate", "Gemini website-session endpoint"],
+              [ServerWrapper, "BuildStoryBotMasterPrompt", "StoryBot master prompt"],
+              [ServerWrapper, "GAME-STATE HONESTY", "truthful game-state instructions"],
+              [ServerWrapper, "gameHasStarted: GameHasStarted", "server-authoritative game-start status"],
+              [AI, 'Socket.timeout(STORY_BOT_REQUEST_TIMEOUT).emit(', "StoryBot socket request path"]
           ]) {
               if (!Text.includes(Needle)) throw new Error("Missing " + Label + ".");
           }
-          if (Bridge.includes("generativelanguage.googleapis.com") || ServerWrapper.includes("generativelanguage.googleapis.com") || ServerWrapper.includes(":generateContent")) {
-              throw new Error("The Gemini Developer API must not be used by this bridge.");
+          if (AI.includes("StoryRewriteGeminiBridge") || AI.includes("storybot:clientGenerate") || AI.includes("GM_setValue")) {
+              throw new Error("The frontend still relies on the obsolete userscript bridge.");
           }
-          console.log("StoryBot Gemini browser-session bridge contract OK.");
+          if (ServerWrapper.includes("generativelanguage.googleapis.com") || ServerWrapper.includes(":generateContent")) {
+              throw new Error("The paid Gemini Developer API must not be used.");
+          }
+          if (fs.existsSync("story-rewrite-gemini-bridge.user.js")) {
+              throw new Error("The Tampermonkey userscript must be removed.");
+          }
+          console.log("StoryBot server-side Gemini website-session contract OK.");
           NODE
 
       - name: Validate StoryBot Python runtime
@@ -178,42 +185,22 @@ jobs:
           }
           const Required = [
               ['Socket.on("storybot:ask", async', "direct StoryBot ask handler"],
-              ["storybot:clientAnswer", "browser-session StoryBot response handler"],
-              ['STORYBOT_LOCAL_FALLBACK || "").toLowerCase() === "true"', "local model warmup environment guard"],
-              ['text: "@StoryBot " + Question', "StoryBot question chat message"],
-              ['username: StoryBotName', "StoryBot response identity"],
-              ["StoryBotMasterPrompt", "StoryBot master prompt"],
-              ["gameHasStarted: GameHasStarted", "server-authoritative game start state"],
-              ["GeminiSocket.emit", "host browser session receives the Gemini prompt"],
-              ["requesterSocketId: Socket.id", "requester identity retained for response errors"],
-              ["GAME-STATE HONESTY", "StoryBot truthful game-state rule"]
+              ["async function AskGeminiWebSession", "server-side Gemini website-session helper"],
+              ["authTokenForGemini", "Render-held session token"],
+              ["GEMINI_SESSION_COOKIE", "Render-held session cookie"],
+              ["GEMINI_BUILD_LABEL", "Render-held build label"],
+              ["BuildStoryBotMasterPrompt", "StoryBot master prompt builder"],
+              ["gameHasStarted: GameHasStarted", "server-authoritative game-start state"],
+              ["GAME-STATE HONESTY", "truthful game-state rule"],
+              ["StreamGenerate", "unofficial Gemini website endpoint"]
           ];
           for (const [Needle, Label] of Required) {
               if (!Source.includes(Needle)) throw new Error("Generated server is missing " + Label + ".");
           }
 
           const Forbidden = [
-              ["private StoryBot prompt", "obsolete private StoryBot prompt patch"],
-              ["botPromptFor", "obsolete StoryBot prompt state"],
-              ["MaybeReplyAsStoryBot", "obsolete automatic StoryBot response path"]
-          ];
-          for (const [Needle, Label] of Forbidden) {
-              if (Source.includes(Needle)) throw new Error("Generated server still contains " + Label + ".");
-          }
-
-          const ConnectionStart = Source.indexOf('Io.on("connection", Socket => {');
-          const StoryBotHandler = Source.indexOf('    Socket.on("storybot:ask", async');
-          const ChatHandler = Source.indexOf('    Socket.on("room:chat", async Payload =>');
-          const ConnectionEnd = Source.indexOf('\n});\n\nHttpServer.listen', StoryBotHandler);
-          if (!(ConnectionStart >= 0 && ConnectionStart < StoryBotHandler && StoryBotHandler < ChatHandler && ChatHandler < ConnectionEnd)) {
-              throw new Error("StoryBot or normal chat handler is outside the Socket.IO connection scope.");
-          }
-
-          console.log("Generated StoryBot server patch chain OK.");
-          NODE
-
-      - run: node --check dialog.js
-      - run: node --check dialog-connection.js
-      - run: node --check game-enhancements.js
-      - run: node --check mobile-controls.js
-      - run: node --check tutorial.js
+              ["storybot:clientGenerate", "obsolete client-side Gemini relay"],
+              ["storybot:clientAnswer", "obsolete browser-session answer event"],
+              ["GeminiSocket.emit", "obsolete host-browser relay"],
+              ["generativelanguage.googleapis.com", "paid Gemini Developer API endpoint"]
+          ];undefined
