@@ -12,7 +12,7 @@ from pydantic import BaseModel, Field
 from playwright.async_api import async_playwright
 
 GEMINI_URL = "https://gemini.google.com/app"
-PROFILE_DIR = Path(os.environ.get("STORYBOT_PROFILE_DIR", "/workspaces/.storybot-gemini-profile")).expanduser()
+PROFILE_DIR = Path(os.environ.get("STORYBOT_PROFILE_DIR", str(Path(__file__).resolve().parent.parent / ".storybot-gemini-profile"))).expanduser()
 MAX_ANSWER_CHARS = 700
 BROWSER_LOCK = asyncio.Lock()
 PLAYWRIGHT = None
