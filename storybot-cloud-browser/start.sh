@@ -48,7 +48,7 @@ sleep 2
 
 mkdir -p "$HOME/.vnc"
 VNC_PASS_FILE="$HOME/.vnc/storybot-cloud-browser.pass"
-"$VENV_DIR/bin/x11vnc" -storepasswd "$STORYBOT_VNC_PASSWORD" "$VNC_PASS_FILE" >/dev/null
+x11vnc -storepasswd "$STORYBOT_VNC_PASSWORD" "$VNC_PASS_FILE" >/dev/null
 chmod 600 "$VNC_PASS_FILE"
 x11vnc -display "$DISPLAY" -forever -shared -rfbauth "$VNC_PASS_FILE" -listen 127.0.0.1 -rfbport 5900 >/tmp/storybot-vnc.log 2>&1 &
 VNC_PID=$!
