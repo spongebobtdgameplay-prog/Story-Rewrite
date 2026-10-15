@@ -28,9 +28,5 @@ services:
         value: "500"
       - key: LOGIN_DELAY_MAX_MS
         value: "10000"
-      - key: STORYBOT_GEMINI_API_KEY
-        sync: false
-      - key: STORYBOT_GEMINI_MODEL
-        value: gemini-3.8-flash
       - key: DATABASE_URL
         sync: false
