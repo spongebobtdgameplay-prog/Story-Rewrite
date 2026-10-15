@@ -7,15 +7,20 @@ if (String(process.env.RENDER || "").toLowerCase() !== "true") {
     process.exit(0);
 }
 
+const Root = path.resolve(__dirname, "..");
+const PackageDirectory = path.join(Root, ".storybot-python");
+const ModelDirectory = path.join(Root, ".storybot-model");
+
 if (String(process.env.STORYBOT_LOCAL_FALLBACK || "").toLowerCase() !== "true") {
-    console.log("StoryBot local CPU fallback disabled; using Vercel AI Gateway.");
+    // Remove any cached model/runtime from earlier builds, so disabling the
+    // CPU fallback also stops it from being available at runtime.
+    fs.rmSync(PackageDirectory, { recursive: true, force: true });
+    fs.rmSync(ModelDirectory, { recursive: true, force: true });
+    console.log("StoryBot local CPU fallback disabled; cached runtime and model removed.");
     process.exit(0);
 }
 
-const Root = path.resolve(__dirname, "..");
 const Python = process.env.PYTHON || "python3";
-const PackageDirectory = path.join(Root, ".storybot-python");
-const ModelDirectory = path.join(Root, ".storybot-model");
 
 function Run(Arguments) {
     execFileSync(Python, Arguments, {
