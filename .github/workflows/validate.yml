@@ -138,11 +138,15 @@ jobs:
 
           for (const [Needle, Label] of [
             ['Socket.on("storybot:ask", async', "StoryBot ask handler"],
-            ["https://text.pollinations.ai/", "no-key hosted text endpoint"],
-            ['model: "openai"', "selected hosted model"],
+            ["https://aihorde.net/api/v2", "anonymous volunteer AI endpoint"],
+            ['"/status/models?type=text"', "live volunteer model discovery"],
             ["StoryBotSystemPrompt", "AI system instructions"],
+            ["AUTHORITATIVE LIVE GAME CONTEXT (JSON)", "full contextual prompt"],
+            ["recentChat:", "recent conversation history"],
+            ["/generate/text/async", "queued text generation request"],
+            ["/generate/text/status/", "asynchronous generation polling"],
             ["gameHasStarted: Status === \"playing\" || Status === \"gameover\"", "authoritative game state"],
-            ["AbortSignal.timeout(90000)", "request timeout"]
+            ["AbortSignal.timeout(125000)", "bounded anonymous model queue"]
           ]) {
             if (!Source.includes(Needle)) throw new Error("Generated server is missing " + Label + ".");
           }
@@ -153,7 +157,8 @@ jobs:
             ["storybot:clientGenerate", "browser-session bridge"],
             ["storybot:clientAnswer", "browser-session response bridge"],
             ["GeminiSocket.emit", "host browser session dependency"],
-            ["StoryBot local model warmup skipped", "local model warmup"]
+            ["StoryBot local model warmup skipped", "local model warmup"],
+            ["https://text.pollinations.ai/", "retired Pollinations endpoint"]
           ]) {
             if (Source.includes(Needle)) throw new Error("Generated server still contains " + Label + ".");
           }
