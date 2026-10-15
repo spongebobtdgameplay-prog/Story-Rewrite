@@ -146,7 +146,7 @@ jobs:
             ["/generate/text/async", "queued text generation request"],
             ["/generate/text/status/", "asynchronous generation polling"],
             ["gameHasStarted: Status === \"playing\" || Status === \"gameover\"", "authoritative game state"],
-            ["AbortSignal.timeout(125000)", "bounded anonymous model queue"]
+            ["const Deadline = Date.now() + 95000", "bounded anonymous model queue"]
           ]) {
             if (!Source.includes(Needle)) throw new Error("Generated server is missing " + Label + ".");
           }
