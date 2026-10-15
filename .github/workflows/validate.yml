@@ -35,6 +35,8 @@ jobs:
       - run: node --check host-controls.js
       - run: node --check ai-chat.js
       - run: python -m py_compile storybot-cloud-browser/worker.py
+      - run: bash -n storybot-cloud-browser/install.sh
+      - run: bash -n storybot-cloud-browser/start.sh
       - name: Validate StoryBot browser composer
         run: |
           node <<'NODE'
