@@ -33,6 +33,7 @@ jobs:
       - run: node --check moderation-version.js
       - run: node --check host-controls.js
       - run: node --check ai-chat.js
+      - run: node --check storybot-gemini-console.js
       - name: Validate StoryBot browser composer
         run: |
           node <<'NODE'
@@ -49,6 +50,12 @@ jobs:
               [AI, "async function SubmitStoryBotFromChat", "normal chat submit path"],
               [AI, "storybot:ask", "direct StoryBot socket event"],
               [AI, "function AskAI(PromptText)", "console AskAI helper"],
+              [AI, "StoryBotGeminiWindow", "Gemini session window"],
+              [AI, "Connect Gemini", "Gemini session connect button"],
+              [AI, 'Socket.on("storybot:clientGenerate", Payload => HandleStoryBotClientGenerate(Socket, Payload))', "host browser generation listener"],
+              [CSS, ".StoryBotGeminiPanel", "Gemini session panel"],
+              [fs.readFileSync("storybot-gemini-console.js", "utf8"), "assistant.lamda.BardFrontendService/StreamGenerate", "Gemini website endpoint"],
+              [fs.readFileSync("storybot-gemini-console.js", "utf8"), "SNlM0e", "local Gemini session token reader"],
               [AI, "STORYBOT RESPONSE", "styled StoryBot console reply"],
               [AI, 'Socket.on("room:chat", LogStoryBotConsoleReply)', "StoryBot room response listener"],
               [Lobby, 'id="ChatInput"', "lobby chat composer"],
@@ -102,12 +109,10 @@ jobs:
             if (!Text.includes(Needle)) throw new Error("Missing " + Label + ".");
           }
           for (const [Text, Needle, Label] of [
-            [AI, "StoryBotGeminiWindow", "Gemini browser window"],
-            [AI, "Connect Gemini", "manual Gemini connect button"],
-            [AI, "storybot:clientGenerate", "browser generation bridge"],
-            [CSS, "StoryBotGeminiPanel", "Gemini session panel"],
             [Docker, "python3", "local Python/model installer"],
-            [Docker, "storybot_ai.py", "local model download"]
+            [Docker, "storybot_ai.py", "local model download"],
+            [fs.readFileSync("storybot-gemini-console.js", "utf8"), "generativelanguage.googleapis.com", "paid Gemini API dependency"],
+            [fs.readFileSync("storybot-gemini-console.js", "utf8"), "GEMINI_API_KEY", "Gemini API-key dependency"]
           ]) {
             if (Text.includes(Needle)) throw new Error("Obsolete " + Label + " remains.");
           }
@@ -138,15 +143,13 @@ jobs:
 
           for (const [Needle, Label] of [
             ['Socket.on("storybot:ask", async', "StoryBot ask handler"],
-            ["https://aihorde.net/api/v2", "anonymous volunteer AI endpoint"],
-            ['"/status/models?type=text"', "live volunteer model discovery"],
+            ['Socket.on("storybot:clientAnswer"', "Gemini response handler"],
+            ['GeminiSocket.emit("storybot:clientGenerate"', "host Gemini session routing"],
             ["StoryBotSystemPrompt", "AI system instructions"],
             ["AUTHORITATIVE LIVE GAME CONTEXT (JSON)", "full contextual prompt"],
             ["recentChat:", "recent conversation history"],
-            ["/generate/text/async", "queued text generation request"],
-            ["/generate/text/status/", "asynchronous generation polling"],
             ["gameHasStarted: Status === \"playing\" || Status === \"gameover\"", "authoritative game state"],
-            ["const Deadline = Date.now() + 95000", "bounded anonymous model queue"]
+            ["STORYBOT_BRIDGE_TIMEOUT_MS", "bounded browser-session request"]
           ]) {
             if (!Source.includes(Needle)) throw new Error("Generated server is missing " + Label + ".");
           }
@@ -154,11 +157,9 @@ jobs:
           for (const [Needle, Label] of [
             ["STORYBOT_GEMINI_API_KEY", "Gemini API key dependency"],
             ["generativelanguage.googleapis.com", "paid Gemini API endpoint"],
-            ["storybot:clientGenerate", "browser-session bridge"],
-            ["storybot:clientAnswer", "browser-session response bridge"],
-            ["GeminiSocket.emit", "host browser session dependency"],
-            ["StoryBot local model warmup skipped", "local model warmup"],
-            ["https://text.pollinations.ai/", "retired Pollinations endpoint"]
+            ["https://text.pollinations.ai/", "retired Pollinations endpoint"],
+            ["https://aihorde.net/api/v2", "anonymous Horde endpoint"],
+            ["StoryBot local model warmup skipped", "local model warmup"]
           ]) {
             if (Source.includes(Needle)) throw new Error("Generated server still contains " + Label + ".");
           }
