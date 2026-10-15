@@ -1,0 +1,21 @@
+{
+  "name": "Story Rewrite",
+  "forwardPorts": [
+    6080,
+    8765
+  ],
+  "portsAttributes": {
+    "6080": {
+      "label": "StoryBot cloud browser console (private)",
+      "visibility": "private",
+      "onAutoForward": "notify"
+    },
+    "8765": {
+      "label": "StoryBot cloud worker API",
+      "visibility": "public",
+      "onAutoForward": "notify"
+    }
+  },
+  "postCreateCommand": "bash storybot-cloud-browser/install.sh",
+  "postStartCommand": "nohup bash storybot-cloud-browser/start.sh > \"$HOME/storybot-cloud-browser.log\" 2>&1 < /dev/null &"
+}
