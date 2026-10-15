@@ -822,192 +822,6 @@ async function AskAI(PromptText) {
 }
 
 
-const StoryBotClientBridgeRequests = new Map();
-let StoryBotGeminiWindow = null;
-let StoryBotGeminiBridgeReady = false;
-const STORY_BOT_GEMINI_BRIDGE_CHANNEL = "story-rewrite-gemini-console-v1";
-const STORY_BOT_GEMINI_SOURCE = "StoryRewriteGeminiConsole";
-const STORY_BOT_GEMINI_ORIGIN = "https://gemini.google.com";
-const STORY_BOT_GEMINI_APP_URL = "https://gemini.google.com/app";
-const STORY_BOT_GEMINI_WINDOW_NAME = "StoryRewriteGeminiSession";
-
-function SetStoryBotGeminiStatus(Message, State = "") {
-    document.querySelectorAll(".StoryBotGeminiStatus").forEach(Status => {
-        Status.textContent = String(Message || "");
-        Status.dataset.state = State;
-    });
-    document.querySelectorAll(".StoryBotGeminiPanel").forEach(Panel => {
-        Panel.dataset.state = State;
-    });
-}
-
-function TryReacquireStoryBotGeminiWindow() {
-    if (StoryBotGeminiWindow && !StoryBotGeminiWindow.closed) return StoryBotGeminiWindow;
-    try {
-        const ExistingWindow = window.open("", STORY_BOT_GEMINI_WINDOW_NAME);
-        if (!ExistingWindow) return null;
-        let NeedsNavigation = false;
-        try {
-            const CurrentUrl = ExistingWindow.location.href;
-            NeedsNavigation = !CurrentUrl || CurrentUrl === "about:blank";
-        } catch {
-            // A cross-origin window is already open. Do not reload it.
-        }
-        if (NeedsNavigation) ExistingWindow.location.href = STORY_BOT_GEMINI_APP_URL;
-        StoryBotGeminiWindow = ExistingWindow;
-        return ExistingWindow;
-    } catch {
-        return null;
-    }
-}
-
-function EnsureStoryBotGeminiPanel(ChatContainer) {
-    if (!ChatContainer?.parentElement) return;
-    const Parent = ChatContainer.parentElement;
-    if (Parent.querySelector(":scope > .StoryBotGeminiPanel")) return;
-
-    const Panel = document.createElement("div");
-    Panel.className = "StoryBotGeminiPanel";
-    Panel.dataset.state = "disconnected";
-
-    const Copy = document.createElement("div");
-    Copy.className = "StoryBotGeminiPanelCopy";
-
-    const Label = document.createElement("strong");
-    Label.className = "StoryBotGeminiLabel";
-    Label.textContent = "StoryBot Gemini session";
-
-    const Status = document.createElement("span");
-    Status.className = "StoryBotGeminiStatus";
-    Status.textContent = "Not connected. The room host needs a signed-in Gemini tab.";
-
-    Copy.append(Label, Status);
-
-    const Button = document.createElement("button");
-    Button.className = "StoryBotGeminiConnect";
-    Button.type = "button";
-    Button.textContent = "Connect Gemini";
-    Button.addEventListener("click", () => {
-        let GeminiWindow = null;
-        try {
-            GeminiWindow = window.open("", STORY_BOT_GEMINI_WINDOW_NAME);
-            if (!GeminiWindow) {
-                SetStoryBotGeminiStatus("The browser blocked the Gemini tab. Allow pop-ups for Story Rewrite and retry.", "error");
-                return;
-            }
-            let NeedsNavigation = false;
-            try {
-                const CurrentUrl = GeminiWindow.location.href;
-                NeedsNavigation = !CurrentUrl || CurrentUrl === "about:blank";
-            } catch {
-                // Preserve an existing Gemini page and its active console helper.
-            }
-            if (NeedsNavigation) GeminiWindow.location.href = STORY_BOT_GEMINI_APP_URL;
-        } catch (Error) {
-            SetStoryBotGeminiStatus("Could not open Gemini: " + String(Error?.message || Error), "error");
-            return;
-        }
-
-        StoryBotGeminiWindow = GeminiWindow;
-        StoryBotGeminiBridgeReady = false;
-        SetStoryBotGeminiStatus("Gemini opened. Sign in if needed, then paste storybot-gemini-console.js into that tab's DevTools Console.", "waiting");
-
-        window.setTimeout(() => {
-            if (!StoryBotGeminiWindow || StoryBotGeminiWindow.closed) return;
-            try {
-                StoryBotGeminiWindow.postMessage({
-                    source: "StoryRewriteApp",
-                    channel: STORY_BOT_GEMINI_BRIDGE_CHANNEL,
-                    type: "hello"
-                }, STORY_BOT_GEMINI_ORIGIN);
-            } catch {}
-        }, 1000);
-    });
-
-    Panel.append(Copy, Button);
-    Parent.insertBefore(Panel, ChatContainer);
-}
-
-function HandleStoryBotGeminiBridgeMessage(Event) {
-    if (Event.origin !== STORY_BOT_GEMINI_ORIGIN) return;
-    if (!StoryBotGeminiWindow || Event.source !== StoryBotGeminiWindow) return;
-
-    const Message = Event.data;
-    if (Message?.channel !== STORY_BOT_GEMINI_BRIDGE_CHANNEL) return;
-
-    if (Message.source === STORY_BOT_GEMINI_SOURCE && Message.type === "ready") {
-        StoryBotGeminiBridgeReady = true;
-        SetStoryBotGeminiStatus("Connected to the signed-in Gemini tab. StoryBot requests use this browser session.", "connected");
-        return;
-    }
-
-    if (Message.source !== STORY_BOT_GEMINI_SOURCE || Message.type !== "result") return;
-    const RequestId = String(Message.requestId || "");
-    const Pending = StoryBotClientBridgeRequests.get(RequestId);
-    if (!Pending) return;
-
-    StoryBotClientBridgeRequests.delete(RequestId);
-    window.clearTimeout(Pending.timer);
-
-    Pending.Socket.emit("storybot:clientAnswer", {
-        requestId: RequestId,
-        answer: String(Message.answer || ""),
-        error: String(Message.error || "")
-    }, (ErrorValue, Reply) => {
-        if (ErrorValue) ShowStoryBotError("StoryBot could not submit the Gemini response to the room.");
-        else if (!Reply?.ok && Reply?.error) ShowStoryBotError(Reply.error);
-    });
-}
-
-window.addEventListener("message", HandleStoryBotGeminiBridgeMessage);
-
-function HandleStoryBotClientGenerate(Socket, Payload) {
-    const RequestId = String(Payload?.requestId || "");
-    const Question = String(Payload?.question || "")
-        .replace(/[\u0000-\u001F\u007F]/g, " ")
-        .replace(/\s+/g, " ").trim().slice(0, 9000);
-    if (!RequestId || !Question) return;
-
-    const GeminiWindow = TryReacquireStoryBotGeminiWindow();
-    if (!StoryBotGeminiBridgeReady || !GeminiWindow || GeminiWindow.closed) {
-        Socket.emit("storybot:clientAnswer", {
-            requestId: RequestId,
-            error: "The room host must click Connect Gemini, sign in at gemini.google.com, and paste storybot-gemini-console.js into Gemini's DevTools Console."
-        });
-        return;
-    }
-    if (StoryBotClientBridgeRequests.has(RequestId)) return;
-
-    const Timer = window.setTimeout(() => {
-        const Pending = StoryBotClientBridgeRequests.get(RequestId);
-        if (!Pending) return;
-        StoryBotClientBridgeRequests.delete(RequestId);
-        Pending.Socket.emit("storybot:clientAnswer", {
-            requestId: RequestId,
-            error: "Gemini did not answer in time. Keep the Gemini tab open and make sure the StoryBot console helper is still running."
-        });
-    }, STORY_BOT_REQUEST_TIMEOUT);
-
-    StoryBotClientBridgeRequests.set(RequestId, { Socket, timer: Timer });
-    try {
-        GeminiWindow.postMessage({
-            source: "StoryRewriteApp",
-            channel: STORY_BOT_GEMINI_BRIDGE_CHANNEL,
-            type: "request",
-            requestId: RequestId,
-            prompt: Question
-        }, STORY_BOT_GEMINI_ORIGIN);
-    } catch (Error) {
-        window.clearTimeout(Timer);
-        StoryBotClientBridgeRequests.delete(RequestId);
-        Socket.emit("storybot:clientAnswer", {
-            requestId: RequestId,
-            error: "Could not contact the Gemini tab: " + String(Error?.message || Error)
-        });
-    }
-}
-
-
 function BindStoryBotSocket(Socket) {
     if (!Socket || BoundBotSockets.has(Socket)) return;
     BoundBotSockets.add(Socket);
@@ -1015,7 +829,6 @@ function BindStoryBotSocket(Socket) {
     Socket.on("connect", () => SetStoryBotConnectionState("online"));
     Socket.on("disconnect", () => SetStoryBotConnectionState("reconnecting"));
     Socket.on("connect_error", () => SetStoryBotConnectionState("reconnecting"));
-    Socket.on("storybot:clientGenerate", Payload => HandleStoryBotClientGenerate(Socket, Payload));
     Socket.on("room:chat", LogStoryBotConsoleReply);
 
     Socket.on("room:botTyping", Payload => {
@@ -1120,7 +933,6 @@ function InitializeStoryBotUi() {
     WrapStoryBotRenderers();
     WrapStoryBotSocketHooks();
     ConfigureStoryBotInputs();
-    GetChatContainers().forEach(EnsureStoryBotGeminiPanel);
     BindStoryBotMentionNormalization();
     BindStoryBotCommandPopups();
     SetStoryBotConnectionState("offline");
