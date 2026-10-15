@@ -7,6 +7,7 @@ const STORY_BOT_COMMANDS = [{
 }];
 const BoundBotSockets = new WeakSet();
 const StoryBotRenderedMessageIds = new Set();
+const StoryBotConsoleLoggedMessageIds = new Set();
 const STORY_BOT_MAX_QUESTION_LENGTH = 1200;
 const STORY_BOT_REQUEST_TIMEOUT = 150000;
 let StoryBotRoomBusy = false;
@@ -726,6 +727,101 @@ function WrapStoryBotRenderers() {
     }
 }
 
+
+function LogStoryBotConsoleReply(Message) {
+    if (!Message?.bot || Message.username !== STORY_BOT_NAME) return;
+    const Answer = String(Message.text || "").trim();
+    if (!Answer) return;
+
+    const Id = String(Message.id || "");
+    if (Id && StoryBotConsoleLoggedMessageIds.has(Id)) return;
+    if (Id) {
+        StoryBotConsoleLoggedMessageIds.add(Id);
+        while (StoryBotConsoleLoggedMessageIds.size > 100) {
+            const Oldest = StoryBotConsoleLoggedMessageIds.values().next().value;
+            if (Oldest === undefined) break;
+            StoryBotConsoleLoggedMessageIds.delete(Oldest);
+        }
+    }
+
+    console.log(
+        "%c🤖 STORYBOT RESPONSE\n\n" + Answer,
+        "background:#22e65b;color:#000;border:4px solid #000;border-radius:8px;padding:16px 20px;font-size:18px;font-weight:800;line-height:1.6;white-space:pre-wrap;"
+    );
+}
+
+async function AskAI(PromptText) {
+    const Question = NormalizeStoryBotQuestionText(PromptText);
+    if (!Question) throw new TypeError("AskAI needs a non-empty question.");
+
+    const Socket = GetConnectedStoryBotSocket();
+    if (!Socket?.connected) {
+        throw new Error("AskAI requires an active Story Rewrite multiplayer room.");
+    }
+
+    return new Promise((Resolve, Reject) => {
+        let Accepted = false;
+        let Finished = false;
+        let Timer = null;
+
+        const Cleanup = () => {
+            if (Timer !== null) window.clearTimeout(Timer);
+            Socket.off("room:chat", OnChat);
+            Socket.off("room:botError", OnBotError);
+        };
+
+        const Finish = (ErrorValue, Answer) => {
+            if (Finished) return;
+            Finished = true;
+            Cleanup();
+            if (ErrorValue) Reject(ErrorValue);
+            else Resolve(Answer);
+        };
+
+        const OnChat = Message => {
+            if (!Accepted || !Message?.bot || Message.username !== STORY_BOT_NAME) return;
+            const Answer = String(Message.text || "").trim();
+            if (Answer) Finish(null, Answer);
+        };
+
+        const OnBotError = Payload => {
+            if (!Accepted) return;
+            Finish(new Error(String(Payload?.error || "StoryBot could not answer right now.")));
+        };
+
+        Socket.on("room:chat", OnChat);
+        Socket.on("room:botError", OnBotError);
+        Timer = window.setTimeout(
+            () => Finish(new Error("AskAI timed out while waiting for StoryBot.")),
+            STORY_BOT_REQUEST_TIMEOUT
+        );
+
+        try {
+            Socket.timeout(10000).emit("storybot:ask", { question: Question }, (ErrorValue, Reply) => {
+                if (ErrorValue) {
+                    Finish(new Error("StoryBot did not acknowledge the request in time."));
+                    return;
+                }
+                if (!Reply?.ok) {
+                    Finish(new Error(String(Reply?.error || "StoryBot rejected the question.")));
+                    return;
+                }
+                if (Reply.message?.bot) {
+                    Finish(null, String(Reply.message.text || "").trim());
+                    return;
+                }
+                Accepted = Boolean(Reply.accepted);
+                if (!Accepted) {
+                    Finish(new Error("StoryBot accepted no response for this request."));
+                }
+            });
+        } catch (ErrorValue) {
+            Finish(ErrorValue instanceof Error ? ErrorValue : new Error(String(ErrorValue)));
+        }
+    });
+}
+
+
 function BindStoryBotSocket(Socket) {
     if (!Socket || BoundBotSockets.has(Socket)) return;
     BoundBotSockets.add(Socket);
@@ -733,6 +829,7 @@ function BindStoryBotSocket(Socket) {
     Socket.on("connect", () => SetStoryBotConnectionState("online"));
     Socket.on("disconnect", () => SetStoryBotConnectionState("reconnecting"));
     Socket.on("connect_error", () => SetStoryBotConnectionState("reconnecting"));
+    Socket.on("room:chat", LogStoryBotConsoleReply);
 
     Socket.on("room:botTyping", Payload => {
         StoryBotRoomBusy=Boolean(Payload?.typing);
@@ -842,6 +939,8 @@ function InitializeStoryBotUi() {
     RefreshStoryBotComposerLock();
     RefreshQuietChatState();
 }
+
+window.AskAI = AskAI;
 
 if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", InitializeStoryBotUi, { once: true });

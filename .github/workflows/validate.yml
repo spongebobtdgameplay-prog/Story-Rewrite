@@ -48,6 +48,8 @@ jobs:
               [AI, "function GetActiveMentionText", "mention lookup helper"],
               [AI, "async function SubmitStoryBotFromChat", "normal chat submit path"],
               [AI, "storybot:ask", "direct StoryBot socket event"],
+              [AI, "function AskAI(PromptText)", "console AskAI helper"],
+              [AI, "STORYBOT RESPONSE", "styled StoryBot console reply"],
               [Lobby, 'id="ChatInput"', "lobby chat composer"],
               [Lobby, "@StoryBot", "lobby StoryBot instruction"],
               [Game, 'id="GameChatInput"', "game chat composer"],
@@ -151,7 +153,8 @@ jobs:
           }
           const Required = [
               ['Socket.on("storybot:ask", async', "direct StoryBot ask handler"],
-              ["RunStoryBotModel(Context)", "local StoryBot model call"],
+              ["GEMINI_API_KEY", "Gemini API key lookup"],
+              [":generateContent", "Gemini generation endpoint"],
               ['text: "@StoryBot " + Question', "StoryBot question chat message"],
               ['username: StoryBotName', "StoryBot response identity"]
           ];
