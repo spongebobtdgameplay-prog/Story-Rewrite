@@ -474,7 +474,7 @@ function DetachStoryBotComposer(Container) {
 }
 
 function RestoreStoryBotComposer(Container, Composer) {
-    if (!Container || !Composer || Container.contains(Composer)) return;
+    if (!Container || !Composer || Composer.dataset.storyBotDismissed === "1" || Container.contains(Composer)) return;
     Container.appendChild(Composer);
 }
 
@@ -528,18 +528,15 @@ function MoveMentionToStoryBotComposer(Input) {
 
 function DismissStoryBotComposer(Composer, NormalChatInput) {
     if (!Composer) return;
+    // Once submitted, this temporary input must not be restored by chat render wrappers.
+    Composer.dataset.storyBotDismissed = "1";
     Composer.classList.add("IsSending");
     Composer.setAttribute("aria-hidden", "true");
     if (NormalChatInput) {
         NormalChatInput.dataset.storyBotComposerActive = "0";
         try { NormalChatInput.focus({ preventScroll: true }); } catch { NormalChatInput.focus({ preventScroll: true }); }
     }
-    const ReducedMotion = Boolean(window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches);
-    if (ReducedMotion) {
-        Composer.remove();
-        return;
-    }
-    window.setTimeout(() => Composer.remove(), 220);
+    Composer.remove();
 }
 
 async function SubmitStoryBotDedicated(Composer) {
@@ -612,16 +609,11 @@ async function SubmitStoryBotDedicated(Composer) {
         RefreshStoryBotComposerLock();
         SetStoryBotTyping(StoryBotRoomBusy, StoryBotActiveQuestion);
         const ErrorText = Result?.error || "StoryBot could not answer right now.";
-        SetStoryBotComposerStatus(Composer, ErrorText, "error");
         ShowStoryBotError(ErrorText);
-        delete Composer.dataset.storyBotSubmitting;
         return;
     }
 
-    // The user message was broadcast first; the reply arrives separately via room:chat.
-    // Release the per-composer submit guard but keep the composer visible for follow-ups.
-    delete Composer.dataset.storyBotSubmitting;
-    SetStoryBotComposerStatus(Composer, "Question sent. Ask another question anytime.");
+    // The temporary composer stays dismissed. The normal chat input can open a fresh one later.
     if (Result.message?.bot) RenderStoryBotReplyMessage(Result.message, ContainerId);
 }
 
