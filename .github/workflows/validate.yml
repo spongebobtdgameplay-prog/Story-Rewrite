@@ -102,7 +102,7 @@ jobs:
 
           for (const [Text, Needle, Label] of [
             [AI, "async function AskAI(PromptText)", "AskAI helper"],
-            [AI, 'Socket.timeout(STORY_BOT_REQUEST_TIMEOUT).emit(', "AskAI socket request"],
+            [AI, 'Socket.timeout(STORY_BOT_ACK_TIMEOUT).emit(', "AskAI socket request"],
             [AI, 'Socket.on("room:chat", LogStoryBotConsoleReply)', "StoryBot chat reply listener"],
             [CSS, ".StoryBotTyping", "typing indicator"],
             [Docker, 'CMD ["npm", "start"]', "Node-only container startup"]
