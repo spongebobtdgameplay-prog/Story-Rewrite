@@ -34,8 +34,10 @@ fi
 if ! grep -q '^STORYBOT_VNC_PASSWORD=' "$ENV_FILE"; then
   VNC_PASSWORD="$(python3 -c 'import secrets,string; print("".join(secrets.choice(string.ascii_letters+string.digits) for _ in range(8)))')"
   printf 'STORYBOT_VNC_PASSWORD=%s\n' "$VNC_PASSWORD" >> "$ENV_FILE"
-  echo "Added a browser-console password: $VNC_PASSWORD"
+  echo "Added a browser-console password to $ENV_FILE; the value is hidden."
+  chmod 600 "$ENV_FILE"
 fi
+chmod 600 "$ENV_FILE"
 
 set -a
 # shellcheck disable=SC1090
