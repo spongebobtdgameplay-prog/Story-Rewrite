@@ -199,6 +199,20 @@ async def _is_generating() -> bool:
 
 
 def _build_prompt(payload: AskPayload) -> str:
+    question = payload.question.strip()[:1200]
+    if re.fullmatch(
+        r"(?:hi|hello|hey|hiya|yo|sup|hi there|hello there|hey there|good morning|good afternoon|good evening|what's up)[.!?]*",
+        question,
+        flags=re.IGNORECASE,
+    ):
+        return (
+            "You are StoryBot, a friendly teammate in Story Rewrite. "
+            "Reply to this simple greeting with one short, natural sentence. "
+            "Do not bring up the room code or explain the game.\n\n"
+            f"PLAYER ASKING: {payload.username[:40]}\n"
+            f"PLAYER GREETING: {question}"
+        )
+
     context_json = json.dumps(payload.context, ensure_ascii=False, separators=(",", ":"))[:18000]
     return (
         "You are StoryBot, the in-game teammate for Story Rewrite, a multiplayer story-survival game.\n"
@@ -265,7 +279,7 @@ async def _ask_gemini(prompt: str) -> str:
 
     last_text = ""
     stable_samples = 0
-    for _ in range(110):
+    for _ in range(180):
         if await _challenge_present():
             raise HTTPException(
                 status_code=503,
@@ -275,16 +289,16 @@ async def _ask_gemini(prompt: str) -> str:
         if responses:
             candidate = responses[-1]
             is_new = len(responses) > before_count or candidate != before_last
-            if is_new and len(candidate) >= 4:
+            if is_new and candidate.strip():
                 if candidate == last_text:
                     stable_samples += 1
                 else:
                     stable_samples = 0
                     last_text = candidate
                 generating = await _is_generating()
-                if not generating and stable_samples >= 2:
+                if not generating and stable_samples >= 1:
                     return candidate[:MAX_ANSWER_CHARS]
-        await asyncio.sleep(1)
+        await asyncio.sleep(0.35)
 
     raise HTTPException(status_code=504, detail="Gemini did not finish an answer in time. Check the cloud browser and try again.")
 

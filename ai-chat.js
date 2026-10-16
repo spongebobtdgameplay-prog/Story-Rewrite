@@ -578,8 +578,6 @@ async function SubmitStoryBotDedicated(Composer) {
     Composer.dataset.storyBotSubmitting = "1";
     StoryBotLocalRequestBusy = true;
     RefreshStoryBotComposerLock();
-    SetStoryBotTyping(true, Question);
-
     const ResultPromise = new Promise(resolve => {
         let Finished = false;
         const Complete = Value => {
@@ -603,17 +601,16 @@ async function SubmitStoryBotDedicated(Composer) {
         }
     });
 
-    // Keep the StoryBot composer mounted after sending so follow-up questions stay available.
-    Input.value = "";
-    UpdateStoryBotDedicatedComposer(Composer);
-    SetStoryBotComposerStatus(Composer, "StoryBot is replying…", "thinking");
+    // The server broadcasts the user's question before it starts the typing indicator.
+    // Remove the temporary prompt frame; the question remains as a normal chat message.
+    DismissStoryBotComposer(Composer, NormalChatInput);
 
     const Result = await ResultPromise;
 
     if (!Result?.ok) {
         StoryBotLocalRequestBusy = false;
         RefreshStoryBotComposerLock();
-        SetStoryBotTyping(StoryBotRoomBusy, Payload?.question || StoryBotActiveQuestion);
+        SetStoryBotTyping(StoryBotRoomBusy, StoryBotActiveQuestion);
         const ErrorText = Result?.error || "StoryBot could not answer right now.";
         SetStoryBotComposerStatus(Composer, ErrorText, "error");
         ShowStoryBotError(ErrorText);
@@ -846,7 +843,7 @@ function BindStoryBotSocket(Socket) {
         StoryBotRoomBusy=Boolean(Payload?.typing);
         if (!StoryBotRoomBusy) StoryBotLocalRequestBusy=false;
         RefreshStoryBotComposerLock();
-        SetStoryBotTyping(StoryBotRoomBusy);
+        SetStoryBotTyping(StoryBotRoomBusy, Payload?.question || "");
     });
 
     Socket.on("room:botError", Payload => {
