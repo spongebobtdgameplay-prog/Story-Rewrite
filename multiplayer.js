@@ -65,7 +65,7 @@ let RoomNoticeHideTimer = 0;
 const SOCKET_CLIENT_URL = "https://story-rewrite-backend.onrender.com/socket.io/socket.io.js";
 const REQUIRED_MULTIPLAYER_SERVER_VERSION = 8;
 const CHAT_MAX_LENGTH = 180;
-const CHAT_HISTORY_LIMIT = 30;
+const CHAT_HISTORY_LIMIT = 100;
 
 window.addEventListener("DOMContentLoaded", () => {
     EnsureLobbyEnhancements();

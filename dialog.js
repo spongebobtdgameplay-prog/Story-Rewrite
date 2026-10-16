@@ -891,7 +891,7 @@ function AppendGameChat(Message, Scroll = true) {
     Element.appendChild(document.createTextNode(Message.text));
     Container.appendChild(Element);
 
-    while (Container.childElementCount > 30) {
+    while (Container.childElementCount > 100) {
         Container.firstElementChild.remove();
     }
 

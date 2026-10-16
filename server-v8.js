@@ -16,7 +16,7 @@ const MaxPlayers = 5;
 const MaxLives = 3;
 const BackendVersion = 8;
 const ChatMaxLength = 180;
-const ChatHistoryLimit = 30;
+const ChatHistoryLimit = 100;
 const ChatRateLimitCount = 5;
 const ChatRateLimitWindow = 10000;
 

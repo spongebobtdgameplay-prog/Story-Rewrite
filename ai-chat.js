@@ -10,6 +10,8 @@ const StoryBotRenderedMessageIds = new Set();
 const StoryBotConsoleLoggedMessageIds = new Set();
 const STORY_BOT_MAX_QUESTION_LENGTH = 1200;
 const STORY_BOT_REQUEST_TIMEOUT = 150000;
+const STORY_BOT_ACK_TIMEOUT = 10000;
+let StoryBotActiveQuestion = "";
 let StoryBotRoomBusy = false;
 let StoryBotLocalRequestBusy = false;
 function IsStoryBotBusy(){return StoryBotRoomBusy||StoryBotLocalRequestBusy}
@@ -64,7 +66,10 @@ function RemoveQuietChatState(Container) {
     Container?.querySelector(".ChatQuietState")?.remove();
 }
 
-function SetStoryBotTyping(Typing) {
+function SetStoryBotTyping(Typing, Question = "") {
+    if (Typing && Question) StoryBotActiveQuestion = String(Question).trim().slice(0, 160);
+    const ThinkingAbout = Typing ? String(Question || StoryBotActiveQuestion || "").trim().slice(0, 160) : "";
+    if (!Typing) StoryBotActiveQuestion = "";
     const Container = GetStoryBotChatContainer();
     if (!Container) return;
 
@@ -85,12 +90,16 @@ function SetStoryBotTyping(Typing) {
             <span class="StoryBotMark" aria-hidden="true">
                 <svg viewBox="0 0 24 24"><path d="M12 3.5 14.2 8l4.8.7-3.5 3.4.8 4.8-4.3-2.2-4.3 2.2.8-4.8L5 8.7 9.8 8 12 3.5Z"></path></svg>
             </span>
-            <span>StoryBot is thinking</span>
+            <span class="StoryBotTypingText">StoryBot is thinking</span>
             <span class="StoryBotDots" aria-hidden="true"><i></i><i></i><i></i></span>
         `;
         Container.appendChild(TypingRow);
     }
 
+    const ThinkingLabel = TypingRow.querySelector(".StoryBotTypingText");
+    if (ThinkingLabel) ThinkingLabel.textContent = ThinkingAbout
+        ? "StoryBot is thinking about: " + ThinkingAbout
+        : "StoryBot is thinking";
     Container.scrollTop = Container.scrollHeight;
 }
 
@@ -104,7 +113,7 @@ function ShowStoryBotError(Message) {
     ErrorElement.className = "StoryBotRequestError";
     ErrorElement.textContent = ErrorText;
     Container.appendChild(ErrorElement);
-    while (Container.childElementCount > 30) Container.firstElementChild?.remove();
+    while (Container.childElementCount > 100) Container.firstElementChild?.remove();
     Container.scrollTop = Container.scrollHeight;
 }
 function MarkLastChatMessage(ContainerId, Message) {
@@ -569,7 +578,7 @@ async function SubmitStoryBotDedicated(Composer) {
     Composer.dataset.storyBotSubmitting = "1";
     StoryBotLocalRequestBusy = true;
     RefreshStoryBotComposerLock();
-    SetStoryBotTyping(true);
+    SetStoryBotTyping(true, Question);
 
     const ResultPromise = new Promise(resolve => {
         let Finished = false;
@@ -580,7 +589,7 @@ async function SubmitStoryBotDedicated(Composer) {
         };
 
         try {
-            Socket.timeout(STORY_BOT_REQUEST_TIMEOUT).emit(
+            Socket.timeout(STORY_BOT_ACK_TIMEOUT).emit(
                 "storybot:ask",
                 { question: Question },
                 (Error, Reply) => Complete(
@@ -604,7 +613,7 @@ async function SubmitStoryBotDedicated(Composer) {
     if (!Result?.ok) {
         StoryBotLocalRequestBusy = false;
         RefreshStoryBotComposerLock();
-        SetStoryBotTyping(StoryBotRoomBusy);
+        SetStoryBotTyping(StoryBotRoomBusy, Payload?.question || StoryBotActiveQuestion);
         const ErrorText = Result?.error || "StoryBot could not answer right now.";
         SetStoryBotComposerStatus(Composer, ErrorText, "error");
         ShowStoryBotError(ErrorText);
