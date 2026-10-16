@@ -65,7 +65,7 @@ VNC_PID=$!
 if [[ -x /usr/share/novnc/utils/novnc_proxy ]]; then
   /usr/share/novnc/utils/novnc_proxy --listen 0.0.0.0:6080 --vnc 127.0.0.1:5900 >/tmp/storybot-novnc.log 2>&1 9>&- &
 elif command -v novnc_proxy >/dev/null 2>&1; then
-  novnc_proxy --listen 0.0.0.0:6080 --vnc 127.0.0.1:5900 >/tmp/storybot-novnc.log 2>&1 &
+  novnc_proxy --listen 0.0.0.0:6080 --vnc 127.0.0.1:5900 >/tmp/storybot-novnc.log 2>&1 9>&- &
 else
   websockify --web=/usr/share/novnc 0.0.0.0:6080 127.0.0.1:5900 >/tmp/storybot-novnc.log 2>&1 9>&- &
 fi
