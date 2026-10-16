@@ -17,5 +17,6 @@
     }
   },
   "postCreateCommand": "bash storybot-cloud-browser/install.sh",
-  "postStartCommand": "nohup bash storybot-cloud-browser/start.sh > \"$HOME/storybot-cloud-browser.log\" 2>&1 < /dev/null &"
+  "postStartCommand": "nohup bash storybot-cloud-browser/start.sh > \"$HOME/storybot-cloud-browser.log\" 2>&1 < /dev/null &",
+  "postAttachCommand": "nohup bash storybot-cloud-browser/start.sh > \"$HOME/storybot-cloud-browser.log\" 2>&1 < /dev/null &"
 }
