@@ -51,7 +51,7 @@ if ! command -v Xvfb >/dev/null 2>&1 || ! command -v x11vnc >/dev/null 2>&1; the
   exit 1
 fi
 
-Xvfb "$DISPLAY" -screen 0 1440x900x24 -ac -nolisten tcp >/tmp/storybot-xvfb.log 2>&1 &
+Xvfb "$DISPLAY" -screen 0 1440x900x24 -ac -nolisten tcp >/tmp/storybot-xvfb.log 2>&1 9>&- &
 XVFB_PID=$!
 sleep 2
 
@@ -59,15 +59,15 @@ mkdir -p "$HOME/.vnc"
 VNC_PASS_FILE="$HOME/.vnc/storybot-cloud-browser.pass"
 x11vnc -storepasswd "$STORYBOT_VNC_PASSWORD" "$VNC_PASS_FILE" >/dev/null
 chmod 600 "$VNC_PASS_FILE"
-x11vnc -display "$DISPLAY" -forever -shared -rfbauth "$VNC_PASS_FILE" -listen 127.0.0.1 -rfbport 5900 >/tmp/storybot-vnc.log 2>&1 &
+x11vnc -display "$DISPLAY" -forever -shared -rfbauth "$VNC_PASS_FILE" -listen 127.0.0.1 -rfbport 5900 >/tmp/storybot-vnc.log 2>&1 9>&- &
 VNC_PID=$!
 
 if [[ -x /usr/share/novnc/utils/novnc_proxy ]]; then
-  /usr/share/novnc/utils/novnc_proxy --listen 0.0.0.0:6080 --vnc 127.0.0.1:5900 >/tmp/storybot-novnc.log 2>&1 &
+  /usr/share/novnc/utils/novnc_proxy --listen 0.0.0.0:6080 --vnc 127.0.0.1:5900 >/tmp/storybot-novnc.log 2>&1 9>&- &
 elif command -v novnc_proxy >/dev/null 2>&1; then
   novnc_proxy --listen 0.0.0.0:6080 --vnc 127.0.0.1:5900 >/tmp/storybot-novnc.log 2>&1 &
 else
-  websockify --web=/usr/share/novnc 0.0.0.0:6080 127.0.0.1:5900 >/tmp/storybot-novnc.log 2>&1 &
+  websockify --web=/usr/share/novnc 0.0.0.0:6080 127.0.0.1:5900 >/tmp/storybot-novnc.log 2>&1 9>&- &
 fi
 NOVNC_PID=$!
 
@@ -84,4 +84,4 @@ echo "Gemini browser profile: $STORYBOT_PROFILE_DIR"
 echo
 
 cd "$SERVICE_DIR"
-"$VENV_DIR/bin/uvicorn" worker:app --host 0.0.0.0 --port 8765
+"$VENV_DIR/bin/uvicorn" worker:app --host 0.0.0.0 --port 8765 9>&-
