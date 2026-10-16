@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
+# Hold a process lock for the entire worker lifetime. postStartCommand and
+# postAttachCommand may run close together, and manual starts must not duplicate it.
+LOCK_FILE="${TMPDIR:-/tmp}/storybot-cloud-browser-worker.lock"
+exec 9>"$LOCK_FILE"
+if ! flock -n 9; then
+  echo "StoryBot worker is already starting or running; skipping duplicate launch."
+  exit 0
+fi
+
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 SERVICE_DIR="$ROOT_DIR/storybot-cloud-browser"
@@ -18,10 +27,8 @@ if [[ ! -f "$ENV_FILE" ]]; then
   TOKEN="$(python3 -c 'import secrets; print(secrets.token_urlsafe(48))')"
   VNC_PASSWORD="$(python3 -c 'import secrets,string; print("".join(secrets.choice(string.ascii_letters+string.digits) for _ in range(8)))')"
   printf 'STORYBOT_WORKER_TOKEN=%s\nSTORYBOT_PROFILE_DIR=%s\nSTORYBOT_VNC_PASSWORD=%s\n' "$TOKEN" "$PROFILE_DIR" "$VNC_PASSWORD" > "$ENV_FILE"
-  echo "Created a private worker token and browser-console password."
-  echo "Worker token: $TOKEN"
-  echo "Private browser-console password: $VNC_PASSWORD"
-  echo "Save both securely. Do not commit storybot-cloud-browser/.env."
+  chmod 600 "$ENV_FILE"
+  echo "Created private StoryBot credentials in $ENV_FILE. Secrets are not printed to startup logs."
 fi
 
 if ! grep -q '^STORYBOT_VNC_PASSWORD=' "$ENV_FILE"; then
