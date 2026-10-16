@@ -594,10 +594,10 @@ async function SubmitStoryBotDedicated(Composer) {
         }
     });
 
-    // Hide the question as soon as the socket send has been initiated.
+    // Keep the StoryBot composer mounted after sending so follow-up questions stay available.
     Input.value = "";
     UpdateStoryBotDedicatedComposer(Composer);
-    DismissStoryBotComposer(Composer, NormalChatInput);
+    SetStoryBotComposerStatus(Composer, "StoryBot is replying…", "thinking");
 
     const Result = await ResultPromise;
 
@@ -612,8 +612,10 @@ async function SubmitStoryBotDedicated(Composer) {
         return;
     }
 
-    // The user message was already broadcast by the server. The bot reply arrives
-    // separately via room:chat; keep the lock until the server says typing=false.
+    // The user message was broadcast first; the reply arrives separately via room:chat.
+    // Release the per-composer submit guard but keep the composer visible for follow-ups.
+    delete Composer.dataset.storyBotSubmitting;
+    SetStoryBotComposerStatus(Composer, "Reply received. Ask another question anytime.");
     if (Result.message?.bot) RenderStoryBotReplyMessage(Result.message, ContainerId);
 }
 
