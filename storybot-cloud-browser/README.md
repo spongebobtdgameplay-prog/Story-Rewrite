@@ -12,7 +12,9 @@ From the repository terminal, run:
 
     bash storybot-cloud-browser/start.sh
 
-The first start creates storybot-cloud-browser/.env containing a private API token and a separate password for the remote browser console. The startup log displays those values when the file is first created; you can also read them from that ignored local file inside the Codespace. Never commit the file or paste either secret into chat. The persistent Gemini profile is stored in the ignored repository folder .storybot-gemini-profile and survives ordinary Codespace stops while the workspace storage remains.
+The first start creates storybot-cloud-browser/.env containing a private API token and a separate password for the remote browser console. Startup logs do not print either secret; the values remain in that ignored local file. Never commit the file or paste either secret into chat. The persistent Gemini profile is stored in the ignored repository folder .storybot-gemini-profile and survives ordinary Codespace stops while the workspace storage remains.
+
+The Codespaces devcontainer starts the worker automatically on container start and when you attach to it. A process lock prevents those two lifecycle hooks from launching duplicate workers. Startup output is saved to `$HOME/storybot-cloud-browser.log`.
 
 ## Port visibility is important
 
@@ -38,6 +40,6 @@ The worker uses normal visible Gemini website interactions in its isolated cloud
 
 It does not hide browser automation, bypass CAPTCHA, defeat bot checks, or automate a login challenge. If Gemini requires verification, the worker stops and reports the problem so it can be handled normally in the private browser console.
 
-## Availability and free-tier limits
+## Availability and production limitation
 
-The Codespace must remain running for the worker to serve requests. Codespaces may stop due to idle policies or usage limits, and port URLs or availability can change after the Codespace is recreated. This is a shared proof of concept, not guaranteed always-on production hosting.
+The startup hooks restart the worker when the existing Codespace starts or you attach to it; they cannot wake a stopped Codespace when a player sends a request. The Codespace must remain running for the worker to serve requests. If the Codespace is stopped, recreated, or its forwarded URL changes, the worker can be unavailable until it starts and the backend URL is updated. This is suitable for development/testing, not guaranteed always-on production hosting.
