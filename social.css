@@ -1384,3 +1384,125 @@ body.StorySocialPage { height:auto!important; min-height:100vh; overflow-x:hidde
     background: rgba(153, 79, 70, .24);
     color: #ffd0c5;
 }
+
+
+/* Keep the Social layout bounded: only the conversation area grows and scrolls. */
+@media (min-width: 761px) {
+    .StorySocialLayout {
+        box-sizing: border-box;
+        height: clamp(620px, calc(100vh - 220px), 820px);
+        min-height: 620px;
+        align-items: stretch;
+    }
+
+    .StorySocialSidebar {
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        overflow: hidden;
+    }
+
+    .StorySocialPaneHeader,
+    .StorySocialSearchBox,
+    .StorySocialSearchHint {
+        flex: 0 0 auto;
+    }
+
+    .StorySocialInbox {
+        flex: 0 1 auto;
+        min-height: 0;
+        max-height: 238px;
+        overflow: hidden;
+    }
+
+    .StorySocialInboxList {
+        max-height: 150px;
+    }
+
+    .StorySocialUserList {
+        flex: 1 1 auto;
+        min-height: 60px;
+        max-height: none;
+    }
+
+    .StorySocialChat {
+        height: 100%;
+        min-height: 0;
+        overflow: hidden;
+    }
+
+    .StorySocialChatEmpty {
+        height: 100%;
+        min-height: 0;
+        overflow: auto;
+    }
+
+    .StorySocialChatView {
+        flex: 1 1 auto;
+        height: 100%;
+        min-height: 0;
+        overflow: hidden;
+    }
+
+    .StorySocialProfileCard {
+        flex: 0 0 auto;
+    }
+
+    .StorySocialMessages {
+        flex: 1 1 0;
+        height: 0;
+        min-height: 0;
+        max-height: none;
+        overflow-y: auto;
+        overflow-x: hidden;
+        overscroll-behavior-y: contain;
+        scrollbar-gutter: stable;
+    }
+
+    .StorySocialComposer,
+    .StorySocialChatStatus {
+        flex: 0 0 auto;
+    }
+}
+
+/* On phones the page can scroll past the player finder, while the chat stays bounded. */
+@media (max-width: 760px) {
+    .StorySocialLayout {
+        height: auto;
+    }
+
+    .StorySocialChat {
+        min-height: 0;
+    }
+
+    .StorySocialChatEmpty {
+        height: auto;
+        min-height: min(58vh, 520px);
+    }
+
+    .StorySocialChatView {
+        height: min(72vh, 720px);
+        min-height: 540px;
+        max-height: 720px;
+        overflow: hidden;
+    }
+
+    .StorySocialMessages {
+        flex: 1 1 0;
+        height: 0;
+        min-height: 0;
+        max-height: none;
+        overflow-y: auto;
+        overflow-x: hidden;
+        overscroll-behavior-y: contain;
+    }
+
+    .StorySocialProfileCard {
+        flex: 0 0 auto;
+    }
+
+    .StorySocialComposer,
+    .StorySocialChatStatus {
+        flex: 0 0 auto;
+    }
+}
