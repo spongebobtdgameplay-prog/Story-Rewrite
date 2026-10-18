@@ -1532,3 +1532,134 @@ body.StorySocialPage { height:auto!important; min-height:100vh; overflow-x:hidde
  .StorySocialNotificationState{width:23px}
  .StorySocialPlayerMore{width:31px;height:32px}
 }
+
+
+/* Social UI cleanup: compact player search, stable inbox sizing, and notification controls by the selected ID. */
+.StorySocialSidebar::after {
+    display: none;
+}
+.StorySocialPaneHeader {
+    align-items: center;
+    padding: 0 3px 2px;
+    border-bottom: 0 !important;
+}
+.StorySocialPaneHeader h2 {
+    margin: 0;
+}
+.StorySocialPaneHeader p,
+.StorySocialPaneHeader .StorySocialEyebrow,
+.StorySocialPaneSeal {
+    display: none !important;
+}
+.StorySocialSearchBox {
+    margin-top: 8px;
+}
+.StorySocialSearchHint {
+    min-height: 18px;
+    padding: 5px 3px 2px;
+}
+.StorySocialIndexRule {
+    display: none !important;
+}
+.StorySocialInbox {
+    box-sizing: border-box;
+    flex: 0 0 auto !important;
+    min-height: 0;
+    max-height: 220px;
+    margin: 8px 0 13px;
+    overflow: hidden;
+}
+.StorySocialInboxList {
+    box-sizing: border-box;
+    max-height: 132px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding-right: 9px;
+    scrollbar-gutter: stable;
+}
+.StorySocialUserList {
+    min-width: 0;
+    padding-right: 10px;
+    margin-right: 0;
+    scrollbar-gutter: stable;
+}
+.StorySocialPlayerRow {
+    grid-template-columns: minmax(0, 1fr);
+}
+.StorySocialPlayerRow .StorySocialUserButton {
+    min-width: 0;
+    width: 100%;
+}
+.StorySocialIdentityStamp {
+    box-sizing: border-box;
+    display: flex !important;
+    flex: 0 1 auto !important;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: min(100%, 290px) !important;
+    padding: 8px 10px !important;
+    text-align: left;
+}
+.StorySocialIdentityValue {
+    display: grid;
+    min-width: 0;
+    gap: 3px;
+    text-align: left;
+}
+.StorySocialIdentityValue span {
+    display: block;
+    color: #d0b58b;
+    font: 800 9px/1.2 system-ui, sans-serif;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+}
+.StorySocialIdentityValue strong {
+    display: block;
+    max-width: 100%;
+    margin-top: 0;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    color: #ffe0a8;
+    font-size: clamp(10px, .95vw, 12px);
+    line-height: 1.35;
+}
+.StorySocialIdentityActions {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 5px;
+}
+.StorySocialIdentityActions .StorySocialNotificationState {
+    box-sizing: border-box;
+    width: 30px;
+    height: 30px;
+    border: 1px solid rgba(223, 186, 124, .22);
+    border-radius: 9px;
+    background: rgba(255, 247, 228, .06);
+}
+.StorySocialIdentityActions .StorySocialPlayerMore {
+    width: 30px;
+    height: 30px;
+}
+@media (max-width: 900px) {
+    .StorySocialIdentityStamp {
+        max-width: min(100%, 270px) !important;
+    }
+}
+@media (max-width: 520px) {
+    .StorySocialInbox {
+        max-height: 208px;
+        margin-block: 8px 12px;
+    }
+    .StorySocialInboxList {
+        max-height: 118px;
+    }
+    .StorySocialIdentityStamp {
+        max-width: 100% !important;
+        gap: 8px;
+        padding: 7px 8px !important;
+    }
+}
