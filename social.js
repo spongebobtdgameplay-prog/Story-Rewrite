@@ -42,6 +42,7 @@ function SocialBellIcon(Muted) {
 
 function SocialRefreshPlayerNotificationIcon(Username, Muted = SocialIsPlayerNotificationMuted(Username)) {
     const Target = String(Username || "").trim().toLowerCase();
+
     document.querySelectorAll(".StorySocialPlayerRow").forEach(Row => {
         if (String(Row.dataset.playerUsername || "").toLowerCase() !== Target) return;
         const Icon = Row.querySelector(".StorySocialNotificationState");
@@ -52,6 +53,24 @@ function SocialRefreshPlayerNotificationIcon(Username, Muted = SocialIsPlayerNot
         Icon.title = Muted ? "Notifications off for " + Username : "Notifications on for " + Username;
         Icon.setAttribute("aria-label", Icon.title);
     });
+
+    const SelectedName = String(SocialSelectedUser?.username || "").trim().toLowerCase();
+    if (SelectedName === Target) {
+        const Icon = SocialById("SocialSelectedNotificationState");
+        if (Icon) {
+            Icon.classList.toggle("Muted", Muted);
+            Icon.classList.toggle("Enabled", !Muted);
+            Icon.innerHTML = SocialBellIcon(Muted);
+            Icon.title = Muted ? "Notifications off for " + SocialSelectedUser.username
+                : "Notifications on for " + SocialSelectedUser.username;
+            Icon.setAttribute("aria-label", Icon.title);
+        }
+        const More = SocialById("SocialSelectedPlayerMore");
+        if (More) {
+            More.title = "Notification settings for " + SocialSelectedUser.username;
+            More.setAttribute("aria-label", More.title);
+        }
+    }
 }
 
 function SocialSetPlayerNotificationMuted(Username, Muted) {
@@ -113,7 +132,6 @@ function SocialOpenPlayerMenu(Username, Trigger) {
 
 function SocialBuildPlayerRow(User, Active) {
     const Username = String(User.username || "");
-    const Muted = SocialIsPlayerNotificationMuted(Username);
     const Row = document.createElement("div");
     Row.className = "StorySocialPlayerRow";
     Row.dataset.playerUsername = Username;
@@ -145,35 +163,9 @@ function SocialBuildPlayerRow(User, Active) {
     Select.append(Avatar, Copy, Presence);
     Select.addEventListener("click", function() { SelectSocialUser(Username); });
 
-    const Bell = document.createElement("span");
-    Bell.className = "StorySocialNotificationState " + (Muted ? "Muted" : "Enabled");
-    Bell.innerHTML = SocialBellIcon(Muted);
-    Bell.title = Muted ? "Notifications off for " + Username : "Notifications on for " + Username;
-    Bell.setAttribute("role", "img");
-    Bell.setAttribute("aria-label", Bell.title);
-
-    const More = document.createElement("button");
-    More.type = "button";
-    More.className = "StorySocialPlayerMore";
-    More.setAttribute("aria-label", "Notification settings for " + Username);
-    More.setAttribute("aria-haspopup", "menu");
-    More.setAttribute("aria-expanded", "false");
-    More.title = "Notification settings";
-    More.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.7"></circle><circle cx="12" cy="12" r="1.7"></circle><circle cx="19" cy="12" r="1.7"></circle></svg>';
-    More.addEventListener("click", function(Event) {
-        Event.preventDefault();
-        Event.stopPropagation();
-        const WasOpen = SocialActivePlayerMenu?.trigger === More;
-        SocialOpenPlayerMenu(Username, More);
-        More.setAttribute("aria-expanded", WasOpen ? "false" : "true");
-        document.querySelectorAll(".StorySocialPlayerMore").forEach(Button => {
-            if (Button !== More) Button.setAttribute("aria-expanded", "false");
-        });
-    });
-    Row.append(Select, Bell, More);
+    Row.appendChild(Select);
     return Row;
 }
-
 function SocialById(Id) {
     return document.getElementById(Id);
 }
@@ -293,10 +285,11 @@ function SocialRenderUsers(Users, EmptyMessage = "No matching Story Rewrite user
     SocialClosePlayerMenu();
 
     if (!Users.length) {
-        const Message = EmptyMessage === "Search for players"
-            ? "Search for players"
-            : "No matching Story Rewrite users were found.";
-        List.innerHTML = '<div class="StorySocialEmpty StorySocialEmptyPlain"><strong>' + Message + '</strong></div>';
+        if (EmptyMessage === "Search for players") {
+            List.replaceChildren();
+            return;
+        }
+        List.innerHTML = '<div class="StorySocialEmpty StorySocialEmptyPlain"><strong>No matching Story Rewrite users were found.</strong></div>';
         return;
     }
 
@@ -962,6 +955,7 @@ async function SelectSocialUser(Username) {
         PresenceDot.title = SocialPresenceTooltip(SocialSelectedUser);
     }
     SocialById("SocialChatUserId").textContent = SocialSelectedUser.userId;
+    SocialRefreshPlayerNotificationIcon(SocialSelectedUser.username);
     SocialRenderStats(SocialSelectedUser);
     SocialSetStatus(SocialById("SocialChatStatus"), "");
     await SocialLoadConversation();
@@ -1144,6 +1138,18 @@ document.addEventListener("DOMContentLoaded", async function() {
 
     SocialShowEmptyState();
     SocialById("SocialSettingsButton")?.addEventListener("click", SocialOpenSettings);
+    const SelectedMore = SocialById("SocialSelectedPlayerMore");
+    SelectedMore?.addEventListener("click", function(Event) {
+        Event.preventDefault();
+        Event.stopPropagation();
+        if (!SocialSelectedUser?.username) return;
+        const WasOpen = SocialActivePlayerMenu?.trigger === SelectedMore;
+        SocialOpenPlayerMenu(SocialSelectedUser.username, SelectedMore);
+        SelectedMore.setAttribute("aria-expanded", WasOpen ? "false" : "true");
+        document.querySelectorAll(".StorySocialPlayerMore").forEach(Button => {
+            if (Button !== SelectedMore) Button.setAttribute("aria-expanded", "false");
+        });
+    });
     Input?.addEventListener("input", function() {
         clearTimeout(SocialSearchTimer);
         SocialSearchTimer = setTimeout(function() {
