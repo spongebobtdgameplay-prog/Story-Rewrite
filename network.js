@@ -12,6 +12,12 @@ const STORY_TAB_ID_KEY = "StoryRewriteTabIdV1";
 const STORY_SOCIAL_HEARTBEAT_INTERVAL = 60000;
 const STORY_SWITCH_FROM_USERNAME_KEY = "StoryRewriteSwitchFromUsernameV1";
 const STORY_SESSION_CHANNEL_NAME = "StoryRewriteSessionChannelV1";
+const STORY_SOCIAL_NOTIFICATION_STATE_PREFIX = "StoryRewriteSocialUnreadStateV1:";
+const STORY_SOCIAL_NOTIFICATION_COUNT_PREFIX = "StoryRewriteSocialUnreadCountV1:";
+const STORY_SOCIAL_NOTIFICATION_MUTE_PREFIX = "StoryRewriteSocialNotificationMutesV1:";
+const STORY_SOCIAL_NOTIFICATION_REFRESH_INTERVAL = 30000;
+let StorySocialNotificationRefreshTimer = null;
+let StorySocialNotificationRefreshInFlight = false;
 const STORY_CLIENT_SNAPSHOT_KEYS = [
     STORY_LAST_PROFILE_KEY,
     STORY_LAST_SAVE_KEY,
@@ -68,12 +74,248 @@ function StoreLastKnownProfileResult(Result) {
     return Result;
 }
 
+function StorySocialNotificationAccountName(Profile = null) {
+    const Source = Profile || GetLastKnownProfileResult()?.profile || null;
+    return String(Source?.username || "").trim();
+}
+
+function StorySocialNotificationStateKey(Username = StorySocialNotificationAccountName()) {
+    const Name = String(Username || "").trim().toLowerCase();
+    return Name ? STORY_SOCIAL_NOTIFICATION_STATE_PREFIX + Name : "";
+}
+
+function StorySocialNotificationCountKey(Username = StorySocialNotificationAccountName()) {
+    const Name = String(Username || "").trim().toLowerCase();
+    return Name ? STORY_SOCIAL_NOTIFICATION_COUNT_PREFIX + Name : "";
+}
+
+function StoryGetStoredSocialNotificationCount(Username = StorySocialNotificationAccountName()) {
+    const Key = StorySocialNotificationCountKey(Username);
+    if (!Key) return 0;
+    try { return Math.max(0, Number.parseInt(localStorage.getItem(Key) || "0", 10) || 0); } catch { return 0; }
+}
+
+function StoryReadSocialNotificationState(Username = StorySocialNotificationAccountName()) {
+    const Key = StorySocialNotificationStateKey(Username);
+    if (!Key) return {};
+    try {
+        const Value = JSON.parse(localStorage.getItem(Key) || "{}");
+        return Value && typeof Value === "object" && !Array.isArray(Value) ? Value : {};
+    } catch { return {}; }
+}
+
+function StoryWriteSocialNotificationState(State, Username = StorySocialNotificationAccountName()) {
+    const Key = StorySocialNotificationStateKey(Username);
+    if (!Key) return;
+    try { localStorage.setItem(Key, JSON.stringify(State || {})); } catch {}
+}
+
+function StorySocialNotificationTime(Value) {
+    if (typeof Value === "number" && Number.isFinite(Value)) {
+        return Value > 0 && Value < 100000000000 ? Value * 1000 : Value;
+    }
+    const Text = String(Value || "").trim();
+    if (!Text) return 0;
+    if (/^\d{10,13}$/.test(Text)) {
+        const Numeric = Number(Text);
+        return Numeric < 100000000000 ? Numeric * 1000 : Numeric;
+    }
+    const Parsed = Date.parse(Text);
+    return Number.isFinite(Parsed) ? Parsed : 0;
+}
+
+function StoryIsSocialPlayerNotificationMuted(Username, AccountName = StorySocialNotificationAccountName()) {
+    const Account = String(AccountName || "").trim().toLowerCase();
+    const Target = String(Username || "").trim().toLowerCase();
+    if (!Account || !Target) return false;
+    try {
+        const Parsed = JSON.parse(localStorage.getItem(STORY_SOCIAL_NOTIFICATION_MUTE_PREFIX + Account) || "[]");
+        return Array.isArray(Parsed) && Parsed.some(Name => String(Name || "").trim().toLowerCase() === Target);
+    } catch { return false; }
+}
+
+function StoryGetSocialUnreadCountForUser(Username) {
+    const Entry = StoryReadSocialNotificationState()[String(Username || "").trim().toLowerCase()];
+    return Math.max(0, Number(Entry?.unreadCount || 0));
+}
+
+function StoryGetSocialUnreadEntries(State = StoryReadSocialNotificationState()) {
+    return Object.entries(State).map(([Key, Entry]) => ({
+        key: Key,
+        username: String(Entry?.username || Key),
+        unreadCount: Math.max(0, Number(Entry?.unreadCount || 0))
+    })).filter(Entry => Entry.unreadCount > 0);
+}
+
+function StoryRenderSocialNotificationState(State = StoryReadSocialNotificationState(), Username = StorySocialNotificationAccountName()) {
+    const Entries = StoryGetSocialUnreadEntries(State);
+    const Count = Entries.reduce((Total, Entry) => Total + Entry.unreadCount, 0);
+    const CountKey = StorySocialNotificationCountKey(Username);
+    if (CountKey) {
+        try { localStorage.setItem(CountKey, String(Count)); } catch {}
+    }
+
+    const ProfileResult = GetLastKnownProfileResult();
+    const Profile = ProfileResult?.profile || null;
+    if (Profile?.username?.toLowerCase() === String(Username || "").toLowerCase() && Profile?.userId) {
+        ApplyStoryIdentityTitle(Profile);
+    } else {
+        const Prefix = Count > 0 ? `(${Count > 99 ? "99+" : Count}) ` : "";
+        try { document.title = Prefix + (document.title.replace(/^\(\d+\+?\)\s*/, "") || "Story Rewrite"); } catch {}
+        try {
+            if (window.parent !== window && window.parent.document) window.parent.document.title = document.title;
+        } catch {}
+    }
+
+    document.querySelectorAll("[data-social-notification-badge]").forEach(Badge => {
+        Badge.textContent = Count > 99 ? "99+" : String(Count);
+        Badge.hidden = Count <= 0;
+        Badge.setAttribute("aria-label", Count + (Count === 1 ? " new message" : " new messages"));
+    });
+
+    const Notice = document.getElementById("SocialMainNotification");
+    if (Notice) {
+        Notice.hidden = Count <= 0;
+        if (Count > 0) {
+            const Heading = document.getElementById("SocialMainNotificationTitle");
+            const Detail = document.getElementById("SocialMainNotificationText");
+            if (Heading) Heading.textContent = Count === 1 ? "You have a new message" : `You have ${Count} new messages`;
+            if (Detail) {
+                const Names = Entries.map(Entry => Entry.username);
+                const Message = Names.length === 1 ? Names[0] + " messaged you."
+                    : Names.length === 2 ? Names[0] + " and " + Names[1] + " messaged you."
+                    : Names.slice(0, 2).join(", ") + " and " + (Names.length - 2) + " more players messaged you.";
+                Detail.textContent = Message;
+            }
+        }
+    }
+
+    try {
+        window.dispatchEvent(new CustomEvent("StorySocialNotificationsChanged", { detail: { count: Count, entries: Entries } }));
+    } catch {}
+    return Count;
+}
+
+function StoryMarkSocialConversationRead(Username) {
+    const TargetName = String(Username || "").trim();
+    const Target = TargetName.toLowerCase();
+    const AccountName = StorySocialNotificationAccountName();
+    if (!Target || !AccountName) return;
+    const State = StoryReadSocialNotificationState(AccountName);
+    const Entry = State[Target] || { username: TargetName, lastSeenAt: 0, lastNotifiedAt: 0, unreadCount: 0 };
+    const Now = Date.now();
+    Entry.username = TargetName || Entry.username || Target;
+    Entry.lastSeenAt = Math.max(Number(Entry.lastSeenAt || 0), Now);
+    Entry.lastNotifiedAt = Math.max(Number(Entry.lastNotifiedAt || 0), Now);
+    Entry.unreadCount = 0;
+    State[Target] = Entry;
+    StoryWriteSocialNotificationState(State, AccountName);
+    StoryRenderSocialNotificationState(State, AccountName);
+}
+
+function StoryRecordIncomingSocialMessage(Username, SentAt) {
+    const TargetName = String(Username || "").trim();
+    const Target = TargetName.toLowerCase();
+    const AccountName = StorySocialNotificationAccountName();
+    if (!Target || !AccountName || Target === AccountName.toLowerCase()) return;
+
+    if (document.visibilityState === "visible" &&
+        /(?:^|\/)social\.html$/i.test(window.location.pathname || "") &&
+        !document.getElementById("SocialChatView")?.hidden &&
+        String(document.getElementById("SocialChatUsername")?.textContent || "").trim().toLowerCase() === Target) {
+        StoryMarkSocialConversationRead(TargetName);
+        return;
+    }
+
+    const At = StorySocialNotificationTime(SentAt) || Date.now();
+    const State = StoryReadSocialNotificationState(AccountName);
+    const Entry = State[Target] || { username: TargetName, lastSeenAt: 0, lastNotifiedAt: 0, unreadCount: 0 };
+    if (At <= Number(Entry.lastSeenAt || 0) || At <= Number(Entry.lastNotifiedAt || 0)) return;
+
+    Entry.username = TargetName;
+    Entry.lastNotifiedAt = At;
+    if (!StoryIsSocialPlayerNotificationMuted(TargetName, AccountName)) {
+        Entry.unreadCount = Math.max(0, Number(Entry.unreadCount || 0)) + 1;
+    }
+    State[Target] = Entry;
+    StoryWriteSocialNotificationState(State, AccountName);
+    StoryRenderSocialNotificationState(State, AccountName);
+}
+
+async function StoryRefreshSocialNotifications() {
+    if (StorySocialNotificationRefreshInFlight || !GetAuthToken() || typeof ApiRequest !== "function") return;
+    StorySocialNotificationRefreshInFlight = true;
+    try {
+        let Profile = GetLastKnownProfileResult()?.profile || null;
+        if (!Profile?.username) {
+            try { Profile = (await GetAccountProfile())?.profile || null; } catch {}
+        }
+        const AccountName = String(Profile?.username || "").trim();
+        if (!AccountName) return;
+
+        const Result = await ApiRequest("/api/social/inbox?limit=20");
+        const Items = Array.isArray(Result?.messages) ? Result.messages : [];
+        const State = StoryReadSocialNotificationState(AccountName);
+
+        for (const Item of Items) {
+            const TargetName = String(Item?.user?.username || "").trim();
+            const Target = TargetName.toLowerCase();
+            if (!Target || Item?.lastMessageFromMe) continue;
+            const At = StorySocialNotificationTime(Item?.lastMessageAt);
+            if (!At) continue;
+            const Entry = State[Target] || { username: TargetName, lastSeenAt: 0, lastNotifiedAt: 0, unreadCount: 0 };
+            if (At > Number(Entry.lastSeenAt || 0) && At > Number(Entry.lastNotifiedAt || 0)) {
+                Entry.username = TargetName;
+                Entry.lastNotifiedAt = At;
+                if (!StoryIsSocialPlayerNotificationMuted(TargetName, AccountName)) {
+                    Entry.unreadCount = Math.max(0, Number(Entry.unreadCount || 0)) + 1;
+                }
+                State[Target] = Entry;
+            }
+        }
+
+        StoryWriteSocialNotificationState(State, AccountName);
+        StoryRenderSocialNotificationState(State, AccountName);
+    } catch {
+        // Notifications are optional; a failed inbox check must not affect gameplay.
+    } finally {
+        StorySocialNotificationRefreshInFlight = false;
+    }
+}
+
+function StartStorySocialNotificationTracking() {
+    if (StorySocialNotificationRefreshTimer || !GetAuthToken()) return;
+    StoryRefreshSocialNotifications();
+    StorySocialNotificationRefreshTimer = window.setInterval(() => {
+        if (!GetAuthToken()) {
+            clearInterval(StorySocialNotificationRefreshTimer);
+            StorySocialNotificationRefreshTimer = null;
+            return;
+        }
+        StoryRefreshSocialNotifications();
+    }, STORY_SOCIAL_NOTIFICATION_REFRESH_INTERVAL);
+}
+
+window.addEventListener("focus", StoryRefreshSocialNotifications);
+document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") StoryRefreshSocialNotifications();
+});
+window.addEventListener("storage", Event => {
+    const Username = StorySocialNotificationAccountName();
+    if (Event.key === StorySocialNotificationStateKey(Username)) {
+        StoryRenderSocialNotificationState(StoryReadSocialNotificationState(Username), Username);
+    }
+});
+document.addEventListener("DOMContentLoaded", StartStorySocialNotificationTracking, { once: true });
+
 function ApplyStoryIdentityTitle(Profile = null) {
     const Username = String(Profile?.username || "").trim();
     const UserId = String(Profile?.userId || "").trim();
     if (!Username || !UserId) return;
 
-    const Title = `Story Rewrite — ${UserId}`;
+    const UnreadCount = StoryGetStoredSocialNotificationCount(Username);
+    const Prefix = UnreadCount > 0 ? `(${UnreadCount > 99 ? "99+" : UnreadCount}) ` : "";
+    const Title = `${Prefix}Story Rewrite — ${UserId}`;
     try { document.title = Title; } catch {}
     try {
         if (window.parent !== window && window.parent.document) {
