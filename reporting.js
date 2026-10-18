@@ -284,6 +284,7 @@ setTimeout(() => clearInterval(ChatModerationBindTimer), 30000);
 .StoryTermsWarningRule strong{color:#fff0d2}
 .StoryTermsWarningActions{display:flex;justify-content:flex-end;margin-top:22px}
 .StoryTermsWarningAcknowledge{min-width:140px;border:0;border-radius:12px;padding:11px 17px;background:#d19a54;color:#1c130a;font:900 13px/1 system-ui,sans-serif;cursor:pointer}
+.StoryTermsWarningTermsButton{min-width:140px;border:1px solid rgba(209,154,84,.42);border-radius:12px;padding:11px 17px;background:transparent;color:#f0cf9a;font:850 13px/1 system-ui,sans-serif;cursor:pointer}
 `;
         document.head.appendChild(Style);
     }
@@ -310,12 +311,17 @@ setTimeout(() => clearInterval(ChatModerationBindTimer), 30000);
                     <h3>What happens next</h3>
                     <p>Confirmed abuse can be removed from chat. Repeated confirmed abuse can result in a temporary chat timeout or additional game moderation.</p>
                     <div class="StoryTermsWarningActions">
-                        <button class="StoryTermsWarningAcknowledge" type="button" data-story-go="terms.html">Read Terms of Service</button>
+                        <button class="StoryTermsWarningTermsButton" id="StoryTermsWarningViewTerms" type="button">Read Terms of Service</button>
                         <button class="StoryTermsWarningAcknowledge" id="StoryTermsWarningAcknowledge" type="button">I Understand</button>
                     </div>
                 </div>
             `;
             document.body.appendChild(Overlay);
+
+            Overlay.querySelector("#StoryTermsWarningViewTerms")?.addEventListener("click", () => {
+                if (typeof StoryNavigate === "function") StoryNavigate("terms.html");
+                else window.location.href = "terms.html";
+            });
 
             const Close = () => {
                 Overlay?.remove();
