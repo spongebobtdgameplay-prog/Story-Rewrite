@@ -1,4 +1,60 @@
 const KeepMusicPlayingKey = "StoryRewriteKeepMusicPlayingV1";
+const InGameNotificationSettingsKey = "StoryRewriteInGameNotificationSettingsV1";
+
+function ReadInGameNotificationPreferences() {
+    const Defaults = { enabled: true, multiplayerChat: true, socialMessages: true };
+    try {
+        const Saved = JSON.parse(localStorage.getItem(InGameNotificationSettingsKey) || "{}");
+        return {
+            enabled: typeof Saved.enabled === "boolean" ? Saved.enabled : Defaults.enabled,
+            multiplayerChat: typeof Saved.multiplayerChat === "boolean" ? Saved.multiplayerChat : Defaults.multiplayerChat,
+            socialMessages: typeof Saved.socialMessages === "boolean" ? Saved.socialMessages : Defaults.socialMessages
+        };
+    } catch {
+        return Defaults;
+    }
+}
+
+function RenderInGameNotificationPreferences() {
+    const Preferences = ReadInGameNotificationPreferences();
+    const Controls = [
+        ["InGameNotificationsToggle", "InGameNotificationsState", Preferences.enabled],
+        ["MultiplayerChatNotificationsToggle", "MultiplayerChatNotificationsState", Preferences.multiplayerChat],
+        ["SocialMessageNotificationsToggle", "SocialMessageNotificationsState", Preferences.socialMessages]
+    ];
+
+    Controls.forEach(function(Entry) {
+        const Button = document.getElementById(Entry[0]);
+        const State = document.getElementById(Entry[1]);
+        if (Button) {
+            Button.setAttribute("aria-checked", Entry[2] ? "true" : "false");
+            Button.disabled = Entry[0] !== "InGameNotificationsToggle" && !Preferences.enabled;
+        }
+        if (State) State.textContent = Entry[2] ? "On" : "Off";
+    });
+
+    document.getElementById("MultiplayerChatNotificationsRow")?.classList.toggle("IsDisabled", !Preferences.enabled);
+    document.getElementById("SocialMessageNotificationsRow")?.classList.toggle("IsDisabled", !Preferences.enabled);
+}
+
+function SaveInGameNotificationPreferences(Changes) {
+    const Preferences = Object.assign({}, ReadInGameNotificationPreferences(), Changes);
+    const Status = document.getElementById("NotificationSettingsStatus");
+    try {
+        localStorage.setItem(InGameNotificationSettingsKey, JSON.stringify(Preferences));
+        if (Status) {
+            Status.textContent = "Notification preferences saved on this device.";
+            Status.className = "StoryNotificationSettingsStatus Good";
+        }
+        window.dispatchEvent(new CustomEvent("StoryRewriteNotificationPreferencesChanged", { detail: Preferences }));
+    } catch {
+        if (Status) {
+            Status.textContent = "This browser could not save notification preferences.";
+            Status.className = "StoryNotificationSettingsStatus Bad";
+        }
+    }
+    RenderInGameNotificationPreferences();
+}
 let SettingsSave = null;
 let SettingsData = null;
 let MusicSlider = null;
@@ -252,6 +308,20 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     RenderKeepMusicPlaying();
     ApplyKeepMusicPlaying(ReadKeepMusicPlaying());
+    RenderInGameNotificationPreferences();
+
+    document.getElementById("InGameNotificationsToggle")?.addEventListener("click", function() {
+        const Preferences = ReadInGameNotificationPreferences();
+        SaveInGameNotificationPreferences({ enabled: !Preferences.enabled });
+    });
+    document.getElementById("MultiplayerChatNotificationsToggle")?.addEventListener("click", function() {
+        const Preferences = ReadInGameNotificationPreferences();
+        if (Preferences.enabled) SaveInGameNotificationPreferences({ multiplayerChat: !Preferences.multiplayerChat });
+    });
+    document.getElementById("SocialMessageNotificationsToggle")?.addEventListener("click", function() {
+        const Preferences = ReadInGameNotificationPreferences();
+        if (Preferences.enabled) SaveInGameNotificationPreferences({ socialMessages: !Preferences.socialMessages });
+    });
 
     PresenceButtons.forEach(Button => {
         Button.addEventListener("click", () => {
