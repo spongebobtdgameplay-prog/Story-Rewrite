@@ -126,12 +126,15 @@ function SocialRenderStats(User) {
     }).join("");
 }
 
-function SocialRenderUsers(Users) {
+function SocialRenderUsers(Users, EmptyMessage = "No matching Story Rewrite users were found.") {
     const List = SocialById("SocialUserList");
     if (!List) return;
 
     if (!Users.length) {
-        List.innerHTML = '<div class="StorySocialEmpty">No matching Story Rewrite users were found.</div>';
+        const Message = EmptyMessage === "Search for players"
+            ? "Search for players"
+            : "No matching Story Rewrite users were found.";
+        List.innerHTML = '<div class="StorySocialEmpty StorySocialEmptyPlain"><strong>' + Message + '</strong></div>';
         return;
     }
 
@@ -231,8 +234,8 @@ async function SocialSearchUsers(Query) {
     const RequestId = ++SocialSearchRequestId;
 
     if (!Search) {
-        SocialRenderUsers([]);
-        if (Status) Status.textContent = "Start with a username.";
+        SocialRenderUsers([], "Search for players");
+        if (Status) Status.textContent = "";
         return;
     }
 
@@ -326,7 +329,18 @@ function SocialPositionMessageMenu() {
     const MenuRect = Menu.getBoundingClientRect();
     const MenuWidth = Math.min(MenuRect.width || 170, ViewportWidth - Margin * 2);
     const MenuHeight = Math.min(MenuRect.height || 120, ViewportHeight - Margin * 2);
-    let Left = TriggerRect.right - MenuWidth;
+    const MessageBubble = Trigger.closest(".StorySocialMessage");
+    const IsRightSideBubble = Boolean(MessageBubble?.classList.contains("Sent"));
+    const Gap = 8;
+    let Left = IsRightSideBubble
+        ? TriggerRect.left - MenuWidth - Gap
+        : TriggerRect.right + Gap;
+
+    if (!IsRightSideBubble && Left + MenuWidth > ViewportWidth - Margin) {
+        Left = TriggerRect.left - MenuWidth - Gap;
+    } else if (IsRightSideBubble && Left < Margin) {
+        Left = TriggerRect.right + Gap;
+    }
     Left = Math.max(Margin, Math.min(Left, ViewportWidth - MenuWidth - Margin));
     let Top = TriggerRect.bottom + 5;
     if (Top + MenuHeight > ViewportHeight - Margin) Top = TriggerRect.top - MenuHeight - 5;
@@ -574,13 +588,22 @@ function SocialAddMessage(Message) {
         });
         Element.append(More, Menu);
 
-        const HeartLabel = Message.heartedByMe
-            ? "♥ Liked" + (Number(Message.heartCount || 0) > 0 ? " · " + Number(Message.heartCount) : "")
-            : "♡ Heart" + (Number(Message.heartCount || 0) > 0 ? " · " + Number(Message.heartCount) : "");
-        Menu.appendChild(SocialBuildMessageAction(HeartLabel, "HeartAction" + (Message.heartedByMe ? " IsActive" : ""), async () => {
-            SocialCloseMessageMenu(Menu);
-            await SocialHeartMessage(Id);
-        }));
+        Menu.appendChild(SocialBuildMessageAction(
+            "👍 Like",
+            "LikeAction" + (Message.likedByMe ? " IsActive" : ""),
+            async () => {
+                SocialCloseMessageMenu(Menu);
+                await SocialReactMessage(Id, "like");
+            }
+        ));
+        Menu.appendChild(SocialBuildMessageAction(
+            "👎 Dislike",
+            "DislikeAction" + (Message.dislikedByMe ? " IsActive" : ""),
+            async () => {
+                SocialCloseMessageMenu(Menu);
+                await SocialReactMessage(Id, "dislike");
+            }
+        ));
 
         if (!Mine) {
             Menu.appendChild(SocialBuildMessageAction("Report", "ReportAction", async () => {
@@ -601,13 +624,23 @@ function SocialAddMessage(Message) {
     Text.textContent = Deleted ? "Message deleted" : String(Message.text || "");
     Element.appendChild(Text);
 
-    if (!Deleted && Number(Message.heartCount || 0) > 0) {
-        const Reactions = document.createElement("div");
-        Reactions.className = "StorySocialMessageReactions";
-        Reactions.textContent = "♥ " + Number(Message.heartCount);
-        if (Message.heartedByMe) Reactions.title = "You hearted this message";
-        Element.appendChild(Reactions);
-    }
+    const Reactions = document.createElement("div");
+    Reactions.className = "StorySocialMessageReactions";
+    Reactions.setAttribute("aria-label",
+        Number(Message.likeCount || 0) + " likes, " + Number(Message.dislikeCount || 0) + " dislikes");
+
+    const Likes = document.createElement("span");
+    Likes.className = "StorySocialMessageReaction LikeCount";
+    Likes.textContent = "👍 " + Number(Message.likeCount || 0);
+    Likes.title = Message.likedByMe ? "You liked this message" : "Likes";
+
+    const Dislikes = document.createElement("span");
+    Dislikes.className = "StorySocialMessageReaction DislikeCount";
+    Dislikes.textContent = "👎 " + Number(Message.dislikeCount || 0);
+    Dislikes.title = Message.dislikedByMe ? "You disliked this message" : "Dislikes";
+
+    Reactions.append(Likes, Dislikes);
+    Element.appendChild(Reactions);
 
     const Time = document.createElement("div");
     Time.className = "StorySocialMessageTime";
@@ -649,14 +682,14 @@ async function SocialLoadConversation() {
     }
 }
 
-async function SocialHeartMessage(MessageId) {
+async function SocialReactMessage(MessageId, Reaction) {
     try {
         const Result = await ApiRequest("/api/social/messages/react", {
             method: "POST",
-            body: JSON.stringify({ messageId: MessageId })
+            body: JSON.stringify({ messageId: MessageId, reaction: Reaction })
         });
         if (Result?.message) SocialAddMessage(Result.message);
-        SocialSetStatus(SocialById("SocialChatStatus"), "Reaction updated.", "Good");
+        SocialSetStatus(SocialById("SocialChatStatus"), Reaction === "like" ? "Like updated." : "Dislike updated.", "Good");
         SocialLoadInbox();
     } catch (Error) {
         SocialSetStatus(SocialById("SocialChatStatus"), SocialSafeError(Error, "Could not update the reaction."), "Bad");
@@ -860,6 +893,10 @@ async function SocialEnsureSocket() {
         const Me = String(SocialCurrentUser?.username || "").toLowerCase();
         SocialLoadInbox();
         if (!Selected || !((Sender === Selected && Recipient === Me) || (Sender === Me && Recipient === Selected))) return;
+        if (Message?.reactionUpdated) {
+            SocialLoadConversation();
+            return;
+        }
         SocialAddMessage(Message);
     });
 
