@@ -34,10 +34,11 @@ jobs:
       - run: node --check moderation-version.js
       - run: node --check host-controls.js
       - run: node --check ai-chat.js
+      - run: node --check storybot-gemini-guest.js
       - run: python -m py_compile storybot-cloud-browser/worker.py
       - run: bash -n storybot-cloud-browser/install.sh
       - run: bash -n storybot-cloud-browser/start.sh
-      - name: Validate StoryBot browser composer
+      - name: Validate StoryBot chat composer
         run: |
           node <<'NODE'
           const fs = require("fs");
@@ -45,6 +46,7 @@ jobs:
           const Lobby = fs.readFileSync("multiplayer.html", "utf8");
           const Game = fs.readFileSync("dialog.html", "utf8");
           const CSS = fs.readFileSync("chat-ai.css", "utf8");
+          const Guest = fs.readFileSync("storybot-gemini-guest.js", "utf8");
 
           const Must = [
               [AI, "function PrepareStoryBotComposer", "composer preparation helper"],
@@ -54,9 +56,9 @@ jobs:
               [AI, "storybot:ask", "direct StoryBot socket event"],
               [AI, "async function AskAI(PromptText)", "AskAI socket helper"],
               [AI, 'Socket.on("room:chat", LogStoryBotConsoleReply)', "StoryBot response logger"],
-              [fs.readFileSync("storybot-cloud-browser/worker.py", "utf8"), "launch_persistent_context", "isolated persistent Chromium profile"],
-              [fs.readFileSync("storybot-cloud-browser/worker.py", "utf8"), "async def _ask_gemini", "Gemini website interaction"],
-              [fs.readFileSync("storybot-cloud-browser/worker.py", "utf8"), "STORYBOT_WORKER_TOKEN", "worker authentication"],
+              [Guest, "STORYBOT_MASTER_PROMPT", "StoryBot master prompt"],
+              [Guest, "askStoryBotGemini", "direct Gemini guest request helper"],
+              [Guest, "BardFrontendService/StreamGenerate", "direct Gemini guest request"],
               [AI, "STORYBOT RESPONSE", "styled StoryBot console reply"],
               [AI, 'Socket.on("room:chat", LogStoryBotConsoleReply)', "StoryBot room response listener"],
               [Lobby, 'id="ChatInput"', "lobby chat composer"],
@@ -99,6 +101,7 @@ jobs:
           const AI = fs.readFileSync("ai-chat.js", "utf8");
           const CSS = fs.readFileSync("chat-ai.css", "utf8");
           const Docker = fs.readFileSync("Dockerfile", "utf8");
+          const Guest = fs.readFileSync("storybot-gemini-guest.js", "utf8");
 
           for (const [Text, Needle, Label] of [
             [AI, "async function AskAI(PromptText)", "AskAI helper"],
@@ -134,7 +137,8 @@ jobs:
             return Test.exports;
           }
 
-          let Source = fs.readFileSync("server-v11.js", "utf8");
+          let Source = fs.readFileSync("server-v12.js", "utf8");
+          Source = CompileWrapper(Source, path.resolve("server-v12.js"));
           Source = CompileWrapper(Source, path.resolve("server-v11.js"));
           Source = CompileWrapper(Source, path.resolve("server-v10.js"));
           Source = CompileWrapper(Source, path.resolve("server-v9.js"));
@@ -147,23 +151,26 @@ jobs:
             process.exit(1);
           }
 
-          for (const [Needle, Label] of [
-            ['Socket.on("storybot:ask"', "StoryBot ask handler"],
-            ["STORYBOT_BROWSER_WORKER_URL", "cloud worker URL configuration"],
-            ["STORYBOT_BROWSER_WORKER_TOKEN", "cloud worker authentication"],
-            ["fetch(WorkerUrl", "cloud worker HTTP request"],
-            ["recentChat:", "recent conversation history"],
-            ["gameHasStarted", "authoritative game state"],
-            ["Abort.signal.aborted", "bounded worker request timeout"]
+          for (const [Text, Needle, Label] of [
+            [Source, 'Socket.on("storybot:ask"', "StoryBot ask handler"],
+            [Source, "StoryBotGeminiGuest.askStoryBotGemini", "direct Gemini guest request"],
+            [Source, "recentChat:", "recent conversation history"],
+            [Source, "gameHasStarted", "authoritative game state"],
+            [Guest, "STORYBOT_MASTER_PROMPT", "StoryBot master prompt"],
+            [Guest, "AbortController", "bounded direct request timeout"],
+            [Guest, "BardFrontendService/StreamGenerate", "guest web RPC endpoint"]
           ]) {
-            if (!Source.includes(Needle)) throw new Error("Generated server is missing " + Label + ".");
+            if (!Text.includes(Needle)) throw new Error("Missing " + Label + ".");
           }
 
           for (const [Needle, Label] of [
+            ["STORYBOT_BROWSER_WORKER_URL", "obsolete cloud browser URL"],
+            ["STORYBOT_BROWSER_WORKER_TOKEN", "obsolete cloud browser token"],
+            ["fetch(WorkerUrl", "obsolete cloud browser request"],
             ["STORYBOT_GEMINI_API_KEY", "Gemini API key dependency"],
             ["generativelanguage.googleapis.com", "paid Gemini API endpoint"],
             ["https://text.pollinations.ai/", "retired Pollinations endpoint"],
-            ["https://aihorde.net/api/v2", "anonymous Horde endpoint"],
+            ["https://aihorde.net/api/v2", "anonymous Horde endpoint"]
           ]) {
             if (Source.includes(Needle)) throw new Error("Generated server still contains " + Label + ".");
           }
