@@ -13,7 +13,7 @@
 <link rel="stylesheet" href="looks3.css?v=20260930-1">
 <link rel="stylesheet" href="looks4.css?v=20260930-1">
 <link rel="stylesheet" href="shell-ui.css?v=20261008-1">
-<link rel="stylesheet" href="social.css?v=20261015-3">
+<link rel="stylesheet" href="social.css?v=20261018-1">
 </head>
 <body class="AccountSettingsPage StorySocialPage">
 <main class="StorySocialShell">
@@ -70,6 +70,16 @@
                 <span id="SocialSearchStatus" aria-live="polite">Start with a username.</span>
                 <span class="StorySocialIndexRule" aria-hidden="true"></span>
             </div>
+
+            <section class="StorySocialInbox" aria-label="People who messaged you">
+                <div class="StorySocialInboxHeader">
+                    <span>Inbox</span>
+                    <span id="SocialInboxStatus">Recent messages</span>
+                </div>
+                <div id="SocialInboxList" class="StorySocialInboxList" aria-live="polite">
+                    <div class="StorySocialInboxEmpty">Loading your inbox...</div>
+                </div>
+            </section>
 
             <div id="SocialUserList" class="StorySocialUserList" aria-live="polite">
                 <div class="StorySocialEmpty">
@@ -151,6 +161,6 @@
 <script src="real-audio.js?v=20261003-4"></script>
 <script src="shell-ui.js?v=20261008-1"></script>
 <script src="build-version.js?v=20261018-2"></script>
-<script src="social.js?v=20261015-3"></script>
+<script src="social.js?v=20261018-1"></script>
 </body>
 </html>
