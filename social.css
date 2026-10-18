@@ -1193,3 +1193,137 @@ body.StorySocialPage { height:auto!important; min-height:100vh; overflow-x:hidde
     .StorySocialInboxButton,.StorySocialMessageMore,.StorySocialMessageAction{transition:none}
     .StorySocialInboxButton:hover,.StorySocialMessageMore:hover,.StorySocialMessageAction:hover{transform:none}
 }
+
+
+/* Social message actions: keep the dots on the bubble's right edge and escape chat overflow. */
+.StorySocialMessage {
+    text-align: left;
+}
+.StorySocialMessageText,
+.StorySocialMessageTime,
+.StorySocialMessageReactions {
+    text-align: left !important;
+}
+.StorySocialMessageMore {
+    left: auto !important;
+    right: 7px !important;
+    z-index: 8 !important;
+    visibility: visible;
+    opacity: .9;
+}
+.StorySocialMessage:hover .StorySocialMessageMore,
+.StorySocialMessage:focus-within .StorySocialMessageMore,
+.StorySocialMessageMore[aria-expanded="true"] {
+    opacity: 1;
+}
+.StorySocialMessageMenu {
+    position: fixed !important;
+    z-index: 2147483647 !important;
+    inset: auto;
+    width: max-content;
+    min-width: 160px;
+    max-width: calc(100vw - 20px);
+    max-height: calc(100vh - 20px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    text-align: left;
+    transform: none !important;
+}
+.StorySocialMessageMenu[hidden] {
+    display: none !important;
+}
+
+/* A top-layer report dialog stays visible even while the conversation is scrolled. */
+.StorySocialReportDialog {
+    box-sizing: border-box;
+    width: min(440px, calc(100vw - 28px));
+    max-width: calc(100vw - 28px);
+    max-height: min(84vh, 690px);
+    overflow: auto;
+    padding: 0;
+    border: 1px solid rgba(225, 190, 132, .38);
+    border-radius: 16px;
+    color: #f7e5c7;
+    background: linear-gradient(160deg, #32231a, #211711);
+    box-shadow: 0 24px 80px rgba(0, 0, 0, .62);
+    z-index: 2147483647;
+}
+.StorySocialReportDialog::backdrop {
+    background: rgba(9, 6, 4, .74);
+    backdrop-filter: blur(3px);
+}
+.StorySocialReportForm {
+    display: grid;
+    gap: 10px;
+    padding: 21px;
+}
+.StorySocialReportForm h2 {
+    margin: 0;
+    color: #ffe4b5;
+    font: 900 23px/1.1 Georgia, "Times New Roman", serif;
+}
+.StorySocialReportForm p {
+    margin: 0 0 4px;
+    color: #cbb397;
+    font: 600 12px/1.5 system-ui, sans-serif;
+}
+.StorySocialReportForm label {
+    margin-top: 3px;
+    color: #efd4a6;
+    font: 800 11px/1.3 system-ui, sans-serif;
+}
+.StorySocialReportForm select,
+.StorySocialReportForm textarea {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    padding: 11px 12px;
+    border: 1px solid rgba(225, 190, 132, .32);
+    border-radius: 9px;
+    outline: 0;
+    color: #fff0d4;
+    background: #19120e;
+    font: 600 13px/1.4 system-ui, sans-serif;
+}
+.StorySocialReportForm select:focus,
+.StorySocialReportForm textarea:focus {
+    border-color: #d6a361;
+    box-shadow: 0 0 0 3px rgba(214, 163, 97, .16);
+}
+.StorySocialReportForm textarea {
+    min-height: 74px;
+    resize: vertical;
+}
+.StorySocialReportActions {
+    display: flex;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 7px;
+}
+.StorySocialReportActions button {
+    min-height: 38px;
+    padding: 9px 13px;
+    border: 1px solid rgba(225, 190, 132, .25);
+    border-radius: 9px;
+    cursor: pointer;
+    font: 800 12px/1.2 system-ui, sans-serif;
+}
+.StorySocialReportCancel {
+    color: #ead4b4;
+    background: rgba(255, 245, 222, .05);
+}
+.StorySocialReportSubmit {
+    color: #2a1a0f;
+    background: linear-gradient(180deg, #f3d29b, #c99a5f);
+}
+.StorySocialReportActions button:focus-visible {
+    outline: 2px solid #ffe3b0;
+    outline-offset: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+    .StorySocialMessageMore,
+    .StorySocialMessageAction {
+        transition: none !important;
+    }
+}
