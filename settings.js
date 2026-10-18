@@ -13,6 +13,7 @@ let PresenceButtons = [];
 let PresenceDurationSelect = null;
 let PresenceStatusLine = null;
 let PresenceSaveInFlight = false;
+let PresenceSaveQueued = false;
 
 function CloneSettingsSave(Save) {
     try { return JSON.parse(JSON.stringify(Save)); } catch { return Save; }
@@ -151,10 +152,15 @@ async function LoadPresenceSettings() {
 }
 
 async function SavePresenceSettings() {
-    if (PresenceSaveInFlight) return;
+    if (PresenceSaveInFlight) {
+        PresenceSaveQueued = true;
+        return;
+    }
     PresenceSaveInFlight = true;
+    PresenceSaveQueued = false;
 
-    const Duration = Number(PresenceDurationSelect?.value || 0);
+    const RequestedStatus = PresenceStatus;
+    const RequestedDuration = Number(PresenceDurationSelect?.value || 0);
     UpdatePresenceButtonTitles();
     SetPresenceStatusLine("Saving presence...");
 
@@ -162,23 +168,34 @@ async function SavePresenceSettings() {
         const Result = await ApiRequest("/api/social/status", {
             method: "POST",
             body: JSON.stringify({
-                status: PresenceStatus,
-                durationMinutes: Duration
+                status: RequestedStatus,
+                durationMinutes: RequestedDuration
             })
         });
-        RenderPresenceControls(Result);
-        SetPresenceStatusLine(
-            PresenceStatus === "ghost"
-                ? "Ghost mode is active. Other players will see you as offline."
-                : PresenceStatus === "idle"
-                    ? "Idle status is active."
-                    : "Online status is active.",
-            "Good"
-        );
+
+        const ChangedWhileSaving = PresenceStatus !== RequestedStatus ||
+            Number(PresenceDurationSelect?.value || 0) !== RequestedDuration;
+        if (ChangedWhileSaving) {
+            PresenceSaveQueued = true;
+        } else {
+            RenderPresenceControls(Result);
+            SetPresenceStatusLine(
+                RequestedStatus === "ghost"
+                    ? "Ghost mode is active. Other players will see you as offline."
+                    : RequestedStatus === "idle"
+                        ? "Idle status is active."
+                        : "Online status is active.",
+                "Good"
+            );
+        }
     } catch (Error) {
         SetPresenceStatusLine(Error.message || "Could not save presence.", "Bad");
     } finally {
         PresenceSaveInFlight = false;
+        if (PresenceSaveQueued) {
+            PresenceSaveQueued = false;
+            SavePresenceSettings();
+        }
     }
 }
 
