@@ -314,6 +314,8 @@ body {
     line-height: 1.1;
     letter-spacing: 0;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 #App > .TopBar > .TopActions > .SettingsNavButton {
     flex: 0 0 40px;
