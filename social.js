@@ -923,6 +923,7 @@ async function SocialReportMessage(MessageId) {
 async function SelectSocialUser(Username) {
     if (!Username) return;
 
+    if (typeof StoryMarkSocialConversationRead === "function") StoryMarkSocialConversationRead(Username);
     SocialActiveUsername = String(Username).toLowerCase();
     SocialUpdateActiveUserButtons();
     SocialSelectedUser = null;
@@ -1075,12 +1076,16 @@ async function SocialEnsureSocket() {
         const Me = String(SocialCurrentUser?.username || "").toLowerCase();
         SocialLoadInbox();
 
-        if (Sender && Recipient === Me && Sender !== Me &&
-            typeof StoryAudio !== "undefined" && typeof StoryAudio.PlaySound === "function") {
-            StoryAudio.PlaySound("socialMessage", {
-                username: Sender,
-                accountUsername: SocialCurrentUser?.username
-            });
+        if (Sender && Recipient === Me && Sender !== Me) {
+            if (typeof StoryRecordIncomingSocialMessage === "function") {
+                StoryRecordIncomingSocialMessage(Sender, Message?.sentAt || Message?.createdAt || Message?.timestamp);
+            }
+            if (typeof StoryAudio !== "undefined" && typeof StoryAudio.PlaySound === "function") {
+                StoryAudio.PlaySound("socialMessage", {
+                    username: Sender,
+                    accountUsername: SocialCurrentUser?.username
+                });
+            }
         }
 
         if (!Selected || !((Sender === Selected && Recipient === Me) || (Sender === Me && Recipient === Selected))) return;
