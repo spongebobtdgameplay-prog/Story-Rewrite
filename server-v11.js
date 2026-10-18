@@ -735,8 +735,21 @@ if (!Source.includes(V43WarmupAnchor)) {
 Source = Source.replace(V43WarmupAnchor, V43WarmupAnchor + "\\n\\n" + V43WarmupCode);
 `;
 
+const V44PatchCode = `if (!Source.includes("const BackendVersion = 40;")) {
+    throw new Error("v44 patch failed: backend version 40 anchor");
+}
+Source = Source.replace("const BackendVersion = 40;", "const BackendVersion = 41;");
+
+const V44QuestionIdSearch = '            id: "storybot-question-" + Date.now() + "-" + Math.random().toString(36).slice(2, 8),';
+const V44QuestionIdReplacement = '            id: /^[A-Za-z0-9_-]{1,100}$/.test(String(Payload?.clientMessageId || "")) ? String(Payload.clientMessageId) : "storybot-question-" + Date.now() + "-" + Math.random().toString(36).slice(2, 8),';
+if (!Source.includes(V44QuestionIdSearch)) {
+    throw new Error("v44 patch failed: optimistic question ID anchor");
+}
+Source = Source.replace(V44QuestionIdSearch, V44QuestionIdReplacement);
+`;
+
 const InjectionSearch = `ExtraPatches + "\\n\\nconst RuntimeModule = new Module(SourcePath, module);",`;
-const InjectionReplacement = `ExtraPatches + "\\n\\n" + ${JSON.stringify(V11PatchCode)} + "\\n\\n" + ${JSON.stringify(V12PatchCode)} + "\\n\\n" + ${JSON.stringify(V13PatchCode)} + "\\n\\n" + ${JSON.stringify(V17PatchCode)} + "\\n\\n" + ${JSON.stringify(V18PatchCode)} + "\\n\\n" + ${JSON.stringify(V19PatchCode)} + "\\n\\n" + ${JSON.stringify(V20PatchCode)} + "\\n\\n" + ${JSON.stringify(V25PatchCode)} + "\\n\\n" + ${JSON.stringify(V26PatchCode)} + "\\n\\n" + ${JSON.stringify(V27PatchCode)} + "\\n\\n" + ${JSON.stringify(V28PatchCode)} + "\\n\\n" + ${JSON.stringify(V29PatchCode)} + "\\n\\n" + ${JSON.stringify(V31SocialPatchCode)} + "\\n\\n" + ${JSON.stringify(V32PatchCode)} + "\\n\\n" + ${JSON.stringify(V33PatchCode)} + "\\n\\n" + ${JSON.stringify(V34PatchCode)} + "\\n\\n" + ${JSON.stringify(V35PatchCode)} + "\\n\\n" + ${JSON.stringify(V36PatchCode)} + "\\n\\n" + ${JSON.stringify(V38PatchCode)} + "\\n\\n" + ${JSON.stringify(V39PatchCode)} + "\\n\\n" + ${JSON.stringify(V40PatchCode)} + "\\n\\n" + ${JSON.stringify(V41PatchCode)} + "\\n\\n" + ${JSON.stringify(V42PatchCode)} + "\\n\\n" + ${JSON.stringify(V43PatchCode)} + "\\n\\nconst RuntimeModule = new Module(SourcePath, module);",`;
+const InjectionReplacement = `ExtraPatches + "\\n\\n" + ${JSON.stringify(V11PatchCode)} + "\\n\\n" + ${JSON.stringify(V12PatchCode)} + "\\n\\n" + ${JSON.stringify(V13PatchCode)} + "\\n\\n" + ${JSON.stringify(V17PatchCode)} + "\\n\\n" + ${JSON.stringify(V18PatchCode)} + "\\n\\n" + ${JSON.stringify(V19PatchCode)} + "\\n\\n" + ${JSON.stringify(V20PatchCode)} + "\\n\\n" + ${JSON.stringify(V25PatchCode)} + "\\n\\n" + ${JSON.stringify(V26PatchCode)} + "\\n\\n" + ${JSON.stringify(V27PatchCode)} + "\\n\\n" + ${JSON.stringify(V28PatchCode)} + "\\n\\n" + ${JSON.stringify(V29PatchCode)} + "\\n\\n" + ${JSON.stringify(V31SocialPatchCode)} + "\\n\\n" + ${JSON.stringify(V32PatchCode)} + "\\n\\n" + ${JSON.stringify(V33PatchCode)} + "\\n\\n" + ${JSON.stringify(V34PatchCode)} + "\\n\\n" + ${JSON.stringify(V35PatchCode)} + "\\n\\n" + ${JSON.stringify(V36PatchCode)} + "\\n\\n" + ${JSON.stringify(V38PatchCode)} + "\\n\\n" + ${JSON.stringify(V39PatchCode)} + "\\n\\n" + ${JSON.stringify(V40PatchCode)} + "\\n\\n" + ${JSON.stringify(V41PatchCode)} + "\\n\\n" + ${JSON.stringify(V42PatchCode)} + "\\n\\n" + ${JSON.stringify(V43PatchCode)} + "\\n\\n" + ${JSON.stringify(V44PatchCode)} + "\\n\\nconst RuntimeModule = new Module(SourcePath, module);",`;
 
 ReplaceWrapperRequired(
     InjectionSearch,
