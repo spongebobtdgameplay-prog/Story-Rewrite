@@ -7,6 +7,8 @@ let SocialSelectedUser = null;
 let SocialActiveUsername = "";
 let SocialSearchTimer = null;
 let SocialSearchRequestId = 0;
+let SocialInboxRequestId = 0;
+let SocialHoveredMessageId = "";
 const SocialMessageIds = new Set();
 
 function SocialById(Id) {
@@ -20,8 +22,7 @@ function SocialInitial(Name) {
 
 function SocialUpdateActiveUserButtons() {
     const Selected = String(SocialActiveUsername || "").toLowerCase();
-    const List = SocialById("SocialUserList");
-    List?.querySelectorAll("[data-social-username]").forEach(Button => {
+    document.querySelectorAll("[data-social-username]").forEach(Button => {
         const Active = String(Button.dataset.socialUsername || "").toLowerCase() === Selected;
         Button.classList.toggle("Active", Active);
         Button.setAttribute("aria-pressed", Active ? "true" : "false");
@@ -49,6 +50,18 @@ function SocialPresenceLabel(Presence) {
     if (Presence === "online") return "Online";
     if (Presence === "idle") return "Idle";
     return "Offline";
+}
+
+function SocialPresenceTooltip(User) {
+    const Status = String(User?.presenceMode || User?.presence || "offline").toLowerCase();
+    const Label = Status === "ghost" ? "Ghost (shown offline)" : SocialPresenceLabel(Status);
+    const ExpiresAt = Number(User?.presenceExpiresAt || 0);
+    const Duration = Number(User?.presenceDurationMinutes || 0);
+    if (ExpiresAt > Date.now()) {
+        return Label + " status · " + (Duration ? Duration + " minute duration" : "temporary status") +
+            " · expires in about " + Math.ceil((ExpiresAt - Date.now()) / 60000) + " minutes";
+    }
+    return Label + " status · " + (Duration ? Duration + " minute duration" : "no expiry");
 }
 
 function SocialFormatTime(Value) {
@@ -141,6 +154,75 @@ function SocialRenderUsers(Users) {
     });
 }
 
+function SocialRenderInbox(Items) {
+    const List = SocialById("SocialInboxList");
+    const Status = SocialById("SocialInboxStatus");
+    if (!List) return;
+
+    if (!Items.length) {
+        List.innerHTML = '<div class="StorySocialInboxEmpty">No one has messaged you yet.</div>';
+        if (Status) Status.textContent = "No new conversations";
+        return;
+    }
+
+    if (Status) Status.textContent = Items.length + (Items.length === 1 ? " conversation" : " conversations");
+    List.replaceChildren();
+
+    Items.forEach(Item => {
+        const User = Item?.user;
+        if (!User?.username) return;
+        const Button = document.createElement("button");
+        Button.type = "button";
+        Button.className = "StorySocialInboxButton";
+        Button.dataset.socialUsername = String(User.username);
+        Button.setAttribute("aria-pressed",
+            String(SocialActiveUsername || "").toLowerCase() === String(User.username).toLowerCase() ? "true" : "false");
+        Button.title = "Open conversation with " + User.username + ". Last message: " + String(Item.lastMessage || "Message").slice(0, 120);
+
+        const Avatar = document.createElement("span");
+        Avatar.className = "StorySocialInboxAvatar";
+        Avatar.textContent = SocialInitial(User.username);
+        Avatar.setAttribute("aria-hidden", "true");
+
+        const Copy = document.createElement("span");
+        Copy.className = "StorySocialInboxCopy";
+        const Name = document.createElement("strong");
+        Name.textContent = User.username;
+        const Preview = document.createElement("span");
+        Preview.className = "StorySocialInboxPreview";
+        Preview.textContent = (Item.lastMessageFromMe ? "You: " : "") + String(Item.lastMessage || "");
+        Copy.append(Name, Preview);
+
+        const Time = document.createElement("span");
+        Time.className = "StorySocialInboxTime";
+        Time.textContent = SocialFormatTime(Item.lastMessageAt);
+        Button.append(Avatar, Copy, Time);
+        Button.addEventListener("click", () => SelectSocialUser(User.username));
+        List.appendChild(Button);
+    });
+    SocialUpdateActiveUserButtons();
+}
+
+async function SocialLoadInbox() {
+    const RequestId = ++SocialInboxRequestId;
+    const List = SocialById("SocialInboxList");
+    const Status = SocialById("SocialInboxStatus");
+    if (List && !List.childElementCount) List.innerHTML = '<div class="StorySocialInboxEmpty">Loading your inbox...</div>';
+    if (Status && !List?.querySelector(".StorySocialInboxButton")) Status.textContent = "Loading...";
+
+    try {
+        const Result = await ApiRequest("/api/social/inbox?limit=20");
+        if (RequestId !== SocialInboxRequestId) return;
+        const Items = Array.isArray(Result.messages) ? Result.messages : [];
+        SocialRenderInbox(Items);
+    } catch (Error) {
+        if (RequestId !== SocialInboxRequestId) return;
+        console.error("Story Social inbox failed", Error);
+        if (List) List.innerHTML = '<div class="StorySocialInboxEmpty StorySocialInboxEmptyBad">Inbox is temporarily unavailable.</div>';
+        if (Status) Status.textContent = "Unavailable";
+    }
+}
+
 async function SocialSearchUsers(Query) {
     const Status = SocialById("SocialSearchStatus");
     const Search = String(Query || "").trim();
@@ -173,29 +255,116 @@ async function SocialSearchUsers(Query) {
     }
 }
 
-function SocialAddMessage(Message) {
-    if (!Message || !Message.id || SocialMessageIds.has(String(Message.id))) return;
-    SocialMessageIds.add(String(Message.id));
+function SocialBuildMessageAction(Label, ClassName, OnClick) {
+    const Button = document.createElement("button");
+    Button.type = "button";
+    Button.className = "StorySocialMessageAction" + (ClassName ? " " + ClassName : "");
+    Button.textContent = Label;
+    Button.addEventListener("click", Event => {
+        Event.preventDefault();
+        Event.stopPropagation();
+        OnClick(Button);
+    });
+    return Button;
+}
 
+function SocialAddMessage(Message) {
+    if (!Message || !Message.id) return;
     const Container = SocialById("SocialMessages");
     if (!Container) return;
 
+    const Id = String(Message.id);
+    const Existing = Array.from(Container.querySelectorAll(".StorySocialMessage"))
+        .find(Element => Element.dataset.messageId === Id) || null;
+    const IsNew = !Existing;
+    if (IsNew && SocialMessageIds.has(Id)) return;
+    SocialMessageIds.add(Id);
+
     const Mine = String(Message.senderUsername || "").toLowerCase() === String(SocialCurrentUser?.username || "").toLowerCase();
-    const Element = document.createElement("article");
-    Element.className = "StorySocialMessage" + (Mine ? " Sent" : "");
+    const Deleted = Boolean(Message.deleted);
+    const Element = Existing || document.createElement("article");
+    Element.className = "StorySocialMessage" + (Mine ? " Sent" : "") + (Deleted ? " Deleted" : "");
+    Element.dataset.messageId = Id;
+    Element.dataset.mine = Mine ? "true" : "false";
+    Element.dataset.deleted = Deleted ? "true" : "false";
+    Element.tabIndex = 0;
+    Element.setAttribute("aria-label", (Mine ? "Your message" : "Message from " + String(Message.senderUsername || "player")));
+
+    while (Element.firstChild) Element.removeChild(Element.firstChild);
+
+    if (!Deleted) {
+        const More = document.createElement("button");
+        More.type = "button";
+        More.className = "StorySocialMessageMore";
+        More.textContent = "···";
+        More.title = "Message actions";
+        More.setAttribute("aria-label", "More actions for this message");
+
+        const Menu = document.createElement("div");
+        Menu.className = "StorySocialMessageMenu";
+        Menu.hidden = true;
+
+        More.addEventListener("click", Event => {
+            Event.preventDefault();
+            Event.stopPropagation();
+            const WasOpen = !Menu.hidden;
+            document.querySelectorAll(".StorySocialMessageMenu").forEach(Other => Other.hidden = true);
+            Menu.hidden = WasOpen;
+            More.setAttribute("aria-expanded", Menu.hidden ? "false" : "true");
+        });
+        Element.append(More, Menu);
+
+        const HeartLabel = Message.heartedByMe
+            ? "♥ Liked" + (Number(Message.heartCount || 0) > 0 ? " · " + Number(Message.heartCount) : "")
+            : "♡ Heart" + (Number(Message.heartCount || 0) > 0 ? " · " + Number(Message.heartCount) : "");
+        Menu.appendChild(SocialBuildMessageAction(HeartLabel, "HeartAction" + (Message.heartedByMe ? " IsActive" : ""), async () => {
+            Menu.hidden = true;
+            More.setAttribute("aria-expanded", "false");
+            await SocialHeartMessage(Id);
+        }));
+
+        if (!Mine) {
+            Menu.appendChild(SocialBuildMessageAction("Report", "ReportAction", async () => {
+                Menu.hidden = true;
+                More.setAttribute("aria-expanded", "false");
+                await SocialReportMessage(Id);
+            }));
+        }
+        if (Mine) {
+            Menu.appendChild(SocialBuildMessageAction("Delete message", "DeleteAction", async () => {
+                Menu.hidden = true;
+                More.setAttribute("aria-expanded", "false");
+                await SocialDeleteMessage(Id);
+            }));
+        }
+    }
 
     const Text = document.createElement("div");
     Text.className = "StorySocialMessageText";
-    Text.textContent = String(Message.text || "");
+    Text.textContent = Deleted ? "Message deleted" : String(Message.text || "");
     Element.appendChild(Text);
+
+    if (!Deleted && Number(Message.heartCount || 0) > 0) {
+        const Reactions = document.createElement("div");
+        Reactions.className = "StorySocialMessageReactions";
+        Reactions.textContent = "♥ " + Number(Message.heartCount);
+        if (Message.heartedByMe) Reactions.title = "You hearted this message";
+        Element.appendChild(Reactions);
+    }
 
     const Time = document.createElement("div");
     Time.className = "StorySocialMessageTime";
-    Time.textContent = SocialFormatTime(Message.sentAt);
+    Time.textContent = SocialFormatTime(Message.sentAt) + (Deleted ? " · deleted" : "");
     Element.appendChild(Time);
 
-    Container.appendChild(Element);
-    Container.scrollTop = Container.scrollHeight;
+    if (IsNew) {
+        Element.addEventListener("pointerenter", () => { SocialHoveredMessageId = Id; });
+        Element.addEventListener("pointerleave", () => {
+            if (SocialHoveredMessageId === Id) SocialHoveredMessageId = "";
+        });
+        Container.appendChild(Element);
+        Container.scrollTop = Container.scrollHeight;
+    }
 }
 
 async function SocialLoadConversation() {
@@ -214,11 +383,70 @@ async function SocialLoadConversation() {
         const Messages = Array.isArray(Result.messages) ? Result.messages : [];
         Messages.forEach(SocialAddMessage);
         if (!Messages.length) {
-            Container.innerHTML = '<div class="StorySocialConversationState">No messages yet. Say hello.</div>';
+            Container.innerHTML = '<div class="StorySocialConversationState">No messages in this conversation yet.</div>';
         }
     } catch (Error) {
         console.error("Story Social conversation load failed", Error);
         Container.innerHTML = '<div class="StorySocialConversationState StorySocialConversationStateBad">Chat is temporarily unavailable. Try again in a moment.</div>';
+    }
+}
+
+async function SocialHeartMessage(MessageId) {
+    try {
+        const Result = await ApiRequest("/api/social/messages/react", {
+            method: "POST",
+            body: JSON.stringify({ messageId: MessageId })
+        });
+        if (Result?.message) SocialAddMessage(Result.message);
+        SocialSetStatus(SocialById("SocialChatStatus"), "Reaction updated.", "Good");
+        SocialLoadInbox();
+    } catch (Error) {
+        SocialSetStatus(SocialById("SocialChatStatus"), SocialSafeError(Error, "Could not update the reaction."), "Bad");
+    }
+}
+
+async function SocialDeleteMessage(MessageId) {
+    const Confirmed = typeof StoryConfirm === "function"
+        ? await StoryConfirm({
+            title: "Delete this message?",
+            message: "Your message will be marked as deleted in the conversation.",
+            confirmText: "Delete message",
+            cancelText: "Keep message",
+            danger: true
+        })
+        : window.confirm("Delete your message? It will be marked as deleted in the conversation.");
+    if (!Confirmed) return;
+
+    try {
+        const Result = await ApiRequest("/api/social/messages/delete", {
+            method: "POST",
+            body: JSON.stringify({ messageId: MessageId })
+        });
+        if (Result?.message) SocialAddMessage(Result.message);
+        SocialSetStatus(SocialById("SocialChatStatus"), "Message deleted.", "Good");
+        SocialLoadInbox();
+    } catch (Error) {
+        SocialSetStatus(SocialById("SocialChatStatus"), SocialSafeError(Error, "Could not delete that message."), "Bad");
+    }
+}
+
+async function SocialReportMessage(MessageId) {
+    let Reason = "";
+    try {
+        const Entered = window.prompt("Optional: why are you reporting this message?");
+        if (Entered === null) return;
+        Reason = String(Entered || "").trim().slice(0, 200);
+    } catch {}
+    try {
+        const Result = await ApiRequest("/api/social/messages/report", {
+            method: "POST",
+            body: JSON.stringify({ messageId: MessageId, reason: Reason })
+        });
+        SocialSetStatus(SocialById("SocialChatStatus"),
+            Result?.alreadyReported ? "You already reported this message." : "Report submitted for review.",
+            "Good");
+    } catch (Error) {
+        SocialSetStatus(SocialById("SocialChatStatus"), SocialSafeError(Error, "Could not report that message."), "Bad");
     }
 }
 
@@ -250,6 +478,12 @@ async function SelectSocialUser(Username) {
     SocialById("SocialChatAvatar").textContent = SocialInitial(SocialSelectedUser.username);
     SocialById("SocialChatUsername").textContent = SocialSelectedUser.username;
     SocialById("SocialChatPresence").textContent = SocialPresenceLabel(SocialSelectedUser.presence);
+    SocialById("SocialChatPresence").title = SocialPresenceTooltip(SocialSelectedUser);
+    const PresenceDot = SocialById("SocialChatPresenceDot");
+    if (PresenceDot) {
+        PresenceDot.className = "StorySocialPresenceDot " + String(SocialSelectedUser.presence || "offline");
+        PresenceDot.title = SocialPresenceTooltip(SocialSelectedUser);
+    }
     SocialById("SocialChatUserId").textContent = SocialSelectedUser.userId;
     SocialRenderStats(SocialSelectedUser);
     SocialSetStatus(SocialById("SocialChatStatus"), "");
@@ -301,6 +535,7 @@ async function SocialSendMessage(Event) {
         Input.value = "";
         SocialUpdateMessageCount();
         SocialSetStatus(SocialById("SocialChatStatus"), "");
+        SocialLoadInbox();
     } catch (Error) {
         console.error("Story Social message send failed", Error);
         SocialSetStatus(SocialById("SocialChatStatus"), SocialSafeError(Error, "Your message could not be sent right now."), "Bad");
@@ -363,6 +598,7 @@ async function SocialEnsureSocket() {
         const Sender = String(Message?.senderUsername || "").toLowerCase();
         const Recipient = String(Message?.recipientUsername || "").toLowerCase();
         const Me = String(SocialCurrentUser?.username || "").toLowerCase();
+        SocialLoadInbox();
         if (!Selected || !((Sender === Selected && Recipient === Me) || (Sender === Me && Recipient === Selected))) return;
         SocialAddMessage(Message);
     });
@@ -372,9 +608,19 @@ async function SocialEnsureSocket() {
         if (!Username) return;
         if (SocialSelectedUser && Username === String(SocialSelectedUser.username || "").toLowerCase()) {
             SocialSelectedUser.presence = Payload.presence || "offline";
-            SocialById("SocialChatPresence").textContent = SocialPresenceLabel(SocialSelectedUser.presence);
+            SocialSelectedUser.presenceMode = Payload.presenceMode || Payload.presence || "offline";
+            SocialSelectedUser.presenceExpiresAt = Number(Payload.presenceExpiresAt || 0);
+            SocialSelectedUser.presenceDurationMinutes = Number(Payload.presenceDurationMinutes || 0);
+            const Presence = SocialById("SocialChatPresence");
+            if (Presence) {
+                Presence.textContent = SocialPresenceLabel(SocialSelectedUser.presence);
+                Presence.title = SocialPresenceTooltip(SocialSelectedUser);
+            }
             const Dot = SocialById("SocialChatPresenceDot");
-            if (Dot) Dot.className = "StorySocialPresenceDot " + String(SocialSelectedUser.presence || "offline");
+            if (Dot) {
+                Dot.className = "StorySocialPresenceDot " + String(SocialSelectedUser.presence || "offline");
+                Dot.title = SocialPresenceTooltip(SocialSelectedUser);
+            }
         }
         const Input = SocialById("SocialSearchInput");
         if (Input && Input.value.trim()) SocialSearchUsers(Input.value.trim());
@@ -413,9 +659,30 @@ document.addEventListener("DOMContentLoaded", async function() {
     MessageInput?.addEventListener("input", SocialUpdateMessageCount);
     SocialUpdateMessageCount();
     Form?.addEventListener("submit", SocialSendMessage);
+    document.addEventListener("click", Event => {
+        if (Event.target.closest(".StorySocialMessageMenu, .StorySocialMessageMore")) return;
+        document.querySelectorAll(".StorySocialMessageMenu").forEach(Menu => {
+            Menu.hidden = true;
+            Menu.previousElementSibling?.setAttribute("aria-expanded", "false");
+        });
+    });
+    document.addEventListener("keydown", Event => {
+        if (!Event.shiftKey || !["Backspace", "Delete"].includes(Event.key)) return;
+        const ActiveElement = document.activeElement;
+        const ActiveMessage = ActiveElement?.closest?.(".StorySocialMessage");
+        if (ActiveElement?.matches?.("input,textarea,[contenteditable='true']") && !ActiveMessage) return;
+        const HoveredMessage = SocialHoveredMessageId
+            ? Array.from(document.querySelectorAll(".StorySocialMessage")).find(Element => Element.dataset.messageId === SocialHoveredMessageId)
+            : null;
+        const Target = ActiveMessage || HoveredMessage;
+        if (!Target || Target.dataset.mine !== "true" || Target.dataset.deleted === "true") return;
+        Event.preventDefault();
+        SocialDeleteMessage(Target.dataset.messageId);
+    });
 
     try {
         await Promise.all([RequireAccount(), SocialLoadCurrentUser()]);
+        SocialLoadInbox();
     } catch (Error) {
         console.error("Story Social startup failed", Error);
         const Status = SocialById("SocialSearchStatus");
