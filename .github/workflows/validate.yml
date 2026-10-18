@@ -137,8 +137,7 @@ jobs:
             return Test.exports;
           }
 
-          let Source = fs.readFileSync("server-v12.js", "utf8");
-          Source = CompileWrapper(Source, path.resolve("server-v12.js"));
+          let Source = fs.readFileSync("server-v11.js", "utf8");
           Source = CompileWrapper(Source, path.resolve("server-v11.js"));
           Source = CompileWrapper(Source, path.resolve("server-v10.js"));
           Source = CompileWrapper(Source, path.resolve("server-v9.js"));
