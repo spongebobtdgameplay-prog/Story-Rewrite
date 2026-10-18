@@ -1,4 +1,4 @@
-const STORY_BUILD_VERSION = "v3.10";
+const STORY_BUILD_VERSION = "v3.11";
 
 function ApplyStoryBuildVersion() {
     for (const Badge of document.querySelectorAll(".StoryBuildVersion")) {
