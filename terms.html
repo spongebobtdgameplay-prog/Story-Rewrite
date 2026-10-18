@@ -11,12 +11,11 @@
 <link rel="stylesheet" href="looks2.css?v=20261018-2">
 <link rel="stylesheet" href="looks3.css?v=20261018-2">
 <link rel="stylesheet" href="looks4.css?v=20261018-2">
-<link rel="stylesheet" href="shell-ui.css?v=20261018-2">
+<link rel="stylesheet" href="shell-ui.css?v=20261018-4">
 <style>
 .TermsPage{min-height:100%;margin:0;padding:clamp(18px,4vw,48px);box-sizing:border-box;background:radial-gradient(circle at 18% 0%,rgba(199,158,102,.16),transparent 34%),linear-gradient(155deg,#35281e,#211812 68%,#18110d);color:#f2e5d0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:16px}
 .TermsShell{width:min(980px,100%);margin:0 auto}
-.TermsBack{display:inline-flex;align-items:center;gap:9px;margin-bottom:22px;border:1px solid rgba(209,163,105,.42);border-radius:10px;padding:11px 15px;color:#f1d2a4;background:#2a1d14;font:800 14px/1.1 system-ui,-apple-system,"Segoe UI",sans-serif;text-decoration:none;cursor:pointer;box-shadow:0 5px 16px rgba(0,0,0,.16)}
-.TermsBack:hover{background:#3a2719;border-color:#d7a66a;color:#fff0d5}
+.TermsBack{margin-bottom:22px}
 .TermsHero,.TermsSection{border:1px solid rgba(204,160,102,.23);border-radius:16px;background:rgba(31,22,16,.9);box-shadow:0 16px 40px rgba(0,0,0,.17)}
 .TermsHero{padding:clamp(22px,4vw,38px);margin-bottom:16px;background:linear-gradient(135deg,rgba(82,54,33,.8),rgba(31,22,16,.96))}
 .TermsEyebrow{color:#d9a967;font-size:11px;font-weight:900;letter-spacing:.16em;text-transform:uppercase}
@@ -38,7 +37,7 @@
 </head>
 <body class="TermsPage">
 <main class="TermsShell">
-    <button class="TermsBack" type="button" data-story-go="main.html" aria-label="Back to Story Rewrite"><span aria-hidden="true">←</span><span>Back to Story Rewrite</span></button>
+    <button class="TermsBack IconBackButton" type="button" data-story-back="main.html" aria-label="Go back"></button>
     <header class="TermsHero">
         <div class="TermsEyebrow">Story Rewrite · Multiplayer</div>
         <h1>Terms of Service</h1>
@@ -93,7 +92,7 @@
     </div>
     <footer class="TermsFooter">These community rules explain expected behaviour in Story Rewrite; they are not legal advice and do not create a guarantee that every automated review will be correct.</footer>
 </main>
-<script src="server-config.js?v=20261018-2"></script>
+<script src="server-config.js?v=20261018-4"></script>
 <script src="shell-ui.js?v=20261018-2"></script>
 </body>
 </html>
