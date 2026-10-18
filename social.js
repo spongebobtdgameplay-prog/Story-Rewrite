@@ -501,6 +501,39 @@ function SocialAskReportReason() {
     });
 }
 
+function SocialUpdateMessageReactions(Message, IncludeViewerState = false) {
+    if (!Message) return;
+    const MessageId = String(Message.messageId || Message.id || "");
+    if (!MessageId) return;
+
+    const Element = Array.from(document.querySelectorAll(".StorySocialMessage"))
+        .find(Item => Item.dataset.messageId === MessageId);
+    if (!Element) return;
+
+    const LikeCount = Math.max(0, Number(Message.likeCount) || 0);
+    const DislikeCount = Math.max(0, Number(Message.dislikeCount) || 0);
+    const Reactions = Element.querySelector(".StorySocialMessageReactions");
+    const Likes = Element.querySelector(".StorySocialMessageReaction.LikeCount");
+    const Dislikes = Element.querySelector(".StorySocialMessageReaction.DislikeCount");
+
+    if (Likes) {
+        Likes.textContent = "👍 " + LikeCount;
+        if (IncludeViewerState) Likes.title = Message.likedByMe ? "You liked this message" : "Likes";
+    }
+    if (Dislikes) {
+        Dislikes.textContent = "👎 " + DislikeCount;
+        if (IncludeViewerState) Dislikes.title = Message.dislikedByMe ? "You disliked this message" : "Dislikes";
+    }
+    if (Reactions) Reactions.setAttribute("aria-label", LikeCount + " likes, " + DislikeCount + " dislikes");
+
+    if (IncludeViewerState) {
+        Element.querySelector(".StorySocialMessageAction.LikeAction")
+            ?.classList.toggle("IsActive", Boolean(Message.likedByMe));
+        Element.querySelector(".StorySocialMessageAction.DislikeAction")
+            ?.classList.toggle("IsActive", Boolean(Message.dislikedByMe));
+    }
+}
+
 function SocialAddMessage(Message) {
     if (!Message || !Message.id) return;
     const Container = SocialById("SocialMessages");
@@ -688,7 +721,7 @@ async function SocialReactMessage(MessageId, Reaction) {
             method: "POST",
             body: JSON.stringify({ messageId: MessageId, reaction: Reaction })
         });
-        if (Result?.message) SocialAddMessage(Result.message);
+        if (Result?.message) SocialUpdateMessageReactions(Result.message, true);
         SocialSetStatus(SocialById("SocialChatStatus"), Reaction === "like" ? "Like updated." : "Dislike updated.", "Good");
         SocialLoadInbox();
     } catch (Error) {
@@ -893,11 +926,11 @@ async function SocialEnsureSocket() {
         const Me = String(SocialCurrentUser?.username || "").toLowerCase();
         SocialLoadInbox();
         if (!Selected || !((Sender === Selected && Recipient === Me) || (Sender === Me && Recipient === Selected))) return;
-        if (Message?.reactionUpdated) {
-            SocialLoadConversation();
-            return;
-        }
         SocialAddMessage(Message);
+    });
+
+    SocialSocket.on("social:reaction", function(Payload) {
+        SocialUpdateMessageReactions(Payload, false);
     });
 
     SocialSocket.on("social:presence", function(Payload) {
