@@ -918,3 +918,11 @@ body.StoryWarningOpen {
         height: 44px;
     }
 }
+
+/* Story Rewrite routes live inside the persistent shell. Keep edge scrolling in the current page
+   instead of chaining gestures to the outer shell or triggering browser back/forward navigation. */
+html,
+body {
+    overscroll-behavior-x: none;
+    overscroll-behavior-y: none;
+}

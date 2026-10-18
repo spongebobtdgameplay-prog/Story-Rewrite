@@ -295,9 +295,9 @@ body {
     text-overflow: clip;
     white-space: nowrap;
 }
-/* The full Story Rewrite title should not be clipped by the decorative build badge. */
+/* Keep the loaded frontend version visible next to the game title. */
 #App > .TopBar .BrandTitle .StoryBuildVersion {
-    display: none !important;
+    display: inline-flex !important;
 }
 #App > .TopBar > .TopActions {
     display: flex;

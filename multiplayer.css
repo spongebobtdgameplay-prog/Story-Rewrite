@@ -357,6 +357,7 @@
 .ChatMessages {
     height: 360px;
     overflow-y: auto;
+    overscroll-behavior: contain;
     display: flex;
     flex-direction: column;
     gap: 7px;

@@ -204,7 +204,8 @@ function RenderStoryBotReplyMessage(Message, ContainerId) {
     if (!Message || !Message.bot || Message.botDialog) return;
 
     const Id = String(Message.id || "").trim();
-    if (Id && StoryBotRenderedMessageIds.has(Id)) return;
+    const Container = document.getElementById(ContainerId);
+    if (Id && FindStoryBotRenderedElement(Container, Id)) return;
 
     if (ContainerId === "ChatMessages" && typeof AppendChat === "function") {
         AppendChat(Message);
@@ -735,7 +736,8 @@ function WrapStoryBotRenderers() {
                 Existing.classList.remove("StoryBotPendingQuestion");
                 const Name = Existing.querySelector("strong");
                 if (Name) Name.textContent = String(Message?.username || "Player") + ": ";
-            } else if (!RememberStoryBotRenderedMessage(Message)) {
+            } else {
+                RememberStoryBotRenderedMessage(Message);
                 BaseAppendChat(Message, ...Rest);
                 const Last = Container?.lastElementChild || null;
                 if (Last && MessageId) Last.dataset.storyBotMessageId = MessageId;
@@ -763,7 +765,8 @@ function WrapStoryBotRenderers() {
                 Existing.classList.remove("StoryBotPendingQuestion");
                 const Name = Existing.querySelector("strong");
                 if (Name) Name.textContent = String(Message?.username || "Player") + ": ";
-            } else if (!RememberStoryBotRenderedMessage(Message)) {
+            } else {
+                RememberStoryBotRenderedMessage(Message);
                 BaseAppendGameChat(Message, ...Rest);
                 const Last = Container?.lastElementChild || null;
                 if (Last && MessageId) Last.dataset.storyBotMessageId = MessageId;
