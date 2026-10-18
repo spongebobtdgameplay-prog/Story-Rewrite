@@ -19,14 +19,6 @@ const ChatMaxLength = 180;
 const ChatHistoryLimit = 100;
 const ChatRateLimitCount = 5;
 const ChatRateLimitWindow = 10000;
-const StoryDeveloperUsernames = new Set([
-    "darius56",
-    ...String(process.env.STORY_REWRITE_DEVELOPER_USERNAMES || "").split(",")
-].map(Username => String(Username || "").trim().toLowerCase()).filter(Boolean));
-
-function IsStoryDeveloper(Socket) {
-    return StoryDeveloperUsernames.has(String(Socket.data?.username || "").trim().toLowerCase());
-}
 
 const Database = DatabaseUrl
     ? new Pool({
@@ -753,67 +745,6 @@ Io.use(async (Socket, Next) => {
 });
 
 Io.on("connection", Socket => {
-    Socket.on("dev:rooms:list", (Payload, Reply = () => {}) => {
-        if (!IsStoryDeveloper(Socket)) {
-            return Reply({ ok: false, error: "Developer access required." });
-        }
-
-        const LiveRooms = [...Rooms.values()]
-            .filter(Room => Room.players?.size > 0)
-            .map(Room => ({
-                code: String(Room.code || ""),
-                hostUsername: String(Room.hostUsername || ""),
-                status: String(Room.status || "unknown"),
-                stageId: String(Room.stageId || ""),
-                stageName: String(StagesData.stages[Room.stageId]?.name || ""),
-                playerCount: Room.players.size,
-                maxPlayers: MaxPlayers,
-                lives: Number(Room.lives || 0),
-                maxLives: Number(Room.maxLives || MaxLives),
-                players: [...Room.players.values()].map(Player => ({
-                    username: String(Player.username || "Player"),
-                    ready: Boolean(Player.ready)
-                }))
-            }))
-            .sort((Left, Right) => Left.code.localeCompare(Right.code));
-
-        Reply({ ok: true, rooms: LiveRooms });
-    });
-
-    Socket.on("dev:observe", (Payload, Reply = () => {}) => {
-        if (!IsStoryDeveloper(Socket)) {
-            return Reply({ ok: false, error: "Developer access required." });
-        }
-
-        const Code = String(Payload?.code || "").trim().toUpperCase();
-        const Room = Rooms.get(Code);
-        if (!Room || Room.players.size === 0) {
-            return Reply({ ok: false, error: "That group chat is no longer online." });
-        }
-
-        if (Socket.data.roomCode === Room.code && Room.players.has(Socket.id)) {
-            const State = BuildRoomState(Room);
-            return Reply({ ok: true, code: Room.code, observer: false, state: State });
-        }
-
-        if (Socket.data.roomCode === Room.code && Socket.data.devObserver) {
-            const State = BuildRoomState(Room);
-            Socket.emit("room:state", State);
-            return Reply({ ok: true, code: Room.code, observer: true, state: State });
-        }
-
-        if (Socket.data.roomCode) LeaveRoom(Socket, true);
-
-        Socket.data.devObserver = true;
-        Socket.data.devObservedRoomCode = Room.code;
-        Socket.join(Room.code);
-        Socket.data.roomCode = Room.code;
-
-        const State = BuildRoomState(Room);
-        Socket.emit("room:state", { ...State, developerObserver: true });
-        Reply({ ok: true, code: Room.code, observer: true, state: State });
-    });
-
     Socket.on("room:join", (Payload, Reply = () => {}) => {
         try {
             const Code = String(Payload?.code || "").trim().toUpperCase();
