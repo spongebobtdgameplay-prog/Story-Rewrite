@@ -358,6 +358,7 @@ function SocialAddMessage(Message) {
     Element.appendChild(Time);
 
     if (IsNew) {
+        Container.querySelectorAll(".StorySocialConversationState").forEach(State => State.remove());
         Element.addEventListener("pointerenter", () => { SocialHoveredMessageId = Id; });
         Element.addEventListener("pointerleave", () => {
             if (SocialHoveredMessageId === Id) SocialHoveredMessageId = "";
@@ -511,6 +512,7 @@ async function SocialSendMessage(Event) {
     const Button = SocialById("SocialSendButton");
     if (Button) Button.disabled = true;
 
+    let SentMessage = null;
     try {
         if (SocialSocket?.connected) {
             const Result = await new Promise(function(Resolve, Reject) {
@@ -524,14 +526,17 @@ async function SocialSendMessage(Event) {
                 );
             });
             if (!Result?.ok) throw new Error(Result?.error || "Could not send message.");
+            SentMessage = Result.message || null;
         } else {
             const Result = await ApiRequest("/api/social/messages", {
                 method: "POST",
                 body: JSON.stringify({ username: SocialSelectedUser.username, message: Text })
             });
             if (!Result?.ok) throw new Error(Result?.error || "Could not send message.");
+            SentMessage = Result.message || null;
         }
 
+        if (SentMessage) SocialAddMessage(SentMessage);
         Input.value = "";
         SocialUpdateMessageCount();
         SocialSetStatus(SocialById("SocialChatStatus"), "");
