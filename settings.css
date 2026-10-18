@@ -68,3 +68,27 @@ html,body,.StorySettingsPage .AccountSettingsCard,.StorySettingsPage .StorySetti
 html::-webkit-scrollbar,body::-webkit-scrollbar,.StorySettingsPage .AccountSettingsCard::-webkit-scrollbar,.StorySettingsPage .StorySettingsCard::-webkit-scrollbar{width:9px;height:9px}
 html::-webkit-scrollbar-track,body::-webkit-scrollbar-track,.StorySettingsPage .AccountSettingsCard::-webkit-scrollbar-track,.StorySettingsPage .StorySettingsCard::-webkit-scrollbar-track{background:transparent}
 html::-webkit-scrollbar-thumb,body::-webkit-scrollbar-thumb,.StorySettingsPage .AccountSettingsCard::-webkit-scrollbar-thumb{background:#6d472e;border-radius:999px;border:2px solid transparent;background-clip:padding-box}
+
+
+.StorySettingsNotifications{padding:19px 26px 21px;border-top:1px solid rgba(221,169,108,.14)}
+.StorySettingsNotificationsIntro{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;margin-bottom:14px}
+.StorySettingsNotificationsIntro h2{margin:4px 0 5px;color:#fff0d3;font:900 clamp(1.25rem,3vw,1.65rem)/1.05 Georgia,'Times New Roman',serif}
+.StorySettingsNotificationsIntro p{max-width:660px;margin:0;color:#b9956e;font-size:.84rem;line-height:1.5}
+.StoryNotificationRows{display:grid;gap:0;padding-top:2px}
+.StoryNotificationRow{grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:18px;padding:14px 8px;border-bottom:1px solid rgba(221,169,108,.11)}
+.StoryNotificationRowMaster{margin-bottom:7px;padding:15px 14px;border:1px solid rgba(221,169,108,.23);border-radius:14px;background:rgba(37,22,14,.28)}
+.StoryNotificationChannel{margin-left:15px;padding-left:17px;border-left:2px solid rgba(221,169,108,.18)}
+.StoryNotificationToggle{min-width:106px}
+.StoryNotificationToggle:disabled{cursor:not-allowed;opacity:.5}
+.StoryNotificationRow.IsDisabled{opacity:.48}
+.StoryNotificationRow.IsDisabled .StorySettingCopy label{color:#cbb18e}
+.StoryNotificationSettingsStatus{min-height:19px;margin-top:10px;color:#9d8161;font-size:.74rem}
+.StoryNotificationSettingsStatus.Good{color:#a9c98d}
+.StoryNotificationSettingsStatus.Bad{color:#d89589}
+@media(max-width:700px){
+ .StorySettingsNotifications{padding:19px 20px}
+ .StoryNotificationRow{grid-template-columns:1fr;gap:12px;padding:15px 8px}
+ .StoryNotificationRowMaster{padding:14px}
+ .StoryNotificationChannel{margin-left:5px;padding-left:12px}
+ .StoryNotificationToggle{justify-self:start}
+}
