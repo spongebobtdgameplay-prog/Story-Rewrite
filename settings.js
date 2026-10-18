@@ -81,11 +81,30 @@ function RenderSettings() {
     RenderKeepMusicPlaying();
 }
 
-async function RenderPresenceControls(Payload) {
+let PresenceExpiresAt = 0;
+
+function UpdatePresenceButtonTitles() {
+    const Duration = Number(PresenceDurationSelect?.value || 0);
+    const Remaining = Math.max(0, PresenceExpiresAt - Date.now());
+    const DurationText = Duration > 0
+        ? (Remaining > 0
+            ? `Set for ${Duration} minutes · expires in about ${Math.ceil(Remaining / 60000)} minutes`
+            : `${Duration}-minute duration`)
+        : "No expiry (infinite)";
+
+    for (const Button of PresenceButtons) {
+        const Status = String(Button.dataset.presenceStatus || "online");
+        const Label = Status === "ghost" ? "Ghost (shown offline)" : Status.charAt(0).toUpperCase() + Status.slice(1);
+        Button.title = Label + " status. " + DurationText + ".";
+    }
+}
+
+function RenderPresenceControls(Payload) {
     const PrivatePresence = Payload?.privatePresence || {};
     PresenceStatus = ["online", "idle", "ghost"].includes(PrivatePresence.status)
         ? PrivatePresence.status
         : "online";
+    PresenceExpiresAt = Math.max(0, Number(PrivatePresence.expiresAt || 0));
 
     for (const Button of PresenceButtons) {
         const Selected = Button.dataset.presenceStatus === PresenceStatus;
@@ -93,17 +112,26 @@ async function RenderPresenceControls(Payload) {
     }
 
     if (PresenceDurationSelect) {
-        const Remaining = Number(PrivatePresence.expiresAt || 0) - Date.now();
-        const Options = [15, 30, 60];
-        let Duration = 0;
-        for (const Minutes of Options) {
-            if (Remaining > (Minutes * 60000) - 5000 && Remaining <= (Minutes * 60000) + 5000) {
-                Duration = Minutes;
-                break;
-            }
+        const Remaining = Math.max(0, PresenceExpiresAt - Date.now());
+        const SavedDuration = Number(PrivatePresence.durationMinutes || 0);
+        let Duration = Remaining > 0 && [15, 30, 60].includes(SavedDuration)
+            ? SavedDuration
+            : 0;
+
+        // Compatibility with a backend that has not yet stored the duration field.
+        // Use the nearest remaining-time bucket instead of requiring a 5-second match.
+        if (Remaining > 0 && Duration === 0) {
+            const Options = [15, 30, 60];
+            const Nearest = Options.reduce((Best, Minutes) =>
+                Math.abs((Minutes * 60000) - Remaining) < Math.abs((Best * 60000) - Remaining)
+                    ? Minutes
+                    : Best, Options[0]);
+            if (Math.abs((Nearest * 60000) - Remaining) <= 60000) Duration = Nearest;
         }
+
         PresenceDurationSelect.value = String(Duration);
     }
+    UpdatePresenceButtonTitles();
 }
 
 function SetPresenceStatusLine(Text, Kind = "") {
@@ -127,6 +155,7 @@ async function SavePresenceSettings() {
     PresenceSaveInFlight = true;
 
     const Duration = Number(PresenceDurationSelect?.value || 0);
+    UpdatePresenceButtonTitles();
     SetPresenceStatusLine("Saving presence...");
 
     try {
@@ -214,7 +243,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
     });
 
-    PresenceDurationSelect?.addEventListener("change", SavePresenceSettings);
+    PresenceDurationSelect?.addEventListener("change", () => {
+        UpdatePresenceButtonTitles();
+        SavePresenceSettings();
+    });
     document.getElementById("OpenSocialButton")?.addEventListener("click", () => {
         if (typeof StoryNavigate === "function") StoryNavigate("social.html");
         else window.location.href = BuildStoryUrl("social.html");
