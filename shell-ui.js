@@ -34,6 +34,21 @@ let StoryConfirmCloser = null;
 let StoryLinkObserver = null;
 
 function StoryNavigate(Page) {
+    try {
+        const Shell = window.parent !== window && window.parent.StoryShell?.IsPersistentShell
+            ? window.parent.StoryShell
+            : null;
+        if (
+            Shell &&
+            typeof Shell.Navigate === "function" &&
+            typeof Shell.CanHandle === "function" &&
+            Shell.CanHandle(Page) &&
+            Shell.Navigate(Page)
+        ) {
+            return;
+        }
+    } catch {}
+
     if (typeof Go === "function") {
         Go(Page);
         return;
