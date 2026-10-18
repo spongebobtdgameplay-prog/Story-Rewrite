@@ -37,7 +37,7 @@
 </head>
 <body class="TermsPage">
 <main class="TermsShell">
-    <a class="TermsBack IconBackButton" href="main.html" aria-label="Back to Story Rewrite"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14.5 5 7.5 12l7 7" /></svg></a>
+    <button class="TermsBack IconBackButton" type="button" aria-label="Back to Story Rewrite" onclick="try { var shell = window.parent !== window ? window.parent.StoryShell : null; if (shell && shell.IsPersistentShell && typeof shell.Navigate === 'function' && shell.Navigate('main.html')) return; } catch (error) {} window.location.href = 'main.html';"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14.5 5 7.5 12l7 7" /></svg></button>
     <header class="TermsHero">
         <div class="TermsEyebrow">Story Rewrite · Multiplayer</div>
         <h1>Terms of Service</h1>
