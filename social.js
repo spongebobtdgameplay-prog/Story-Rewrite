@@ -66,6 +66,7 @@ function SocialSetPlayerNotificationMuted(Username, Muted) {
 }
 
 function SocialClosePlayerMenu() {
+    if (SocialActivePlayerMenu?.trigger) SocialActivePlayerMenu.trigger.setAttribute("aria-expanded", "false");
     if (SocialActivePlayerMenu?.element?.isConnected) SocialActivePlayerMenu.element.remove();
     SocialActivePlayerMenu = null;
 }
