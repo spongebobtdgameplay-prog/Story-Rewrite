@@ -265,54 +265,108 @@ body {
         padding-inline: 8px;
     }
 }
-/* Keep the home navigation compact, with its buttons returned to the right. */
+/* Main navigation: more vertical breathing room and one desktop row. */
 #App > .TopBar {
+    min-height: clamp(76px, 5.8vw, 84px);
+    height: auto;
+    padding: clamp(14px, 1.35vw, 18px) clamp(10px, 1.35vw, 18px);
+    align-items: center;
     justify-content: space-between;
-    column-gap: clamp(8px, 1vw, 12px);
+    flex-wrap: nowrap;
+    column-gap: clamp(8px, 1vw, 14px);
     row-gap: 8px;
 }
 #App > .TopBar > .Brand {
     flex: 0 1 270px;
     max-width: 100%;
+    min-width: 0;
+}
+#App > .TopBar > .Brand > div {
+    min-width: 0;
+}
+#App > .TopBar .BrandTitle,
+#App > .TopBar .BrandSub {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 #App > .TopBar > .TopActions {
-    flex: 0 1 auto;
+    display: flex;
+    flex: 1 1 auto;
     min-width: 0;
     margin-left: auto;
+    align-items: center;
     justify-content: flex-end;
-    gap: clamp(4px, .45vw, 6px);
+    flex-wrap: nowrap;
+    gap: clamp(3px, .4vw, 6px);
 }
 #App > .TopBar > .TopActions > .UiButton {
+    box-sizing: border-box;
     flex: 0 1 auto;
     min-width: 0;
-    padding-inline: clamp(5px, .65vw, 9px);
-    font-size: clamp(11px, .85vw, 13px);
+    height: 40px;
+    min-height: 40px;
+    max-height: 40px;
+    padding: 8px clamp(3px, .5vw, 7px);
+    font-size: clamp(11px, .82vw, 12px);
+    line-height: 1.1;
+    letter-spacing: 0;
     white-space: nowrap;
 }
 #App > .TopBar > .TopActions > .SettingsNavButton {
     flex: 0 0 40px;
-    min-width: 40px !important;
     width: 40px !important;
+    min-width: 40px !important;
+    height: 40px;
+    min-height: 40px;
+    padding: 0;
 }
-@media (min-width: 900px) {
-    #App > .TopBar {
-        flex-wrap: nowrap;
-    }
+#App > .TopBar > .TopActions > .AccountNavButton {
+    flex: 0 1 82px;
+    max-width: 82px;
+}
+#App > .TopBar > .TopActions > .AccountNavButton #AccountButtonLabel {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+@media (min-width: 761px) {
+    #App > .TopBar,
     #App > .TopBar > .TopActions {
         flex-wrap: nowrap;
     }
 }
-@media (min-width: 761px) and (max-width: 899px) {
+@media (max-width: 760px) {
     #App > .TopBar {
+        min-height: 0;
+        padding: 12px;
         flex-wrap: wrap;
     }
     #App > .TopBar > .Brand {
-        flex-basis: auto;
+        flex: 1 1 100%;
     }
     #App > .TopBar > .TopActions {
         flex: 1 1 100%;
         width: 100%;
         margin-left: 0;
-        justify-content: flex-end;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+    #App > .TopBar > .TopActions > .UiButton {
+        flex: 0 1 auto;
+        max-width: 100%;
+        font-size: 12px;
+        padding-inline: 8px;
+    }
+    #App > .TopBar > .TopActions > .SettingsNavButton {
+        flex: 0 0 40px;
+    }
+    #App > .TopBar > .TopActions > .AccountNavButton {
+        flex: 0 1 auto;
+        max-width: 100%;
     }
 }
