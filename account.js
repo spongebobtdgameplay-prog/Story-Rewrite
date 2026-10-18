@@ -249,7 +249,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         const Username = AccountProfileResult?.profile?.username || "this account";
         const Confirmed = await StoryConfirm({
             title: `Delete ${Username}?`,
-            message: "This permanently deletes the account and all Story Rewrite progress. This cannot be undone.",
+            message: "This marks the account as deleted, signs you out, and keeps a deleted-account record in the database for history and moderation. This cannot be undone.",
             confirmText: "Delete Account",
             cancelText: "Cancel",
             danger: true
