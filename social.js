@@ -30,7 +30,14 @@ function SocialReadMutedPlayers() {
     }
 }
 
+function SocialIsSelfUsername(Username) {
+    const Current = String(SocialCurrentUser?.username || "").trim().toLowerCase();
+    const Target = String(Username || "").trim().toLowerCase();
+    return Boolean(Current && Target && Current === Target);
+}
+
 function SocialIsPlayerNotificationMuted(Username) {
+    if (SocialIsSelfUsername(Username)) return false;
     return SocialReadMutedPlayers().includes(String(Username || "").trim().toLowerCase());
 }
 
@@ -42,6 +49,11 @@ function SocialBellIcon(Muted) {
 
 function SocialRefreshPlayerNotificationIcon(Username, Muted = SocialIsPlayerNotificationMuted(Username)) {
     const Target = String(Username || "").trim().toLowerCase();
+    const Actions = document.querySelector(".StorySocialIdentityActions");
+    if (Actions && SocialSelectedUser?.username) {
+        Actions.hidden = SocialIsSelfUsername(SocialSelectedUser.username);
+    }
+    if (SocialIsSelfUsername(Username)) return;
 
     document.querySelectorAll(".StorySocialPlayerRow").forEach(Row => {
         if (String(Row.dataset.playerUsername || "").toLowerCase() !== Target) return;
@@ -76,6 +88,7 @@ function SocialRefreshPlayerNotificationIcon(Username, Muted = SocialIsPlayerNot
 function SocialSetPlayerNotificationMuted(Username, Muted) {
     const Target = String(Username || "").trim().toLowerCase();
     if (!Target) return;
+    if (SocialIsSelfUsername(Username)) return;
     const Players = SocialReadMutedPlayers().filter(Name => Name !== Target);
     if (Muted) Players.push(Target);
     try {
@@ -103,6 +116,10 @@ function SocialPositionPlayerMenu() {
 }
 
 function SocialOpenPlayerMenu(Username, Trigger) {
+    if (SocialIsSelfUsername(Username)) {
+        SocialClosePlayerMenu();
+        return;
+    }
     if (SocialActivePlayerMenu?.trigger === Trigger) {
         SocialClosePlayerMenu();
         return;
@@ -1147,7 +1164,7 @@ document.addEventListener("DOMContentLoaded", async function() {
     SelectedMore?.addEventListener("click", function(Event) {
         Event.preventDefault();
         Event.stopPropagation();
-        if (!SocialSelectedUser?.username) return;
+        if (!SocialSelectedUser?.username || SocialIsSelfUsername(SocialSelectedUser.username)) return;
         const WasOpen = SocialActivePlayerMenu?.trigger === SelectedMore;
         SocialOpenPlayerMenu(SocialSelectedUser.username, SelectedMore);
         SelectedMore.setAttribute("aria-expanded", WasOpen ? "false" : "true");

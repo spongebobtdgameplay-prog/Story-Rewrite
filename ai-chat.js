@@ -66,9 +66,34 @@ function RemoveQuietChatState(Container) {
     Container?.querySelector(".ChatQuietState")?.remove();
 }
 
+function GetStoryBotTaskStatus(Question = "") {
+    const Text = String(Question || StoryBotActiveQuestion || "").trim();
+    if (!Text) return "StoryBot is checking the relevant game context…";
+
+    if (/^(?:hi|hello|hey|hiya|yo|sup|good morning|good afternoon|good evening)[.!?]*$/i.test(Text)) {
+        return "StoryBot is preparing a quick reply…";
+    }
+    if (/\b(?:what did i say|what did we say|earlier|previous message|last message|remember|mentioned before|conversation history|chat history)\b/i.test(Text)) {
+        return "StoryBot is reviewing the recent chat context…";
+    }
+    if (/\b(?:vote|votes|voting|choice|choices|option|options|sentence|rewrite|pick|choose|selection|select)\b/i.test(Text)) {
+        return "StoryBot is comparing the available story choices and votes…";
+    }
+    if (/\b(?:stage|level|story|survive|survival|threat|objective|life|lives|heart|rule|rules|ending|outcome)\b/i.test(Text)) {
+        return "StoryBot is checking the current stage and survival rules…";
+    }
+    if (/\b(?:player|players|ready|lobby|room|game code|host|joining|invite|multiplayer)\b/i.test(Text)) {
+        return "StoryBot is checking the current lobby and player status…";
+    }
+    if (/^(?:why|how)\b|\b(?:explain|meaning|means|reason|because)\b/i.test(Text)) {
+        return "StoryBot is putting together a clear explanation…";
+    }
+    return "StoryBot is reviewing the question and relevant game context…";
+}
+
 function SetStoryBotTyping(Typing, Question = "") {
-    if (Typing && Question) StoryBotActiveQuestion = String(Question).trim().slice(0, 160);
-    const ThinkingAbout = Typing ? String(Question || StoryBotActiveQuestion || "").trim().slice(0, 160) : "";
+    if (Typing && Question) StoryBotActiveQuestion = String(Question).trim().slice(0, 240);
+    const StatusText = Typing ? GetStoryBotTaskStatus(Question || StoryBotActiveQuestion) : "";
     if (!Typing) StoryBotActiveQuestion = "";
     const Container = GetStoryBotChatContainer();
     if (!Container) return;
@@ -90,19 +115,16 @@ function SetStoryBotTyping(Typing, Question = "") {
             <span class="StoryBotMark" aria-hidden="true">
                 <svg viewBox="0 0 24 24"><path d="M12 3.5 14.2 8l4.8.7-3.5 3.4.8 4.8-4.3-2.2-4.3 2.2.8-4.8L5 8.7 9.8 8 12 3.5Z"></path></svg>
             </span>
-            <span class="StoryBotTypingText">StoryBot is thinking</span>
+            <span class="StoryBotTypingText">StoryBot is checking the relevant game context…</span>
             <span class="StoryBotDots" aria-hidden="true"><i></i><i></i><i></i></span>
         `;
         Container.appendChild(TypingRow);
     }
 
     const ThinkingLabel = TypingRow.querySelector(".StoryBotTypingText");
-    if (ThinkingLabel) ThinkingLabel.textContent = ThinkingAbout
-        ? "StoryBot is thinking about: " + ThinkingAbout
-        : "StoryBot is thinking";
+    if (ThinkingLabel) ThinkingLabel.textContent = StatusText;
     Container.scrollTop = Container.scrollHeight;
 }
-
 function ShowStoryBotError(Message) {
     const ErrorText = String(Message || "").trim();
     if (!ErrorText) return;

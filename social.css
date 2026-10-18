@@ -1698,3 +1698,31 @@ body.StorySocialPage { height:auto!important; min-height:100vh; overflow-x:hidde
 @media (prefers-reduced-motion: reduce) {
     .StorySocialIdentityActions .StorySocialNotificationState svg { animation: none; }
 }
+
+
+/* Keep player search results as compact template buttons, with a bounded scrolling list. */
+.StorySocialUserList {
+    grid-auto-rows: max-content !important;
+    align-content: start !important;
+    max-height: 530px !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+}
+.StorySocialPlayerRow {
+    display: block !important;
+    width: 100%;
+    min-width: 0;
+    height: auto !important;
+    min-height: 0 !important;
+}
+.StorySocialPlayerRow .StorySocialUserButton {
+    box-sizing: border-box;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 66px;
+    max-height: none !important;
+    align-self: start;
+}
+.StorySocialIdentityActions[hidden] {
+    display: none !important;
+}
