@@ -536,6 +536,10 @@ function SocialAddMessage(Message) {
             if (Event.pointerType !== "touch") SocialQueueMessageMenuClose(Menu);
         });
         More.addEventListener("focus", () => {
+            if (More.dataset.suppressMenuFocusOpen === "true") {
+                More.dataset.suppressMenuFocusOpen = "";
+                return;
+            }
             if (SocialActiveMessageMenu !== Menu || Menu.hidden) SocialOpenMessageMenu(Menu, More, false);
         });
         More.addEventListener("click", Event => {
@@ -565,6 +569,7 @@ function SocialAddMessage(Message) {
             if (Event.key !== "Escape") return;
             Event.preventDefault();
             SocialCloseMessageMenu(Menu);
+            More.dataset.suppressMenuFocusOpen = "true";
             More.focus();
         });
         Element.append(More, Menu);
