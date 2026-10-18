@@ -85,11 +85,11 @@ let PresenceExpiresAt = 0;
 
 function UpdatePresenceButtonTitles() {
     const Duration = Number(PresenceDurationSelect?.value || 0);
-    const Remaining = Math.max(0, PresenceExpiresAt - Date.now());
+    const ExpiresAtLabel = PresenceExpiresAt > Date.now()
+        ? " · expires at " + new Date(PresenceExpiresAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })
+        : "";
     const DurationText = Duration > 0
-        ? (Remaining > 0
-            ? `Set for ${Duration} minutes · expires in about ${Math.ceil(Remaining / 60000)} minutes`
-            : `${Duration}-minute duration`)
+        ? `Set for ${Duration} minutes` + ExpiresAtLabel
         : "No expiry (infinite)";
 
     for (const Button of PresenceButtons) {
@@ -239,11 +239,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     PresenceButtons.forEach(Button => {
         Button.addEventListener("click", () => {
             PresenceStatus = Button.dataset.presenceStatus || "online";
+            PresenceExpiresAt = 0;
+            UpdatePresenceButtonTitles();
             SavePresenceSettings();
         });
     });
 
     PresenceDurationSelect?.addEventListener("change", () => {
+        PresenceExpiresAt = 0;
         UpdatePresenceButtonTitles();
         SavePresenceSettings();
     });
