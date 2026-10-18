@@ -305,11 +305,12 @@ setTimeout(() => clearInterval(ChatModerationBindTimer), 30000);
                     <h2 id="StoryTermsWarningTitle">Chat warning</h2>
                     <div class="StoryTermsWarningLead">The multiplayer moderation AI detected abusive content in your chat message.</div>
                     <h3>Terms &amp; Conditions</h3>
-                    <p>By using Story Rewrite multiplayer chat, you agree to communicate without targeted harassment, threats, personal attacks, or other abusive conduct toward other players.</p>
-                    <div class="StoryTermsWarningRule"><strong>Important:</strong> Swearing or profanity by itself does not create a warning. A warning is shown only when the moderation AI confirms that the message is actually abusive in context.</div>
+                    <p>By using Story Rewrite multiplayer chat, you agree to communicate without profanity, slurs, targeted harassment, threats, personal attacks, sexual harassment, or other abusive conduct toward other players.</p>
+                    <div class="StoryTermsWarningRule"><strong>Important:</strong> Profanity and abusive language are not allowed in ordinary multiplayer chat. Reviews consider the surrounding conversation, including whether a message quotes harmful words to report them or uses them to target someone; a keyword match alone is not conclusive.</div>
                     <h3>What happens next</h3>
                     <p>Confirmed abuse can be removed from chat. Repeated confirmed abuse can result in a temporary chat timeout or additional game moderation.</p>
                     <div class="StoryTermsWarningActions">
+                        <button class="StoryTermsWarningAcknowledge" type="button" data-story-go="terms.html">Read Terms of Service</button>
                         <button class="StoryTermsWarningAcknowledge" id="StoryTermsWarningAcknowledge" type="button">I Understand</button>
                     </div>
                 </div>
