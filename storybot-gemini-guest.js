@@ -79,16 +79,18 @@ function cookieHeader() {
         .join("; ");
 }
 
-async function fetchWithTimeout(url, options, timeoutMs) {
+async function fetchTextWithTimeout(url, options, timeoutMs) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
     timer.unref?.();
 
     try {
-        return await fetch(url, {
+        const response = await fetch(url, {
             ...options,
             signal: controller.signal
         });
+        const text = await response.text();
+        return { response, text };
     } catch (error) {
         if (controller.signal.aborted) {
             throw new Error("Gemini guest request timed out after " + Math.round(timeoutMs / 1000) + " seconds.");
@@ -104,7 +106,7 @@ async function getBuildLabel() {
         return CachedBuildLabel;
     }
 
-    const response = await fetchWithTimeout(GEMINI_APP_URL, {
+    const pageResult = await fetchTextWithTimeout(GEMINI_APP_URL, {
         method: "GET",
         redirect: "follow",
         headers: {
@@ -113,9 +115,10 @@ async function getBuildLabel() {
             "Accept-Language": "en-US,en;q=0.9"
         }
     }, GEMINI_PAGE_TIMEOUT_MS);
+    const response = pageResult.response;
 
     rememberCookies(response);
-    const html = await response.text();
+    const html = pageResult.text;
 
     if (!response.ok) {
         throw new Error("Gemini guest page returned HTTP " + response.status + ".");
@@ -232,15 +235,16 @@ async function askGeminiNow(prompt) {
     const cookies = cookieHeader();
     if (cookies) headers.Cookie = cookies;
 
-    const response = await fetchWithTimeout(endpoint.href, {
+    const rpcResult = await fetchTextWithTimeout(endpoint.href, {
         method: "POST",
         redirect: "follow",
         headers,
         body: body.toString()
     }, GEMINI_REQUEST_TIMEOUT_MS);
+    const response = rpcResult.response;
 
     rememberCookies(response);
-    const raw = await response.text();
+    const raw = rpcResult.text;
 
     if (!response.ok) {
         CachedBuildLabel = "";
