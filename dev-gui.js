@@ -8,6 +8,7 @@
     let Authorized = false;
     let IsOpen = false;
     let SelectedCode = "";
+    let ObservationRequestSequence = 0;
     let Snapshot = null;
     let PollTimer = null;
     let Rooms = [];
@@ -141,7 +142,7 @@
             const Button = document.createElement("button");
             Button.type = "button";
             Button.className = "StoryDevRoomItem" + (Room.code === SelectedCode ? " is-selected" : "");
-            Button.addEventListener("click", () => ObserveRoom(Room.code));
+            Button.addEventListener("click", () => ToggleRoomObservation(Room.code));
             const Top = document.createElement("div");
             Top.className = "StoryDevRoomItemTop";
             const Code = document.createElement("strong");
@@ -164,15 +165,28 @@
             List.appendChild(Button);
         }
     }
+    function ToggleRoomObservation(Code) {
+        const Normalized = Txt(Code).toUpperCase();
+        if (!Normalized) return;
+        if (SelectedCode === Normalized) {
+            StopObserving();
+            return;
+        }
+        ObserveRoom(Normalized);
+    }
     function ObserveRoom(Code) {
         const Normalized = Txt(Code).toUpperCase();
         if (!Socket || !Socket.connected || !Normalized) return;
+
+        const RequestSequence = ++ObservationRequestSequence;
         SelectedCode = Normalized;
         Snapshot = null;
         RenderRooms();
         RenderDetails(null);
         SetStatus("Opening read-only observer…");
         Socket.timeout(8000).emit("dev:observe", { code: Normalized }, (Error, Result) => {
+            // Ignore late acknowledgements after the user has closed or switched rooms.
+            if (RequestSequence !== ObservationRequestSequence || SelectedCode !== Normalized) return;
             if (Error || !Result || !Result.ok || !Result.room) {
                 SelectedCode = "";
                 Snapshot = null;
@@ -188,13 +202,17 @@
         });
     }
     function StopObserving() {
-        if (Socket && Socket.connected && SelectedCode) {
+        const PreviousCode = SelectedCode;
+        // Invalidate any in-flight observe acknowledgement before clearing the view.
+        ObservationRequestSequence += 1;
+        if (Socket && Socket.connected && PreviousCode) {
             Socket.timeout(3000).emit("dev:stopObserving", {}, () => {});
         }
         SelectedCode = "";
         Snapshot = null;
         RenderRooms();
         RenderDetails(null);
+        SetStatus("No room selected · server view remains open");
     }
     function RenderDetails(Data) {
         const Empty = El("StoryDevEmpty");
