@@ -330,20 +330,25 @@ function SocialPositionMessageMenu() {
     const MenuWidth = Math.min(MenuRect.width || 170, ViewportWidth - Margin * 2);
     const MenuHeight = Math.min(MenuRect.height || 120, ViewportHeight - Margin * 2);
     const MessageBubble = Trigger.closest(".StorySocialMessage");
+    const BubbleRect = MessageBubble?.getBoundingClientRect() || TriggerRect;
     const IsRightSideBubble = Boolean(MessageBubble?.classList.contains("Sent"));
-    const Gap = 8;
-    let Left = IsRightSideBubble
-        ? TriggerRect.left - MenuWidth - Gap
-        : TriggerRect.right + Gap;
+    const Gap = 14;
+    let Left;
 
-    if (!IsRightSideBubble && Left + MenuWidth > ViewportWidth - Margin) {
-        Left = TriggerRect.left - MenuWidth - Gap;
-    } else if (IsRightSideBubble && Left < Margin) {
-        Left = TriggerRect.right + Gap;
+    // Place the menu outside the entire bubble, not over the message text.
+    if (IsRightSideBubble) {
+        Left = BubbleRect.left - MenuWidth - Gap;
+        if (Left < Margin) Left = TriggerRect.left - MenuWidth - Gap * 2;
+    } else {
+        Left = BubbleRect.right + Gap;
+        if (Left + MenuWidth > ViewportWidth - Margin) Left = TriggerRect.right + Gap;
     }
     Left = Math.max(Margin, Math.min(Left, ViewportWidth - MenuWidth - Margin));
-    let Top = TriggerRect.bottom + 5;
-    if (Top + MenuHeight > ViewportHeight - Margin) Top = TriggerRect.top - MenuHeight - 5;
+
+    // Align with the top of the bubble so it opens beside the content.
+    let Top = BubbleRect.top;
+    if (Top + MenuHeight > ViewportHeight - Margin) Top = BubbleRect.bottom - MenuHeight;
+    if (Top < Margin) Top = TriggerRect.bottom + 5;
     Top = Math.max(Margin, Math.min(Top, ViewportHeight - MenuHeight - Margin));
 
     Menu.style.left = Math.round(Left) + "px";
