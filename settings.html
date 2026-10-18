@@ -12,7 +12,7 @@
 <link rel="stylesheet" href="looks3.css?v=20260930-1">
 <link rel="stylesheet" href="looks4.css?v=20260930-1">
 <link rel="stylesheet" href="shell-ui.css?v=20261018-6">
-<link rel="stylesheet" href="settings.css?v=20261018-1">
+<link rel="stylesheet" href="settings.css?v=20261018-2">
 </head>
 <body class="AccountSettingsPage StorySettingsPage">
 <main class="AccountSettingsShell StorySettingsShell">
@@ -73,6 +73,53 @@
             </div>
         </div>
 
+
+        <section class="StorySettingsNotifications" aria-labelledby="InGameNotificationsTitle">
+            <div class="StorySettingsNotificationsIntro">
+                <div>
+                    <div class="Kicker">Notifications</div>
+                    <h2 id="InGameNotificationsTitle">In-game notifications</h2>
+                    <p>Choose which incoming messages can make a notification sound while Story Rewrite is open.</p>
+                </div>
+            </div>
+
+            <div class="StoryNotificationRows">
+                <div class="AccountSettingRow AccountToggleRow StoryNotificationRow StoryNotificationRowMaster">
+                    <div class="StorySettingCopy">
+                        <label for="InGameNotificationsToggle">In-game notifications</label>
+                        <small>Master switch for notification sounds in Story Rewrite.</small>
+                    </div>
+                    <button id="InGameNotificationsToggle" class="AccountToggleButton StoryNotificationToggle" type="button" role="switch" aria-checked="true" aria-label="In-game notifications">
+                        <span class="AccountToggleTrack"><span></span></span>
+                        <strong id="InGameNotificationsState">On</strong>
+                    </button>
+                </div>
+
+                <div class="AccountSettingRow AccountToggleRow StoryNotificationRow StoryNotificationChannel" id="MultiplayerChatNotificationsRow">
+                    <div class="StorySettingCopy">
+                        <label for="MultiplayerChatNotificationsToggle">Multiplayer room chat</label>
+                        <small>Play a sound when another player sends a message in a multiplayer story.</small>
+                    </div>
+                    <button id="MultiplayerChatNotificationsToggle" class="AccountToggleButton StoryNotificationToggle" type="button" role="switch" aria-checked="true" aria-label="Multiplayer room chat notifications">
+                        <span class="AccountToggleTrack"><span></span></span>
+                        <strong id="MultiplayerChatNotificationsState">On</strong>
+                    </button>
+                </div>
+
+                <div class="AccountSettingRow AccountToggleRow StoryNotificationRow StoryNotificationChannel" id="SocialMessageNotificationsRow">
+                    <div class="StorySettingCopy">
+                        <label for="SocialMessageNotificationsToggle">Social direct messages</label>
+                        <small>Play a sound for new private messages, unless that player is muted in Social.</small>
+                    </div>
+                    <button id="SocialMessageNotificationsToggle" class="AccountToggleButton StoryNotificationToggle" type="button" role="switch" aria-checked="true" aria-label="Social direct message notifications">
+                        <span class="AccountToggleTrack"><span></span></span>
+                        <strong id="SocialMessageNotificationsState">On</strong>
+                    </button>
+                </div>
+            </div>
+            <div id="NotificationSettingsStatus" class="StoryNotificationSettingsStatus" aria-live="polite">Notification preferences save on this device.</div>
+        </section>
+
         <section class="StorySettingsPresence">
             <div class="StorySettingsPresenceIntro">
                 <div>
@@ -118,10 +165,10 @@
 <script src="server-config.js?v=20261008-2"></script>
 <script src="network.js?v=20261008-2"></script>
 <script src="app.js?fresh=20260930-83"></script>
-<script src="audio.js?fresh=20260930-83"></script>
+<script src="audio.js?v=20261018-8"></script>
 <script src="real-audio.js?fresh=20260930-83"></script>
 <script src="shell-ui.js?v=20261018-6"></script>
-<script src="build-version.js?v=20261018-3"></script>
-<script src="settings.js?v=20261018-3"></script>
+<script src="build-version.js?v=20261018-7"></script>
+<script src="settings.js?v=20261018-4"></script>
 </body>
 </html>
