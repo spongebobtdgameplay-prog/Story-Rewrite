@@ -307,7 +307,7 @@ body {
     align-items: center;
     justify-content: flex-end;
     flex-wrap: nowrap;
-    gap: clamp(4px, .5vw, 8px);
+    gap: clamp(6.4px, .8vw, 12.8px);
 }
 #App > .TopBar > .TopActions > .UiButton {
     box-sizing: border-box;
@@ -315,11 +315,11 @@ body {
     min-width: 0;
     max-width: none;
     width: auto;
-    height: 42px;
-    min-height: 42px;
-    max-height: 42px;
-    padding: 9px 10px;
-    font-size: 12px;
+    height: 67.2px;
+    min-height: 67.2px;
+    max-height: 67.2px;
+    padding: 14.4px 16px;
+    font-size: 19.2px;
     line-height: 1.1;
     letter-spacing: 0;
     white-space: nowrap;
@@ -327,19 +327,23 @@ body {
     text-overflow: clip;
 }
 #App > .TopBar > .TopActions > .SettingsNavButton {
-    flex: 0 0 40px;
-    width: 40px !important;
-    min-width: 40px !important;
-    height: 40px;
-    min-height: 40px;
-    max-height: 40px;
+    flex: 0 0 67.2px;
+    width: 67.2px !important;
+    min-width: 67.2px !important;
+    height: 67.2px;
+    min-height: 67.2px !important;
+    max-height: 67.2px;
     padding: 0;
+}
+#App > .TopBar > .TopActions > .SettingsNavButton svg {
+    width: 30.4px;
+    height: 30.4px;
 }
 #App > .TopBar > .TopActions > .AccountNavButton {
     flex: 0 0 auto;
     max-width: none;
     width: auto;
-    gap: 6px;
+    gap: 9.6px;
 }
 #App > .TopBar > .TopActions > .AccountNavButton #AccountButtonLabel {
     min-width: max-content;
@@ -347,12 +351,14 @@ body {
     text-overflow: clip;
     white-space: nowrap;
 }
-@media (min-width: 761px) and (max-width: 1050px) {
+@media (min-width: 761px) and (max-width: 1250px) {
     #App > .TopBar {
         padding: 12px 10px;
         gap: 8px;
+        flex-wrap: wrap;
     }
     #App > .TopBar > .Brand {
+        flex: 1 1 100%;
         gap: 8px;
     }
     #App > .TopBar .BrandSub {
@@ -362,18 +368,31 @@ body {
         font-size: 18px;
     }
     #App > .TopBar > .TopActions {
-        gap: 4px;
+        flex: 1 1 100%;
+        width: 100%;
+        margin-left: 0;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+        gap: 6.4px;
     }
     #App > .TopBar > .TopActions > .UiButton {
-        height: 40px;
-        min-height: 40px;
-        max-height: 40px;
-        padding: 8px 5px;
-        font-size: 11px;
+        height: 64px;
+        min-height: 64px;
+        max-height: 64px;
+        padding: 12.8px 8px;
+        font-size: 17.6px;
     }
     #App > .TopBar > .TopActions > .SettingsNavButton {
-        flex-basis: 40px;
+        flex-basis: 64px;
+        width: 64px !important;
+        min-width: 64px !important;
+        height: 64px;
+        min-height: 64px !important;
+        max-height: 64px;
         padding: 0;
+    }
+    #App > .TopBar > .TopActions > .AccountNavButton {
+        gap: 9.6px;
     }
 }
 @media (max-width: 760px) {
@@ -407,23 +426,32 @@ body {
         margin-left: 0;
         justify-content: flex-start;
         flex-wrap: wrap;
-        gap: 6px;
+        gap: 9.6px;
     }
     #App > .TopBar > .TopActions > .UiButton {
         flex: 0 0 auto;
         max-width: none;
-        height: 40px;
-        min-height: 40px;
-        max-height: 40px;
-        font-size: 12px;
-        padding: 8px 9px;
+        height: 64px;
+        min-height: 64px;
+        max-height: 64px;
+        font-size: 19.2px;
+        padding: 12.8px 14.4px;
     }
     #App > .TopBar > .TopActions > .SettingsNavButton {
-        flex: 0 0 40px;
+        flex: 0 0 64px;
+        width: 64px !important;
+        min-width: 64px !important;
+        height: 64px;
+        min-height: 64px !important;
+        max-height: 64px;
         padding: 0;
     }
+    #App > .TopBar > .TopActions > .SettingsNavButton svg {
+        width: 30.4px;
+        height: 30.4px;
+    }
     #App > .TopBar > .TopActions > .AccountNavButton {
-        flex: 0 0 auto;
+        gap: 9.6px;
         max-width: none;
     }
 }
