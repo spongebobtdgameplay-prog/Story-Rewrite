@@ -2,10 +2,32 @@ const { Server: SocketServer } = require("socket.io");
 
 const ActiveDeviceSessions = new Map();
 const ActiveAccountSessions = new Map();
+const DeveloperUsernames = new Set([
+    "darius56",
+    ...String(process.env.STORY_REWRITE_DEVELOPER_USERNAMES || "").split(",")
+].map(Username => String(Username || "").trim().toLowerCase()).filter(Boolean));
+const DeveloperObserverBlockedEvents = new Set([
+    "room:ready",
+    "room:start",
+    "game:vote",
+    "game:check",
+    "game:retry",
+    "game:next",
+    "game:restartChapter",
+    "game:revive",
+    "host:kick",
+    "host:chatBan",
+    "host:approveJoin",
+    "host:declineJoin"
+]);
 const OriginalServerOn = SocketServer.prototype.on;
 
 function NormalizeSessionValue(Value, MaximumLength = 160) {
     return String(Value || "").trim().slice(0, MaximumLength);
+}
+
+function IsDeveloperUsername(Value) {
+    return DeveloperUsernames.has(NormalizeSessionValue(Value, 32).toLowerCase());
 }
 
 function GetConnectedSession(MapValue) {
@@ -100,6 +122,34 @@ function InstallRoomSessionGuard(Socket) {
     OriginalSocketOn("disconnect", ClearCurrentSession);
 
     Socket.on = function(EventName, Listener) {
+        if (EventName === "dev:observe") {
+            return OriginalSocketOn(EventName, (Payload, Reply = () => {}) => {
+                if (!IsDeveloperUsername(Socket.data?.username)) {
+                    return Reply({ ok: false, error: "Developer access required." });
+                }
+
+                const Session = BuildSession(Socket);
+                const Conflict = FindSessionConflict(Session);
+                if (Conflict) {
+                    Reply(BuildConflictResult(Session, Conflict));
+                    return;
+                }
+
+                const GuardedReply = Result => {
+                    if (Result?.ok) {
+                        ClearCurrentSession();
+                        CurrentSession = Session;
+                        RegisterSession(Session);
+                        Socket.data.devObserver = Boolean(Result.observer);
+                        Socket.data.devObservedRoomCode = String(Result.code || "");
+                    }
+                    Reply(Result);
+                };
+
+                return Listener(Payload, GuardedReply);
+            });
+        }
+
         if (EventName === "room:join") {
             return OriginalSocketOn(EventName, (Payload, Reply = () => {}) => {
                 const Session = BuildSession(Socket);
@@ -115,6 +165,8 @@ function InstallRoomSessionGuard(Socket) {
                         ClearCurrentSession();
                         CurrentSession = Session;
                         RegisterSession(Session);
+                        Socket.data.devObserver = false;
+                        Socket.data.devObservedRoomCode = "";
                     }
                     Reply(Result);
                 };
@@ -125,14 +177,46 @@ function InstallRoomSessionGuard(Socket) {
 
         if (EventName === "room:leave") {
             return OriginalSocketOn(EventName, (Payload, Reply = () => {}) => {
-                const GuardedReply = Result => {
+                const ClearDeveloperObserver = () => {
+                    Socket.data.devObserver = false;
+                    Socket.data.devObservedRoomCode = "";
                     ClearCurrentSession();
+                };
+                const GuardedReply = Result => {
+                    ClearDeveloperObserver();
                     Reply(Result);
                 };
 
                 const Result = Listener(Payload, GuardedReply);
-                if (Listener.length < 2) ClearCurrentSession();
+                if (Listener.length < 2) ClearDeveloperObserver();
                 return Result;
+            });
+        }
+
+        if (DeveloperObserverBlockedEvents.has(EventName)) {
+            return OriginalSocketOn(EventName, (...Args) => {
+                if (!Socket.data?.devObserver) return Listener(...Args);
+
+                const Result = {
+                    ok: false,
+                    error: "Developer observer mode is read-only for gameplay controls."
+                };
+                let Reply = null;
+                for (const Argument of Args) {
+                    if (typeof Argument === "function") Reply = Argument;
+                }
+                if (Reply) Reply(Result);
+                Socket.emit("dev:actionDenied", { event: EventName, error: Result.error });
+            });
+        }
+
+        if (EventName === "room:chat") {
+            return OriginalSocketOn(EventName, Payload => {
+                if (Socket.data?.devObserver && /^\s*\d+\s*$/.test(String(Payload?.text || ""))) {
+                    Socket.emit("room:chatError", { error: "Developer observers can chat, but cannot cast gameplay votes." });
+                    return;
+                }
+                return Listener(Payload);
             });
         }
 
