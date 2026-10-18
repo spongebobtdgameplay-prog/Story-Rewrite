@@ -1663,3 +1663,38 @@ body.StorySocialPage { height:auto!important; min-height:100vh; overflow-x:hidde
         padding: 7px 8px !important;
     }
 }
+
+
+/* Center the selected player's bell precisely and give its state a soft glow. */
+.StorySocialIdentityActions .StorySocialNotificationState {
+    display: grid !important;
+    place-items: center !important;
+    align-content: center !important;
+    justify-items: center !important;
+    align-self: center !important;
+    justify-self: center !important;
+    box-sizing: border-box;
+    line-height: 0;
+    padding: 0;
+    text-align: center;
+}
+.StorySocialIdentityActions .StorySocialNotificationState svg {
+    display: block;
+    width: 18px;
+    height: 18px;
+    margin: auto;
+    animation: StorySocialBellGlow 2.4s ease-in-out infinite;
+}
+.StorySocialIdentityActions .StorySocialNotificationState.Enabled svg {
+    filter: drop-shadow(0 0 2px rgba(65, 218, 112, .85)) drop-shadow(0 0 6px rgba(65, 218, 112, .5));
+}
+.StorySocialIdentityActions .StorySocialNotificationState.Muted svg {
+    filter: drop-shadow(0 0 2px rgba(255, 73, 66, .8)) drop-shadow(0 0 6px rgba(255, 73, 66, .44));
+}
+@keyframes StorySocialBellGlow {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.06); }
+}
+@media (prefers-reduced-motion: reduce) {
+    .StorySocialIdentityActions .StorySocialNotificationState svg { animation: none; }
+}
