@@ -9,6 +9,8 @@ let SocialSearchTimer = null;
 let SocialSearchRequestId = 0;
 let SocialInboxRequestId = 0;
 let SocialHoveredMessageId = "";
+let SocialActiveMessageMenu = null;
+let SocialMessageMenuCloseTimer = null;
 const SocialMessageIds = new Set();
 
 function SocialById(Id) {
@@ -268,6 +270,223 @@ function SocialBuildMessageAction(Label, ClassName, OnClick) {
     return Button;
 }
 
+
+function SocialClearMessageMenuCloseTimer() {
+    if (SocialMessageMenuCloseTimer !== null) {
+        window.clearTimeout(SocialMessageMenuCloseTimer);
+        SocialMessageMenuCloseTimer = null;
+    }
+}
+
+function SocialCloseMessageMenu(Menu) {
+    if (!Menu) return;
+    SocialClearMessageMenuCloseTimer();
+    const Trigger = Menu._storySocialTrigger || null;
+    const Home = Menu._storySocialHome || null;
+    Menu.hidden = true;
+    Menu.dataset.openedByHover = "";
+    Menu.dataset.openedByClick = "";
+    Menu.style.left = "";
+    Menu.style.top = "";
+    Menu.style.visibility = "";
+    Menu.style.position = "";
+    if (Home && Trigger && Menu.parentElement === document.body && Trigger.parentElement === Home) {
+        Home.insertBefore(Menu, Trigger.nextSibling);
+    }
+    Trigger?.setAttribute("aria-expanded", "false");
+    if (SocialActiveMessageMenu === Menu) SocialActiveMessageMenu = null;
+}
+
+function SocialCloseAllMessageMenus(Except = null) {
+    SocialClearMessageMenuCloseTimer();
+    document.querySelectorAll(".StorySocialMessageMenu").forEach(Menu => {
+        if (Menu !== Except && !Menu.hidden) SocialCloseMessageMenu(Menu);
+    });
+}
+
+function SocialPositionMessageMenu() {
+    const Menu = SocialActiveMessageMenu;
+    if (!Menu || Menu.hidden) return;
+    const Trigger = Menu._storySocialTrigger;
+    if (!Trigger?.isConnected) {
+        SocialCloseMessageMenu(Menu);
+        return;
+    }
+
+    const ViewportWidth = document.documentElement.clientWidth || window.innerWidth;
+    const ViewportHeight = window.innerHeight || document.documentElement.clientHeight;
+    const Margin = 10;
+    Menu.style.position = "fixed";
+    Menu.style.zIndex = "2147483647";
+    Menu.style.left = "0px";
+    Menu.style.top = "0px";
+    Menu.style.visibility = "hidden";
+
+    const TriggerRect = Trigger.getBoundingClientRect();
+    const MenuRect = Menu.getBoundingClientRect();
+    const MenuWidth = Math.min(MenuRect.width || 170, ViewportWidth - Margin * 2);
+    const MenuHeight = Math.min(MenuRect.height || 120, ViewportHeight - Margin * 2);
+    let Left = TriggerRect.right - MenuWidth;
+    Left = Math.max(Margin, Math.min(Left, ViewportWidth - MenuWidth - Margin));
+    let Top = TriggerRect.bottom + 5;
+    if (Top + MenuHeight > ViewportHeight - Margin) Top = TriggerRect.top - MenuHeight - 5;
+    Top = Math.max(Margin, Math.min(Top, ViewportHeight - MenuHeight - Margin));
+
+    Menu.style.left = Math.round(Left) + "px";
+    Menu.style.top = Math.round(Top) + "px";
+    Menu.style.visibility = "visible";
+}
+
+function SocialOpenMessageMenu(Menu, Trigger, OpenedByHover = false) {
+    if (!Menu || !Trigger) return;
+    SocialClearMessageMenuCloseTimer();
+    if (SocialActiveMessageMenu && SocialActiveMessageMenu !== Menu) {
+        SocialCloseMessageMenu(SocialActiveMessageMenu);
+    }
+    Menu._storySocialTrigger = Trigger;
+    Menu._storySocialHome = Trigger.closest(".StorySocialMessage");
+    if (Menu.parentElement !== document.body) document.body.appendChild(Menu);
+    Menu.hidden = false;
+    Menu.dataset.openedByHover = OpenedByHover ? "true" : "";
+    Menu.dataset.openedByClick = "";
+    SocialActiveMessageMenu = Menu;
+    Trigger.setAttribute("aria-expanded", "true");
+    SocialPositionMessageMenu();
+}
+
+function SocialQueueMessageMenuClose(Menu) {
+    SocialClearMessageMenuCloseTimer();
+    SocialMessageMenuCloseTimer = window.setTimeout(() => {
+        SocialMessageMenuCloseTimer = null;
+        const Trigger = Menu?._storySocialTrigger;
+        const PointerStillInside = Boolean(Menu?.matches(":hover") || Trigger?.matches(":hover"));
+        const FocusStillInside = Boolean(Menu?.contains(document.activeElement) ||
+            (document.activeElement === Trigger && Trigger?.matches(":focus-visible")));
+        if (!PointerStillInside && !FocusStillInside) SocialCloseMessageMenu(Menu);
+    }, 220);
+}
+
+function SocialAskReportReason() {
+    return new Promise(resolve => {
+        const Dialog = document.createElement("dialog");
+        Dialog.className = "StorySocialReportDialog";
+        Dialog.setAttribute("aria-labelledby", "StorySocialReportHeading");
+
+        const Form = document.createElement("form");
+        Form.className = "StorySocialReportForm";
+        const Heading = document.createElement("h2");
+        Heading.id = "StorySocialReportHeading";
+        Heading.textContent = "Report this message";
+        const Intro = document.createElement("p");
+        Intro.textContent = "Choose the reason that best describes the problem. Add details only if they help explain the report.";
+
+        const ReasonLabel = document.createElement("label");
+        ReasonLabel.htmlFor = "StorySocialReportReason";
+        ReasonLabel.textContent = "Reason";
+        const ReasonSelect = document.createElement("select");
+        ReasonSelect.id = "StorySocialReportReason";
+        ReasonSelect.required = true;
+        ReasonSelect.name = "reason";
+
+        const Placeholder = document.createElement("option");
+        Placeholder.value = "";
+        Placeholder.textContent = "Select a reason…";
+        Placeholder.disabled = true;
+        Placeholder.selected = true;
+        ReasonSelect.appendChild(Placeholder);
+
+        [
+            "Harassment or bullying",
+            "Hate or hateful conduct",
+            "Threats or violence",
+            "Sexual content",
+            "Spam or advertising",
+            "Scam or fraud",
+            "Sharing private or personal information",
+            "Impersonation",
+            "Other"
+        ].forEach(Value => {
+            const Option = document.createElement("option");
+            Option.value = Value;
+            Option.textContent = Value;
+            ReasonSelect.appendChild(Option);
+        });
+
+        const DetailsLabel = document.createElement("label");
+        DetailsLabel.htmlFor = "StorySocialReportDetails";
+        DetailsLabel.textContent = "Additional details (optional)";
+        const Details = document.createElement("textarea");
+        Details.id = "StorySocialReportDetails";
+        Details.name = "details";
+        Details.maxLength = 150;
+        Details.rows = 3;
+        Details.placeholder = "Add context for the moderators…";
+
+        const Actions = document.createElement("div");
+        Actions.className = "StorySocialReportActions";
+        const Cancel = document.createElement("button");
+        Cancel.type = "button";
+        Cancel.className = "StorySocialReportCancel";
+        Cancel.textContent = "Cancel";
+        const Submit = document.createElement("button");
+        Submit.type = "submit";
+        Submit.className = "StorySocialReportSubmit";
+        Submit.textContent = "Submit report";
+
+        Form.append(Heading, Intro, ReasonLabel, ReasonSelect, DetailsLabel, Details);
+        Actions.append(Cancel, Submit);
+        Form.appendChild(Actions);
+        Dialog.appendChild(Form);
+
+        let Settled = false;
+        const Finish = Value => {
+            if (Settled) return;
+            Settled = true;
+            if (Dialog.open) Dialog.close();
+            Dialog.remove();
+            resolve(Value);
+        };
+        Cancel.addEventListener("click", () => Finish(null));
+        Dialog.addEventListener("cancel", Event => {
+            Event.preventDefault();
+            Finish(null);
+        });
+        Dialog.addEventListener("close", () => {
+            if (!Settled) {
+                Settled = true;
+                Dialog.remove();
+                resolve(null);
+            }
+        });
+        Form.addEventListener("submit", Event => {
+            Event.preventDefault();
+            if (!ReasonSelect.value) {
+                ReasonSelect.reportValidity();
+                ReasonSelect.focus();
+                return;
+            }
+            Finish({
+                reason: ReasonSelect.value,
+                details: String(Details.value || "").trim().slice(0, 150)
+            });
+        });
+
+        document.body.appendChild(Dialog);
+        if (typeof Dialog.showModal !== "function") {
+            Dialog.remove();
+            resolve(null);
+            return;
+        }
+        try {
+            Dialog.showModal();
+            ReasonSelect.focus();
+        } catch (Error) {
+            Dialog.remove();
+            resolve(null);
+        }
+    });
+}
+
 function SocialAddMessage(Message) {
     if (!Message || !Message.id) return;
     const Container = SocialById("SocialMessages");
@@ -290,6 +509,7 @@ function SocialAddMessage(Message) {
     Element.tabIndex = 0;
     Element.setAttribute("aria-label", (Mine ? "Your message" : "Message from " + String(Message.senderUsername || "player")));
 
+    if (SocialActiveMessageMenu?.dataset.messageId === Id) SocialCloseMessageMenu(SocialActiveMessageMenu);
     while (Element.firstChild) Element.removeChild(Element.firstChild);
 
     if (!Deleted) {
@@ -300,17 +520,52 @@ function SocialAddMessage(Message) {
         More.title = "Message actions";
         More.setAttribute("aria-label", "More actions for this message");
 
+        More.setAttribute("aria-expanded", "false");
+
         const Menu = document.createElement("div");
         Menu.className = "StorySocialMessageMenu";
+        Menu.dataset.messageId = Id;
         Menu.hidden = true;
+        Menu._storySocialTrigger = More;
+        Menu._storySocialHome = Element;
 
+        More.addEventListener("pointerenter", Event => {
+            if (Event.pointerType !== "touch") SocialOpenMessageMenu(Menu, More, true);
+        });
+        More.addEventListener("pointerleave", Event => {
+            if (Event.pointerType !== "touch") SocialQueueMessageMenuClose(Menu);
+        });
+        More.addEventListener("focus", () => {
+            if (SocialActiveMessageMenu !== Menu || Menu.hidden) SocialOpenMessageMenu(Menu, More, false);
+        });
         More.addEventListener("click", Event => {
             Event.preventDefault();
             Event.stopPropagation();
-            const WasOpen = !Menu.hidden;
-            document.querySelectorAll(".StorySocialMessageMenu").forEach(Other => Other.hidden = true);
-            Menu.hidden = WasOpen;
-            More.setAttribute("aria-expanded", Menu.hidden ? "false" : "true");
+            if (SocialActiveMessageMenu === Menu && !Menu.hidden) {
+                if (Menu.dataset.openedByHover === "true") {
+                    Menu.dataset.openedByHover = "";
+                    Menu.dataset.openedByClick = "true";
+                    return;
+                }
+                if (Menu.dataset.openedByClick !== "true") {
+                    Menu.dataset.openedByClick = "true";
+                    return;
+                }
+                SocialCloseMessageMenu(Menu);
+            } else {
+                SocialOpenMessageMenu(Menu, More, false);
+                Menu.dataset.openedByClick = "true";
+            }
+        });
+        Menu.addEventListener("pointerenter", SocialClearMessageMenuCloseTimer);
+        Menu.addEventListener("pointerleave", () => SocialQueueMessageMenuClose(Menu));
+        Menu.addEventListener("focusin", SocialClearMessageMenuCloseTimer);
+        Menu.addEventListener("focusout", () => SocialQueueMessageMenuClose(Menu));
+        Menu.addEventListener("keydown", Event => {
+            if (Event.key !== "Escape") return;
+            Event.preventDefault();
+            SocialCloseMessageMenu(Menu);
+            More.focus();
         });
         Element.append(More, Menu);
 
@@ -318,22 +573,19 @@ function SocialAddMessage(Message) {
             ? "♥ Liked" + (Number(Message.heartCount || 0) > 0 ? " · " + Number(Message.heartCount) : "")
             : "♡ Heart" + (Number(Message.heartCount || 0) > 0 ? " · " + Number(Message.heartCount) : "");
         Menu.appendChild(SocialBuildMessageAction(HeartLabel, "HeartAction" + (Message.heartedByMe ? " IsActive" : ""), async () => {
-            Menu.hidden = true;
-            More.setAttribute("aria-expanded", "false");
+            SocialCloseMessageMenu(Menu);
             await SocialHeartMessage(Id);
         }));
 
         if (!Mine) {
             Menu.appendChild(SocialBuildMessageAction("Report", "ReportAction", async () => {
-                Menu.hidden = true;
-                More.setAttribute("aria-expanded", "false");
+                SocialCloseMessageMenu(Menu);
                 await SocialReportMessage(Id);
             }));
         }
         if (Mine) {
             Menu.appendChild(SocialBuildMessageAction("Delete message", "DeleteAction", async () => {
-                Menu.hidden = true;
-                More.setAttribute("aria-expanded", "false");
+                SocialCloseMessageMenu(Menu);
                 await SocialDeleteMessage(Id);
             }));
         }
@@ -432,12 +684,10 @@ async function SocialDeleteMessage(MessageId) {
 }
 
 async function SocialReportMessage(MessageId) {
-    let Reason = "";
-    try {
-        const Entered = window.prompt("Optional: why are you reporting this message?");
-        if (Entered === null) return;
-        Reason = String(Entered || "").trim().slice(0, 200);
-    } catch {}
+    const Selection = await SocialAskReportReason();
+    if (!Selection) return;
+
+    const Reason = (Selection.reason + (Selection.details ? ": " + Selection.details : "")).slice(0, 200);
     try {
         const Result = await ApiRequest("/api/social/messages/report", {
             method: "POST",
@@ -665,12 +915,11 @@ document.addEventListener("DOMContentLoaded", async function() {
     SocialUpdateMessageCount();
     Form?.addEventListener("submit", SocialSendMessage);
     document.addEventListener("click", Event => {
-        if (Event.target.closest(".StorySocialMessageMenu, .StorySocialMessageMore")) return;
-        document.querySelectorAll(".StorySocialMessageMenu").forEach(Menu => {
-            Menu.hidden = true;
-            Menu.previousElementSibling?.setAttribute("aria-expanded", "false");
-        });
+        if (Event.target?.closest?.(".StorySocialMessageMenu, .StorySocialMessageMore")) return;
+        SocialCloseAllMessageMenus();
     });
+    document.addEventListener("scroll", SocialPositionMessageMenu, true);
+    window.addEventListener("resize", SocialPositionMessageMenu);
     document.addEventListener("keydown", Event => {
         if (!Event.shiftKey || !["Backspace", "Delete"].includes(Event.key)) return;
         const ActiveElement = document.activeElement;
