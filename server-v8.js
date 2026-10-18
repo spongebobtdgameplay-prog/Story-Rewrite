@@ -337,6 +337,11 @@ function IsAllowedOrigin(Origin) {
         const Parsed = new URL(Origin);
         const Hostname = Parsed.hostname.toLowerCase();
         if (Parsed.protocol === "https:" && Hostname === "spongebobtdgameplay-prog.github.io") return true;
+        if (Parsed.protocol === "https:" && (
+            Hostname === "story-rewrite-iota.vercel.app"
+            || Hostname === "story-rewrite-spongebobtdgameplay-prog.vercel.app"
+            || /^story-rewrite-[a-z0-9-]+-spongebobtdgameplay-prog\.vercel\.app$/.test(Hostname)
+        )) return true;
         if (Parsed.protocol === "https:" && Hostname === "story-rewrite-backend.onrender.com") return true;
         if (Parsed.protocol === "http:" && (Hostname === "localhost" || Hostname === "127.0.0.1")) return true;
     } catch {}
