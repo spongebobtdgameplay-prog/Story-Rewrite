@@ -27,3 +27,44 @@
 .StoryDevFooter{min-height:37px;padding:0 22px;display:flex;align-items:center;justify-content:space-between;gap:12px;border-top:1px solid var(--dev-line);color:#8d795e;background:#1b130e;font-size:9px}.StoryDevFooter strong{color:#cba16b;font-weight:800}
 @media(max-width:790px){.StoryDevPanel{height:min(900px,97vh)}.StoryDevHeader{min-height:72px;padding:13px 14px}.StoryDevBrand h2{font-size:20px}.StoryDevMain{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(155px,.75fr) minmax(0,1.4fr)}.StoryDevRoomsPane{border-right:0;border-bottom:1px solid var(--dev-line)}.StoryDevPaneHeading{padding:11px 13px 9px}.StoryDevPaneHeading h3{font-size:16px}.StoryDevRoomList{display:flex;gap:7px;overflow-x:auto;overflow-y:hidden;padding:0 10px 9px}.StoryDevRoomItem{min-width:205px;max-width:235px;margin:0}.StoryDevPaneFooter{display:none}.StoryDevRoomTop{padding:14px 14px 11px}.StoryDevRoomCode{font-size:22px}.StoryDevMetrics{padding:10px;gap:6px}.StoryDevMetric{padding:8px}.StoryDevMetric span{font-size:7px}.StoryDevMetric strong{font-size:11px}.StoryDevContentGrid{padding:10px;gap:8px;grid-template-columns:minmax(115px,.75fr) minmax(0,1.25fr)}.StoryDevMessages{height:220px;max-height:30vh}}
 @media(max-width:520px){.StoryDevOverlay{padding:0}.StoryDevPanel{width:100%;height:100%;max-height:none;min-height:0;border-radius:0;border:0}.StoryDevHeaderActions{gap:5px}.StoryDevLive{display:none}.StoryDevMark{width:39px;height:39px;border-radius:11px}.StoryDevBrand{gap:9px}.StoryDevBrand h2{font-size:18px}.StoryDevBrand p{font-size:10px}.StoryDevEyebrow{font-size:8px}.StoryDevSummaryBar{padding:0 12px;gap:7px;font-size:9px}.StoryDevReadOnly{font-size:8px}.StoryDevMain{grid-template-rows:minmax(145px,.65fr) minmax(0,1.55fr)}.StoryDevRoomTop{align-items:flex-start}.StoryDevRoomTopRight{gap:7px}.StoryDevMetrics{grid-template-columns:repeat(2,minmax(0,1fr))}.StoryDevContentGrid{grid-template-columns:minmax(0,1fr)}.StoryDevMessages{height:200px;max-height:28vh}.StoryDevFooter{min-height:34px;padding:0 12px;font-size:8px}.StoryDevFooter span:last-child{text-align:right}.StoryDevOpenButton{min-height:36px;padding:8px;font-size:10px}.StoryDevOpenButton span{display:none}}
+
+/* Larger observer console with stronger, easier-to-scan labels. */
+.StoryDevPanel{
+    width:min(1480px,calc(100vw - 20px));
+    height:min(960px,calc(100vh - 20px));
+    min-height:min(520px,calc(100vh - 20px));
+}
+.StoryDevSummaryBar{font-size:12px;font-weight:650}
+.StoryDevEyebrow{font-size:10px;font-weight:950;letter-spacing:.13em}
+.StoryDevPaneHeading h3{font-size:21px;font-weight:800}
+.StoryDevCount{font-size:12px;font-weight:900}
+.StoryDevRoomItemTop strong{font-size:18px;font-weight:900}
+.StoryDevRoomItemHost{font-size:13px;font-weight:700}
+.StoryDevRoomItemBottom{font-size:11px;font-weight:750}
+.StoryDevStatus{font-size:10px;font-weight:950}
+.StoryDevMetric span{font-size:10px;font-weight:950;letter-spacing:.1em}
+.StoryDevMetric strong{font-size:13px;font-weight:850}
+.StoryDevCardHeading h3{font-size:15px;font-weight:800}
+.StoryDevCardHeading span{font-size:9px;font-weight:950}
+.StoryDevPlayerName strong{font-size:12px;font-weight:850}
+.StoryDevPlayerName span{font-size:10px;font-weight:700}
+.StoryDevMessageMeta strong{font-size:12px;font-weight:950}
+.StoryDevMessage p{font-size:13px;line-height:1.55}
+.StoryDevFooter{font-size:10px;font-weight:700}
+.StoryDevFooter strong{font-weight:950}
+.StoryDevStopButton{font-size:11px;font-weight:900}
+@media(max-width:790px){
+    .StoryDevPanel{height:min(960px,97vh);min-height:0}
+    .StoryDevSummaryBar{font-size:10px}
+    .StoryDevMetric span{font-size:9px}
+    .StoryDevRoomItemHost{font-size:12px}
+    .StoryDevMessage p{font-size:12px}
+}
+@media(max-width:520px){
+    .StoryDevPanel{width:100%;height:100%;min-height:0}
+    .StoryDevEyebrow{font-size:8px}
+    .StoryDevSummaryBar{font-size:9px}
+    .StoryDevMetric span{font-size:9px}
+    .StoryDevMessage p{font-size:12px}
+    .StoryDevFooter{font-size:9px}
+}
