@@ -896,7 +896,7 @@ function AppendGameChat(Message, Scroll = true) {
     }
 
     if (Scroll) {
-        StoryAudio.PlaySound("message");
+        StoryAudio.PlaySound("message", { username: Message.username, accountUsername: Profile?.username });
         Container.scrollTop = Container.scrollHeight;
 
         const Dock = document.getElementById("MultiplayerDock");
