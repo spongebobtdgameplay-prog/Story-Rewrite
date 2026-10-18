@@ -136,6 +136,56 @@ function MarkLastChatMessage(ContainerId, Message) {
     }
 }
 
+function FindStoryBotRenderedElement(Container, MessageId) {
+    const Id = String(MessageId || "").trim();
+    if (!Container || !Id) return null;
+    return [...Container.children].find(Element => Element.dataset.storyBotMessageId === Id) || null;
+}
+
+function RenderStoryBotStructuredMessage(Element, Message) {
+    if (!Element || !Message?.bot) return;
+    const RawText = String(Message.text || "").trim();
+    if (!RawText.includes(";")) return;
+
+    const Segments = RawText.split(";").map(Segment => Segment.trim()).filter(Boolean);
+    if (Segments.length < 2) return;
+
+    const Name = document.createElement("strong");
+    Name.textContent = String(Message.username || STORY_BOT_NAME) + ": ";
+
+    const Body = document.createElement("div");
+    Body.className = "StoryBotMessageBody";
+    for (const Segment of Segments) {
+        const TextElement = document.createElement("div");
+        TextElement.className = "StoryBotTextElement";
+        TextElement.textContent = Segment;
+        Body.appendChild(TextElement);
+    }
+
+    Element.replaceChildren(Name, Body);
+}
+
+function RenderStoryBotQuestionImmediately(Message, ContainerId) {
+    if (!Message?.id || !ContainerId) return;
+    if (ContainerId === "ChatMessages" && typeof AppendChat === "function") {
+        AppendChat(Message);
+    } else if (ContainerId === "GameChatMessages" && typeof AppendGameChat === "function") {
+        AppendGameChat(Message);
+    }
+
+    const Container = document.getElementById(ContainerId);
+    const Element = FindStoryBotRenderedElement(Container, Message.id);
+    if (Element) Element.classList.add("StoryBotPendingQuestion");
+}
+
+function RemoveStoryBotOptimisticQuestion(ContainerId, MessageId) {
+    const Container = document.getElementById(ContainerId);
+    const Element = FindStoryBotRenderedElement(Container, MessageId);
+    if (Element?.classList.contains("StoryBotPendingQuestion")) Element.remove();
+    RefreshQuietChatState(Container);
+}
+
+
 function RememberStoryBotRenderedMessage(Message) {
     const Id = String(Message?.id || "").trim();
     if (!Message?.bot || Message?.botDialog || !Id) return false;
@@ -575,6 +625,17 @@ async function SubmitStoryBotDedicated(Composer) {
     Composer.dataset.storyBotSubmitting = "1";
     StoryBotLocalRequestBusy = true;
     RefreshStoryBotComposerLock();
+
+    const ClientMessageId = "storybot-question-" + Date.now() + "-" + Math.random().toString(36).slice(2, 10);
+    const OptimisticQuestion = {
+        id: ClientMessageId,
+        username: GetStoryBotCurrentUsername() || "Player",
+        text: "@StoryBot " + Question,
+        sentAt: Date.now()
+    };
+    RenderStoryBotQuestionImmediately(OptimisticQuestion, ContainerId);
+    SetStoryBotTyping(true, Question);
+
     const ResultPromise = new Promise(resolve => {
         let Finished = false;
         const Complete = Value => {
@@ -586,7 +647,7 @@ async function SubmitStoryBotDedicated(Composer) {
         try {
             Socket.timeout(STORY_BOT_ACK_TIMEOUT).emit(
                 "storybot:ask",
-                { question: Question },
+                { question: Question, clientMessageId: ClientMessageId },
                 (Error, Reply) => Complete(
                     Error
                         ? { ok: false, error: "StoryBot did not answer in time." }
@@ -605,6 +666,7 @@ async function SubmitStoryBotDedicated(Composer) {
     const Result = await ResultPromise;
 
     if (!Result?.ok) {
+        RemoveStoryBotOptimisticQuestion(ContainerId, ClientMessageId);
         StoryBotLocalRequestBusy = false;
         RefreshStoryBotComposerLock();
         SetStoryBotTyping(StoryBotRoomBusy, StoryBotActiveQuestion);
@@ -667,8 +729,17 @@ function WrapStoryBotRenderers() {
             const Composer = DetachStoryBotComposer(Container);
             RemoveQuietChatState(Container);
 
-            if (!RememberStoryBotRenderedMessage(Message)) {
+            const MessageId = String(Message?.id || "").trim();
+            const Existing = FindStoryBotRenderedElement(Container, MessageId);
+            if (Existing) {
+                Existing.classList.remove("StoryBotPendingQuestion");
+                const Name = Existing.querySelector("strong");
+                if (Name) Name.textContent = String(Message?.username || "Player") + ": ";
+            } else if (!RememberStoryBotRenderedMessage(Message)) {
                 BaseAppendChat(Message, ...Rest);
+                const Last = Container?.lastElementChild || null;
+                if (Last && MessageId) Last.dataset.storyBotMessageId = MessageId;
+                RenderStoryBotStructuredMessage(Last, Message);
                 MarkLastChatMessage("ChatMessages", Message);
             }
 
@@ -686,8 +757,17 @@ function WrapStoryBotRenderers() {
             const Composer = DetachStoryBotComposer(Container);
             RemoveQuietChatState(Container);
 
-            if (!RememberStoryBotRenderedMessage(Message)) {
+            const MessageId = String(Message?.id || "").trim();
+            const Existing = FindStoryBotRenderedElement(Container, MessageId);
+            if (Existing) {
+                Existing.classList.remove("StoryBotPendingQuestion");
+                const Name = Existing.querySelector("strong");
+                if (Name) Name.textContent = String(Message?.username || "Player") + ": ";
+            } else if (!RememberStoryBotRenderedMessage(Message)) {
                 BaseAppendGameChat(Message, ...Rest);
+                const Last = Container?.lastElementChild || null;
+                if (Last && MessageId) Last.dataset.storyBotMessageId = MessageId;
+                RenderStoryBotStructuredMessage(Last, Message);
                 MarkLastChatMessage("GameChatMessages", Message);
             }
 
