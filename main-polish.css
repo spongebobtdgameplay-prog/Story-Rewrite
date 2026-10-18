@@ -265,3 +265,40 @@ body {
         padding-inline: 8px;
     }
 }
+/* Keep the home header inside its frame when the Terms tab adds another navigation item. */
+#App > .TopBar {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    column-gap: clamp(10px, 1vw, 14px);
+    row-gap: 9px;
+}
+#App > .TopBar > .Brand {
+    flex: 0 1 285px;
+    max-width: 100%;
+}
+#App > .TopBar > .TopActions {
+    flex: 1 1 610px;
+    min-width: 0;
+    margin-left: 0;
+    justify-content: flex-start;
+    gap: 6px;
+}
+#App > .TopBar > .TopActions > .UiButton {
+    min-width: 0;
+    padding-inline: clamp(8px, .9vw, 12px);
+    font-size: clamp(12px, .93vw, 14px);
+}
+#App > .TopBar > .TopActions > .SettingsNavButton {
+    flex: 0 0 42px;
+    min-width: 42px !important;
+    width: 42px !important;
+}
+@media (min-width: 821px) and (max-width: 1180px) {
+    #App > .TopBar > .Brand {
+        flex-basis: auto;
+    }
+    #App > .TopBar > .TopActions {
+        flex-basis: 100%;
+        width: 100%;
+    }
+}
