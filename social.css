@@ -1028,3 +1028,168 @@ body.StorySocialPage { height:auto!important; min-height:100vh; overflow-x:hidde
  .StorySocialIdentityStamp strong { font-size:10px; }
  .StorySocialChatHeader { align-items:flex-start; gap:10px; }
 }
+
+
+/* Social inbox and per-message controls */
+.StorySocialInbox{
+    position:relative;
+    z-index:5;
+    margin:12px 0 16px;
+    padding:12px;
+    border:1px solid rgba(105,71,37,.23);
+    border-radius:13px;
+    background:rgba(255,247,228,.42);
+    box-shadow:inset 0 1px rgba(255,255,255,.48),0 4px 12px rgba(65,36,14,.06);
+}
+.StorySocialInboxHeader{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    margin-bottom:8px;
+    color:#54351e;
+}
+.StorySocialInboxHeader>span:first-child{
+    font:900 14px/1.2 Georgia,"Times New Roman",serif;
+}
+.StorySocialInboxHeader>span:last-child{
+    color:#806143;
+    font:800 9px/1.2 system-ui,sans-serif;
+}
+.StorySocialInboxList{
+    display:grid;
+    gap:6px;
+    max-height:190px;
+    overflow:auto;
+    overscroll-behavior:contain;
+    scrollbar-width:thin;
+    scrollbar-color:#8c6341 transparent;
+    padding:2px 2px 3px 0;
+}
+.StorySocialInboxEmpty{
+    padding:10px 8px;
+    color:#7a5a3e;
+    font:600 11px/1.45 Georgia,"Times New Roman",serif;
+    text-align:center;
+}
+.StorySocialInboxEmptyBad{color:#8e4439}
+.StorySocialInboxButton{
+    width:100%;
+    min-width:0;
+    display:grid;
+    grid-template-columns:32px minmax(0,1fr) auto;
+    align-items:center;
+    gap:8px;
+    padding:8px;
+    text-align:left;
+    color:#382316;
+    border:1px solid rgba(105,71,37,.16);
+    border-radius:10px;
+    background:rgba(255,250,237,.72);
+    cursor:pointer;
+    transition:transform .16s ease,background .16s ease,border-color .16s ease;
+}
+.StorySocialInboxButton:hover{transform:scale(1.015);background:#fff5dc;border-color:rgba(105,71,37,.3)}
+.StorySocialInboxButton.Active{background:#f0dfbf;border-color:rgba(93,69,45,.25)}
+.StorySocialInboxAvatar{
+    width:30px;
+    height:30px;
+    display:grid;
+    place-items:center;
+    border-radius:50%;
+    color:#fff0d2;
+    background:linear-gradient(145deg,#8b5b31,#4f2f1c);
+    font:900 12px/1 Georgia,"Times New Roman",serif;
+}
+.StorySocialInboxCopy{min-width:0;display:grid;gap:3px}
+.StorySocialInboxCopy strong{
+    color:#301c11;
+    overflow:hidden;
+    white-space:nowrap;
+    text-overflow:ellipsis;
+    font:900 12px/1.1 Georgia,"Times New Roman",serif;
+}
+.StorySocialInboxPreview{
+    color:#7a5a3e;
+    overflow:hidden;
+    white-space:nowrap;
+    text-overflow:ellipsis;
+    font:600 10px/1.25 system-ui,sans-serif;
+}
+.StorySocialInboxTime{align-self:start;padding-top:2px;color:#896d50;font:700 9px/1.2 system-ui,sans-serif}
+
+.StorySocialMessage{position:relative;padding-top:30px}
+.StorySocialMessageMore{
+    position:absolute;
+    z-index:2;
+    top:5px;
+    right:6px;
+    display:grid;
+    place-items:center;
+    width:25px;
+    height:22px;
+    padding:0 0 5px;
+    border:1px solid rgba(225,190,132,.22);
+    border-radius:7px;
+    background:rgba(17,12,8,.16);
+    color:#e9d3b0;
+    font:900 19px/1 system-ui,sans-serif;
+    cursor:pointer;
+    opacity:.82;
+    transition:transform .15s ease,background .15s ease,opacity .15s ease;
+}
+.StorySocialMessageMore:hover,
+.StorySocialMessageMore[aria-expanded="true"]{
+    opacity:1;
+    transform:scale(1.06);
+    background:rgba(10,7,5,.42);
+}
+.StorySocialMessageMenu{
+    position:absolute;
+    z-index:20;
+    top:30px;
+    right:6px;
+    width:max-content;
+    min-width:142px;
+    max-width:min(190px,calc(100vw - 64px));
+    display:grid;
+    gap:4px;
+    padding:6px;
+    border:1px solid rgba(225,190,132,.3);
+    border-radius:10px;
+    background:#211811;
+    box-shadow:0 12px 32px rgba(0,0,0,.4);
+}
+.StorySocialMessageMenu[hidden]{display:none!important}
+.StorySocialMessageAction{
+    width:100%;
+    padding:8px 9px;
+    border:1px solid transparent;
+    border-radius:7px;
+    text-align:left;
+    background:transparent;
+    color:#f0dec0;
+    font:700 11px/1.25 system-ui,sans-serif;
+    cursor:pointer;
+    transition:transform .14s ease,background .14s ease,border-color .14s ease;
+}
+.StorySocialMessageAction:hover{transform:scale(1.02);background:rgba(255,239,210,.08);border-color:rgba(225,190,132,.15)}
+.StorySocialMessageAction.HeartAction{color:#f2c7c1}
+.StorySocialMessageAction.HeartAction.IsActive{background:rgba(146,61,59,.24);color:#ffc6bd}
+.StorySocialMessageAction.DeleteAction{color:#f4a29a}
+.StorySocialMessageAction.ReportAction{color:#f1d1a0}
+.StorySocialMessageReactions{margin-top:5px;color:#f4c5bd;font:800 10px/1.2 system-ui,sans-serif}
+.StorySocialMessage.Deleted{opacity:.72;border-style:dashed}
+.StorySocialMessage.Deleted .StorySocialMessageText{color:#c0af99;font-style:italic}
+.StorySocialInboxButton:focus-visible,.StorySocialMessageMore:focus-visible,.StorySocialMessageAction:focus-visible{
+    outline:2px solid rgba(232,220,197,.8);
+    outline-offset:2px;
+}
+@media(max-width:760px){
+    .StorySocialInboxList{max-height:170px}
+    .StorySocialInbox{padding:10px;margin:10px 0 12px}
+}
+@media(prefers-reduced-motion:reduce){
+    .StorySocialInboxButton,.StorySocialMessageMore,.StorySocialMessageAction{transition:none}
+    .StorySocialInboxButton:hover,.StorySocialMessageMore:hover,.StorySocialMessageAction:hover{transform:none}
+}
