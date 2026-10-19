@@ -577,3 +577,37 @@ html[data-storybot-theme="paper"] {
 .StoryBotCodeFrame pre code {
     font: inherit;
 }
+
+
+.StoryBotMemoryContext {
+    display:block;
+    min-width:0;
+    margin:5px 0 8px;
+    padding:0;
+    overflow:hidden;
+    border:1px solid var(--storybot-border,rgba(221,177,100,.34));
+    border-radius:10px;
+    background:color-mix(in srgb,var(--storybot-message-background,#302014) 72%,transparent);
+    color:var(--storybot-text-color,#f7e4c5);
+    font:12px/1.45 var(--storybot-font-family,system-ui,sans-serif);
+}
+.StoryBotMemoryContext summary {
+    padding:9px 11px;
+    color:var(--storybot-name-color,#ffd68d);
+    font-weight:800;
+    cursor:pointer;
+    user-select:none;
+}
+.StoryBotMemoryContext summary:hover { background:rgba(215,168,94,.08); }
+.StoryBotMemoryContext[open] summary { border-bottom:1px solid var(--storybot-border,rgba(221,177,100,.25)); }
+.StoryBotMemoryDescription { margin:0;padding:8px 11px 2px;opacity:.78;font-size:11px; }
+.StoryBotMemoryFacts { padding:3px 11px 7px;opacity:.9;font-size:11px; }
+.StoryBotMemoryFacts p { margin:3px 0;overflow-wrap:anywhere; }
+.StoryBotMemoryMessages { display:grid;gap:0;max-height:250px;overflow-y:auto;border-top:1px solid var(--storybot-border,rgba(221,177,100,.18)); }
+.StoryBotMemoryEntry { padding:7px 11px;border-bottom:1px solid rgba(150,120,82,.14);overflow-wrap:anywhere;white-space:pre-wrap; }
+.StoryBotMemoryEntry:last-child { border-bottom:0; }
+.StoryBotMemoryEntry strong { color:var(--storybot-name-color,#ffd68d); }
+.StoryBotMemoryEntry.IsBot { background:rgba(215,168,94,.045); }
+.StoryBotMemoryEmpty { margin:0;padding:9px 11px;opacity:.75; }
+html[data-storybot-theme="paper"] .StoryBotMemoryContext { background:rgba(255,248,232,.72); }
+@media(prefers-reduced-motion:reduce){.StoryBotMemoryContext *{scroll-behavior:auto!important}}
