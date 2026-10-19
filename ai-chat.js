@@ -361,7 +361,10 @@ function RenderStoryBotMarkdown(Body, Value) {
 function RenderStoryBotStructuredMessage(Element, Message) {
     if (!Element || !Message?.bot) return;
     const RawText = CleanStoryBotDisplayText(Message.text);
-    if (!RawText) return;
+    if (!RawText) {
+        Element.remove();
+        return;
+    }
 
     const Name = document.createElement("strong");
     Name.textContent = String(Message.username || STORY_BOT_NAME) + ": ";
