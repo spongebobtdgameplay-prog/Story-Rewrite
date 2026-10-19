@@ -1,3 +1,11 @@
+function CloneSettingsSave(Save) {
+    try {
+        return Save == null ? Save : JSON.parse(JSON.stringify(Save));
+    } catch {
+        return Save;
+    }
+}
+
 const KeepMusicPlayingKey = "StoryRewriteKeepMusicPlayingV1";
 function ReadKeepMusicPlaying() {
     try { return localStorage.getItem(KeepMusicPlayingKey) === "1"; } catch { return false; }
