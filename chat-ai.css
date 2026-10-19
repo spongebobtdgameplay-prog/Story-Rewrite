@@ -577,3 +577,27 @@ html[data-storybot-theme="paper"] {
 .StoryBotCodeFrame pre code {
     font: inherit;
 }
+
+
+/* Accessible read-aloud control for StoryBot replies. */
+.StoryBotSpeechControls {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 8px;
+}
+.StoryBotListenButton {
+    min-height: 32px;
+    padding: 5px 10px;
+    border: 1px solid var(--storybot-border, rgba(221, 177, 100, .4));
+    border-radius: 7px;
+    background: rgba(0, 0, 0, .16);
+    color: var(--storybot-text-color, #f7e4c5);
+    font: 700 12px/1.2 system-ui, sans-serif;
+    cursor: pointer;
+}
+.StoryBotListenButton:hover,
+.StoryBotListenButton:focus-visible {
+    outline: 2px solid var(--storybot-accent, #d7a85e);
+    outline-offset: 2px;
+    background: rgba(255, 255, 255, .08);
+}
