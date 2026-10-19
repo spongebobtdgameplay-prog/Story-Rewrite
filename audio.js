@@ -179,46 +179,7 @@ const StoryAudio = (() => {
         return NotificationAudio;
     }
 
-    const InGameNotificationSettingsKey = "StoryRewriteInGameNotificationSettingsV1";
-    const SocialNotificationMuteKeyPrefix = "StoryRewriteSocialNotificationMutesV1:";
-
-    function ReadInGameNotificationSettings() {
-        const Defaults = { enabled: true, multiplayerChat: true, socialMessages: true };
-        try {
-            const Saved = JSON.parse(localStorage.getItem(InGameNotificationSettingsKey) || "{}");
-            return {
-                enabled: typeof Saved.enabled === "boolean" ? Saved.enabled : Defaults.enabled,
-                multiplayerChat: typeof Saved.multiplayerChat === "boolean" ? Saved.multiplayerChat : Defaults.multiplayerChat,
-                socialMessages: typeof Saved.socialMessages === "boolean" ? Saved.socialMessages : Defaults.socialMessages
-            };
-        } catch {
-            return Defaults;
-        }
-    }
-
-    function IsInGameNotificationAllowed(Category, Context = {}) {
-        const Preferences = ReadInGameNotificationSettings();
-        if (!Preferences.enabled || Preferences[Category] === false) return false;
-
-        const Sender = String(Context.username || "").trim().toLowerCase();
-        const Account = String(Context.accountUsername || "").trim().toLowerCase();
-        if (!Sender || !Account) return true;
-
-        try {
-            const MutedPlayers = JSON.parse(localStorage.getItem(SocialNotificationMuteKeyPrefix + Account) || "[]");
-            if (Array.isArray(MutedPlayers) &&
-                MutedPlayers.some(Name => String(Name || "").trim().toLowerCase() === Sender)) {
-                return false;
-            }
-        } catch {}
-        return true;
-    }
-
-    function PlayNotificationSound(Category = "multiplayerChat", Context = {}) {
-        if (!IsInGameNotificationAllowed(Category, Context) ||
-            SoundsPaused || !SoundSettingsReady || SoundVolume <= 0 || NotificationPlaying) {
-            return Promise.resolve(false);
-        }
+    function PlayNotificationSound() {
         if (SoundsPaused || !SoundSettingsReady || SoundVolume <= 0 || NotificationPlaying) {
             return Promise.resolve(false);
         }
@@ -242,7 +203,7 @@ const StoryAudio = (() => {
         }
     }
 
-    function PlaySound(Name = "click", Context = {}) {
+    function PlaySound(Name = "click") {
         if (SoundsPaused || !SoundSettingsReady || SoundVolume <= 0) return Promise.resolve(false);
 
         if (String(Name) === "timerBell") {
@@ -250,11 +211,7 @@ const StoryAudio = (() => {
         }
 
         if (String(Name) === "message") {
-            return PlayNotificationSound("multiplayerChat", Context);
-        }
-
-        if (String(Name) === "socialMessage") {
-            return PlayNotificationSound("socialMessages", Context);
+            return PlayNotificationSound();
         }
 
         return PlayClick();
