@@ -164,29 +164,214 @@ function FindStoryBotRenderedElement(Container, MessageId) {
     return [...Container.children].find(Element => Element.dataset.storyBotMessageId === Id) || null;
 }
 
+function CleanStoryBotDisplayText(Value) {
+    const Fence = String.fromCharCode(96).repeat(3);
+    let Text = String(Value || "").replace(/\r\n?/g, "\n");
+
+    // Gemini sometimes returns its private tool-event labels as if they were answer text.
+    // Remove only those labelled execution frames; keep ordinary code fences intact.
+    let SearchFrom = 0;
+    while (true) {
+        const Start = Text.indexOf(Fence, SearchFrom);
+        if (Start < 0) break;
+        const InfoEnd = Text.indexOf("\n", Start + Fence.length);
+        const InlineEnd = Text.indexOf(Fence, Start + Fence.length);
+        const Info = Text.slice(Start + Fence.length, InfoEnd >= 0 ? InfoEnd : (InlineEnd >= 0 ? InlineEnd : Text.length));
+        if (!/\?code_(?:reference|stdout)\b/i.test(Info)) {
+            SearchFrom = Start + Fence.length;
+            continue;
+        }
+        const End = InlineEnd >= 0 && (InfoEnd < 0 || InlineEnd < InfoEnd)
+            ? InlineEnd
+            : Text.indexOf(Fence, InfoEnd + 1);
+        if (End < 0) {
+            Text = Text.slice(0, Start) + Text.slice((InfoEnd >= 0 ? InfoEnd + 1 : Text.length));
+            SearchFrom = Start;
+        } else {
+            Text = Text.slice(0, Start) + Text.slice(End + Fence.length);
+            SearchFrom = Start;
+        }
+    }
+
+    Text = Text.replace(/^[ \t]*(?:python|text)\?code_(?:reference|stdout)\b[^\n]*$/gim, "");
+    Text = Text.replace(/(?:^|\n)[ \t]*(?:need help with anything else|let me know if you need anything else|is there anything else i can help with)\b[\s\S]*$/i, "");
+    return Text.replace(/\n[ \t]+\n/g, "\n\n").replace(/\n{3,}/g, "\n\n").trim().slice(0, 4000);
+}
+
+function AppendStoryBotInlineMarkdown(Target, Value) {
+    const Text = String(Value || "");
+    const Tick = String.fromCharCode(96);
+    const Pattern = new RegExp("(\\*\\*.+?\\*\\*|__.+?__|" + Tick + "[^" + Tick + "\\n]+" + Tick + "|\\*[^*\\n]+\\*|_[^_\\n]+_)", "g");
+    let Position = 0;
+    let Match;
+
+    while ((Match = Pattern.exec(Text))) {
+        if (Match.index > Position) {
+            Target.appendChild(document.createTextNode(Text.slice(Position, Match.index)));
+        }
+
+        const Token = Match[0];
+        let Node;
+        if ((Token.startsWith("**") && Token.endsWith("**")) ||
+            (Token.startsWith("__") && Token.endsWith("__"))) {
+            Node = document.createElement("strong");
+            Node.textContent = Token.slice(2, -2);
+        } else if (Token.startsWith(Tick) && Token.endsWith(Tick)) {
+            Node = document.createElement("code");
+            Node.className = "StoryBotInlineCode";
+            Node.textContent = Token.slice(1, -1);
+        } else {
+            Node = document.createElement("em");
+            Node.textContent = Token.slice(1, -1);
+        }
+        Target.appendChild(Node);
+        Position = Pattern.lastIndex;
+    }
+
+    if (Position < Text.length) {
+        Target.appendChild(document.createTextNode(Text.slice(Position)));
+    }
+}
+
+function RenderStoryBotMarkdown(Body, Value) {
+    const Text = String(Value || "").trim();
+    if (!Body || !Text) return;
+
+    const Fence = String.fromCharCode(96).repeat(3);
+    const Lines = Text.split(/\r?\n/);
+    let Index = 0;
+    let ListElement = null;
+    let ListType = "";
+
+    const FlushList = () => {
+        ListElement = null;
+        ListType = "";
+    };
+    const IsBlockStart = Line => {
+        const Trimmed = Line.trim();
+        return Trimmed.startsWith(Fence) ||
+            /^#{1,3}\s+/.test(Trimmed) ||
+            /^(?:[-*+])\s+/.test(Trimmed) ||
+            /^\d+[.)]\s+/.test(Trimmed) ||
+            /^>\s?/.test(Trimmed);
+    };
+
+    while (Index < Lines.length) {
+        const Line = Lines[Index];
+        const Trimmed = Line.trim();
+
+        if (!Trimmed) {
+            FlushList();
+            Index += 1;
+            continue;
+        }
+
+        if (Trimmed.startsWith(Fence)) {
+            FlushList();
+            const Language = (Trimmed.slice(Fence.length).trim().split(/\s+/)[0] || "code")
+                .replace(/[^a-z0-9_+-]/gi, "").slice(0, 24) || "code";
+            Index += 1;
+            const CodeLines = [];
+            while (Index < Lines.length && !Lines[Index].trim().startsWith(Fence)) {
+                CodeLines.push(Lines[Index]);
+                Index += 1;
+            }
+            if (Index < Lines.length) Index += 1;
+
+            const CodeText = CodeLines.join("\n");
+            const Frame = document.createElement("div");
+            Frame.className = "StoryBotCodeFrame";
+            const Toolbar = document.createElement("div");
+            Toolbar.className = "StoryBotCodeToolbar";
+            const Label = document.createElement("span");
+            Label.textContent = Language;
+            const Copy = document.createElement("button");
+            Copy.type = "button";
+            Copy.className = "StoryBotCodeCopy";
+            Copy.textContent = "Copy";
+            Copy.setAttribute("aria-label", "Copy " + Language + " code");
+            Copy.addEventListener("click", async () => {
+                try {
+                    await navigator.clipboard.writeText(CodeText);
+                    Copy.textContent = "Copied";
+                } catch {
+                    Copy.textContent = "Copy unavailable";
+                }
+            });
+            Toolbar.append(Label, Copy);
+            const Pre = document.createElement("pre");
+            const Code = document.createElement("code");
+            Code.className = "language-" + Language;
+            Code.textContent = CodeText;
+            Pre.appendChild(Code);
+            Frame.append(Toolbar, Pre);
+            Body.appendChild(Frame);
+            continue;
+        }
+
+        const Heading = Trimmed.match(/^(#{1,3})\s+(.+)$/);
+        if (Heading) {
+            FlushList();
+            const Node = document.createElement(Heading[1].length === 1 ? "h3" : "h4");
+            AppendStoryBotInlineMarkdown(Node, Heading[2]);
+            Body.appendChild(Node);
+            Index += 1;
+            continue;
+        }
+
+        const Bullet = Trimmed.match(/^([-*+])\s+(.+)$/);
+        const Numbered = Trimmed.match(/^(\d+)[.)]\s+(.+)$/);
+        if (Bullet || Numbered) {
+            const Type = Numbered ? "ol" : "ul";
+            if (!ListElement || ListType !== Type) {
+                FlushList();
+                ListElement = document.createElement(Type);
+                ListElement.className = "StoryBotMarkdownList";
+                Body.appendChild(ListElement);
+                ListType = Type;
+            }
+            const Item = document.createElement("li");
+            AppendStoryBotInlineMarkdown(Item, (Numbered || Bullet)[2]);
+            ListElement.appendChild(Item);
+            Index += 1;
+            continue;
+        }
+
+        if (Trimmed.startsWith(">")) {
+            FlushList();
+            const Quote = document.createElement("blockquote");
+            AppendStoryBotInlineMarkdown(Quote, Trimmed.replace(/^>\s?/, ""));
+            Body.appendChild(Quote);
+            Index += 1;
+            continue;
+        }
+
+        FlushList();
+        const Paragraph = document.createElement("p");
+        while (Index < Lines.length && Lines[Index].trim() && !IsBlockStart(Lines[Index])) {
+            if (Paragraph.childNodes.length) Paragraph.appendChild(document.createElement("br"));
+            AppendStoryBotInlineMarkdown(Paragraph, Lines[Index].trim());
+            Index += 1;
+        }
+        if (Paragraph.childNodes.length) Body.appendChild(Paragraph);
+        else Index += 1;
+    }
+}
+
 function RenderStoryBotStructuredMessage(Element, Message) {
     if (!Element || !Message?.bot) return;
-    const RawText = String(Message.text || "").trim();
-    if (!RawText.includes(";")) return;
-
-    const Segments = RawText.split(";").map(Segment => Segment.trim()).filter(Boolean);
-    if (Segments.length < 2) return;
+    const RawText = CleanStoryBotDisplayText(Message.text);
+    if (!RawText) return;
 
     const Name = document.createElement("strong");
     Name.textContent = String(Message.username || STORY_BOT_NAME) + ": ";
 
     const Body = document.createElement("div");
     Body.className = "StoryBotMessageBody";
-    for (const Segment of Segments) {
-        const TextElement = document.createElement("div");
-        TextElement.className = "StoryBotTextElement";
-        TextElement.textContent = Segment;
-        Body.appendChild(TextElement);
-    }
-
+    RenderStoryBotMarkdown(Body, RawText);
     Element.replaceChildren(Name, Body);
+    Element.classList.add("StoryBotMessage");
 }
-
 function RenderStoryBotQuestionImmediately(Message, ContainerId) {
     if (!Message?.id || !ContainerId) return;
     if (ContainerId === "ChatMessages" && typeof AppendChat === "function") {
@@ -835,7 +1020,7 @@ function WrapStoryBotRenderers() {
 
 function LogStoryBotConsoleReply(Message) {
     if (!Message?.bot || Message.username !== STORY_BOT_NAME) return;
-    const Answer = String(Message.text || "").trim();
+    const Answer = CleanStoryBotDisplayText(Message.text);
     if (!Answer) return;
 
     const Id = String(Message.id || "");
@@ -885,7 +1070,7 @@ async function AskAI(PromptText) {
 
         const OnChat = Message => {
             if (!Accepted || !Message?.bot || Message.username !== STORY_BOT_NAME) return;
-            const Answer = String(Message.text || "").trim();
+            const Answer = CleanStoryBotDisplayText(Message.text);
             if (Answer) Finish(null, Answer);
         };
 
@@ -912,7 +1097,7 @@ async function AskAI(PromptText) {
                     return;
                 }
                 if (Reply.message?.bot) {
-                    Finish(null, String(Reply.message.text || "").trim());
+                    Finish(null, CleanStoryBotDisplayText(Reply.message.text));
                     return;
                 }
                 Accepted = Boolean(Reply.accepted);
