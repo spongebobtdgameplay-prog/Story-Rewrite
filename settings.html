@@ -12,7 +12,8 @@
 <link rel="stylesheet" href="looks3.css?v=20260930-1">
 <link rel="stylesheet" href="looks4.css?v=20260930-1">
 <link rel="stylesheet" href="shell-ui.css?v=20261018-7">
-<link rel="stylesheet" href="settings.css?v=20261018-2">
+<link rel="stylesheet" href="chat-ai.css?v=20261018-2">
+<link rel="stylesheet" href="settings.css?v=20261018-3">
 </head>
 <body class="AccountSettingsPage StorySettingsPage">
 <main class="AccountSettingsShell StorySettingsShell">
@@ -73,6 +74,63 @@
             </div>
         </div>
 
+
+        <section class="StoryBotAppearanceSection" aria-labelledby="StoryBotAppearanceTitle">
+            <div class="StoryBotAppearanceIntro">
+                <div>
+                    <div class="Kicker">AI chat</div>
+                    <h2 id="StoryBotAppearanceTitle">StoryBot appearance</h2>
+                    <p>Customize the font, text size, and color theme used for StoryBot replies.</p>
+                </div>
+                <span class="StorySettingsApply">Changes apply immediately.</span>
+            </div>
+
+            <div class="StoryBotAppearanceGrid">
+                <div class="StoryBotAppearanceControl">
+                    <label for="StoryBotFontFamily">Reply font</label>
+                    <select id="StoryBotFontFamily">
+                        <option value="system">System</option>
+                        <option value="serif">Serif</option>
+                        <option value="rounded">Rounded</option>
+                        <option value="mono">Monospace</option>
+                    </select>
+                </div>
+
+                <div class="StoryBotAppearanceControl">
+                    <label for="StoryBotFontSize">Text size</label>
+                    <div class="StoryBotAppearanceSizeControl">
+                        <input id="StoryBotFontSize" type="range" min="12" max="18" step="1" value="14" aria-label="StoryBot reply text size">
+                        <output id="StoryBotFontSizeValue" for="StoryBotFontSize">14 px</output>
+                    </div>
+                </div>
+
+                <div class="StoryBotAppearanceControl">
+                    <label for="StoryBotTheme">Message theme</label>
+                    <select id="StoryBotTheme">
+                        <option value="classic">Warm book</option>
+                        <option value="midnight">Midnight blue</option>
+                        <option value="violet">Violet</option>
+                        <option value="paper">Light parchment</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="StoryBotMessage StoryBotAppearancePreview" id="StoryBotAppearancePreview" aria-label="StoryBot appearance preview">
+                <strong>StoryBot:</strong>
+                <div class="StoryBotMessageBody">
+                    <p>Quick answer: <strong>144,887,274</strong></p>
+                    <ul class="StoryBotMarkdownList">
+                        <li>Bullet points stay easy to scan.</li>
+                        <li>Longer replies can use headings and steps.</li>
+                    </ul>
+                    <div class="StoryBotCodeFrame">
+                        <div class="StoryBotCodeToolbar"><span>python</span></div>
+                        <pre><code>print("Hello, world!")</code></pre>
+                    </div>
+                </div>
+            </div>
+            <div id="StoryBotAppearanceStatus" class="StoryBotAppearanceStatus" aria-live="polite">Appearance settings save on this device.</div>
+        </section>
 
         <section class="StorySettingsNotifications" aria-labelledby="InGameNotificationsTitle">
             <div class="StorySettingsNotificationsIntro">
@@ -168,7 +226,8 @@
 <script src="audio.js?v=20261018-8"></script>
 <script src="real-audio.js?fresh=20260930-83"></script>
 <script src="shell-ui.js?v=20261018-8"></script>
-<script src="build-version.js?v=20261018-14"></script>
+<script src="build-version.js?v=20261018-15"></script>
+<script src="storybot-appearance.js?v=20261018-1"></script>
 <script src="settings.js?v=20261018-4"></script>
 </body>
 </html>
