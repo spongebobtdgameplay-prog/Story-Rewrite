@@ -66,6 +66,77 @@ function RemoveQuietChatState(Container) {
     Container?.querySelector(".ChatQuietState")?.remove();
 }
 
+
+function RenderStoryBotMemoryContext(Payload) {
+    const Container = GetStoryBotChatContainer();
+    if (!Container || !Payload || typeof Payload !== "object") return;
+
+    const Card = document.createElement("details");
+    Card.className = "StoryBotMemoryContext";
+    Card.dataset.storyBotMemoryContext = String(Date.now());
+
+    const Summary = document.createElement("summary");
+    const Count = Array.isArray(Payload.recentChat) ? Payload.recentChat.length : 0;
+    Summary.textContent = "Memory context used for this reply · " + Count + " recent messages";
+    Card.appendChild(Summary);
+
+    const Description = document.createElement("p");
+    Description.className = "StoryBotMemoryDescription";
+    Description.textContent = "Room-scoped memory sent to StoryBot for this request.";
+    Card.appendChild(Description);
+
+    const Room = Payload.room && typeof Payload.room === "object" ? Payload.room : {};
+    const Stage = Payload.stage && typeof Payload.stage === "object" ? Payload.stage : null;
+    const Facts = document.createElement("div");
+    Facts.className = "StoryBotMemoryFacts";
+    const RoomFacts = [
+        Room.code ? "Room " + String(Room.code) : "",
+        Room.status ? String(Room.status) : "",
+        Array.isArray(Room.players) ? Room.players.length + " players" : "",
+        Number.isFinite(Number(Room.lives)) && Number.isFinite(Number(Room.maxLives))
+            ? "Lives " + Number(Room.lives) + "/" + Number(Room.maxLives) : ""
+    ].filter(Boolean);
+    const RoomLine = document.createElement("p");
+    RoomLine.textContent = RoomFacts.join(" · ") || "Current room state unavailable";
+    Facts.appendChild(RoomLine);
+    if (Stage) {
+        const StageLine = document.createElement("p");
+        StageLine.textContent = "Stage: " + String(Stage.name || "Unknown stage") +
+            (Stage.objective ? " — Objective: " + String(Stage.objective) : "") +
+            (Stage.threat ? " — Threat: " + String(Stage.threat) : "");
+        Facts.appendChild(StageLine);
+    }
+    Card.appendChild(Facts);
+
+    const Messages = document.createElement("div");
+    Messages.className = "StoryBotMemoryMessages";
+    const History = Array.isArray(Payload.recentChat) ? Payload.recentChat : [];
+    if (!History.length) {
+        const Empty = document.createElement("p");
+        Empty.className = "StoryBotMemoryEmpty";
+        Empty.textContent = "No earlier room messages were available.";
+        Messages.appendChild(Empty);
+    } else {
+        History.forEach(Message => {
+            const Entry = document.createElement("div");
+            Entry.className = "StoryBotMemoryEntry" + (Message?.bot ? " IsBot" : "");
+            const Speaker = document.createElement("strong");
+            Speaker.textContent = String(Message?.username || "Player") + ": ";
+            const Text = document.createElement("span");
+            Text.textContent = String(Message?.text || "");
+            Entry.append(Speaker, Text);
+            Messages.appendChild(Entry);
+        });
+    }
+    Card.appendChild(Messages);
+
+    // Keep each request's context adjacent to the question and above the typing indicator.
+    const Typing = Container.querySelector(".StoryBotTyping");
+    if (Typing) Container.insertBefore(Card, Typing);
+    else Container.appendChild(Card);
+    RemoveQuietChatState(Container);
+}
+
 function GetStoryBotTaskStatus(Question = "") {
     const Text = String(Question || StoryBotActiveQuestion || "").trim();
     if (!Text) return "StoryBot is checking the relevant game context…";
@@ -1123,6 +1194,7 @@ function BindStoryBotSocket(Socket) {
     Socket.on("disconnect", () => SetStoryBotConnectionState("reconnecting"));
     Socket.on("connect_error", () => SetStoryBotConnectionState("reconnecting"));
     Socket.on("room:chat", LogStoryBotConsoleReply);
+    Socket.on("room:botMemory", RenderStoryBotMemoryContext);
 
     Socket.on("room:botTyping", Payload => {
         StoryBotRoomBusy=Boolean(Payload?.typing);
