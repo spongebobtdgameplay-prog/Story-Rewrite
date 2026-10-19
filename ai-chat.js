@@ -77,12 +77,12 @@ function RenderStoryBotMemoryContext(Payload) {
 
     const Summary = document.createElement("summary");
     const Count = Array.isArray(Payload.recentChat) ? Payload.recentChat.length : 0;
-    Summary.textContent = "Memory context used for this reply · " + Count + " recent messages";
+    Summary.textContent = "Memory context snapshot · " + Count + " recent messages";
     Card.appendChild(Summary);
 
     const Description = document.createElement("p");
     Description.className = "StoryBotMemoryDescription";
-    Description.textContent = "Room-scoped memory sent to StoryBot for this request.";
+    Description.textContent = "Room-scoped context snapshot supplied for this request. Very long prompts may be shortened to fit.";
     Card.appendChild(Description);
 
     const Room = Payload.room && typeof Payload.room === "object" ? Payload.room : {};
