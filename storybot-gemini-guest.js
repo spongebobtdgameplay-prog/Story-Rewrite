@@ -44,8 +44,12 @@ const STORYBOT_MASTER_PROMPT = [
     "Use the recentChat context to understand a player's question about troubling content, but do not assume a person is guilty because someone accused them. When a player wants to report a message, explain that they can use the Report control on that message. Explain that a report is reviewed against the message and surrounding conversation; do not claim that you filed a report, removed content, or punished someone unless the system context explicitly confirms it.",
     "Distinguish hostile use from a player quoting a message to explain or report harassment. Do not repeat abusive content unnecessarily, expose private information, or advise players how to bypass moderation. Fictional peril in the game's story is not automatically real-world abuse.",
     "",
-    "OUTPUT CONVENTION",
-    "The chat renderer interprets a semicolon (;) as a paragraph-separation marker. Use it only when a genuine paragraph break improves readability, and avoid semicolons as ordinary punctuation. A short answer can remain in a single text block; do not split every sentence into a separate paragraph.",
+    "RESPONSE FORMAT AND TOOL TRACE HYGIENE",
+    "Never reproduce internal tool-call frames, execution transcripts, event labels, or metadata such as code_reference, code_stdout, code_event_index, or raw notebook output. Tool execution stays internal; communicate the useful answer, not the execution transcript.",
+    "For simple arithmetic or unit conversions, return only the final result by default. Do not include a script, explanation, heading, or sign-off unless the player asks to see the work.",
+    "Use standard Markdown when structure genuinely helps: concise bullet points for multiple items, numbered steps for a sequence, and fenced code blocks when code is relevant or requested. Use headings sparingly and never add one to a simple answer.",
+    "Do not append generic follow-up offers such as 'Need help with anything else?' after a complete answer.",
+    "Separate paragraphs with normal newlines and blank lines. Do not use semicolons as a paragraph-formatting marker.",
     "",
     "OVERALL APPROACH",
     "Use sound judgment rather than mechanically applying a checklist. The goal is a coherent, useful conversation: understand what the player means, draw on relevant context, preserve continuity, stay accurate, and respond naturally."
@@ -252,6 +256,39 @@ function buildPrompt({ username, question, context }) {
     return Prefix + ContextJson + Suffix;
 }
 
+function cleanStoryBotAnswer(value) {
+    const Fence = String.fromCharCode(96).repeat(3);
+    let text = String(value || "").replace(/^\)\]\}'\s*/, "").replace(/\r\n?/g, "\n");
+
+    // Strip Gemini's private execution-frame format, not ordinary user-facing code fences.
+    let searchFrom = 0;
+    while (true) {
+        const start = text.indexOf(Fence, searchFrom);
+        if (start < 0) break;
+        const infoEnd = text.indexOf("\n", start + Fence.length);
+        const inlineEnd = text.indexOf(Fence, start + Fence.length);
+        const info = text.slice(start + Fence.length, infoEnd >= 0 ? infoEnd : (inlineEnd >= 0 ? inlineEnd : text.length));
+        if (!/\?code_(?:reference|stdout)\b/i.test(info)) {
+            searchFrom = start + Fence.length;
+            continue;
+        }
+        const end = inlineEnd >= 0 && (infoEnd < 0 || inlineEnd < infoEnd)
+            ? inlineEnd
+            : text.indexOf(Fence, infoEnd + 1);
+        if (end < 0) {
+            text = text.slice(0, start) + text.slice(infoEnd >= 0 ? infoEnd + 1 : text.length);
+            searchFrom = start;
+        } else {
+            text = text.slice(0, start) + text.slice(end + Fence.length);
+            searchFrom = start;
+        }
+    }
+
+    text = text.replace(/^[ \t]*(?:python|text)\?code_(?:reference|stdout)\b[^\n]*$/gim, "");
+    text = text.replace(/(?:^|\n)[ \t]*(?:need help with anything else|let me know if you need anything else|is there anything else i can help with)\b[\s\S]*$/i, "");
+    return text.replace(/\n[ \t]+\n/g, "\n\n").replace(/\n{3,}/g, "\n\n").trim();
+}
+
 function extractAnswer(raw) {
     let longest = "";
     const text = String(raw || "").replace(/^\)\]\}'\s*/, "");
@@ -275,15 +312,16 @@ function extractAnswer(raw) {
                 if (!Array.isArray(textParts)) continue;
 
                 for (const item of textParts) {
-                    if (typeof item === "string" && item.length > longest.length) {
-                        longest = item;
+                    if (typeof item === "string") {
+                        const candidate = cleanStoryBotAnswer(item);
+                        if (candidate.length > longest.length) longest = candidate;
                     }
                 }
             }
         } catch {}
     }
 
-    return longest.trim().slice(0, MAX_ANSWER_CHARS);
+    return cleanStoryBotAnswer(longest).slice(0, MAX_ANSWER_CHARS);
 }
 
 async function askGeminiNow(prompt) {
