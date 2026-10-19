@@ -7,7 +7,7 @@ const GEMINI_RPC_PATH = "/_/BardChatUi/data/assistant.lamda.BardFrontendService/
 const GEMINI_SESSION_TTL_MS = 15 * 60 * 1000;
 const GEMINI_PAGE_TIMEOUT_MS = 20000;
 const GEMINI_REQUEST_TIMEOUT_MS = 60000;
-const MAX_PROMPT_CHARS = 14000;
+const MAX_PROMPT_CHARS = 10000;
 const MAX_ANSWER_CHARS = 4000;
 const USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36";
 
