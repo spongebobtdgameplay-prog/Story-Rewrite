@@ -410,3 +410,170 @@
 @media (prefers-reduced-motion: reduce) {
     .StoryBotInputSlot > .StoryBotComposer { transition-duration: .01ms; }
 }
+
+
+/* StoryBot answers: readable Markdown blocks with user-customizable typography and theme. */
+:root {
+    --storybot-font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --storybot-font-size: 14px;
+    --storybot-message-background: linear-gradient(135deg, rgba(83, 55, 33, .78), rgba(48, 31, 20, .92));
+    --storybot-border: rgba(221, 177, 100, .34);
+    --storybot-accent: rgba(215, 168, 94, .75);
+    --storybot-name-color: #ffd68d;
+    --storybot-text-color: #f7e4c5;
+    --storybot-code-background: rgba(22, 15, 11, .96);
+    --storybot-code-border: rgba(221, 177, 100, .22);
+    --storybot-code-label: #d4b17b;
+}
+
+html[data-storybot-theme="midnight"] {
+    --storybot-message-background: linear-gradient(135deg, rgba(33, 48, 72, .97), rgba(15, 23, 39, .98));
+    --storybot-border: rgba(125, 171, 235, .42);
+    --storybot-accent: #7eb7ff;
+    --storybot-name-color: #b9d8ff;
+    --storybot-text-color: #e8f0ff;
+    --storybot-code-background: rgba(8, 14, 25, .98);
+    --storybot-code-border: rgba(125, 171, 235, .3);
+    --storybot-code-label: #b9d8ff;
+}
+
+html[data-storybot-theme="violet"] {
+    --storybot-message-background: linear-gradient(135deg, rgba(64, 42, 86, .97), rgba(34, 22, 48, .98));
+    --storybot-border: rgba(202, 156, 239, .4);
+    --storybot-accent: #c49af0;
+    --storybot-name-color: #e1c6ff;
+    --storybot-text-color: #f4eaff;
+    --storybot-code-background: rgba(22, 12, 31, .98);
+    --storybot-code-border: rgba(202, 156, 239, .28);
+    --storybot-code-label: #e1c6ff;
+}
+
+html[data-storybot-theme="paper"] {
+    --storybot-message-background: linear-gradient(135deg, rgba(249, 239, 218, .99), rgba(229, 210, 177, .99));
+    --storybot-border: rgba(132, 91, 47, .38);
+    --storybot-accent: #986b38;
+    --storybot-name-color: #674019;
+    --storybot-text-color: #39291c;
+    --storybot-code-background: rgba(59, 43, 30, .97);
+    --storybot-code-border: rgba(132, 91, 47, .45);
+    --storybot-code-label: #edd4a7;
+}
+
+.StoryBotMessage {
+    border-color: var(--storybot-border) !important;
+    background: var(--storybot-message-background) !important;
+    box-shadow: inset 3px 0 var(--storybot-accent) !important;
+    color: var(--storybot-text-color);
+}
+
+.StoryBotMessage > strong {
+    color: var(--storybot-name-color) !important;
+}
+
+.StoryBotMessage .StoryBotMessageBody {
+    font-family: var(--storybot-font-family);
+    font-size: var(--storybot-font-size);
+    line-height: 1.55;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+.StoryBotMessageBody p {
+    margin: 0;
+}
+
+.StoryBotMessageBody h3,
+.StoryBotMessageBody h4 {
+    margin: 4px 0 0;
+    font-family: var(--storybot-font-family);
+    line-height: 1.25;
+    color: var(--storybot-name-color);
+}
+
+.StoryBotMessageBody h3 { font-size: 1.12em; }
+.StoryBotMessageBody h4 { font-size: 1.04em; }
+
+.StoryBotMessageBody .StoryBotMarkdownList {
+    display: grid;
+    gap: 4px;
+    margin: 0;
+    padding-left: 1.55em;
+}
+
+.StoryBotMessageBody .StoryBotMarkdownList li {
+    padding-left: 2px;
+}
+
+.StoryBotMessageBody blockquote {
+    margin: 2px 0;
+    padding: 5px 10px;
+    border-left: 3px solid var(--storybot-accent);
+    border-radius: 0 6px 6px 0;
+    background: rgba(0, 0, 0, .12);
+}
+
+.StoryBotInlineCode {
+    padding: 1px 5px;
+    border: 1px solid var(--storybot-code-border);
+    border-radius: 5px;
+    background: var(--storybot-code-background);
+    color: var(--storybot-text-color);
+    font: .92em/1.5 ui-monospace, SFMono-Regular, Consolas, monospace;
+    overflow-wrap: anywhere;
+}
+
+.StoryBotCodeFrame {
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid var(--storybot-code-border);
+    border-radius: 9px;
+    background: var(--storybot-code-background);
+}
+
+.StoryBotCodeToolbar {
+    min-height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 4px 8px;
+    border-bottom: 1px solid var(--storybot-code-border);
+    color: var(--storybot-code-label);
+    font: 800 10px/1.2 system-ui, sans-serif;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+}
+
+.StoryBotCodeCopy {
+    border: 1px solid var(--storybot-code-border);
+    border-radius: 5px;
+    padding: 3px 7px;
+    background: rgba(255, 255, 255, .04);
+    color: inherit;
+    font: inherit;
+    letter-spacing: 0;
+    text-transform: none;
+    cursor: pointer;
+}
+
+.StoryBotCodeCopy:hover,
+.StoryBotCodeCopy:focus-visible {
+    background: rgba(255, 255, 255, .1);
+    outline: 2px solid var(--storybot-accent);
+    outline-offset: 1px;
+}
+
+.StoryBotCodeFrame pre {
+    max-width: 100%;
+    margin: 0;
+    padding: 10px 12px;
+    overflow-x: auto;
+    white-space: pre;
+    tab-size: 4;
+    color: var(--storybot-text-color);
+    font: 12px/1.5 ui-monospace, SFMono-Regular, Consolas, monospace;
+}
+
+.StoryBotCodeFrame pre code {
+    font: inherit;
+}
