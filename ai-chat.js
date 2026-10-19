@@ -359,6 +359,72 @@ function RenderStoryBotMarkdown(Body, Value) {
     }
 }
 
+
+let StoryBotSpeakingUtterance = null;
+let StoryBotSpeakingButton = null;
+
+function GetStoryBotSpeechText(Value) {
+    const Fence = String.fromCharCode(96).repeat(3);
+    return String(Value || "")
+        .replace(new RegExp(Fence + "[^\\n]*\\n[\\s\\S]*?" + Fence, "g"), " Code example omitted. ")
+        .replace(/https?:\\/\\/\\S+/g, " link ")
+        .replace(/#{1,6}\\s*/g, "")
+        .replace(/[*_~]/g, "")
+        .replace(new RegExp(String.fromCharCode(96), "g"), "")
+        .replace(/^\\s*[-+>]\\s*/gm, "")
+        .replace(/^\\s*\\d+[.)]\\s*/gm, "")
+        .replace(/\\s+/g, " ")
+        .trim();
+}
+
+function StopStoryBotSpeech() {
+    if (typeof window.speechSynthesis !== "undefined") window.speechSynthesis.cancel();
+    if (StoryBotSpeakingButton) {
+        StoryBotSpeakingButton.textContent = "Listen";
+        StoryBotSpeakingButton.setAttribute("aria-label", "Listen to the StoryBot reply");
+        StoryBotSpeakingButton.setAttribute("aria-pressed", "false");
+    }
+    StoryBotSpeakingUtterance = null;
+    StoryBotSpeakingButton = null;
+}
+
+function AddStoryBotListenButton(Element, Text) {
+    if (!Element || typeof window.speechSynthesis === "undefined" || !Text) return;
+    const Controls = document.createElement("div");
+    Controls.className = "StoryBotSpeechControls";
+    const Listen = document.createElement("button");
+    Listen.type = "button";
+    Listen.className = "StoryBotListenButton";
+    Listen.textContent = "Listen";
+    Listen.setAttribute("aria-label", "Listen to the StoryBot reply");
+    Listen.setAttribute("aria-pressed", "false");
+    Listen.addEventListener("click", () => {
+        if (StoryBotSpeakingButton === Listen) {
+            StopStoryBotSpeech();
+            return;
+        }
+        StopStoryBotSpeech();
+        const SpeechText = GetStoryBotSpeechText(Text);
+        if (!SpeechText) return;
+        const Utterance = new SpeechSynthesisUtterance(SpeechText);
+        Utterance.rate = 1;
+        Utterance.onend = () => {
+            if (StoryBotSpeakingUtterance === Utterance) StopStoryBotSpeech();
+        };
+        Utterance.onerror = () => {
+            if (StoryBotSpeakingUtterance === Utterance) StopStoryBotSpeech();
+        };
+        StoryBotSpeakingUtterance = Utterance;
+        StoryBotSpeakingButton = Listen;
+        Listen.textContent = "Stop listening";
+        Listen.setAttribute("aria-label", "Stop reading the StoryBot reply aloud");
+        Listen.setAttribute("aria-pressed", "true");
+        window.speechSynthesis.speak(Utterance);
+    });
+    Controls.appendChild(Listen);
+    Element.appendChild(Controls);
+}
+
 function RenderStoryBotStructuredMessage(Element, Message) {
     if (!Element || !Message?.bot) return;
     const RawText = CleanStoryBotDisplayText(Message.text);
@@ -375,6 +441,7 @@ function RenderStoryBotStructuredMessage(Element, Message) {
     RenderStoryBotMarkdown(Body, RawText);
     Element.replaceChildren(Name, Body);
     Element.classList.add("StoryBotMessage");
+    AddStoryBotListenButton(Element, RawText);
 }
 function RenderStoryBotQuestionImmediately(Message, ContainerId) {
     if (!Message?.id || !ContainerId) return;
