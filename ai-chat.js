@@ -367,13 +367,13 @@ function GetStoryBotSpeechText(Value) {
     const Fence = String.fromCharCode(96).repeat(3);
     return String(Value || "")
         .replace(new RegExp(Fence + "[^\\n]*\\n[\\s\\S]*?" + Fence, "g"), " Code example omitted. ")
-        .replace(/https?:\\/\\/\\S+/g, " link ")
-        .replace(/#{1,6}\\s*/g, "")
+        .replace(/https?:\/\/\S+/g, " link ")
+        .replace(/#{1,6}\s*/g, "")
         .replace(/[*_~]/g, "")
         .replace(new RegExp(String.fromCharCode(96), "g"), "")
-        .replace(/^\\s*[-+>]\\s*/gm, "")
-        .replace(/^\\s*\\d+[.)]\\s*/gm, "")
-        .replace(/\\s+/g, " ")
+        .replace(/^\s*[-+>]\s*/gm, "")
+        .replace(/^\s*\d+[.)]\s*/gm, "")
+        .replace(/\s+/g, " ")
         .trim();
 }
 
