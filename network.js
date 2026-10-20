@@ -930,7 +930,15 @@ function ConnectStorySocket() {
             deviceSignature: GetStoryDeviceSignature(),
             tabId: GetStoryTabId()
         },
-        transports: ["websocket", "polling"]
+        transports: ["websocket", "polling"],
+        tryAllTransports: true,
+        rememberUpgrade: true,
+        timeout: 10000,
+        reconnection: true,
+        reconnectionAttempts: Infinity,
+        reconnectionDelay: 400,
+        reconnectionDelayMax: 3000,
+        randomizationFactor: 0.25
     });
 
     Socket.on("session:conflict", Payload => {
