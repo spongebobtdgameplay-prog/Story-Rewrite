@@ -199,17 +199,17 @@ function StoryRenderSocialNotificationState(State = StoryReadSocialNotificationS
     return Count;
 }
 
-function StoryMarkSocialConversationRead(Username) {
+function StoryMarkSocialConversationRead(Username, SeenThroughAt = 0) {
     const TargetName = String(Username || "").trim();
     const Target = TargetName.toLowerCase();
     const AccountName = StorySocialNotificationAccountName();
     if (!Target || !AccountName) return;
     const State = StoryReadSocialNotificationState(AccountName);
     const Entry = State[Target] || { username: TargetName, lastSeenAt: 0, lastNotifiedAt: 0, unreadCount: 0 };
-    const Now = Date.now();
+    const SeenThrough = Math.max(Date.now(), StorySocialNotificationTime(SeenThroughAt));
     Entry.username = TargetName || Entry.username || Target;
-    Entry.lastSeenAt = Math.max(Number(Entry.lastSeenAt || 0), Now);
-    Entry.lastNotifiedAt = Math.max(Number(Entry.lastNotifiedAt || 0), Now);
+    Entry.lastSeenAt = Math.max(Number(Entry.lastSeenAt || 0), SeenThrough);
+    Entry.lastNotifiedAt = Math.max(Number(Entry.lastNotifiedAt || 0), SeenThrough);
     Entry.unreadCount = 0;
     State[Target] = Entry;
     StoryWriteSocialNotificationState(State, AccountName);
@@ -226,7 +226,7 @@ function StoryRecordIncomingSocialMessage(Username, SentAt) {
         /(?:^|\/)social\.html$/i.test(window.location.pathname || "") &&
         !document.getElementById("SocialChatView")?.hidden &&
         String(document.getElementById("SocialChatUsername")?.textContent || "").trim().toLowerCase() === Target) {
-        StoryMarkSocialConversationRead(TargetName);
+        StoryMarkSocialConversationRead(TargetName, SentAt);
         return;
     }
 
