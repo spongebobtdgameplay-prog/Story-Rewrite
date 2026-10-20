@@ -12,11 +12,31 @@ const STORY_TAB_ID_KEY = "StoryRewriteTabIdV1";
 const STORY_SOCIAL_HEARTBEAT_INTERVAL = 60000;
 const STORY_SWITCH_FROM_USERNAME_KEY = "StoryRewriteSwitchFromUsernameV1";
 const STORY_SESSION_CHANNEL_NAME = "StoryRewriteSessionChannelV1";
-const STORY_SOCIAL_NOTIFICATION_STATE_PREFIX = "StoryRewriteSocialUnreadStateV1:";
-const STORY_SOCIAL_NOTIFICATION_COUNT_PREFIX = "StoryRewriteSocialUnreadCountV1:";
+const STORY_SOCIAL_NOTIFICATION_STATE_PREFIX = "StoryRewriteSocialUnreadStateV2:";
+const STORY_SOCIAL_NOTIFICATION_COUNT_PREFIX = "StoryRewriteSocialUnreadCountV2:";
 const STORY_SOCIAL_NOTIFICATION_MUTE_PREFIX = "StoryRewriteSocialNotificationMutesV1:";
+const STORY_SOCIAL_NOTIFICATION_LEGACY_RESET_KEY = "StoryRewriteSocialNotificationLegacyResetV2";
+const STORY_SOCIAL_NOTIFICATION_BASELINE_PREFIX = "StoryRewriteSocialNotificationBaselineV2:";
 const STORY_SOCIAL_NOTIFICATION_REFRESH_INTERVAL = 30000;
 let StorySocialNotificationRefreshTimer = null;
+
+function StoryClearLegacySocialNotificationStorage() {
+    try {
+        if (localStorage.getItem(STORY_SOCIAL_NOTIFICATION_LEGACY_RESET_KEY) === "1") return;
+        const LegacyKeys = [];
+        for (let Index = 0; Index < localStorage.length; Index += 1) {
+            const Key = localStorage.key(Index) || "";
+            if (Key.startsWith("StoryRewriteSocialUnreadStateV1:") ||
+                Key.startsWith("StoryRewriteSocialUnreadCountV1:")) {
+                LegacyKeys.push(Key);
+            }
+        }
+        LegacyKeys.forEach(Key => localStorage.removeItem(Key));
+        localStorage.setItem(STORY_SOCIAL_NOTIFICATION_LEGACY_RESET_KEY, "1");
+    } catch {}
+}
+
+StoryClearLegacySocialNotificationStorage();
 let StorySocialNotificationRefreshInFlight = false;
 const STORY_CLIENT_SNAPSHOT_KEYS = [
     STORY_LAST_PROFILE_KEY,
@@ -236,9 +256,39 @@ async function StoryRefreshSocialNotifications() {
         const AccountName = String(Profile?.username || "").trim();
         if (!AccountName) return;
 
+        const NotificationScanStartedAt = Date.now();
         const Result = await ApiRequest("/api/social/inbox?limit=20");
         const Items = Array.isArray(Result?.messages) ? Result.messages : [];
         const State = StoryReadSocialNotificationState(AccountName);
+        const BaselineKey = STORY_SOCIAL_NOTIFICATION_BASELINE_PREFIX + AccountName.toLowerCase();
+        let NeedsInitialBaseline = false;
+        try { NeedsInitialBaseline = localStorage.getItem(BaselineKey) !== "1"; } catch { NeedsInitialBaseline = true; }
+
+        // The old unread state had no reliable read/message connection. Establish a
+        // clean baseline from existing conversations once, while preserving messages
+        // received after this inbox scan began.
+        if (NeedsInitialBaseline) {
+            for (const Item of Items) {
+                const TargetName = String(Item?.user?.username || "").trim();
+                const Target = TargetName.toLowerCase();
+                if (!Target) continue;
+
+                const At = StorySocialNotificationTime(Item?.lastMessageAt);
+                const Entry = State[Target] || { username: TargetName, lastSeenAt: 0, lastNotifiedAt: 0, unreadCount: 0 };
+                Entry.username = TargetName;
+                Entry.lastSeenAt = Math.max(Number(Entry.lastSeenAt || 0), NotificationScanStartedAt);
+
+                // Only clear stale history. A socket notification received after
+                // startup has a newer lastNotifiedAt and must remain unread.
+                if (Number(Entry.lastNotifiedAt || 0) <= NotificationScanStartedAt &&
+                    (!At || At <= NotificationScanStartedAt)) {
+                    Entry.lastNotifiedAt = Math.max(Number(Entry.lastNotifiedAt || 0), At || 0, NotificationScanStartedAt);
+                    Entry.unreadCount = 0;
+                }
+                State[Target] = Entry;
+            }
+            try { localStorage.setItem(BaselineKey, "1"); } catch {}
+        }
 
         for (const Item of Items) {
             const TargetName = String(Item?.user?.username || "").trim();
