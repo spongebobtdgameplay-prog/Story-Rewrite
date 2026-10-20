@@ -143,6 +143,64 @@ body {
         height: clamp(20px, 5.2vw, 23px);
     }
 }
+
+/* Keep the game usable only in landscape on phone-sized viewports. */
+#StoryLandscapeGuard {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 2147483647;
+    box-sizing: border-box;
+    align-items: center;
+    justify-content: center;
+    padding: clamp(20px, 6vw, 44px);
+    color: #f7e6c8;
+    text-align: center;
+    background:
+        radial-gradient(circle at 50% 12%, rgba(213, 161, 90, .18), transparent 42%),
+        linear-gradient(145deg, #20140e, #100b08 78%);
+}
+#StoryLandscapeGuard .StoryLandscapeCard {
+    display: grid;
+    justify-items: center;
+    gap: 14px;
+    width: 100%;
+    max-width: 420px;
+    box-sizing: border-box;
+    padding: clamp(22px, 5vw, 38px);
+    border: 1px solid rgba(219, 171, 103, .42);
+    border-radius: 22px;
+    background: linear-gradient(145deg, rgba(65, 42, 27, .96), rgba(31, 20, 14, .98));
+    box-shadow: 0 24px 70px rgba(0, 0, 0, .42), inset 0 1px rgba(255, 239, 207, .07);
+}
+#StoryLandscapeGuard svg {
+    width: clamp(52px, 13vw, 76px);
+    height: clamp(52px, 13vw, 76px);
+    fill: none;
+    stroke: #f0c47a;
+    stroke-width: 2.2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+#StoryLandscapeGuard h1 {
+    margin: 0;
+    color: #ffe5b7;
+    font: 800 clamp(22px, 5.5vw, 30px)/1.15 Georgia, "Times New Roman", serif;
+}
+#StoryLandscapeGuard p {
+    margin: 0;
+    max-width: 32ch;
+    color: #d0b695;
+    font: 600 clamp(13px, 3.3vw, 16px)/1.55 system-ui, sans-serif;
+}
+@media screen and (max-width: 900px) and (orientation: portrait) {
+    #StoryLandscapeGuard { display: flex; }
+    #StoryShellRoot > iframe.StoryShellFrame {
+        visibility: hidden !important;
+        pointer-events: none !important;
+    }
+    #StoryShellPauseButton { display: none !important; }
+}
 </style>
 <script>
 const AuthKey = "StoryRewriteAuthToken";
@@ -171,8 +229,18 @@ if (!Token) window.location.replace("auth.html");
         </svg>
     </button>
     <iframe id="StoryShellFrame" class="StoryShellFrame" scrolling="auto" title="Story Rewrite"></iframe>
+    <div id="StoryLandscapeGuard" role="alert" aria-live="assertive">
+        <div class="StoryLandscapeCard">
+            <svg viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+                <rect x="17" y="22" width="30" height="20" rx="3"></rect>
+                <path d="M10 20a24 24 0 0 1 40-6M50 14l0-8m0 8h-8M54 44a24 24 0 0 1-40 6M14 50v8m0-8h8"></path>
+            </svg>
+            <h1>Turn your device sideways</h1>
+            <p>Story Rewrite is designed for landscape play. Rotate your screen horizontally to continue.</p>
+        </div>
+    </div>
 </div>
 <script src="cache-guard.js?v=20261001-1"></script>
-<script src="shell.js?v=20261018-6"></script>
+<script src="shell.js?v=20261020-1"></script>
 </body>
 </html>
