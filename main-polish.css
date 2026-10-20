@@ -429,26 +429,26 @@ body {
         gap: 7.2px;
     }
     #App > .TopBar > .TopActions > .UiButton {
-        flex: 0 0 auto;
-        max-width: none;
-        height: 48px;
-        min-height: 48px;
-        max-height: 48px;
-        font-size: 14.4px;
-        padding: 9.6px 10.8px;
+        flex: 0 1 auto;
+        max-width: 100%;
+        height: auto;
+        min-height: clamp(38px, 6svh, 48px);
+        max-height: none;
+        font-size: clamp(11px, 1.8vw, 14.4px);
+        padding: clamp(7px, 1.2svh, 10px) clamp(8px, 1.6vw, 12px);
     }
     #App > .TopBar > .TopActions > .SettingsNavButton {
-        flex: 0 0 48px;
-        width: 48px !important;
-        min-width: 48px !important;
-        height: 48px;
-        min-height: 48px !important;
-        max-height: 48px;
+        flex: 0 0 clamp(40px, 7vw, 48px);
+        width: clamp(40px, 7vw, 48px) !important;
+        min-width: clamp(40px, 7vw, 48px) !important;
+        height: clamp(40px, 7vw, 48px);
+        min-height: clamp(40px, 7vw, 48px) !important;
+        max-height: none;
         padding: 0;
     }
     #App > .TopBar > .TopActions > .SettingsNavButton svg {
-        width: 22.8px;
-        height: 22.8px;
+        width: clamp(18px, 3.2vw, 22.8px);
+        height: clamp(18px, 3.2vw, 22.8px);
     }
     #App > .TopBar > .TopActions > .AccountNavButton {
         gap: 9.6px;
@@ -457,7 +457,7 @@ body {
 }
 
 
-/* Social unread count badges and the main-menu new-message notice. */
+/* Social unread count badges. */
 .StorySocialNotificationButton {
     position: relative;
     display: inline-flex;
@@ -483,78 +483,3 @@ body {
     font-variant-numeric: tabular-nums;
 }
 .StorySocialUnreadBadge[hidden] { display: none !important; }
-.StorySocialMainNotification {
-    box-sizing: border-box;
-    display: flex;
-    align-items: center;
-    gap: 13px;
-    margin: 0 0 14px;
-    padding: 12px 15px;
-    border: 1px solid rgba(219, 171, 103, .42);
-    border-left: 4px solid #d5a15a;
-    border-radius: 14px;
-    color: #f7e6c8;
-    background: radial-gradient(circle at 0 0, rgba(223, 171, 95, .15), transparent 38%), linear-gradient(135deg, #392519, #231711);
-    box-shadow: 0 9px 26px rgba(26, 12, 6, .2), inset 0 1px rgba(255, 239, 207, .06);
-}
-.StorySocialMainNotification[hidden] { display: none !important; }
-.StorySocialMainNotificationIcon {
-    width: 40px;
-    height: 40px;
-    flex: 0 0 40px;
-    display: grid;
-    place-items: center;
-    border: 1px solid rgba(231, 182, 107, .36);
-    border-radius: 11px;
-    color: #f4c47d;
-    background: rgba(221, 157, 73, .1);
-    box-shadow: 0 0 15px rgba(224, 161, 76, .12);
-}
-.StorySocialMainNotificationIcon svg {
-    display: block;
-    width: 22px;
-    height: 22px;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 1.7;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    filter: drop-shadow(0 0 4px rgba(241, 183, 99, .4));
-}
-.StorySocialMainNotificationCopy {
-    min-width: 0;
-    flex: 1 1 auto;
-    display: grid;
-    gap: 3px;
-}
-.StorySocialMainNotificationCopy strong {
-    color: #ffe5b7;
-    font: 900 14px/1.2 Georgia, "Times New Roman", serif;
-}
-.StorySocialMainNotificationCopy span {
-    color: #cdb391;
-    overflow-wrap: anywhere;
-    font: 600 12px/1.4 system-ui, sans-serif;
-}
-.StorySocialMainNotificationAction {
-    flex: 0 0 auto;
-    min-height: 36px;
-    padding: 8px 12px;
-    border: 1px solid rgba(223, 176, 106, .43);
-    border-radius: 9px;
-    color: #ffedcf;
-    background: linear-gradient(180deg, #704728, #482b19);
-    font: 800 11px/1.2 system-ui, sans-serif;
-    cursor: pointer;
-}
-.StorySocialMainNotificationAction:hover, .StorySocialMainNotificationAction:focus-visible {
-    border-color: #f0bf76;
-    background: linear-gradient(180deg, #82532e, #57331e);
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(219, 164, 85, .14);
-}
-@media (max-width: 560px) {
-    .StorySocialMainNotification { align-items: flex-start; flex-wrap: wrap; }
-    .StorySocialMainNotificationCopy { flex: 1 1 calc(100% - 60px); }
-    .StorySocialMainNotificationAction { margin-left: 53px; }
-}
