@@ -359,21 +359,42 @@
 
     const FrameTitleObservers = new WeakMap();
 
+    function SyncActiveFrameTitle(Frame, Title) {
+        if (!Frame || Frame !== ActiveFrame) return false;
+        const SafeTitle = String(Title || "Story Rewrite").slice(0, 180);
+        if (document.title !== SafeTitle) document.title = SafeTitle;
+        return true;
+    }
+
+    // The child page can request a title update, but only the active iframe is
+    // allowed to write the browser tab title.
+    window.StoryShellSyncTitle = function(Title, SourceWindow) {
+        try {
+            const Frame = ActiveFrame;
+            if (!Frame || !SourceWindow || Frame.contentWindow !== SourceWindow) return false;
+            return SyncActiveFrameTitle(Frame, Title);
+        } catch {
+            return false;
+        }
+    };
+
     function WatchFrameTitle(Frame) {
         try {
             const ChildDocument = Frame.contentDocument;
             const Head = ChildDocument?.head;
-            if (!Head || FrameTitleObservers.has(Frame)) return;
+            if (!Head) return;
+            const Existing = FrameTitleObservers.get(Frame);
+            if (Existing?.document === ChildDocument) return;
+            Existing?.observer?.disconnect();
 
             const Observer = new MutationObserver(() => {
                 if (Frame !== ActiveFrame) return;
                 try {
-                    const ChildTitle = ChildDocument.title || "Story Rewrite";
-                    if (document.title !== ChildTitle) document.title = ChildTitle;
+                    SyncActiveFrameTitle(Frame, ChildDocument.title || "Story Rewrite");
                 } catch {}
             });
             Observer.observe(Head, { childList: true, characterData: true, subtree: true });
-            FrameTitleObservers.set(Frame, Observer);
+            FrameTitleObservers.set(Frame, { document: ChildDocument, observer: Observer });
         } catch {}
     }
 
@@ -381,10 +402,10 @@
         try {
             const ChildDocument = Frame.contentDocument;
             const ChildTitle = ChildDocument?.title || "Story Rewrite";
-            document.title = ChildTitle;
+            SyncActiveFrameTitle(Frame, ChildTitle);
             WatchFrameTitle(Frame);
         } catch {
-            document.title = "Story Rewrite";
+            if (Frame === ActiveFrame) document.title = "Story Rewrite";
         }
     }
 
