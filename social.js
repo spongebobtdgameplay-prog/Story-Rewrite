@@ -802,6 +802,10 @@ async function SelectSocialUser(Username) {
 
     SocialById("SocialChatEmpty").hidden = true;
     SocialById("SocialChatView").hidden = false;
+    // Opening a conversation marks its notifications as seen immediately.
+    if (typeof StoryMarkSocialConversationRead === "function") {
+        StoryMarkSocialConversationRead(SocialSelectedUser.username);
+    }
     SocialById("SocialChatAvatar").textContent = SocialInitial(SocialSelectedUser.username);
     SocialById("SocialChatUsername").textContent = SocialSelectedUser.username;
     SocialById("SocialChatPresence").textContent = SocialPresenceLabel(SocialSelectedUser.presence);
