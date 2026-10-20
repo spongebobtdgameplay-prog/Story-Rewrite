@@ -715,9 +715,15 @@ async function SocialLoadConversation() {
         if (!Messages.length) {
             Container.innerHTML = '<div class="StorySocialConversationState">No messages in this conversation yet.</div>';
         }
+        const LatestMessageAt = Messages.reduce((Latest, Message) => {
+            const SentAt = typeof StorySocialNotificationTime === "function"
+                ? StorySocialNotificationTime(Message?.sentAt || Message?.createdAt || Message?.timestamp)
+                : 0;
+            return Math.max(Latest, SentAt);
+        }, 0);
         if (String(SocialSelectedUser?.username || "").toLowerCase() === ConversationUsername.toLowerCase() &&
             typeof StoryMarkSocialConversationRead === "function") {
-            StoryMarkSocialConversationRead(ConversationUsername);
+            StoryMarkSocialConversationRead(ConversationUsername, LatestMessageAt);
         }
     } catch (Error) {
         console.error("Story Social conversation load failed", Error);
