@@ -173,23 +173,6 @@ function StoryRenderSocialNotificationState(State = StoryReadSocialNotificationS
         Badge.setAttribute("aria-label", Count + (Count === 1 ? " new message" : " new messages"));
     });
 
-    const Notice = document.getElementById("SocialMainNotification");
-    if (Notice) {
-        Notice.hidden = Count <= 0;
-        if (Count > 0) {
-            const Heading = document.getElementById("SocialMainNotificationTitle");
-            const Detail = document.getElementById("SocialMainNotificationText");
-            if (Heading) Heading.textContent = Count === 1 ? "You have a new message" : `You have ${Count} new messages`;
-            if (Detail) {
-                const Names = Entries.map(Entry => Entry.username);
-                const Message = Names.length === 1 ? Names[0] + " messaged you."
-                    : Names.length === 2 ? Names[0] + " and " + Names[1] + " messaged you."
-                    : Names.slice(0, 2).join(", ") + " and " + (Names.length - 2) + " more players messaged you.";
-                Detail.textContent = Message;
-            }
-        }
-    }
-
     try {
         window.dispatchEvent(new CustomEvent("StorySocialNotificationsChanged", { detail: { count: Count, entries: Entries } }));
     } catch {}
