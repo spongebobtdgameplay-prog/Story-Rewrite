@@ -226,12 +226,11 @@ async function EnsureMultiplayerReady() {
 
 async function InitializeMultiplayer() {
     ShowLobbyStatus("Connecting to the game server...", null);
-    await EnsureBackendVersion();
+    // Download Socket.IO while the backend wakes/checks its version instead of serializing both waits.
+    await Promise.all([EnsureBackendVersion(), LoadSocketClient()]);
 
     const ProfileResult = await RequireAccount();
     CurrentProfile = ProfileResult.profile;
-
-    await LoadSocketClient();
 
     if (MultiplayerSocket) {
         MultiplayerSocket.removeAllListeners();
