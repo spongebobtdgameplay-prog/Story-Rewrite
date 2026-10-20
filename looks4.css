@@ -365,3 +365,71 @@ body {
         scroll-behavior: auto !important;
     }
 }
+
+
+/* Fluid layout guardrails shared by all Story Rewrite pages. */
+html,
+body {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+}
+body {
+    overflow-x: clip;
+}
+img,
+svg,
+video,
+canvas,
+iframe {
+    max-width: 100%;
+}
+input,
+select,
+textarea,
+button {
+    box-sizing: border-box;
+}
+.TopBar,
+.TopActions,
+.Main,
+.Page,
+.Panel,
+.HomeHero,
+.RoomActions,
+.ChatPanel,
+.SocialShell,
+.SettingsShell {
+    min-width: 0;
+}
+@media (max-width: 900px) {
+    .TopBar {
+        max-width: 100%;
+        flex-wrap: wrap;
+        gap: clamp(8px, 2vw, 16px);
+    }
+    .TopActions {
+        min-width: 0;
+        max-width: 100%;
+        flex-wrap: wrap;
+        gap: clamp(6px, 1.5vw, 12px);
+    }
+    .Main,
+    .Page,
+    .Panel,
+    .OverlayCard {
+        max-width: 100%;
+    }
+}
+@media (max-width: 600px) {
+    .Panel,
+    .OverlayCard {
+        border-radius: clamp(10px, 2.5vw, 18px);
+    }
+    button,
+    input,
+    select,
+    textarea {
+        max-width: 100%;
+    }
+}
