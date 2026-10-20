@@ -698,6 +698,7 @@ function SocialAddMessage(Message) {
 
 async function SocialLoadConversation() {
     if (!SocialSelectedUser) return;
+    const ConversationUsername = String(SocialSelectedUser.username || "");
     const Container = SocialById("SocialMessages");
     if (!Container) return;
 
@@ -713,6 +714,10 @@ async function SocialLoadConversation() {
         Messages.forEach(SocialAddMessage);
         if (!Messages.length) {
             Container.innerHTML = '<div class="StorySocialConversationState">No messages in this conversation yet.</div>';
+        }
+        if (String(SocialSelectedUser?.username || "").toLowerCase() === ConversationUsername.toLowerCase() &&
+            typeof StoryMarkSocialConversationRead === "function") {
+            StoryMarkSocialConversationRead(ConversationUsername);
         }
     } catch (Error) {
         console.error("Story Social conversation load failed", Error);
