@@ -1,5 +1,5 @@
 (() => {
-    const FrontendVersion = "20261020.1";
+    const FrontendVersion = "20261020.2";
     const Root = document.getElementById("StoryShellRoot");
     const InitialFrame = document.getElementById("StoryShellFrame");
     if (!Root || !InitialFrame) return;
@@ -357,10 +357,32 @@
         }
     }
 
+    const FrameTitleObservers = new WeakMap();
+
+    function WatchFrameTitle(Frame) {
+        try {
+            const ChildDocument = Frame.contentDocument;
+            const Head = ChildDocument?.head;
+            if (!Head || FrameTitleObservers.has(Frame)) return;
+
+            const Observer = new MutationObserver(() => {
+                if (Frame !== ActiveFrame) return;
+                try {
+                    const ChildTitle = ChildDocument.title || "Story Rewrite";
+                    if (document.title !== ChildTitle) document.title = ChildTitle;
+                } catch {}
+            });
+            Observer.observe(Head, { childList: true, characterData: true, subtree: true });
+            FrameTitleObservers.set(Frame, Observer);
+        } catch {}
+    }
+
     function UpdateTitle(Frame) {
         try {
-            const ChildTitle = Frame.contentDocument?.title;
-            document.title = ChildTitle || "Story Rewrite";
+            const ChildDocument = Frame.contentDocument;
+            const ChildTitle = ChildDocument?.title || "Story Rewrite";
+            document.title = ChildTitle;
+            WatchFrameTitle(Frame);
         } catch {
             document.title = "Story Rewrite";
         }
