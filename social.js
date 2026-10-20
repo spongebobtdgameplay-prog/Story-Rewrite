@@ -12,6 +12,7 @@ let SocialHoveredMessageId = "";
 let SocialActiveMessageMenu = null;
 let SocialMessageMenuCloseTimer = null;
 const SocialMessageIds = new Set();
+const SocialPendingReactionIds = new Set();
 
 function SocialById(Id) {
     return document.getElementById(Id);
@@ -539,6 +540,68 @@ function SocialUpdateMessageReactions(Message, IncludeViewerState = false) {
     }
 }
 
+function SocialReadReactionState(Element) {
+    const LikeCountText = Element?.querySelector(".StorySocialMessageReaction.LikeCount")?.textContent || "";
+    const DislikeCountText = Element?.querySelector(".StorySocialMessageReaction.DislikeCount")?.textContent || "";
+    return {
+        likeCount: Math.max(0, Number(LikeCountText.match(/\\d+/)?.[0] || 0)),
+        dislikeCount: Math.max(0, Number(DislikeCountText.match(/\\d+/)?.[0] || 0)),
+        likedByMe: Boolean(Element?.querySelector(".StorySocialMessageAction.LikeAction")?.classList.contains("IsActive")),
+        dislikedByMe: Boolean(Element?.querySelector(".StorySocialMessageAction.DislikeAction")?.classList.contains("IsActive"))
+    };
+}
+
+function SocialApplyOptimisticReaction(MessageId, Reaction) {
+    const Element = Array.from(document.querySelectorAll(".StorySocialMessage"))
+        .find(Item => Item.dataset.messageId === String(MessageId));
+    if (!Element) return null;
+    const Previous = SocialReadReactionState(Element);
+    const Next = { ...Previous };
+
+    if (Reaction === "like") {
+        if (Previous.likedByMe) {
+            Next.likedByMe = false;
+            Next.likeCount = Math.max(0, Next.likeCount - 1);
+        } else {
+            Next.likedByMe = true;
+            Next.likeCount += 1;
+            if (Previous.dislikedByMe) {
+                Next.dislikedByMe = false;
+                Next.dislikeCount = Math.max(0, Next.dislikeCount - 1);
+            }
+        }
+    } else {
+        if (Previous.dislikedByMe) {
+            Next.dislikedByMe = false;
+            Next.dislikeCount = Math.max(0, Next.dislikeCount - 1);
+        } else {
+            Next.dislikedByMe = true;
+            Next.dislikeCount += 1;
+            if (Previous.likedByMe) {
+                Next.likedByMe = false;
+                Next.likeCount = Math.max(0, Next.likeCount - 1);
+            }
+        }
+    }
+
+    SocialUpdateMessageReactions({ messageId: String(MessageId), ...Next }, true);
+    Element.querySelectorAll(".StorySocialMessageAction.LikeAction, .StorySocialMessageAction.DislikeAction")
+        .forEach(Button => { Button.disabled = true; });
+    return { Element, Previous };
+}
+
+function SocialRestoreReactionState(MessageId, State) {
+    if (!State) return;
+    SocialUpdateMessageReactions({ messageId: String(MessageId), ...State }, true);
+}
+
+function SocialSetReactionButtonsPending(MessageId, Pending) {
+    const Element = Array.from(document.querySelectorAll(".StorySocialMessage"))
+        .find(Item => Item.dataset.messageId === String(MessageId));
+    Element?.querySelectorAll(".StorySocialMessageAction.LikeAction, .StorySocialMessageAction.DislikeAction")
+        .forEach(Button => { Button.disabled = Boolean(Pending); });
+}
+
 function SocialAddMessage(Message) {
     if (!Message || !Message.id) return;
     const Container = SocialById("SocialMessages");
@@ -732,17 +795,46 @@ async function SocialLoadConversation() {
 }
 
 async function SocialReactMessage(MessageId, Reaction) {
-    try {
-        const Result = await ApiRequest("/api/social/messages/react", {
-            method: "POST",
-            body: JSON.stringify({ messageId: MessageId, reaction: Reaction })
-        });
-        if (Result?.message) SocialUpdateMessageReactions(Result.message, true);
-        SocialSetStatus(SocialById("SocialChatStatus"), Reaction === "like" ? "Like updated." : "Dislike updated.", "Good");
-        SocialLoadInbox();
-    } catch (Error) {
-        SocialSetStatus(SocialById("SocialChatStatus"), SocialSafeError(Error, "Could not update the reaction."), "Bad");
-    }
+    const Id = String(MessageId || "");
+    if (!Id || !["like", "dislike"].includes(Reaction) || SocialPendingReactionIds.has(Id)) return;
+
+    // Update the rendered reaction before waiting on the network/database.
+    const Optimistic = SocialApplyOptimisticReaction(Id, Reaction);
+    if (!Optimistic) return;
+    SocialPendingReactionIds.add(Id);
+    SocialSetStatus(SocialById("SocialChatStatus"), "Saving reaction…");
+
+    let Saved = false;
+    const PersistRequest = ApiRequest("/api/social/messages/react", {
+        method: "POST",
+        body: JSON.stringify({ messageId: Id, reaction: Reaction })
+    }).then(Result => {
+        if (Result?.message) {
+            SocialUpdateMessageReactions(Result.message, true);
+            Saved = true;
+            SocialSetStatus(SocialById("SocialChatStatus"), Reaction === "like" ? "Like saved." : "Dislike saved.", "Good");
+        } else {
+            throw new Error("The server did not confirm the reaction.");
+        }
+    }).catch(Error => {
+        SocialRestoreReactionState(Id, Optimistic.Previous);
+        SocialSetStatus(SocialById("SocialChatStatus"), SocialSafeError(Error, "Could not save the reaction. Try again."), "Bad");
+    }).finally(() => {
+        SocialPendingReactionIds.delete(Id);
+        SocialSetReactionButtonsPending(Id, false);
+    });
+
+    // Do not stall the click handler if the server is slow; show a status after
+    // one second while the request continues in the background.
+    await Promise.race([
+        PersistRequest,
+        new Promise(resolve => window.setTimeout(() => {
+            if (SocialPendingReactionIds.has(Id) && !Saved) {
+                SocialSetStatus(SocialById("SocialChatStatus"), "Reaction is still saving…");
+            }
+            resolve();
+        }, 1000))
+    ]);
 }
 
 async function SocialDeleteMessage(MessageId) {
