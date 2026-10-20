@@ -183,6 +183,9 @@ function warmGeminiGuest() {
     return getBuildLabel();
 }
 
+// Warm the guest build label at startup so the first player question avoids this extra round trip.
+void warmGeminiGuest().catch(() => {});
+
 function buildPrompt({ username, question, context }) {
     const SafeUsername = String(username || "Player").trim().slice(0, 40) || "Player";
     const SafeQuestion = String(question || "").trim().slice(0, 1200);
