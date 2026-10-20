@@ -544,8 +544,8 @@ function SocialReadReactionState(Element) {
     const LikeCountText = Element?.querySelector(".StorySocialMessageReaction.LikeCount")?.textContent || "";
     const DislikeCountText = Element?.querySelector(".StorySocialMessageReaction.DislikeCount")?.textContent || "";
     return {
-        likeCount: Math.max(0, Number(LikeCountText.match(/\\d+/)?.[0] || 0)),
-        dislikeCount: Math.max(0, Number(DislikeCountText.match(/\\d+/)?.[0] || 0)),
+        likeCount: Math.max(0, Number(LikeCountText.match(/\d+/)?.[0] || 0)),
+        dislikeCount: Math.max(0, Number(DislikeCountText.match(/\d+/)?.[0] || 0)),
         likedByMe: Boolean(Element?.querySelector(".StorySocialMessageAction.LikeAction")?.classList.contains("IsActive")),
         dislikedByMe: Boolean(Element?.querySelector(".StorySocialMessageAction.DislikeAction")?.classList.contains("IsActive"))
     };
