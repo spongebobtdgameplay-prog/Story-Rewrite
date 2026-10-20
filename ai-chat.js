@@ -1158,7 +1158,7 @@ async function AskAI(PromptText) {
         );
 
         try {
-            Socket.timeout(10000).emit("storybot:ask", { question: Question }, (ErrorValue, Reply) => {
+            Socket.timeout(STORY_BOT_ACK_TIMEOUT).emit("storybot:ask", { question: Question }, (ErrorValue, Reply) => {
                 if (ErrorValue) {
                     Finish(new Error("StoryBot did not acknowledge the request in time."));
                     return;
