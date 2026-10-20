@@ -929,6 +929,12 @@ async function SocialEnsureSocket() {
         const Sender = String(Message?.senderUsername || "").toLowerCase();
         const Recipient = String(Message?.recipientUsername || "").toLowerCase();
         const Me = String(SocialCurrentUser?.username || "").toLowerCase();
+        if (Recipient === Me && Sender && Sender !== Me && typeof StoryRecordIncomingSocialMessage === "function") {
+            StoryRecordIncomingSocialMessage(
+                Message?.senderUsername || Sender,
+                Message?.sentAt || Message?.createdAt || Message?.timestamp
+            );
+        }
         SocialLoadInbox();
         if (!Selected || !((Sender === Selected && Recipient === Me) || (Sender === Me && Recipient === Selected))) return;
         SocialAddMessage(Message);
