@@ -167,6 +167,20 @@ function StoryGetSocialUnreadEntries(State = StoryReadSocialNotificationState())
     })).filter(Entry => Entry.unreadCount > 0);
 }
 
+function StorySyncSocialDocumentTitle(Title) {
+    const SafeTitle = String(Title || "Story Rewrite").slice(0, 180);
+    try { document.title = SafeTitle; } catch {}
+    if (window.parent === window) return;
+    try {
+        if (typeof window.parent.StoryShellSyncTitle === "function") {
+            // The outer shell ignores titles from hidden/prefetched frames.
+            window.parent.StoryShellSyncTitle(SafeTitle, window);
+            return;
+        }
+        if (window.parent.document) window.parent.document.title = SafeTitle;
+    } catch {}
+}
+
 function StoryRenderSocialNotificationState(State = StoryReadSocialNotificationState(), Username = StorySocialNotificationAccountName()) {
     const Entries = StoryGetSocialUnreadEntries(State);
     const Count = Entries.reduce((Total, Entry) => Total + Entry.unreadCount, 0);
@@ -181,10 +195,8 @@ function StoryRenderSocialNotificationState(State = StoryReadSocialNotificationS
         ApplyStoryIdentityTitle(Profile);
     } else {
         const Prefix = Count > 0 ? `(${Count > 99 ? "99+" : Count}) ` : "";
-        try { document.title = Prefix + (document.title.replace(/^\(\d+\+?\)\s*/, "") || "Story Rewrite"); } catch {}
-        try {
-            if (window.parent !== window && window.parent.document) window.parent.document.title = document.title;
-        } catch {}
+        const BaseTitle = (document.title.replace(/^\(\d+\+?\)\s*/, "") || "Story Rewrite");
+        StorySyncSocialDocumentTitle(Prefix + BaseTitle);
     }
 
     document.querySelectorAll("[data-social-notification-badge]").forEach(Badge => {
@@ -349,12 +361,7 @@ function ApplyStoryIdentityTitle(Profile = null) {
     const UnreadCount = StoryGetStoredSocialNotificationCount(Username);
     const Prefix = UnreadCount > 0 ? `(${UnreadCount > 99 ? "99+" : UnreadCount}) ` : "";
     const Title = `${Prefix}Story Rewrite — ${UserId}`;
-    try { document.title = Title; } catch {}
-    try {
-        if (window.parent !== window && window.parent.document) {
-            window.parent.document.title = Title;
-        }
-    } catch {}
+    StorySyncSocialDocumentTitle(Title);
 }
 
 let StorySocialHeartbeatTimer = null;
