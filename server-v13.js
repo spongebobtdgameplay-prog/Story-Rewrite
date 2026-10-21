@@ -2,7 +2,7 @@ const path = require("path");
 const Module = require("module");
 
 const OriginalCompile = Module.prototype._compile;
-const TargetGeneratedServer = path.resolve(__dirname, "server-v10.js");
+const TargetGeneratedServer = path.resolve(__dirname, "server-v9.js");
 let TtsPatchApplied = false;
 
 Module.prototype._compile = function(Content, Filename) {
