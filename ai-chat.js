@@ -360,8 +360,11 @@ function RenderStoryBotMarkdown(Body, Value) {
 }
 
 
-let StoryBotSpeakingUtterance = null;
+let StoryBotSpeakingAudio = null;
 let StoryBotSpeakingButton = null;
+let StoryBotSpeechObjectUrl = "";
+let StoryBotSpeechRequestController = null;
+const StoryBotSpeechCache = new WeakMap();
 
 function GetStoryBotSpeechText(Value) {
     const Fence = String.fromCharCode(96).repeat(3);
@@ -378,18 +381,84 @@ function GetStoryBotSpeechText(Value) {
 }
 
 function StopStoryBotSpeech() {
-    if (typeof window.speechSynthesis !== "undefined") window.speechSynthesis.cancel();
+    if (StoryBotSpeechRequestController) {
+        try { StoryBotSpeechRequestController.abort(); } catch {}
+    }
+    StoryBotSpeechRequestController = null;
+
+    if (StoryBotSpeakingAudio) {
+        try {
+            StoryBotSpeakingAudio.pause();
+            StoryBotSpeakingAudio.removeAttribute("src");
+            StoryBotSpeakingAudio.load();
+        } catch {}
+    }
+    StoryBotSpeakingAudio = null;
+
+    if (StoryBotSpeechObjectUrl) {
+        try { URL.revokeObjectURL(StoryBotSpeechObjectUrl); } catch {}
+    }
+    StoryBotSpeechObjectUrl = "";
+
     if (StoryBotSpeakingButton) {
         StoryBotSpeakingButton.textContent = "Listen";
         StoryBotSpeakingButton.setAttribute("aria-label", "Listen to the StoryBot reply");
         StoryBotSpeakingButton.setAttribute("aria-pressed", "false");
     }
-    StoryBotSpeakingUtterance = null;
     StoryBotSpeakingButton = null;
 }
 
+async function RequestStoryBotSpeech(Text, Signal, Button) {
+    const Server = typeof GetServerUrl === "function"
+        ? String(GetServerUrl() || "").trim().replace(/\/+$/, "")
+        : "";
+    const Token = typeof GetAuthToken === "function"
+        ? String(GetAuthToken() || "").trim()
+        : "";
+
+    if (!Server) throw new Error("Story Rewrite's speech service is not configured.");
+    if (!Token) throw new Error("Sign in to use StoryBot voice.");
+
+    const Cached = StoryBotSpeechCache.get(Button);
+    if (Cached instanceof Blob && Cached.size > 0) return Cached;
+
+    const Response = await fetch(Server + "/api/tts", {
+        method: "POST",
+        headers: {
+            "Authorization": "Bearer " + Token,
+            "Content-Type": "application/json",
+            "Accept": "audio/mpeg"
+        },
+        body: JSON.stringify({
+            text: String(Text || "").slice(0, 4000),
+            voice: "en-US-AndrewNeural"
+        }),
+        signal: Signal,
+        cache: "no-store"
+    });
+
+    if (!Response.ok) {
+        let Detail = "";
+        try {
+            const Data = await Response.json();
+            Detail = String(Data?.error || "");
+        } catch {}
+        throw new Error(Detail || ("Speech synthesis failed (HTTP " + Response.status + ")."));
+    }
+
+    const ContentType = String(Response.headers.get("content-type") || "").toLowerCase();
+    if (!ContentType.startsWith("audio/")) {
+        throw new Error("Story Rewrite's speech service returned an invalid audio response.");
+    }
+
+    const AudioBlob = await Response.blob();
+    if (!AudioBlob.size) throw new Error("Story Rewrite's speech service returned empty audio.");
+    StoryBotSpeechCache.set(Button, AudioBlob);
+    return AudioBlob;
+}
+
 function AddStoryBotListenButton(Element, Text) {
-    if (!Element || typeof window.speechSynthesis === "undefined" || !Text) return;
+    if (!Element || !String(Text || "").trim()) return;
     const Controls = document.createElement("div");
     Controls.className = "StoryBotSpeechControls";
     const Listen = document.createElement("button");
@@ -398,28 +467,53 @@ function AddStoryBotListenButton(Element, Text) {
     Listen.textContent = "Listen";
     Listen.setAttribute("aria-label", "Listen to the StoryBot reply");
     Listen.setAttribute("aria-pressed", "false");
-    Listen.addEventListener("click", () => {
+    Listen.addEventListener("click", async () => {
         if (StoryBotSpeakingButton === Listen) {
             StopStoryBotSpeech();
             return;
         }
+
         StopStoryBotSpeech();
         const SpeechText = GetStoryBotSpeechText(Text);
         if (!SpeechText) return;
-        const Utterance = new SpeechSynthesisUtterance(SpeechText);
-        Utterance.rate = 1;
-        Utterance.onend = () => {
-            if (StoryBotSpeakingUtterance === Utterance) StopStoryBotSpeech();
-        };
-        Utterance.onerror = () => {
-            if (StoryBotSpeakingUtterance === Utterance) StopStoryBotSpeech();
-        };
-        StoryBotSpeakingUtterance = Utterance;
+
+        const Controller = new AbortController();
+        StoryBotSpeechRequestController = Controller;
         StoryBotSpeakingButton = Listen;
-        Listen.textContent = "Stop listening";
-        Listen.setAttribute("aria-label", "Stop reading the StoryBot reply aloud");
+        Listen.title = "";
+        Listen.textContent = "Creating voice…";
+        Listen.setAttribute("aria-label", "Creating synthesized speech for the StoryBot reply");
         Listen.setAttribute("aria-pressed", "true");
-        window.speechSynthesis.speak(Utterance);
+
+        try {
+            const AudioBlob = await RequestStoryBotSpeech(SpeechText, Controller.signal, Listen);
+            if (Controller.signal.aborted || StoryBotSpeakingButton !== Listen) return;
+
+            const ObjectUrl = URL.createObjectURL(AudioBlob);
+            const Player = new Audio(ObjectUrl);
+            StoryBotSpeechObjectUrl = ObjectUrl;
+            StoryBotSpeakingAudio = Player;
+            StoryBotSpeechRequestController = null;
+
+            Listen.textContent = "Stop listening";
+            Listen.setAttribute("aria-label", "Stop listening to the StoryBot reply");
+            Player.addEventListener("ended", () => {
+                if (StoryBotSpeakingAudio === Player) StopStoryBotSpeech();
+            }, { once: true });
+            Player.addEventListener("error", () => {
+                if (StoryBotSpeakingAudio === Player) {
+                    StopStoryBotSpeech();
+                    Listen.title = "Audio playback failed. Try listening again.";
+                }
+            }, { once: true });
+
+            await Player.play();
+        } catch (Error) {
+            if (Controller.signal.aborted) return;
+            console.error("StoryBot neural TTS request failed:", Error);
+            StopStoryBotSpeech();
+            Listen.title = String(Error?.message || "Could not create StoryBot audio.").slice(0, 200);
+        }
     });
     Controls.appendChild(Listen);
     Element.appendChild(Controls);
