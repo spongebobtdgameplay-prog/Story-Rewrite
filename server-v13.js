@@ -14,13 +14,13 @@ Module.prototype._compile = function(Content, Filename) {
         }
         GeneratedSource = GeneratedSource.replace(
             VersionAnchor,
-            "const BackendVersion = 50;\\nconst StoryTtsRateLimits = new Map();"
+            "const BackendVersion = 50;\nconst StoryTtsRateLimits = new Map();"
         );
 
         const AuthAnchor = [
             '    if (!Account) return SendJson(Response, 401, { error: "Sign in required." }, Origin);',
             "    Account.save = NormalizeSave(Account.save);"
-        ].join("\\n");
+        ].join("\n");
         if (GeneratedSource.split(AuthAnchor).length !== 2) {
             throw new Error("server-v13 TTS patch failed: authenticated API route anchor.");
         }
@@ -102,12 +102,12 @@ Module.prototype._compile = function(Content, Filename) {
             "        }",
             "    }",
             ""
-        ].join("\\n");
+        ].join("\n");
 
         const AuthReplacement = [
             '    if (!Account) return SendJson(Response, 401, { error: "Sign in required." }, Origin);',
-            TtsRoute + "    Account.save = NormalizeSave(Account.save);"
-        ].join("\\n");
+            TtsRoute + "\n    Account.save = NormalizeSave(Account.save);"
+        ].join("\n");
         GeneratedSource = GeneratedSource.replace(AuthAnchor, AuthReplacement);
         TtsPatchApplied = true;
         return OriginalCompile.call(this, GeneratedSource, Filename);
