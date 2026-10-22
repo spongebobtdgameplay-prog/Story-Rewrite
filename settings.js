@@ -71,6 +71,17 @@ function RenderSettings() {
 }
 
 let PresenceExpiresAt = 0;
+let PresenceStatus = "online";
+let PresenceSaveInFlight = false;
+let PresenceSaveQueued = false;
+let PresenceSettingsTouched = false;
+
+function RenderPresenceSelection(Status) {
+    for (const Button of PresenceButtons) {
+        const Selected = Button.dataset.presenceStatus === Status;
+        Button.setAttribute("aria-checked", Selected ? "true" : "false");
+    }
+}
 
 function UpdatePresenceButtonTitles() {
     const Duration = Number(PresenceDurationSelect?.value || 0);
@@ -83,7 +94,7 @@ function UpdatePresenceButtonTitles() {
 
     for (const Button of PresenceButtons) {
         const Status = String(Button.dataset.presenceStatus || "online");
-        const Label = Status === "ghost" ? "Ghost (shown offline)" : Status.charAt(0).toUpperCase() + Status.slice(1);
+        const Label = Status === "ghost" ? "Offline (hidden)" : Status.charAt(0).toUpperCase() + Status.slice(1);
         Button.title = Label + " status. " + DurationText + ".";
     }
 }
@@ -95,10 +106,7 @@ function RenderPresenceControls(Payload) {
         : "online";
     PresenceExpiresAt = Math.max(0, Number(PrivatePresence.expiresAt || 0));
 
-    for (const Button of PresenceButtons) {
-        const Selected = Button.dataset.presenceStatus === PresenceStatus;
-        Button.setAttribute("aria-checked", Selected ? "true" : "false");
-    }
+    RenderPresenceSelection(PresenceStatus);
 
     if (PresenceDurationSelect) {
         const Remaining = Math.max(0, PresenceExpiresAt - Date.now());
@@ -132,10 +140,12 @@ function SetPresenceStatusLine(Text, Kind = "") {
 async function LoadPresenceSettings() {
     try {
         const Result = await ApiRequest("/api/social/me");
+        // Do not overwrite a choice made while the initial request was in flight.
+        if (PresenceSettingsTouched) return;
         RenderPresenceControls(Result);
         SetPresenceStatusLine("Presence is saved to your account.");
     } catch (Error) {
-        SetPresenceStatusLine(Error.message || "Could not load presence.", "Bad");
+        if (!PresenceSettingsTouched) SetPresenceStatusLine(Error.message || "Could not load presence.", "Bad");
     }
 }
 
@@ -169,7 +179,7 @@ async function SavePresenceSettings() {
             RenderPresenceControls(Result);
             SetPresenceStatusLine(
                 RequestedStatus === "ghost"
-                    ? "Ghost mode is active. Other players will see you as offline."
+                    ? "Offline mode is active. Other players will see you as offline."
                     : RequestedStatus === "idle"
                         ? "Idle status is active."
                         : "Online status is active.",
@@ -244,14 +254,19 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     PresenceButtons.forEach(Button => {
         Button.addEventListener("click", () => {
+            PresenceSettingsTouched = true;
             PresenceStatus = Button.dataset.presenceStatus || "online";
             PresenceExpiresAt = 0;
+            // Update the selected state immediately, before waiting on the server.
+            RenderPresenceSelection(PresenceStatus);
             UpdatePresenceButtonTitles();
+            SetPresenceStatusLine("Applying " + (PresenceStatus === "ghost" ? "offline" : PresenceStatus) + " status…");
             SavePresenceSettings();
         });
     });
 
     PresenceDurationSelect?.addEventListener("change", () => {
+        PresenceSettingsTouched = true;
         PresenceExpiresAt = 0;
         UpdatePresenceButtonTitles();
         SavePresenceSettings();
