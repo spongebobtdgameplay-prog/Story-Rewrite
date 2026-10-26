@@ -14,7 +14,7 @@ Module.prototype._compile = function(Content, Filename) {
         }
         GeneratedSource = GeneratedSource.replace(
             VersionAnchor,
-            "const BackendVersion = 51;\nconst StoryTtsRateLimits = new Map();\nconst StoryBotRequestRateLimits = new Map();\nconst StoryApiRequestRateLimits = new Map();\nlet StoryAuthSessionSchemaPromise = null;
+            "const BackendVersion = 51;\nconst StoryTtsRateLimits = new Map();\nconst StoryBotRequestRateLimits = new Map();\nconst StoryApiRequestRateLimits = new Map();\nlet StoryAuthSessionSchemaPromise = null;"
         );
 
         const AuthLookupAnchor = "async function GetAccountByToken(Token) {\n    const Username = VerifyToken(Token);\n    return Username ? GetAccountByUsername(Username) : null;\n}";
