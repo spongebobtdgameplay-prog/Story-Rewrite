@@ -60,7 +60,7 @@ EnsureBackendVersion = async function() {
 
     for (let Attempt = 0; Attempt < MULTIPLAYER_BACKEND_RETRIES; Attempt += 1) {
         try {
-            const Health = await ApiRequest("/api/health");
+            const Health = await ApiRequest("/api/health", { timeoutMs: 45000 });
             const Version = Number(Health?.version || 0);
 
             if (!Health?.ok || !Health?.multiplayer) {
@@ -105,7 +105,7 @@ LoadSocketClient = function() {
                     document.querySelectorAll('script[data-story-socket-client="1"]').forEach(Script => Script.remove());
 
                     const Script = document.createElement("script");
-                    Script.src = `${SOCKET_CLIENT_URL}?v=8&r=${Date.now()}`;
+                    Script.src = `${SOCKET_CLIENT_URL}?v=9`;
                     Script.async = true;
                     Script.crossOrigin = "anonymous";
                     Script.dataset.storySocketClient = "1";
@@ -162,16 +162,16 @@ ConnectStorySocket = function() {
             deviceSignature: typeof GetStoryDeviceSignature === "function" ? GetStoryDeviceSignature() : "",
             tabId: typeof GetStoryTabId === "function" ? GetStoryTabId() : ""
         },
-        transports: ["polling"],
-        tryAllTransports: false,
-        upgrade: false,
-        rememberUpgrade: false,
+        transports: ["websocket", "polling"],
+        tryAllTransports: true,
+        upgrade: true,
+        rememberUpgrade: true,
         reconnection: true,
         reconnectionAttempts: Infinity,
-        reconnectionDelay: 700,
-        reconnectionDelayMax: 5000,
-        randomizationFactor: 0.45,
-        timeout: 20000,
+        reconnectionDelay: 400,
+        reconnectionDelayMax: 3000,
+        randomizationFactor: 0.25,
+        timeout: 12000,
         forceNew: true
     });
 };
