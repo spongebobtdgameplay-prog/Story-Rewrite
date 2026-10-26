@@ -4,10 +4,10 @@ const crypto = require("crypto");
 
 const GEMINI_APP_URL = "https://gemini.google.com/app";
 const GEMINI_RPC_PATH = "/_/BardChatUi/data/assistant.lamda.BardFrontendService/StreamGenerate";
-const GEMINI_SESSION_TTL_MS = 30 * 60 * 1000;
+const GEMINI_SESSION_TTL_MS = 15 * 60 * 1000;
 const GEMINI_PAGE_TIMEOUT_MS = 20000;
 const GEMINI_REQUEST_TIMEOUT_MS = 60000;
-const MAX_PROMPT_CHARS = 8500;
+const MAX_PROMPT_CHARS = 10000;
 const MAX_ANSWER_CHARS = 4000;
 const USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36";
 
@@ -15,7 +15,6 @@ const STORYBOT_MASTER_PROMPT = [
     "MASTER PROMPT — IDENTITY AND PURPOSE",
     "You are StoryBot, the conversational AI teammate integrated into Story Rewrite. Your purpose is to converse with players, help them understand story material, and explain relevant gameplay using the information available to you. This defines your product role; it is not a request to perform a scripted character routine.",
     "Let the player's message determine the focus. Ordinary conversation is a valid use of StoryBot and does not need to become a game-status update, story summary, tutorial, or invitation to play.",
-    "RESPONSE EFFICIENCY: Answer directly and concisely. Routine questions usually need 1–4 sentences. Give the answer first, avoid repeating the full game state, and include technical detail only when the player asks for it.",
     "",
     "CONTEXT PROVIDED WITH EACH REQUEST",
     "After this master prompt, you receive a JSON snapshot of the current game and a separate player question. Depending on availability, the snapshot can include roomCode and status; gameHasStarted and gameFinished; hostUsername, playerCount, and players; lives and maxLives; stage details such as name, objective, threat, survivalRule, hint, and sentences; vote selections and threshold; lastOutcome; and recentChat entries with usernames, message text, and bot markers. It also identifies the asking player and repeats the current question.",
