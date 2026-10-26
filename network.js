@@ -725,18 +725,19 @@ async function SwitchSavedAccount(Username) {
     }
 }
 
-function LogoutAccount() {
+async function LogoutAccount() {
     StopStoryMusicForSignedOutState();
+    try {
+        if (GetAuthToken()) await ApiRequest("/api/session", { method: "DELETE", timeoutMs: 2500 });
+    } catch {}
     SetAuthToken("");
     BroadcastStorySession("");
-
     try {
         if (window.parent !== window && window.parent.StoryShell?.IsPersistentShell) {
             window.parent.StoryShell.Exit("auth.html", true);
             return;
         }
     } catch {}
-
     window.location.replace(BuildStoryUrl("auth.html"));
 }
 
@@ -770,45 +771,61 @@ async function GuardProtectedPage() {
 
 async function ApiRequest(Path, Options = {}) {
     const ServerUrl = GetServerUrl();
-    if (!ServerUrl) {
-        throw new Error("Multiplayer server is not configured yet. Run server.js locally or set the deployed server URL in server-config.js.");
-    }
-
+    if (!ServerUrl) throw new Error("Multiplayer server is not configured yet. Run server.js locally or set the deployed server URL in server-config.js.");
     const RequestOptions = { ...Options };
     const HasAuthOverride = Object.prototype.hasOwnProperty.call(RequestOptions, "authToken");
     const AuthTokenOverride = HasAuthOverride ? String(RequestOptions.authToken || "") : "";
     const PreserveAuthOn401 = Boolean(RequestOptions.preserveAuthOn401);
+    const TimeoutMs = Math.max(1000, Math.min(90000, Number(RequestOptions.timeoutMs || 20000)));
     delete RequestOptions.authToken;
     delete RequestOptions.preserveAuthOn401;
-
+    delete RequestOptions.timeoutMs;
     const RequestHeaders = new window.Headers(RequestOptions.headers || {});
     if (!RequestHeaders.has("Content-Type") && RequestOptions.body !== undefined) RequestHeaders.set("Content-Type", "application/json");
-
     const Token = HasAuthOverride ? AuthTokenOverride : GetAuthToken();
     if (Token && !RequestHeaders.has("Authorization")) RequestHeaders.set("Authorization", `Bearer ${Token}`);
-
-    const Response = await fetch(`${ServerUrl}${Path}`, {
-        ...RequestOptions,
-        headers: RequestHeaders,
-        cache: "no-store"
-    });
-
-    let Data = {};
-    try {
-        Data = await Response.json();
-    } catch {}
-
-    if (!Response.ok) {
-        if (Response.status === 401 && !PreserveAuthOn401) SetAuthToken("");
-        const RequestError = new Error(Data.error || `Server request failed: ${Response.status}`);
-        RequestError.status = Response.status;
-        RequestError.data = Data;
-        throw RequestError;
+    const Method = String(RequestOptions.method || "GET").toUpperCase();
+    const MaxAttempts = Method === "GET" ? 2 : 1;
+    for (let Attempt = 0; Attempt < MaxAttempts; Attempt += 1) {
+        const Controller = new AbortController();
+        const Timeout = window.setTimeout(() => Controller.abort(), TimeoutMs);
+        let Response;
+        try {
+            Response = await fetch(`${ServerUrl}${Path}`, {
+                ...RequestOptions, headers: RequestHeaders, cache: "no-store", signal: Controller.signal
+            });
+        } catch (Error) {
+            if (Attempt < MaxAttempts - 1) {
+                await new Promise(Resolve => window.setTimeout(Resolve, 250));
+                continue;
+            }
+            if (Controller.signal.aborted) {
+                const TimeoutError = new Error("The server request timed out. Please retry.");
+                TimeoutError.name = "TimeoutError";
+                throw TimeoutError;
+            }
+            throw Error;
+        } finally {
+            window.clearTimeout(Timeout);
+        }
+        if (Method === "GET" && Attempt < MaxAttempts - 1 && [502, 503, 504].includes(Response.status)) {
+            try { await Response.body?.cancel(); } catch {}
+            await new Promise(Resolve => window.setTimeout(Resolve, 250));
+            continue;
+        }
+        let Data = {};
+        try { Data = await Response.json(); } catch {}
+        if (!Response.ok) {
+            if (Response.status === 401 && !PreserveAuthOn401) SetAuthToken("");
+            const RequestError = new Error(Data.error || `Server request failed: ${Response.status}`);
+            RequestError.status = Response.status;
+            RequestError.data = Data;
+            throw RequestError;
+        }
+        return Data;
     }
-
-    return Data;
+    throw new Error("The server request could not be completed.");
 }
-
 async function RegisterAccount(Username, Password) {
     ClearLastKnownStoryState();
     const Result = await ApiRequest("/api/register", {

@@ -20,6 +20,8 @@ jobs:
       - run: node --check server-v11.js
       - run: node --check server-v12.js
       - run: node --check server-v13.js
+      - name: Validate generated backend session patch anchors
+        run: PORT=0 node -e "require('./server.js'); process.exit(0)"
       - run: node --check server-config.js
       - run: node --check network.js
       - run: node --check app.js
