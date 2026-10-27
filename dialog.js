@@ -753,9 +753,8 @@ async function ReturnToSelectWithTrail(Event) {
     else window.StoryClearNavigationLock?.();
 }
 
-function ReplayStage(Event) {
+function ReplayStage() {
     if (TransitionBusy || !Stage) return;
-    if (typeof StoryLockNavigationButton === "function" && !StoryLockNavigationButton(Event?.currentTarget)) return;
     TransitionBusy = true;
 
     document.getElementById("CompleteOverlay")?.classList.remove("Show");
