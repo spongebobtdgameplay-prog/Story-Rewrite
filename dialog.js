@@ -1,3 +1,43 @@
+function EnsureGameplayHeartPulse() {
+    if (document.head.querySelector('style[data-story-gameplay-heart-pulse="1"]')) return;
+
+    const Style = document.createElement("style");
+    Style.dataset.storyGameplayHeartPulse = "1";
+    Style.textContent = `
+        /* This gameplay-only layer deliberately overrides the shared empty-heart rule.
+           The level HUD should use the same red, glowing SVG heartbeat on every heart. */
+        body.GamePage .LivesBar .LifeHeart,
+        body.GamePage .LivesBar .LifeHeart.Empty {
+            display: inline-grid !important;
+            place-items: center !important;
+            color: #ff1738 !important;
+            text-shadow: none !important;
+        }
+        body.GamePage .LivesBar .LifeHeart svg,
+        body.GamePage .LivesBar .LifeHeart.Empty svg,
+        body.GamePage .LivesBar .LifeHeart svg path,
+        body.GamePage .LivesBar .LifeHeart.Empty svg path {
+            fill: #ff1738 !important;
+            color: #ff1738 !important;
+        }
+        body.GamePage .LivesBar .LifeHeart svg,
+        body.GamePage .LivesBar .LifeHeart.Empty svg {
+            display: block !important;
+            filter:
+                drop-shadow(0 0 3px rgba(255, 23, 56, .9))
+                drop-shadow(0 0 8px rgba(255, 23, 56, .7))
+                drop-shadow(0 0 16px rgba(255, 23, 56, .45)) !important;
+            animation: LifeHeartBeat .86s cubic-bezier(.34,1.56,.64,1) infinite !important;
+            transform-origin: center !important;
+            transform-box: fill-box !important;
+            will-change: transform, filter;
+        }
+        body.GamePage .LivesBar .LifeHeart:nth-child(2) svg { animation-delay: .14s !important; }
+        body.GamePage .LivesBar .LifeHeart:nth-child(3) svg { animation-delay: .28s !important; }
+    `;
+    document.head.appendChild(Style);
+}
+
 function EnsureStoryLifeHeartVisuals() {
     if (document.head.querySelector('style[data-story-life-hearts="1"]')) return;
 
@@ -486,6 +526,7 @@ function RenderRemainingStory() {
 
 function RenderLives() {
     EnsureStoryLifeHeartVisuals();
+    EnsureGameplayHeartPulse();
     const Lives = RoomCode ? Number(MultiplayerState?.lives ?? 3) : Number(Save?.lives ?? 3);
     const MaxLives = RoomCode ? Number(MultiplayerState?.maxLives ?? 3) : Number(Save?.maxLives ?? 3);
     document.getElementById("LivesLabel").textContent = RoomCode ? "Team lives" : "Lives";
