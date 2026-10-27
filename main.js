@@ -122,18 +122,30 @@ document.addEventListener("DOMContentLoaded", async () => {
         MainInitialized = true;
         StoryAudio.PlayMusic("menu");
 
-        document.getElementById("ContinueButton").addEventListener("click", async () => {
+        document.getElementById("ContinueButton").addEventListener("click", async Event => {
+            const Button = Event.currentTarget;
             if (!MainSave || !MainData) return;
+            if (typeof StoryLockNavigationButton === "function" && !StoryLockNavigationButton(Button)) return;
 
             const StageId = IsStageUnlocked(MainSave, MainSave.currentStage)
                 ? MainSave.currentStage
                 : MainData.worlds[0].entryStage;
 
-            MainSave = await EnterServerStage(StageId);
+            try {
+                MainSave = await EnterServerStage(StageId);
+            } catch (Error) {
+                window.StoryClearNavigationLock?.();
+                const ErrorBox = document.getElementById("LoadError");
+                if (ErrorBox) {
+                    ErrorBox.classList.remove("Hidden");
+                    ErrorBox.textContent = Error?.message || "Could not open this level. Please try again.";
+                }
+                return;
+            }
             RenderMainPlayerState();
             StoryAudio.PlaySound("click");
             try { sessionStorage.setItem("StoryRewriteResumeContinueV1", "1"); } catch {}
-            GoStage(StageId);
+            StoryNavigate(`dialog.html?stage=${encodeURIComponent(StageId)}`, Button);
         });
     } catch (Error) {
         const ErrorBox = document.getElementById("LoadError");
