@@ -882,3 +882,40 @@ body.LevelSelectPage {
     .StageNodeLabel { display: none; }
     .SceneFocus { max-width: 88%; }
 }
+
+/* Single-player/manual mode: keep its three life icons red, glowing and beating.
+   Reuse the multiplayer LifeHeartBeat keyframes without changing multiplayer. */
+body.GamePage.ManualStoryGame .LivesBar .LifeHeart,
+body.GamePage.ManualStoryGame .LivesBar .LifeHeart.Empty {
+    color: #ff1738 !important;
+    display: inline-grid !important;
+    place-items: center !important;
+}
+
+body.GamePage.ManualStoryGame .LivesBar .LifeHeart svg,
+body.GamePage.ManualStoryGame .LivesBar .LifeHeart.Empty svg {
+    fill: #ff1738 !important;
+    color: #ff1738 !important;
+    filter:
+        drop-shadow(0 0 3px rgba(255, 23, 56, .9))
+        drop-shadow(0 0 8px rgba(255, 23, 56, .7))
+        drop-shadow(0 0 16px rgba(255, 23, 56, .45)) !important;
+    animation: LifeHeartBeat .86s cubic-bezier(.34,1.56,.64,1) infinite !important;
+    transform-origin: center !important;
+    transform-box: fill-box !important;
+    will-change: transform, filter;
+}
+
+body.GamePage.ManualStoryGame .LivesBar .LifeHeart path,
+body.GamePage.ManualStoryGame .LivesBar .LifeHeart.Empty path {
+    fill: #ff1738 !important;
+    color: #ff1738 !important;
+}
+
+body.GamePage.ManualStoryGame .LivesBar .LifeHeart:nth-child(2) svg {
+    animation-delay: .14s !important;
+}
+
+body.GamePage.ManualStoryGame .LivesBar .LifeHeart:nth-child(3) svg {
+    animation-delay: .28s !important;
+}

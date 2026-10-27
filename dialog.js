@@ -79,6 +79,8 @@ async function InitDialogPage() {
     try {
         const Params = new URLSearchParams(window.location.search);
         RoomCode = String(Params.get("room") || "").trim().toUpperCase();
+        // Manual/single-player HUD gets its own glow treatment; multiplayer is unchanged.
+        document.body.classList.toggle("ManualStoryGame", !RoomCode);
 
         Data = await LoadStoryData();
 
@@ -474,8 +476,8 @@ function RenderLives() {
         const Heart = document.createElement("span");
         Heart.className = `LifeHeart ${Active ? "StoryHeartActive" : "StoryHeartEmpty Empty"}`;
         Heart.setAttribute("aria-hidden", "true");
-        Heart.style.setProperty("color", Active ? "#ff1738" : "#6d625d", "important");
-        Heart.innerHTML = `<svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="${HeartPath}" style="fill:${Active ? "#ff1738" : "#6d625d"}"></path></svg>`;
+        Heart.style.setProperty("color", (!RoomCode || Active) ? "#ff1738" : "#6d625d", "important");
+        Heart.innerHTML = `<svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="${HeartPath}" style="fill:${(!RoomCode || Active) ? "#ff1738" : "#6d625d"}"></path></svg>`;
         Container.appendChild(Heart);
     }
 }
