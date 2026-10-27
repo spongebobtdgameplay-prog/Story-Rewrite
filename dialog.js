@@ -27,9 +27,24 @@ function EnsureStoryLifeHeartVisuals() {
         .LifeHeart.StoryHeartEmpty path {
             fill: #6d625d !important;
         }
+        /* Empty hearts still pulse gently so the life display never looks frozen.
+           Their muted color remains, so this does not pretend they are available lives. */
         .LifeHeart.StoryHeartEmpty {
-            animation: none !important;
-            filter: none !important;
+            display: inline-grid !important;
+            place-items: center;
+            vertical-align: middle;
+            transform-origin: center;
+            animation: StoryRewriteEmptyHeartPulse 1.15s ease-in-out infinite !important;
+            filter: drop-shadow(0 0 2px rgba(165, 145, 130, .28)) !important;
+        }
+        .LifeHeart.StoryHeartActive {
+            display: inline-grid !important;
+            place-items: center;
+            vertical-align: middle;
+        }
+        @keyframes StoryRewriteEmptyHeartPulse {
+            0%, 100% { transform: scale(.98); filter: brightness(.92); }
+            50% { transform: scale(1.09); filter: brightness(1.2); }
         }
         .LifeHeart.StoryHeartActive svg {
             filter:
