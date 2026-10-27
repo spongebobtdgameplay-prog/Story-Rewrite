@@ -169,7 +169,7 @@ function RenderSelectedWorld() {
         PlayButton.addEventListener("click", () => {
             const StageId = PlayButton.dataset.stageId;
             StoryAudio.PlaySound("click");
-            GoStage(StageId);
+            StoryNavigate(`dialog.html?stage=${encodeURIComponent(StageId)}`, PlayButton);
         });
     }
 }
