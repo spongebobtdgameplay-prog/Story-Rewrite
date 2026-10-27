@@ -897,7 +897,7 @@ body.GamePage .LivesBar .LifeHeart:not(.Empty) svg {
         drop-shadow(0 0 3px rgba(255, 23, 56, .9))
         drop-shadow(0 0 8px rgba(255, 23, 56, .7))
         drop-shadow(0 0 16px rgba(255, 23, 56, .45));
-    animation: GamePageLifeHeartBeat .86s cubic-bezier(.34,1.56,.64,1) infinite;
+    animation: none !important;
     transform-origin: center;
     transform-box: fill-box;
     will-change: transform, filter;

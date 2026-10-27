@@ -811,12 +811,13 @@
 
     window.addEventListener("popstate", Event => {
         const WasInSinglePlayerGame = IsSinglePlayerGameRoute();
+        const WasOnChapterMap = PageForRoute(CurrentRoute) === "levels.html";
         BeginNavigationTransition();
         CurrentHistoryDepth = Math.max(0, Number(Event.state?.StoryRewriteDepth || 0));
         let Route = NormalizeRoute(Event.state?.StoryRewriteRoute) || RouteFromLocation();
 
-        // Browser Back from one level must leave gameplay, not reopen an older level.
-        if (WasInSinglePlayerGame && IsSinglePlayerGameRoute(Route)) {
+        // Do not use browser history to reopen an old level from gameplay or the map.
+        if ((WasInSinglePlayerGame || WasOnChapterMap) && IsSinglePlayerGameRoute(Route)) {
             Route = "levels.html";
             LoadRoute(Route, { replace: true });
             return;
