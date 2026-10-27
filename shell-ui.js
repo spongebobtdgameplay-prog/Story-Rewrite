@@ -32,8 +32,133 @@ const STORY_WARNING_ICON = `
 
 let StoryConfirmCloser = null;
 let StoryLinkObserver = null;
+let StoryNavigationPending = false;
+let StoryNavigationUnlockTimer = 0;
+const StoryNavigationLocks = new Map();
 
-function StoryNavigate(Page) {
+function EnsureStoryNavigationStyles() {
+    if (document.getElementById("StoryNavigationLoadingStyles")) return;
+    const Style = document.createElement("style");
+    Style.id = "StoryNavigationLoadingStyles";
+    Style.textContent = `
+        .StoryNavigationLoading {
+            cursor: progress !important;
+            opacity: .78 !important;
+            pointer-events: none !important;
+        }
+        .StoryNavigationSpinner {
+            display: inline-block;
+            width: .78em;
+            height: .78em;
+            box-sizing: border-box;
+            margin-inline-start: .55em;
+            border: 2px solid currentColor;
+            border-right-color: transparent;
+            border-radius: 50%;
+            vertical-align: -.12em;
+            flex: 0 0 auto;
+            animation: StoryNavigationSpin .68s linear infinite;
+        }
+        @keyframes StoryNavigationSpin {
+            to { transform: rotate(360deg); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .StoryNavigationSpinner { animation-duration: 1.8s; }
+        }
+    `;
+    document.head.appendChild(Style);
+}
+
+function ResolveStoryNavigationTrigger(Trigger = null) {
+    if (Trigger && Trigger.nodeType === 1) return Trigger;
+    const Active = document.activeElement;
+    if (
+        Active instanceof HTMLButtonElement ||
+        Active instanceof HTMLAnchorElement ||
+        (Active instanceof HTMLElement && Active.getAttribute("role") === "button")
+    ) return Active;
+    return null;
+}
+
+function StoryLockNavigationButton(Trigger = null) {
+    Trigger = ResolveStoryNavigationTrigger(Trigger);
+    if (!Trigger) return !StoryNavigationPending;
+    if (StoryNavigationLocks.has(Trigger)) return true;
+    if (StoryNavigationPending) return false;
+    if (Trigger instanceof HTMLButtonElement && Trigger.disabled) return false;
+
+    const State = {
+        disabled: Trigger instanceof HTMLButtonElement ? Trigger.disabled : null,
+        ariaBusy: Trigger.getAttribute("aria-busy"),
+        ariaDisabled: Trigger.getAttribute("aria-disabled")
+    };
+    StoryNavigationLocks.set(Trigger, State);
+    Trigger.classList.add("StoryNavigationLoading");
+    Trigger.setAttribute("aria-busy", "true");
+    Trigger.setAttribute("aria-disabled", "true");
+    if (Trigger instanceof HTMLButtonElement) Trigger.disabled = true;
+
+    if (!Trigger.querySelector(":scope > .StoryNavigationSpinner")) {
+        const Spinner = document.createElement("span");
+        Spinner.className = "StoryNavigationSpinner";
+        Spinner.setAttribute("aria-hidden", "true");
+        Trigger.appendChild(Spinner);
+    }
+    return true;
+}
+
+function ClearStoryNavigationLock() {
+    StoryNavigationPending = false;
+    if (StoryNavigationUnlockTimer) {
+        clearTimeout(StoryNavigationUnlockTimer);
+        StoryNavigationUnlockTimer = 0;
+    }
+    for (const [Trigger, State] of StoryNavigationLocks) {
+        Trigger.querySelector(":scope > .StoryNavigationSpinner")?.remove();
+        Trigger.classList.remove("StoryNavigationLoading");
+        if (State.ariaBusy === null) Trigger.removeAttribute("aria-busy");
+        else Trigger.setAttribute("aria-busy", State.ariaBusy);
+        if (State.ariaDisabled === null) Trigger.removeAttribute("aria-disabled");
+        else Trigger.setAttribute("aria-disabled", State.ariaDisabled);
+        if (Trigger instanceof HTMLButtonElement && State.disabled !== null) {
+            Trigger.disabled = State.disabled;
+        }
+        StoryNavigationLocks.delete(Trigger);
+    }
+}
+
+function StoryBeginNavigation(Trigger = null) {
+    Trigger = ResolveStoryNavigationTrigger(Trigger);
+    if (StoryNavigationPending) return false;
+    if (Trigger && !StoryLockNavigationButton(Trigger)) return false;
+    StoryNavigationPending = true;
+    StoryNavigationUnlockTimer = window.setTimeout(ClearStoryNavigationLock, 15000);
+    return true;
+}
+
+window.StoryLockNavigationButton = StoryLockNavigationButton;
+window.StoryBeginNavigation = StoryBeginNavigation;
+window.StoryClearNavigationLock = ClearStoryNavigationLock;
+window.addEventListener("StoryShellDeactivate", ClearStoryNavigationLock);
+window.addEventListener("StoryShellActivate", ClearStoryNavigationLock);
+
+function StoryNavigate(Page, Trigger = null) {
+    const Requested = String(Page || "").trim();
+    if (!Requested) return false;
+
+    try {
+        const Target = new URL(Requested, window.location.href);
+        const Current = new URL(window.location.href);
+        if (
+            Target.origin === Current.origin &&
+            Target.pathname === Current.pathname &&
+            Target.search === Current.search &&
+            Target.hash === Current.hash
+        ) return false;
+    } catch {}
+
+    if (!StoryBeginNavigation(Trigger)) return false;
+
     try {
         const Shell = window.parent !== window && window.parent.StoryShell?.IsPersistentShell
             ? window.parent.StoryShell
@@ -42,29 +167,21 @@ function StoryNavigate(Page) {
             Shell &&
             typeof Shell.Navigate === "function" &&
             typeof Shell.CanHandle === "function" &&
-            Shell.CanHandle(Page) &&
-            Shell.Navigate(Page)
-        ) {
-            return;
-        }
+            Shell.CanHandle(Requested) &&
+            Shell.Navigate(Requested)
+        ) return true;
     } catch {}
 
-    if (typeof Go === "function") {
-        Go(Page);
-        return;
-    }
-
-    if (typeof BuildStoryUrl === "function") {
-        window.location.href = BuildStoryUrl(Page);
-        return;
-    }
-
-    window.location.href = String(Page || "").replace(/^\/+/, "");
+    window.location.href = typeof BuildStoryUrl === "function"
+        ? BuildStoryUrl(Requested)
+        : Requested.replace(/^\/+/, "");
+    return true;
 }
 
-function StoryGoBack(FallbackPage = "main.html") {
+function StoryGoBack(FallbackPage = "main.html", Trigger = null) {
     try {
         if (window.parent !== window && window.parent.StoryShell?.IsPersistentShell) {
+            if (!StoryBeginNavigation(Trigger)) return;
             window.parent.StoryShell.Back(FallbackPage);
             return;
         }
@@ -82,11 +199,12 @@ function StoryGoBack(FallbackPage = "main.html") {
     } catch {}
 
     if (CanUseHistory) {
+        if (!StoryBeginNavigation(Trigger)) return;
         window.history.back();
         return;
     }
 
-    StoryNavigate(FallbackPage);
+    StoryNavigate(FallbackPage, Trigger);
 }
 
 function MakeStoryAnchorLinkless(Link) {
@@ -114,7 +232,7 @@ function MakeStoryAnchorLinkless(Link) {
         Event.preventDefault();
         const Target = Link.dataset.storyLinkTarget;
         if (!Target) return;
-        StoryNavigate(Target);
+        StoryNavigate(Target, Link);
     };
 
     Link.addEventListener("click", Activate);
@@ -304,6 +422,7 @@ function AddStoryVersionBadge() {
 }
 
 function WireStoryShell() {
+    EnsureStoryNavigationStyles();
     AddStoryVersionBadge();
 
     for (const Button of document.querySelectorAll("[data-story-back]")) {
@@ -325,11 +444,11 @@ function WireStoryShell() {
                 const BackTarget = Button.dataset.storyBack || "main.html";
 
                 if (document.body.classList.contains("GamePage") && typeof RequestLeaveCurrentLevel === "function") {
-                    RequestLeaveCurrentLevel(BackTarget);
+                    RequestLeaveCurrentLevel(BackTarget, Button);
                     return;
                 }
 
-                StoryGoBack(BackTarget);
+                StoryGoBack(BackTarget, Button);
             });
         }
 
@@ -337,7 +456,7 @@ function WireStoryShell() {
     }
 
     for (const Button of document.querySelectorAll("[data-story-go]")) {
-        Button.addEventListener("click", () => StoryNavigate(Button.dataset.storyGo));
+        Button.addEventListener("click", () => StoryNavigate(Button.dataset.storyGo, Button));
         Button.addEventListener("contextmenu", Event => Event.preventDefault());
     }
 
