@@ -1,43 +1,3 @@
-function EnsureGameplayHeartPulse() {
-    if (document.head.querySelector('style[data-story-gameplay-heart-pulse="1"]')) return;
-
-    const Style = document.createElement("style");
-    Style.dataset.storyGameplayHeartPulse = "1";
-    Style.textContent = `
-        /* This gameplay-only layer deliberately overrides the shared empty-heart rule.
-           The level HUD should use the same red, glowing SVG heartbeat on every heart. */
-        body.GamePage .LivesBar .LifeHeart,
-        body.GamePage .LivesBar .LifeHeart.Empty {
-            display: inline-grid !important;
-            place-items: center !important;
-            color: #ff1738 !important;
-            text-shadow: none !important;
-        }
-        body.GamePage .LivesBar .LifeHeart svg,
-        body.GamePage .LivesBar .LifeHeart.Empty svg,
-        body.GamePage .LivesBar .LifeHeart svg path,
-        body.GamePage .LivesBar .LifeHeart.Empty svg path {
-            fill: #ff1738 !important;
-            color: #ff1738 !important;
-        }
-        body.GamePage .LivesBar .LifeHeart svg,
-        body.GamePage .LivesBar .LifeHeart.Empty svg {
-            display: block !important;
-            filter:
-                drop-shadow(0 0 3px rgba(255, 23, 56, .9))
-                drop-shadow(0 0 8px rgba(255, 23, 56, .7))
-                drop-shadow(0 0 16px rgba(255, 23, 56, .45)) !important;
-            animation: LifeHeartBeat .86s cubic-bezier(.34,1.56,.64,1) infinite !important;
-            transform-origin: center !important;
-            transform-box: fill-box !important;
-            will-change: transform, filter;
-        }
-        body.GamePage .LivesBar .LifeHeart:nth-child(2) svg { animation-delay: .14s !important; }
-        body.GamePage .LivesBar .LifeHeart:nth-child(3) svg { animation-delay: .28s !important; }
-    `;
-    document.head.appendChild(Style);
-}
-
 function EnsureStoryLifeHeartVisuals() {
     if (document.head.querySelector('style[data-story-life-hearts="1"]')) return;
 
@@ -45,9 +5,6 @@ function EnsureStoryLifeHeartVisuals() {
     Style.setAttribute("data-story-life-hearts", "1");
     Style.textContent = `
         .LifeHeart.StoryHeartActive {
-            display: inline-grid;
-            place-items: center;
-            vertical-align: middle;
             color: #ff1738 !important;
             transform-origin: center;
             animation: StoryRewriteLifeHeartPulse .86s cubic-bezier(.34,1.56,.64,1) infinite !important;
@@ -67,24 +24,9 @@ function EnsureStoryLifeHeartVisuals() {
         .LifeHeart.StoryHeartEmpty path {
             fill: #6d625d !important;
         }
-        /* Empty hearts still pulse gently so the life display never looks frozen.
-           Their muted color remains, so this does not pretend they are available lives. */
         .LifeHeart.StoryHeartEmpty {
-            display: inline-grid !important;
-            place-items: center;
-            vertical-align: middle;
-            transform-origin: center;
-            animation: StoryRewriteEmptyHeartPulse 1.15s ease-in-out infinite !important;
-            filter: drop-shadow(0 0 2px rgba(165, 145, 130, .28)) !important;
-        }
-        .LifeHeart.StoryHeartActive {
-            display: inline-grid !important;
-            place-items: center;
-            vertical-align: middle;
-        }
-        @keyframes StoryRewriteEmptyHeartPulse {
-            0%, 100% { transform: scale(.98); filter: brightness(.92); }
-            50% { transform: scale(1.09); filter: brightness(1.2); }
+            animation: none !important;
+            filter: none !important;
         }
         .LifeHeart.StoryHeartActive svg {
             filter:
@@ -109,7 +51,6 @@ function EnsureStoryLifeHeartVisuals() {
     `;
     document.head.appendChild(Style);
 }
-
 let Data;
 let Save;
 let Stage;
@@ -382,10 +323,6 @@ async function RequestLeaveCurrentLevel(TargetPage = "levels.html") {
     const Shell = typeof GetPersistentStoryShell === "function"
         ? GetPersistentStoryShell()
         : null;
-    let LeaveAccepted = false;
-
-    // Hide the host pause control before the confirmation overlay appears.
-    Shell?.BeginNavigationTransition?.();
 
     try {
         const Confirmed = typeof StoryConfirm === "function"
@@ -401,7 +338,6 @@ async function RequestLeaveCurrentLevel(TargetPage = "levels.html") {
             : window.confirm("Leave this level? Your current progress on this level will be lost.");
 
         if (!Confirmed) return;
-        LeaveAccepted = true;
 
         if (Shell?.Back) {
             Shell.Back(TargetPage);
@@ -416,7 +352,6 @@ async function RequestLeaveCurrentLevel(TargetPage = "levels.html") {
         window.location.href = TargetPage;
     } finally {
         LevelLeaveBusy = false;
-        if (!LeaveAccepted) Shell?.EndNavigationTransition?.();
     }
 }
 
@@ -526,7 +461,6 @@ function RenderRemainingStory() {
 
 function RenderLives() {
     EnsureStoryLifeHeartVisuals();
-    EnsureGameplayHeartPulse();
     const Lives = RoomCode ? Number(MultiplayerState?.lives ?? 3) : Number(Save?.lives ?? 3);
     const MaxLives = RoomCode ? Number(MultiplayerState?.maxLives ?? 3) : Number(Save?.maxLives ?? 3);
     document.getElementById("LivesLabel").textContent = RoomCode ? "Team lives" : "Lives";
