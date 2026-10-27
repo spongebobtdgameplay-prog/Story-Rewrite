@@ -5,6 +5,9 @@ function EnsureStoryLifeHeartVisuals() {
     Style.setAttribute("data-story-life-hearts", "1");
     Style.textContent = `
         .LifeHeart.StoryHeartActive {
+            display: inline-grid;
+            place-items: center;
+            vertical-align: middle;
             color: #ff1738 !important;
             transform-origin: center;
             animation: StoryRewriteLifeHeartPulse .86s cubic-bezier(.34,1.56,.64,1) infinite !important;
@@ -321,6 +324,14 @@ async function RequestLeaveCurrentLevel(TargetPage = "levels.html") {
     if (LevelLeaveBusy) return;
     LevelLeaveBusy = true;
 
+    const Shell = typeof GetPersistentStoryShell === "function"
+        ? GetPersistentStoryShell()
+        : null;
+    let LeaveAccepted = false;
+
+    // Hide the host pause control before the confirmation overlay appears.
+    Shell?.BeginNavigationTransition?.();
+
     try {
         const Confirmed = typeof StoryConfirm === "function"
             ? await StoryConfirm({
@@ -335,10 +346,7 @@ async function RequestLeaveCurrentLevel(TargetPage = "levels.html") {
             : window.confirm("Leave this level? Your current progress on this level will be lost.");
 
         if (!Confirmed) return;
-
-        const Shell = typeof GetPersistentStoryShell === "function"
-            ? GetPersistentStoryShell()
-            : null;
+        LeaveAccepted = true;
 
         if (Shell?.Back) {
             Shell.Back(TargetPage);
@@ -353,6 +361,7 @@ async function RequestLeaveCurrentLevel(TargetPage = "levels.html") {
         window.location.href = TargetPage;
     } finally {
         LevelLeaveBusy = false;
+        if (!LeaveAccepted) Shell?.EndNavigationTransition?.();
     }
 }
 

@@ -1,5 +1,5 @@
 (() => {
-    const FrontendVersion = "20261025.1";
+    const FrontendVersion = "20261027.1";
     const Root = document.getElementById("StoryShellRoot");
     const InitialFrame = document.getElementById("StoryShellFrame");
     if (!Root || !InitialFrame) return;
@@ -40,6 +40,7 @@
     let CurrentHistoryDepth = 0;
     let GameplayAudioPaused = false;
     let ShellPauseState = false;
+    let PauseButtonNavigationSuppressed = false;
     const GameplayPauseButton = document.getElementById("StoryShellPauseButton");
 
     function GetBaseUrl() {
@@ -451,8 +452,32 @@
             : '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="7" y="5.5" width="3.5" height="13" rx="1"></rect><rect x="13.5" y="5.5" width="3.5" height="13" rx="1"></rect></svg>';
     }
 
+    function BeginNavigationTransition() {
+        PauseButtonNavigationSuppressed = true;
+        ShellPauseState = false;
+        if (!GameplayPauseButton) return;
+        GameplayPauseButton.hidden = true;
+        GameplayPauseButton.classList.remove("IsPaused");
+        GameplayPauseButton.setAttribute("aria-pressed", "false");
+        GameplayPauseButton.setAttribute("aria-label", "Pause game");
+        GameplayPauseButton.title = "Pause game";
+        SetGameplayPauseButtonIcon(false);
+    }
+
+    function EndNavigationTransition() {
+        PauseButtonNavigationSuppressed = false;
+        SyncGameplayPauseButton();
+    }
+
     function SyncGameplayPauseButton(Options = {}) {
         if (!GameplayPauseButton) return;
+        if (PauseButtonNavigationSuppressed) {
+            GameplayPauseButton.hidden = true;
+            GameplayPauseButton.classList.remove("IsPaused");
+            GameplayPauseButton.setAttribute("aria-pressed", "false");
+            SetGameplayPauseButtonIcon(false);
+            return;
+        }
 
         let Ready = false;
         if (IsSinglePlayerGameRoute() && ActiveFrame?.dataset.storyLoaded === "1") {
@@ -687,6 +712,7 @@
         const Normalized = NormalizeRoute(Route);
         if (!Normalized) return false;
 
+        PauseButtonNavigationSuppressed = false;
         const Replace = Boolean(Options.replace);
         const SkipHistory = Boolean(Options.skipHistory);
         const Frame = GetFrameForRoute(Normalized);
@@ -758,14 +784,24 @@
     }
 
     function Back(Fallback = "main.html") {
+        const NormalizedFallback = NormalizeRoute(Fallback) || "main.html";
+        BeginNavigationTransition();
+
+        // The in-game Back button explicitly leaves the level for the chapter map.
+        // Do not let stale browser history send the player into the previous level.
+        if (IsSinglePlayerGameRoute()) {
+            LoadRoute(NormalizedFallback, { replace: true });
+            return;
+        }
+
         if (CurrentHistoryDepth > 0) {
             window.history.back();
             return;
         }
 
         const SavedBackRoute = ReadLastShellState()?.backRoute;
-        const NormalizedFallback = NormalizeRoute(SavedBackRoute || Fallback) || "main.html";
-        LoadRoute(NormalizedFallback, { replace: true });
+        const NormalizedTarget = NormalizeRoute(SavedBackRoute || NormalizedFallback) || NormalizedFallback;
+        LoadRoute(NormalizedTarget, { replace: true });
     }
 
     window.addEventListener("storage", Event => {
@@ -774,8 +810,18 @@
     });
 
     window.addEventListener("popstate", Event => {
+        const WasInSinglePlayerGame = IsSinglePlayerGameRoute();
+        BeginNavigationTransition();
         CurrentHistoryDepth = Math.max(0, Number(Event.state?.StoryRewriteDepth || 0));
-        const Route = NormalizeRoute(Event.state?.StoryRewriteRoute) || RouteFromLocation();
+        let Route = NormalizeRoute(Event.state?.StoryRewriteRoute) || RouteFromLocation();
+
+        // Browser Back from one level must leave gameplay, not reopen an older level.
+        if (WasInSinglePlayerGame && IsSinglePlayerGameRoute(Route)) {
+            Route = "levels.html";
+            LoadRoute(Route, { replace: true });
+            return;
+        }
+
         const BackRoute = NormalizeRoute(Event.state?.StoryRewriteBackRoute || "") || "main.html";
         WriteLastShellState(Route, BackRoute);
         LoadRoute(Route, { skipHistory: true });
@@ -788,6 +834,8 @@
         CanHandle: Value => Boolean(NormalizeRoute(Value)),
         Exit,
         Back,
+        BeginNavigationTransition,
+        EndNavigationTransition,
         ConfigureAudio,
         PauseMusicForGameplay,
         ResumeMusicForGameplay,

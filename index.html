@@ -119,8 +119,8 @@ body {
 
 /* Fluid shell control sizing; offsets follow viewport + safe-area instead of fixed device coordinates. */
 #StoryShellPauseButton {
-    inset-block-start: max(env(safe-area-inset-top), clamp(10px, 2vw, 22px));
-    inset-inline-start: max(env(safe-area-inset-left), clamp(10px, 2vw, 22px));
+    inset-block-start: max(env(safe-area-inset-top), clamp(4px, .6vw, 9px));
+    inset-inline-start: max(env(safe-area-inset-left), clamp(4px, .6vw, 9px));
     width: clamp(38px, 3.25vw, 46px);
     height: clamp(38px, 3.25vw, 46px);
     min-width: 38px;
@@ -241,6 +241,6 @@ if (!Token) window.location.replace("auth.html");
     </div>
 </div>
 <script src="cache-guard.js?v=20261001-1"></script>
-<script src="shell.js?v=20261025-1"></script>
+<script src="shell.js?v=20261027-1"></script>
 </body>
 </html>
