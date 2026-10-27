@@ -313,7 +313,7 @@ async function LeaveMultiplayerStoryToLobby() {
     }
 }
 
-async function RequestLeaveCurrentLevel(TargetPage = "levels.html") {
+async function RequestLeaveCurrentLevel(TargetPage = "levels.html", Trigger = null) {
     if (RoomCode) {
         await LeaveMultiplayerStoryToLobby();
         return;
@@ -342,12 +342,13 @@ async function RequestLeaveCurrentLevel(TargetPage = "levels.html") {
         if (!Confirmed) return;
 
         if (Shell?.Back) {
+            if (typeof StoryBeginNavigation === "function" && !StoryBeginNavigation(Trigger)) return;
             Shell.Back(TargetPage);
             return;
         }
 
         if (typeof StoryNavigate === "function") {
-            StoryNavigate(TargetPage);
+            StoryNavigate(TargetPage, Trigger);
             return;
         }
 
@@ -361,13 +362,13 @@ function BindActions() {
     document.getElementById("ResumeGameButton")?.addEventListener("click", () => SetGamePaused(false, "manual"));
     document.getElementById("CheckButton").addEventListener("click", CheckStage);
     document.getElementById("RestoreButton").addEventListener("click", RestoreStage);
-    document.getElementById("BackButton").addEventListener("click", () => RequestLeaveCurrentLevel("levels.html"));
+    document.getElementById("BackButton").addEventListener("click", Event => RequestLeaveCurrentLevel("levels.html", Event.currentTarget));
     document.getElementById("NextButton").addEventListener("click", NextStage);
     document.getElementById("ReplayButton").addEventListener("click", ReplayStage);
     document.getElementById("CompleteSelectButton").addEventListener("click", ReturnToSelectWithTrail);
-    document.getElementById("TbcSelectButton").addEventListener("click", () => window.location.href = "levels.html");
+    document.getElementById("TbcSelectButton").addEventListener("click", Event => StoryNavigate("levels.html", Event.currentTarget));
     document.getElementById("ReplayDeathButton")?.addEventListener("click", ReplayStage);
-    document.getElementById("GameOverMapButton").addEventListener("click", () => window.location.href = RoomCode ? "multiplayer.html" : "levels.html");
+    document.getElementById("GameOverMapButton").addEventListener("click", Event => StoryNavigate(RoomCode ? "multiplayer.html" : "levels.html", Event.currentTarget));
     document.getElementById("GameChatForm").addEventListener("submit", SendGameChat);
     document.getElementById("ToggleGameChatButton").addEventListener("click", ToggleGameChat);
 }
@@ -474,7 +475,7 @@ function RenderLives() {
     for (let Index = 0; Index < MaxLives; Index += 1) {
         const Active = Index < Lives;
         const Heart = document.createElement("span");
-        Heart.className = `LifeHeart ${Active ? "StoryHeartActive" : "StoryHeartEmpty Empty"}`;
+        Heart.className = `LifeHeart ${(!RoomCode || Active) ? "StoryHeartActive" : "StoryHeartEmpty Empty"}`;
         Heart.setAttribute("aria-hidden", "true");
         Heart.style.setProperty("color", (!RoomCode || Active) ? "#ff1738" : "#6d625d", "important");
         Heart.innerHTML = `<svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="${HeartPath}" style="fill:${(!RoomCode || Active) ? "#ff1738" : "#6d625d"}"></path></svg>`;
@@ -690,7 +691,7 @@ async function ShowChapterComplete() {
     Overlay.classList.remove("Show");
 }
 
-async function NextStage() {
+async function NextStage(Event) {
     if (TransitionBusy) return;
 
     if (RoomCode) {
@@ -703,6 +704,8 @@ async function NextStage() {
         return;
     }
 
+    const NextButton = Event?.currentTarget || document.getElementById("NextButton");
+    if (typeof StoryLockNavigationButton === "function" && !StoryLockNavigationButton(NextButton)) return;
     document.getElementById("CompleteOverlay").classList.remove("Show");
     const NextStageId = NextStageOverride || Stage.nextStage;
 
@@ -710,35 +713,49 @@ async function NextStage() {
         await ShowChapterComplete();
         if (!NextStageId) {
             document.getElementById("TbcOverlay").classList.add("Show");
+            window.StoryClearNavigationLock?.();
             return;
         }
         const Next = Data.stages[NextStageId];
-        await ShowTrail(NextStageId, false);
-        window.location.href = `levels.html?unlock=${encodeURIComponent(Next.worldId)}&autostart=${encodeURIComponent(NextStageId)}`;
+        const Traveled = await ShowTrail(NextStageId, false);
+        if (Traveled) {
+            StoryNavigate(`levels.html?unlock=${encodeURIComponent(Next.worldId)}&autostart=${encodeURIComponent(NextStageId)}`, NextButton);
+        } else {
+            window.StoryClearNavigationLock?.();
+        }
         return;
     }
 
     if (!NextStageId) {
         document.getElementById("TbcOverlay").classList.add("Show");
+        window.StoryClearNavigationLock?.();
         return;
     }
 
     const Traveled = await ShowTrail(NextStageId, false);
-    if (Traveled) GoStage(NextStageId);
+    if (Traveled) {
+        StoryNavigate(`dialog.html?stage=${encodeURIComponent(NextStageId)}`, NextButton);
+    } else {
+        window.StoryClearNavigationLock?.();
+    }
 }
 
-async function ReturnToSelectWithTrail() {
-    document.getElementById("CompleteOverlay").classList.remove("Show");
+async function ReturnToSelectWithTrail(Event) {
+    const Trigger = Event?.currentTarget || document.getElementById("CompleteSelectButton");
+    if (typeof StoryLockNavigationButton === "function" && !StoryLockNavigationButton(Trigger)) return;
+
     if (RoomCode) {
-        window.location.href = "multiplayer.html";
+        StoryNavigate("multiplayer.html", Trigger);
         return;
     }
     const Traveled = await ShowTrail(null, true);
-    if (Traveled) window.location.href = "levels.html";
+    if (Traveled) StoryNavigate("levels.html", Trigger);
+    else window.StoryClearNavigationLock?.();
 }
 
-function ReplayStage() {
+function ReplayStage(Event) {
     if (TransitionBusy || !Stage) return;
+    if (typeof StoryLockNavigationButton === "function" && !StoryLockNavigationButton(Event?.currentTarget)) return;
     TransitionBusy = true;
 
     document.getElementById("CompleteOverlay")?.classList.remove("Show");
