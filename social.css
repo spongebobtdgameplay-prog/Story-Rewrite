@@ -1512,7 +1512,7 @@ body.StorySocialPage { height:auto!important; min-height:100vh; overflow-x:hidde
 @media (min-width: 761px) {
     .StorySocialLayout {
         height: min(860px, calc(100vh - 180px));
-        min-height: 620px;
+        min-height: min(620px, calc(100vh - 180px));
     }
 
     .StorySocialSidebar {
