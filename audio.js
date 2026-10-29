@@ -5,6 +5,7 @@ const StoryAudio = (() => {
     let SoundSettingsReady = false;
     let SoundsPaused = false;
     let LastClickAt = 0;
+    let ClickAudioElement = null;
 
     function Clamp(Value, Fallback) {
         const NumberValue = Number(Value);
@@ -41,40 +42,6 @@ const StoryAudio = (() => {
         } catch {
             return Promise.resolve(null);
         }
-    }
-
-    function DrawClick(Context) {
-        if (!Context || Context.state !== "running" || SoundVolume <= 0) return false;
-
-        const StartTime = Context.currentTime;
-        const EndTime = StartTime + 0.08;
-        const PrimaryTone = Context.createOscillator();
-        const AccentTone = Context.createOscillator();
-        const MasterGain = Context.createGain();
-
-        PrimaryTone.type = "triangle";
-        PrimaryTone.frequency.setValueAtTime(760, StartTime);
-        PrimaryTone.frequency.exponentialRampToValueAtTime(420, EndTime);
-
-        AccentTone.type = "sine";
-        AccentTone.frequency.setValueAtTime(1180, StartTime);
-        AccentTone.frequency.exponentialRampToValueAtTime(720, StartTime + 0.038);
-
-        const Peak = Math.max(0.0001, 0.48 * SoundVolume);
-        MasterGain.gain.setValueAtTime(0.0001, StartTime);
-        MasterGain.gain.exponentialRampToValueAtTime(Peak, StartTime + 0.002);
-        MasterGain.gain.exponentialRampToValueAtTime(Math.max(0.0001, Peak * 0.34), StartTime + 0.022);
-        MasterGain.gain.exponentialRampToValueAtTime(0.0001, EndTime);
-
-        PrimaryTone.connect(MasterGain);
-        AccentTone.connect(MasterGain);
-        MasterGain.connect(Context.destination);
-
-        PrimaryTone.start(StartTime);
-        AccentTone.start(StartTime);
-        AccentTone.stop(StartTime + 0.042);
-        PrimaryTone.stop(EndTime);
-        return true;
     }
 
     function DrawBell(Context) {
@@ -114,14 +81,45 @@ const StoryAudio = (() => {
         return true;
     }
 
+    function GetClickAudio() {
+        if (ClickAudioElement) return ClickAudioElement;
+
+        try {
+            ClickAudioElement = new Audio(
+                new URL("sounds/ui/button-click.wav", document.baseURI).href
+            );
+            ClickAudioElement.preload = "auto";
+            ClickAudioElement.volume = SoundVolume;
+            ClickAudioElement.addEventListener("error", () => {
+                console.warn("Story Rewrite UI click sound could not be loaded.");
+            }, { once: true });
+            ClickAudioElement.load();
+        } catch {
+            ClickAudioElement = null;
+        }
+
+        return ClickAudioElement;
+    }
+
     function PlayClick() {
         if (SoundsPaused || !SoundSettingsReady || SoundVolume <= 0) return Promise.resolve(false);
 
         const CurrentTime = Date.now();
-        if (CurrentTime - LastClickAt < 120) return Promise.resolve(false);
+        if (CurrentTime - LastClickAt < 100) return Promise.resolve(false);
         LastClickAt = CurrentTime;
 
-        return ResumeAudio().then(Context => DrawClick(Context));
+        const AudioElement = GetClickAudio();
+        if (!AudioElement) return Promise.resolve(false);
+
+        AudioElement.volume = Clamp(SoundVolume, 0);
+        try {
+            AudioElement.currentTime = 0;
+            const PlayPromise = AudioElement.play();
+            if (!PlayPromise?.then) return Promise.resolve(true);
+            return PlayPromise.then(() => true).catch(() => false);
+        } catch {
+            return Promise.resolve(false);
+        }
     }
 
     function ClickableTarget(Target) {
@@ -138,13 +136,36 @@ const StoryAudio = (() => {
         return Clickable;
     }
 
+    function GetPersistentShellAudioHost() {
+        try {
+            const Shell = window.parent !== window ? window.parent.StoryShell : null;
+            if (
+                Shell?.IsPersistentShell &&
+                window.frameElement?.id !== "StoryShellFrame" &&
+                typeof Shell.PlaySound === "function"
+            ) return Shell;
+        } catch {}
+        return null;
+    }
+
     function PlayClickFromCompletedClick(Event) {
         if (!ClickableTarget(Event.target)) return;
         AudioUnlocked = true;
+
+        // Play from the persistent shell host so route changes do not cut off the sound.
+        const Shell = GetPersistentShellAudioHost();
+        if (Shell) {
+            Shell.PlaySound("click");
+            return;
+        }
+
         PlayClick();
     }
 
     document.addEventListener("click", PlayClickFromCompletedClick, { capture: true });
+
+    // Preload the UI effect before the first interaction.
+    GetClickAudio();
 
     function Configure(Settings = {}) {
         const NextSoundVolume = Number(Settings.soundVolume);
