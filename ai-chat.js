@@ -412,20 +412,20 @@ async function RequestStoryBotSpeech(Text, Signal, Button) {
     const Server = typeof GetServerUrl === "function"
         ? String(GetServerUrl() || "").trim().replace(/\/+$/, "")
         : "";
-    const Token = typeof GetAuthToken === "function"
-        ? String(GetAuthToken() || "").trim()
-        : "";
+    const Authenticated = typeof GetAuthToken === "function"
+        ? Boolean(GetAuthToken())
+        : false;
 
     if (!Server) throw new Error("Story Rewrite's speech service is not configured.");
-    if (!Token) throw new Error("Sign in to use StoryBot voice.");
+    if (!Authenticated) throw new Error("Sign in to use StoryBot voice.");
 
     const Cached = StoryBotSpeechCache.get(Button);
     if (Cached instanceof Blob && Cached.size > 0) return Cached;
 
     const Response = await fetch(Server + "/api/tts", {
         method: "POST",
+        credentials: "include",
         headers: {
-            "Authorization": "Bearer " + Token,
             "Content-Type": "application/json",
             "Accept": "audio/mpeg"
         },
