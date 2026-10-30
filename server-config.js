@@ -1,4 +1,10 @@
-window.STORY_REWRITE_SERVER_URL = "https://story-rewrite-backend.onrender.com";
+const StoryHost = String(window.location.hostname || "").toLowerCase();
+const StoryUsesSameOriginApi = StoryHost === "story-rewrite-iota.vercel.app"
+    || StoryHost === "story-rewrite-spongebobtdgameplay-prog.vercel.app"
+    || /^story-rewrite-[a-z0-9-]+-spongebobtdgameplay-prog\.vercel\.app$/.test(StoryHost);
+window.STORY_REWRITE_SERVER_URL = StoryUsesSameOriginApi
+    ? window.location.origin
+    : "https://story-rewrite-backend.onrender.com";
 window.STORY_REWRITE_CANONICAL_URL = "https://story-rewrite-iota.vercel.app";
 
 (() => {
