@@ -424,6 +424,9 @@ function GetServerUrl() {
     const Configured = String(window.STORY_REWRITE_SERVER_URL || "").trim().replace(/\/$/, "");
     const Override = String(sessionStorage.getItem(STORY_SERVER_OVERRIDE_KEY) || "").trim().replace(/\/$/, "");
 
+    // Production Vercel sessions must stay on the first-party proxy origin so
+    // browsers never need to send the HttpOnly cookie as a third-party cookie.
+    if (window.STORY_REWRITE_SAME_ORIGIN_API === true) return window.location.origin;
     if (Override) return Override;
     if (Configured) return Configured;
 
