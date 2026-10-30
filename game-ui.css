@@ -883,17 +883,17 @@ body.LevelSelectPage {
     .SceneFocus { max-width: 88%; }
 }
 
-/* Single-player/manual mode: keep its three life icons red, glowing and beating.
-   Reuse the multiplayer LifeHeartBeat keyframes without changing multiplayer. */
-body.GamePage.ManualStoryGame .LivesBar .LifeHeart,
-body.GamePage.ManualStoryGame .LivesBar .LifeHeart.Empty {
-    color: #ff1738 !important;
+/* Single-player lives: only remaining hearts glow and beat. Empty hearts stay still. */
+body.GamePage.ManualStoryGame .LivesBar .LifeHeart {
     display: inline-grid !important;
     place-items: center !important;
 }
 
-body.GamePage.ManualStoryGame .LivesBar .LifeHeart svg,
-body.GamePage.ManualStoryGame .LivesBar .LifeHeart.Empty svg {
+body.GamePage.ManualStoryGame .LivesBar .LifeHeart.StoryHeartActive {
+    color: #ff1738 !important;
+}
+
+body.GamePage.ManualStoryGame .LivesBar .LifeHeart.StoryHeartActive svg {
     fill: #ff1738 !important;
     color: #ff1738 !important;
     filter:
@@ -906,16 +906,35 @@ body.GamePage.ManualStoryGame .LivesBar .LifeHeart.Empty svg {
     will-change: transform, filter;
 }
 
-body.GamePage.ManualStoryGame .LivesBar .LifeHeart path,
-body.GamePage.ManualStoryGame .LivesBar .LifeHeart.Empty path {
+body.GamePage.ManualStoryGame .LivesBar .LifeHeart.StoryHeartActive path {
     fill: #ff1738 !important;
     color: #ff1738 !important;
 }
 
-body.GamePage.ManualStoryGame .LivesBar .LifeHeart:nth-child(2) svg {
+body.GamePage.ManualStoryGame .LivesBar .LifeHeart.StoryHeartEmpty {
+    color: #6d625d !important;
+    animation: none !important;
+    filter: none !important;
+}
+
+body.GamePage.ManualStoryGame .LivesBar .LifeHeart.StoryHeartEmpty svg {
+    fill: #6d625d !important;
+    color: #6d625d !important;
+    animation: none !important;
+    filter: none !important;
+    transform: none !important;
+    will-change: auto !important;
+}
+
+body.GamePage.ManualStoryGame .LivesBar .LifeHeart.StoryHeartEmpty path {
+    fill: #6d625d !important;
+    color: #6d625d !important;
+}
+
+body.GamePage.ManualStoryGame .LivesBar .LifeHeart.StoryHeartActive:nth-child(2) svg {
     animation-delay: .14s !important;
 }
 
-body.GamePage.ManualStoryGame .LivesBar .LifeHeart:nth-child(3) svg {
+body.GamePage.ManualStoryGame .LivesBar .LifeHeart.StoryHeartActive:nth-child(3) svg {
     animation-delay: .28s !important;
 }
