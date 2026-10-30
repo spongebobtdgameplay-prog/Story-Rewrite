@@ -76,11 +76,7 @@
 
     function GetShellAuthMarker() {
         try {
-            const Token = localStorage.getItem("StoryRewriteAuthToken")
-                || localStorage.getItem("StoryRewriteSessionToken")
-                || "";
-            if (!Token) return "";
-            return `${Token.length}:${Token.slice(-8)}`;
+            return localStorage.getItem("StoryRewriteCookieSessionActiveV1") === "1" ? "cookie-session" : "";
         } catch {
             return "";
         }
@@ -141,10 +137,7 @@
 
     function HasAuthenticatedSession() {
         try {
-            return Boolean(
-                localStorage.getItem("StoryRewriteAuthToken") ||
-                localStorage.getItem("StoryRewriteSessionToken")
-            );
+            return localStorage.getItem("StoryRewriteCookieSessionActiveV1") === "1";
         } catch {
             return false;
         }
@@ -806,7 +799,7 @@
     }
 
     window.addEventListener("storage", Event => {
-        if (Event.key !== "StoryRewriteAuthToken" && Event.key !== "StoryRewriteSessionToken") return;
+        if (Event.key !== "StoryRewriteCookieSessionActiveV1") return;
         if (!HasAuthenticatedSession()) StopMusic();
     });
 
