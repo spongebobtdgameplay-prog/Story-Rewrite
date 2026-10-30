@@ -4,7 +4,7 @@ const StoryAudio = (() => {
     let SoundVolume = 0.8;
     let SoundSettingsReady = false;
     let SoundsPaused = false;
-    let LastClickAt = 0;
+    let ClickSoundHandledForCurrentEvent = false;
 
     function Clamp(Value, Fallback) {
         const NumberValue = Number(Value);
@@ -117,12 +117,6 @@ const StoryAudio = (() => {
     function PlayClick() {
         if (SoundsPaused || !SoundSettingsReady || SoundVolume <= 0) return Promise.resolve(false);
 
-        const CurrentTime = Date.now();
-        // Only collapse the duplicate sound call made by the same click event.
-        // Separate rapid clicks on ordinary controls remain audible.
-        if (LastClickAt && CurrentTime - LastClickAt < 20) return Promise.resolve(false);
-        LastClickAt = CurrentTime;
-
         return ResumeAudio().then(Context => DrawClick(Context));
     }
 
@@ -145,6 +139,8 @@ const StoryAudio = (() => {
         if (!Clickable) return;
         if (Clickable.classList?.contains("StoryNavigationLoading")) return;
 
+        ClickSoundHandledForCurrentEvent = true;
+        Promise.resolve().then(() => { ClickSoundHandledForCurrentEvent = false; });
         AudioUnlocked = true;
 
         // Page iframes change visibility during navigation. Play their click
@@ -223,7 +219,12 @@ const StoryAudio = (() => {
         }
     }
 
+    function IsClickSoundHandled() {
+        return ClickSoundHandledForCurrentEvent;
+    }
+
     function PlaySound(Name = "click") {
+        if (String(Name) === "click" && ClickSoundHandledForCurrentEvent) return Promise.resolve(false);
         if (SoundsPaused || !SoundSettingsReady || SoundVolume <= 0) return Promise.resolve(false);
 
         if (String(Name) === "timerBell") {
@@ -285,6 +286,7 @@ const StoryAudio = (() => {
         PauseSounds,
         ResumeSounds,
         GetSoundState,
+        IsClickSoundHandled,
         PlayNotificationSound
     };
 })();
