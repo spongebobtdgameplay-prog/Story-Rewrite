@@ -28,6 +28,9 @@
         };
 
         StoryAudio.PlaySound = function(Name = "click") {
+            if (String(Name) === "click" && StoryAudio.IsClickSoundHandled?.()) {
+                return Promise.resolve(false);
+            }
             return ShellHost.StoryShell.PlaySound(Name);
         };
 
