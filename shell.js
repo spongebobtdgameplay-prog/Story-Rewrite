@@ -1,5 +1,5 @@
 (() => {
-    const FrontendVersion = "20261030.6";
+    const FrontendVersion = "20261030.7";
     const Root = document.getElementById("StoryShellRoot");
     const InitialFrame = document.getElementById("StoryShellFrame");
     if (!Root || !InitialFrame) return;
@@ -796,20 +796,13 @@
             return;
         }
 
-        // Repair stale metadata created by earlier builds.
-        if (PageForRoute(CurrentRoute) === "levels.html" && IsSinglePlayerGameRoute(StateBackRoute)) {
-            LoadRoute("main.html", { replace: true, backRoute: "main.html" });
-            return;
-        }
-
         if (CurrentHistoryDepth > 0) {
             window.history.back();
             return;
         }
 
         const SavedBackRoute = NormalizeRoute(ReadLastShellState()?.backRoute || "") || NormalizedFallback;
-        const SafeTarget = IsSinglePlayerGameRoute(SavedBackRoute) ? "main.html" : SavedBackRoute;
-        LoadRoute(SafeTarget, { replace: true, backRoute: "main.html" });
+        LoadRoute(SavedBackRoute, { replace: true, backRoute: "main.html" });
     }
 
     window.addEventListener("storage", Event => {
@@ -818,32 +811,8 @@
     });
 
     window.addEventListener("popstate", Event => {
-        const WasInSinglePlayerGame = IsSinglePlayerGameRoute();
-        const WasOnChapterMap = PageForRoute(CurrentRoute) === "levels.html";
         CurrentHistoryDepth = Math.max(0, Number(Event.state?.StoryRewriteDepth || 0));
-        let Route = NormalizeRoute(Event.state?.StoryRewriteRoute) || RouteFromLocation();
-
-        if (WasOnChapterMap && IsSinglePlayerGameRoute(Route)) {
-            const MapState = ReadLastShellState();
-            const ParentRoute = NormalizeRoute(MapState?.backRoute || "main.html") || "main.html";
-            const SafeTarget = IsSinglePlayerGameRoute(ParentRoute)
-                || PageForRoute(ParentRoute) === "levels.html"
-                ? "main.html"
-                : ParentRoute;
-            LoadRoute(SafeTarget, { replace: true, backRoute: "main.html" });
-            return;
-        }
-
-        if (WasInSinglePlayerGame && IsSinglePlayerGameRoute(Route)) {
-            const CurrentState = ReadLastShellState();
-            const ExistingBackRoute = NormalizeRoute(CurrentState?.backRoute || "main.html") || "main.html";
-            const SafeParent = IsSinglePlayerGameRoute(ExistingBackRoute)
-                || PageForRoute(ExistingBackRoute) === "levels.html"
-                ? "main.html"
-                : ExistingBackRoute;
-            LoadRoute("levels.html", { replace: true, backRoute: SafeParent });
-            return;
-        }
+        const Route = NormalizeRoute(Event.state?.StoryRewriteRoute) || RouteFromLocation();
 
         const BackRoute = NormalizeRoute(Event.state?.StoryRewriteBackRoute || "") || "main.html";
         WriteLastShellState(Route, BackRoute);
