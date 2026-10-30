@@ -93,15 +93,11 @@
         danger: "Music/danger.mp3"
     };
 
-    const MusicAuthTokenKey = "StoryRewriteAuthToken";
-    const LegacyMusicAuthTokenKey = "StoryRewriteSessionToken";
+    const MusicAuthMarkerKey = "StoryRewriteCookieSessionActiveV1";
 
     function HasAuthenticatedMusicSession() {
         try {
-            return Boolean(
-                localStorage.getItem(MusicAuthTokenKey) ||
-                localStorage.getItem(LegacyMusicAuthTokenKey)
-            );
+            return localStorage.getItem(MusicAuthMarkerKey) === "1";
         } catch {
             return false;
         }
@@ -460,7 +456,7 @@
             return;
         }
 
-        if (Event.key === MusicAuthTokenKey || Event.key === LegacyMusicAuthTokenKey) {
+        if (Event.key === MusicAuthMarkerKey) {
             if (!HasAuthenticatedMusicSession()) StoryAudio.StopMusic();
         }
     });
