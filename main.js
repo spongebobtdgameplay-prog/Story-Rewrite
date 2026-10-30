@@ -143,7 +143,6 @@ document.addEventListener("DOMContentLoaded", async () => {
                 return;
             }
             RenderMainPlayerState();
-            StoryAudio.PlaySound("click");
             try { sessionStorage.setItem("StoryRewriteResumeContinueV1", "1"); } catch {}
             StoryNavigate(`dialog.html?stage=${encodeURIComponent(StageId)}`, Button);
         });
