@@ -26,7 +26,7 @@
     gap: 9px;
     padding: 10px 14px;
     cursor: pointer;
-    color: #c8b393;
+    color: #f0dfc3;
     border: 1px solid transparent;
     border-radius: 12px;
     background: transparent;
@@ -43,9 +43,9 @@
 }
 
 .TutorialCategoryButton.Active {
-    color: #29170e;
-    border-color: #e7bd7b;
-    background: linear-gradient(180deg, #efc982, #c98b48);
+    color: #1d130b;
+    border-color: #ffe0a0;
+    background: linear-gradient(180deg, #ffe39a, #d9a04c);
     box-shadow: 0 8px 22px rgba(184, 111, 43, .2);
 }
 
@@ -66,9 +66,45 @@
 .TutorialCategoryHeader {
     margin-bottom: 14px;
     padding: 18px 20px;
-    border: 1px solid rgba(214, 164, 95, .17);
+    border: 1px solid rgba(225, 183, 113, .42);
     border-radius: 16px;
-    background: linear-gradient(135deg, rgba(69, 42, 25, .74), rgba(31, 18, 12, .9));
+    background: linear-gradient(135deg, #382719 0%, #241811 64%, #19120f 100%);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, .2), inset 0 1px rgba(255, 232, 190, .08);
+}
+
+.TutorialCategoryHeader > .Kicker {
+    display: inline-flex;
+    align-items: center;
+    margin-bottom: 8px;
+    padding: 6px 10px;
+    color: #ffe0a0;
+    border: 1px solid rgba(255, 218, 147, .55);
+    border-radius: 999px;
+    background: rgba(17, 12, 9, .72);
+    font-size: 11px;
+    letter-spacing: .13em;
+    text-shadow: 0 1px 8px rgba(255, 194, 95, .18);
+}
+
+#MultiplayerTutorial .TutorialCategoryHeader {
+    border-color: rgba(117, 194, 204, .5);
+    background: linear-gradient(125deg, #18343d 0%, #1b2933 58%, #30212d 100%);
+    box-shadow: 0 14px 34px rgba(0, 0, 0, .24), inset 0 1px rgba(210, 246, 245, .1);
+}
+
+#MultiplayerTutorial .TutorialCategoryHeader > .Kicker {
+    color: #bff4e9;
+    border-color: rgba(154, 225, 218, .58);
+    background: rgba(9, 25, 30, .75);
+    text-shadow: 0 1px 9px rgba(124, 232, 213, .2);
+}
+
+#MultiplayerTutorial .TutorialCategoryHeader h2 {
+    color: #f0fffb;
+}
+
+#MultiplayerTutorial .TutorialCategoryHeader p {
+    color: #c3d9dc;
 }
 
 .TutorialCategoryHeader h2 {

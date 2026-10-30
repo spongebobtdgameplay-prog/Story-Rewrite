@@ -42,7 +42,57 @@ const StoryAudio = (() => {
         }
     }
 
-    function DrawClick(Context) {
+    // Render the click waveform once and keep its AudioBuffer in the persistent audio host.
+    // Later clicks reuse this in-memory sample; they never fetch an audio asset.
+    let ClickAudioBuffer = null;
+    let ClickAudioBufferContext = null;
+
+    function GetClickAudioBuffer(Context) {
+        if (ClickAudioBuffer && ClickAudioBufferContext === Context) return ClickAudioBuffer;
+
+        try {
+            const SampleRate = Context.sampleRate || 44100;
+            const Duration = 0.08;
+            const SampleCount = Math.max(1, Math.ceil(SampleRate * Duration));
+            const Buffer = Context.createBuffer(1, SampleCount, SampleRate);
+            const Samples = Buffer.getChannelData(0);
+            let PrimaryPhase = 0;
+            let AccentPhase = 0;
+
+            for (let Index = 0; Index < SampleCount; Index += 1) {
+                const Time = Index / SampleRate;
+                const PrimaryFrequency = 760 * Math.pow(420 / 760, Time / Duration);
+                const AccentActive = Time < 0.042;
+                const AccentFrequency = 1180 * Math.pow(720 / 1180, Math.min(1, Time / 0.038));
+
+                let Envelope;
+                if (Time < 0.002) {
+                    Envelope = 0.0001 * Math.pow(0.48 / 0.0001, Time / 0.002);
+                } else if (Time < 0.022) {
+                    Envelope = 0.48 * Math.pow(0.34, (Time - 0.002) / 0.02);
+                } else {
+                    Envelope = 0.1632 * Math.pow(0.0001 / 0.1632, (Time - 0.022) / 0.058);
+                }
+
+                const Triangle = (2 / Math.PI) * Math.asin(Math.sin(PrimaryPhase));
+                const Accent = AccentActive ? Math.sin(AccentPhase) : 0;
+                Samples[Index] = (Triangle + Accent) * Envelope;
+
+                PrimaryPhase += (2 * Math.PI * PrimaryFrequency) / SampleRate;
+                if (AccentActive) AccentPhase += (2 * Math.PI * AccentFrequency) / SampleRate;
+            }
+
+            ClickAudioBuffer = Buffer;
+            ClickAudioBufferContext = Context;
+            return Buffer;
+        } catch {
+            ClickAudioBuffer = null;
+            ClickAudioBufferContext = null;
+            return null;
+        }
+    }
+
+    function DrawClickOscillators(Context) {
         if (!Context || Context.state !== "running" || SoundVolume <= 0) return false;
 
         const StartTime = Context.currentTime;
@@ -74,6 +124,31 @@ const StoryAudio = (() => {
         AccentTone.stop(StartTime + 0.042);
         PrimaryTone.stop(EndTime);
         return true;
+    }
+
+    function DrawClick(Context) {
+        if (!Context || Context.state !== "running" || SoundVolume <= 0) return false;
+
+        const Buffer = GetClickAudioBuffer(Context);
+        if (!Buffer) return DrawClickOscillators(Context);
+
+        try {
+            const StartTime = Context.currentTime;
+            const Source = Context.createBufferSource();
+            const MasterGain = Context.createGain();
+            Source.buffer = Buffer;
+            MasterGain.gain.setValueAtTime(SoundVolume, StartTime);
+            Source.connect(MasterGain);
+            MasterGain.connect(Context.destination);
+            Source.addEventListener("ended", () => {
+                try { Source.disconnect(); } catch {}
+                try { MasterGain.disconnect(); } catch {}
+            }, { once: true });
+            Source.start(StartTime);
+            return true;
+        } catch {
+            return DrawClickOscillators(Context);
+        }
     }
 
     function DrawBell(Context) {
@@ -255,7 +330,8 @@ const StoryAudio = (() => {
             audioUnlocked: AudioUnlocked,
             settingsReady: SoundSettingsReady,
             contextState: AudioContextInstance?.state || "closed",
-            soundVolume: SoundVolume
+            soundVolume: SoundVolume,
+            clickBufferCached: Boolean(ClickAudioBuffer)
         };
     }
 

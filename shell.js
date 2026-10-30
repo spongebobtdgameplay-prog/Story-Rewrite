@@ -1,5 +1,5 @@
 (() => {
-    const FrontendVersion = "20261030.5";
+    const FrontendVersion = "20261030.6";
     const Root = document.getElementById("StoryShellRoot");
     const InitialFrame = document.getElementById("StoryShellFrame");
     if (!Root || !InitialFrame) return;
@@ -778,17 +778,21 @@
         );
 
         if (IsSinglePlayerGameRoute()) {
-            // Pop the level entry to the existing Chapter Map entry; do not create
-            // a duplicate map entry on top of the level that was just exited.
-            if (CurrentHistoryDepth > 0 && StateBackRoute === NormalizedFallback) {
+            // Continue Story returns to Home; a stage opened from Worlds returns
+            // to the existing Chapter Map entry.
+            const IntendedBackRoute = StateBackRoute && !IsSinglePlayerGameRoute(StateBackRoute)
+                ? StateBackRoute
+                : NormalizedFallback;
+
+            if (CurrentHistoryDepth > 0 && StateBackRoute === IntendedBackRoute) {
                 window.history.back();
                 return;
             }
-            const SafeBackRoute = !StateBackRoute || IsSinglePlayerGameRoute(StateBackRoute)
-                || PageForRoute(StateBackRoute) === "levels.html"
+
+            const SafeBackRoute = IntendedBackRoute === "levels.html"
                 ? "main.html"
-                : StateBackRoute;
-            LoadRoute(NormalizedFallback, { replace: true, backRoute: SafeBackRoute });
+                : (StateBackRoute && StateBackRoute !== IntendedBackRoute ? StateBackRoute : "main.html");
+            LoadRoute(IntendedBackRoute, { replace: true, backRoute: SafeBackRoute });
             return;
         }
 
