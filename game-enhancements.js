@@ -704,6 +704,7 @@ async function ExpireSingleStoryDangerV12() {
 
         Save = NormalizeSave(Data, Result.save);
         ApplyFailureOutcome(Result);
+        if (Save.lives > 0) StartSingleStoryDangerV12(true);
     } catch (Error) {
         SetStoryStatusV12(Error.message, "Bad");
     }
