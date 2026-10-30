@@ -27,6 +27,10 @@
             ShellHost.StoryShell.ConfigureAudio(Settings);
         };
 
+        StoryAudio.PlaySound = function(Name = "click") {
+            return ShellHost.StoryShell.PlaySound(Name);
+        };
+
         StoryAudio.PlayMusic = function(Name) {
             ShellHost.StoryShell.PlayMusic(Name);
         };
