@@ -21,8 +21,7 @@ body,
     padding: 0;
 }
 
-html,
-body {
+html {
     overflow: hidden;
     overscroll-behavior: none;
     background:
@@ -30,8 +29,13 @@ body {
         radial-gradient(circle at 84% 16%, rgba(60, 30, 14, .19), transparent 28%),
         linear-gradient(155deg, #b38b61 0%, #8b6848 42%, #6e4c33 72%, #4d301f 100%);
     background-repeat: no-repeat;
-    background-size: cover;
-    background-attachment: fixed;
+    background-size: 100% 100%;
+}
+
+body {
+    overflow: hidden;
+    overscroll-behavior: none;
+    background: transparent;
 }
 
 #StoryShellRoot {
