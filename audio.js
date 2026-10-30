@@ -5,7 +5,6 @@ const StoryAudio = (() => {
     let SoundSettingsReady = false;
     let SoundsPaused = false;
     let LastClickAt = 0;
-    let ClickAudioElement = null;
 
     function Clamp(Value, Fallback) {
         const NumberValue = Number(Value);
@@ -42,6 +41,40 @@ const StoryAudio = (() => {
         } catch {
             return Promise.resolve(null);
         }
+    }
+
+    function DrawClick(Context) {
+        if (!Context || Context.state === "closed" || SoundVolume <= 0) return false;
+
+        const StartTime = Context.currentTime;
+        const EndTime = StartTime + 0.08;
+        const PrimaryTone = Context.createOscillator();
+        const AccentTone = Context.createOscillator();
+        const MasterGain = Context.createGain();
+
+        PrimaryTone.type = "triangle";
+        PrimaryTone.frequency.setValueAtTime(760, StartTime);
+        PrimaryTone.frequency.exponentialRampToValueAtTime(420, EndTime);
+
+        AccentTone.type = "sine";
+        AccentTone.frequency.setValueAtTime(1180, StartTime);
+        AccentTone.frequency.exponentialRampToValueAtTime(720, StartTime + 0.038);
+
+        const Peak = Math.max(0.0001, 0.48 * SoundVolume);
+        MasterGain.gain.setValueAtTime(0.0001, StartTime);
+        MasterGain.gain.exponentialRampToValueAtTime(Peak, StartTime + 0.002);
+        MasterGain.gain.exponentialRampToValueAtTime(Math.max(0.0001, Peak * 0.34), StartTime + 0.022);
+        MasterGain.gain.exponentialRampToValueAtTime(0.0001, EndTime);
+
+        PrimaryTone.connect(MasterGain);
+        AccentTone.connect(MasterGain);
+        MasterGain.connect(Context.destination);
+
+        PrimaryTone.start(StartTime);
+        AccentTone.start(StartTime);
+        AccentTone.stop(StartTime + 0.042);
+        PrimaryTone.stop(EndTime);
+        return true;
     }
 
     function DrawBell(Context) {
@@ -81,45 +114,24 @@ const StoryAudio = (() => {
         return true;
     }
 
-    function GetClickAudio() {
-        if (ClickAudioElement) return ClickAudioElement;
-
-        try {
-            ClickAudioElement = new Audio(
-                new URL("sounds/ui/button-click.wav", document.baseURI).href
-            );
-            ClickAudioElement.preload = "auto";
-            ClickAudioElement.volume = SoundVolume;
-            ClickAudioElement.addEventListener("error", () => {
-                console.warn("Story Rewrite UI click sound could not be loaded.");
-            }, { once: true });
-            ClickAudioElement.load();
-        } catch {
-            ClickAudioElement = null;
-        }
-
-        return ClickAudioElement;
-    }
-
     function PlayClick() {
         if (SoundsPaused || !SoundSettingsReady || SoundVolume <= 0) return Promise.resolve(false);
 
         const CurrentTime = Date.now();
-        if (CurrentTime - LastClickAt < 100) return Promise.resolve(false);
+        // Filter duplicate calls from the delegated click listener and page handlers,
+        // without suppressing normal consecutive clicks.
+        if (CurrentTime - LastClickAt < 55) return Promise.resolve(false);
         LastClickAt = CurrentTime;
 
-        const AudioElement = GetClickAudio();
-        if (!AudioElement) return Promise.resolve(false);
+        const Context = GetContext();
+        if (!Context) return Promise.resolve(false);
 
-        AudioElement.volume = Clamp(SoundVolume, 0);
-        try {
-            AudioElement.currentTime = 0;
-            const PlayPromise = AudioElement.play();
-            if (!PlayPromise?.then) return Promise.resolve(true);
-            return PlayPromise.then(() => true).catch(() => false);
-        } catch {
-            return Promise.resolve(false);
-        }
+        // Resume is requested synchronously, while the browser still considers
+        // the click a user gesture. Schedule the original tone immediately too;
+        // it can be queued while the context transitions from suspended to running.
+        const ResumePromise = ResumeAudio();
+        const WasScheduled = DrawClick(Context);
+        return ResumePromise.then(Resumed => Boolean(WasScheduled && Resumed));
     }
 
     function ClickableTarget(Target) {
