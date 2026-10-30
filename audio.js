@@ -118,7 +118,9 @@ const StoryAudio = (() => {
         if (SoundsPaused || !SoundSettingsReady || SoundVolume <= 0) return Promise.resolve(false);
 
         const CurrentTime = Date.now();
-        if (CurrentTime - LastClickAt < 120) return Promise.resolve(false);
+        // Only collapse the duplicate sound call made by the same click event.
+        // Separate rapid clicks on ordinary controls remain audible.
+        if (LastClickAt && CurrentTime - LastClickAt < 20) return Promise.resolve(false);
         LastClickAt = CurrentTime;
 
         return ResumeAudio().then(Context => DrawClick(Context));
@@ -139,8 +141,26 @@ const StoryAudio = (() => {
     }
 
     function PlayClickFromCompletedClick(Event) {
-        if (!ClickableTarget(Event.target)) return;
+        const Clickable = ClickableTarget(Event.target);
+        if (!Clickable) return;
+        if (Clickable.classList?.contains("StoryNavigationLoading")) return;
+
         AudioUnlocked = true;
+
+        // Page iframes change visibility during navigation. Play their click
+        // sounds in the shell's persistent audio host so a Back/navigation
+        // transition cannot cut the sound off mid-playback.
+        try {
+            const Shell = window.parent !== window && window.parent.StoryShell?.IsPersistentShell
+                ? window.parent.StoryShell
+                : null;
+            if (Shell && typeof Shell.PlaySound === "function") {
+                Shell.NotifyInteraction?.(Event?.isTrusted === true);
+                Shell.PlaySound("click");
+                return;
+            }
+        } catch {}
+
         PlayClick();
     }
 
