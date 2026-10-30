@@ -201,23 +201,8 @@ body {
     #StoryShellPauseButton { display: none !important; }
 }
 </style>
-<script>
-const AuthKey = "StoryRewriteAuthToken";
-const LegacyKey = "StoryRewriteSessionToken";
-let Token = localStorage.getItem(AuthKey) || "";
-
-if (!Token) {
-    Token = localStorage.getItem(LegacyKey) || sessionStorage.getItem(LegacyKey) || "";
-    if (Token) {
-        localStorage.setItem(AuthKey, Token);
-        localStorage.removeItem(LegacyKey);
-        sessionStorage.removeItem(LegacyKey);
-    }
-}
-
-if (!Token) window.location.replace("auth.html");
-
-</script>
+<script src="server-config.js?v=20261030-cookie1"></script>
+<script src="auth-bootstrap.js?v=20261030-cookie1"></script>
 </head>
 <body>
 <div id="StoryShellRoot">
@@ -239,7 +224,25 @@ if (!Token) window.location.replace("auth.html");
         </div>
     </div>
 </div>
-<script src="cache-guard.js?v=20261001-1"></script>
-<script src="shell.js?v=20261030-engine7"></script>
+<script>
+(async () => {
+    const Session = await window.StoryCookieSessionReady;
+    if (!Session?.authenticated) {
+        window.location.replace("auth.html");
+        return;
+    }
+
+    const LoadScript = Source => new Promise((Resolve, Reject) => {
+        const Script = document.createElement("script");
+        Script.src = Source;
+        Script.onload = Resolve;
+        Script.onerror = () => Reject(new Error("A required Story Rewrite script could not load."));
+        document.body.appendChild(Script);
+    });
+
+    await LoadScript("cache-guard.js?v=20261030-cookie1");
+    await LoadScript("shell.js?v=20261030-cookie2");
+})().catch(() => window.location.replace("auth.html"));
+</script>
 </body>
 </html>
