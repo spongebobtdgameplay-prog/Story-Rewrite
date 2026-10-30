@@ -1,4 +1,6 @@
 const STORY_AUTH_TOKEN_KEY = "StoryRewriteAuthToken";
+const STORY_COOKIE_SESSION_MARKER_KEY = "StoryRewriteCookieSessionActiveV1";
+const STORY_SAVED_ACCOUNT_NAMES_KEY = "StoryRewriteSavedAccountNamesV1";
 const STORY_LEGACY_AUTH_TOKEN_KEY = "StoryRewriteSessionToken";
 const STORY_SERVER_OVERRIDE_KEY = "StoryRewriteServerOverride";
 const STORY_AUTH_VALIDATED_AT_KEY = "StoryRewriteAuthValidatedAt";
@@ -476,30 +478,41 @@ function GetStoryDeviceSignature() {
 }
 
 function GetSavedAccountSessions() {
-    const Value = ReadStoryLocalJson(STORY_SAVED_ACCOUNTS_KEY);
-    const Accounts = Array.isArray(Value?.accounts) ? Value.accounts : [];
-    return Accounts
-        .filter(Account => Account && typeof Account.username === "string" && typeof Account.token === "string" && Account.token)
-        .sort((First, Second) => Number(Second.lastUsedAt || 0) - Number(First.lastUsedAt || 0));
+    const Current = ReadStoryLocalJson(STORY_SAVED_ACCOUNT_NAMES_KEY);
+    const Legacy = ReadStoryLocalJson(STORY_SAVED_ACCOUNTS_KEY);
+    const Combined = [
+        ...(Array.isArray(Current?.accounts) ? Current.accounts : []),
+        ...(Array.isArray(Legacy?.accounts) ? Legacy.accounts : [])
+    ];
+    const Seen = new Set();
+    const Accounts = Combined.filter(Account => {
+        const Username = String(Account?.username || "").trim();
+        const Key = Username.toLowerCase();
+        if (!Username || Seen.has(Key)) return false;
+        Seen.add(Key);
+        return true;
+    }).map(Account => ({
+        username: String(Account.username).trim(),
+        lastUsedAt: Number(Account.lastUsedAt || 0)
+    })).sort((First, Second) => Number(Second.lastUsedAt || 0) - Number(First.lastUsedAt || 0));
+    SaveSavedAccountSessions(Accounts);
+    try { localStorage.removeItem(STORY_SAVED_ACCOUNTS_KEY); } catch {}
+    return Accounts;
 }
 
 function SaveSavedAccountSessions(Accounts) {
-    WriteStoryLocalJson(STORY_SAVED_ACCOUNTS_KEY, {
-        accounts: Accounts.slice(0, 8)
-    });
+    const SafeAccounts = (Array.isArray(Accounts) ? Accounts : [])
+        .filter(Account => Account && typeof Account.username === "string" && Account.username.trim())
+        .map(Account => ({ username: Account.username.trim(), lastUsedAt: Number(Account.lastUsedAt || Date.now()) }))
+        .slice(0, 8);
+    WriteStoryLocalJson(STORY_SAVED_ACCOUNT_NAMES_KEY, { accounts: SafeAccounts });
 }
 
 function RememberAccountSession(Result) {
     const Username = String(Result?.profile?.username || "").trim();
-    const Token = String(Result?.token || GetAuthToken() || "");
-    if (!Username || !Token) return;
-
+    if (!Username) return;
     const Accounts = GetSavedAccountSessions().filter(Account => Account.username.toLowerCase() !== Username.toLowerCase());
-    Accounts.unshift({
-        username: Username,
-        token: Token,
-        lastUsedAt: Date.now()
-    });
+    Accounts.unshift({ username: Username, lastUsedAt: Date.now() });
     SaveSavedAccountSessions(Accounts);
 }
 
@@ -507,6 +520,7 @@ function ForgetSavedAccount(Username) {
     const Key = String(Username || "").trim().toLowerCase();
     if (!Key) return;
     SaveSavedAccountSessions(GetSavedAccountSessions().filter(Account => Account.username.toLowerCase() !== Key));
+    try { localStorage.removeItem(STORY_SAVED_ACCOUNTS_KEY); } catch {}
 }
 
 function ShowOtherSessionFound(Username = "") {
@@ -548,14 +562,16 @@ function ShowOtherSessionFound(Username = "") {
 }
 
 function BroadcastStorySession(Username = "") {
+    const Authenticated = Boolean(GetAuthToken());
+    const NormalizedUsername = String(Username || GetLastKnownProfileResult()?.profile?.username || "").trim();
+    StoryTabAuthToken = Authenticated ? "1:" + NormalizedUsername.toLowerCase() : "0";
     const Message = {
         type: "auth-change",
         sourceTabId: GetStoryTabId(),
-        token: GetAuthToken(),
-        username: String(Username || ""),
+        authenticated: Authenticated,
+        username: NormalizedUsername,
         sentAt: Date.now()
     };
-
     try { StorySessionChannel?.postMessage(Message); } catch {}
     try { localStorage.setItem(STORY_SESSION_EVENT_KEY, JSON.stringify(Message)); } catch {}
 }
@@ -563,16 +579,18 @@ function BroadcastStorySession(Username = "") {
 function HandleStorySessionMessage(Message) {
     if (!Message || Message.type !== "auth-change") return;
     if (Message.sourceTabId === GetStoryTabId()) return;
-
-    const IncomingToken = String(Message.token || "");
-    if (IncomingToken === StoryTabAuthToken) return;
-
-    StoryTabAuthToken = IncomingToken;
+    const IncomingMarker = Message.authenticated
+        ? "1:" + String(Message.username || "").trim().toLowerCase()
+        : "0";
+    if (IncomingMarker === StoryTabAuthToken) return;
+    StoryTabAuthToken = IncomingMarker;
     ShowOtherSessionFound(Message.username || "");
 }
 
 function InitializeStorySessionSync() {
-    StoryTabAuthToken = GetAuthToken();
+    StoryTabAuthToken = GetAuthToken()
+        ? "1:" + String(GetLastKnownProfileResult()?.profile?.username || "").trim().toLowerCase()
+        : "0";
 
     if (typeof BroadcastChannel === "function") {
         try {
@@ -614,22 +632,11 @@ function DispatchStoryAuthState(Authenticated) {
 }
 
 function GetAuthToken() {
-    const Persistent = localStorage.getItem(STORY_AUTH_TOKEN_KEY) || "";
-    if (Persistent) return Persistent;
-
-    const LegacyPersistent = localStorage.getItem(STORY_LEGACY_AUTH_TOKEN_KEY) || "";
-    if (LegacyPersistent) {
-        localStorage.setItem(STORY_AUTH_TOKEN_KEY, LegacyPersistent);
-        localStorage.removeItem(STORY_LEGACY_AUTH_TOKEN_KEY);
-        return LegacyPersistent;
+    try {
+        return localStorage.getItem(STORY_COOKIE_SESSION_MARKER_KEY) === "1" ? "cookie-session" : "";
+    } catch {
+        return "";
     }
-
-    const LegacySession = sessionStorage.getItem(STORY_LEGACY_AUTH_TOKEN_KEY) || "";
-    if (!LegacySession) return "";
-
-    localStorage.setItem(STORY_AUTH_TOKEN_KEY, LegacySession);
-    sessionStorage.removeItem(STORY_LEGACY_AUTH_TOKEN_KEY);
-    return LegacySession;
 }
 
 function GetAccountSwitchSourceUsername() {
@@ -640,49 +647,48 @@ function ClearAccountSwitchSource() {
     sessionStorage.removeItem(STORY_SWITCH_FROM_USERNAME_KEY);
 }
 
-function BeginAccountSwitch(Username) {
+async function BeginAccountSwitch(Username) {
     const SwitchFromUsername = String(Username || "").trim();
-    if (SwitchFromUsername) {
-        sessionStorage.setItem(STORY_SWITCH_FROM_USERNAME_KEY, SwitchFromUsername);
-    } else {
-        ClearAccountSwitchSource();
-    }
-
+    if (SwitchFromUsername) sessionStorage.setItem(STORY_SWITCH_FROM_USERNAME_KEY, SwitchFromUsername);
+    else ClearAccountSwitchSource();
     StopStoryMusicForSignedOutState();
+    try {
+        if (GetAuthToken()) await ApiRequest("/api/session", { method: "DELETE", timeoutMs: 4000 });
+    } catch {}
     SetAuthToken("");
     BroadcastStorySession("");
-
     try {
         if (window.parent !== window && window.parent.StoryShell?.IsPersistentShell) {
             window.parent.StoryShell.Exit("auth.html", true);
             return;
         }
     } catch {}
-
     window.location.replace(BuildStoryUrl("auth.html"));
 }
 
 function SetAuthToken(Token) {
-    const PreviousToken = localStorage.getItem(STORY_AUTH_TOKEN_KEY) || "";
-
-    if (Token) {
-        if (PreviousToken && PreviousToken !== Token) ClearLastKnownStoryState();
-        localStorage.setItem(STORY_AUTH_TOKEN_KEY, Token);
+    const WasAuthenticated = Boolean(GetAuthToken());
+    try {
+        localStorage.removeItem(STORY_AUTH_TOKEN_KEY);
         localStorage.removeItem(STORY_LEGACY_AUTH_TOKEN_KEY);
         sessionStorage.removeItem(STORY_LEGACY_AUTH_TOKEN_KEY);
+        localStorage.removeItem(STORY_SAVED_ACCOUNTS_KEY);
+    } catch {}
+    if (Token) {
+        if (!WasAuthenticated) ClearLastKnownStoryState();
+        try { localStorage.setItem(STORY_COOKIE_SESSION_MARKER_KEY, "1"); } catch {}
         ClearAccountSwitchSource();
-        StoryTabAuthToken = String(Token);
+        StoryTabAuthToken = "1:" + String(GetLastKnownProfileResult()?.profile?.username || "").toLowerCase();
         DispatchStoryAuthState(true);
         return;
     }
-
     StopStoryMusicForSignedOutState();
     ClearLastKnownStoryState();
-    localStorage.removeItem(STORY_AUTH_TOKEN_KEY);
-    localStorage.removeItem(STORY_LEGACY_AUTH_TOKEN_KEY);
-    sessionStorage.removeItem(STORY_LEGACY_AUTH_TOKEN_KEY);
-    localStorage.removeItem(STORY_AUTH_VALIDATED_AT_KEY);
-    StoryTabAuthToken = "";
+    try {
+        localStorage.removeItem(STORY_COOKIE_SESSION_MARKER_KEY);
+        localStorage.removeItem(STORY_AUTH_VALIDATED_AT_KEY);
+    } catch {}
+    StoryTabAuthToken = "0";
     DispatchStoryAuthState(false);
 }
 
@@ -693,36 +699,6 @@ function MarkAuthValidated() {
 function WasAuthRecentlyValidated() {
     const ValidatedAt = Number(localStorage.getItem(STORY_AUTH_VALIDATED_AT_KEY) || 0);
     return ValidatedAt > 0 && Date.now() - ValidatedAt < STORY_AUTH_VALIDATION_WINDOW;
-}
-
-async function SwitchSavedAccount(Username) {
-    const Key = String(Username || "").trim().toLowerCase();
-    const SavedAccount = GetSavedAccountSessions().find(Account => Account.username.toLowerCase() === Key);
-    if (!SavedAccount) throw new Error("That saved account is no longer available on this browser.");
-
-    try {
-        const Result = await ApiRequest("/api/me", {
-            authToken: SavedAccount.token,
-            preserveAuthOn401: true
-        });
-
-        if (!Result?.profile?.username) {
-            throw new Error("The server did not verify that saved account.");
-        }
-
-        SetAuthToken(SavedAccount.token);
-        ClearLastKnownStoryState();
-        AccountProfileRequestPromise = null;
-        ServerSaveRequestPromise = null;
-        StoreLastKnownProfileResult(Result);
-        MarkAuthValidated();
-        RememberAccountSession({ profile: Result.profile, token: SavedAccount.token });
-        BroadcastStorySession(Result.profile.username);
-        return Result;
-    } catch (Error) {
-        if (Error?.status === 401) ForgetSavedAccount(SavedAccount.username);
-        throw Error;
-    }
 }
 
 async function LogoutAccount() {
@@ -773,17 +749,12 @@ async function ApiRequest(Path, Options = {}) {
     const ServerUrl = GetServerUrl();
     if (!ServerUrl) throw new Error("Multiplayer server is not configured yet. Run server.js locally or set the deployed server URL in server-config.js.");
     const RequestOptions = { ...Options };
-    const HasAuthOverride = Object.prototype.hasOwnProperty.call(RequestOptions, "authToken");
-    const AuthTokenOverride = HasAuthOverride ? String(RequestOptions.authToken || "") : "";
-    const PreserveAuthOn401 = Boolean(RequestOptions.preserveAuthOn401);
     const TimeoutMs = Math.max(1000, Math.min(90000, Number(RequestOptions.timeoutMs || 20000)));
+    delete RequestOptions.timeoutMs;
     delete RequestOptions.authToken;
     delete RequestOptions.preserveAuthOn401;
-    delete RequestOptions.timeoutMs;
     const RequestHeaders = new window.Headers(RequestOptions.headers || {});
     if (!RequestHeaders.has("Content-Type") && RequestOptions.body !== undefined) RequestHeaders.set("Content-Type", "application/json");
-    const Token = HasAuthOverride ? AuthTokenOverride : GetAuthToken();
-    if (Token && !RequestHeaders.has("Authorization")) RequestHeaders.set("Authorization", `Bearer ${Token}`);
     const Method = String(RequestOptions.method || "GET").toUpperCase();
     const MaxAttempts = Method === "GET" ? 2 : 1;
     for (let Attempt = 0; Attempt < MaxAttempts; Attempt += 1) {
@@ -792,7 +763,7 @@ async function ApiRequest(Path, Options = {}) {
         let Response;
         try {
             Response = await fetch(`${ServerUrl}${Path}`, {
-                ...RequestOptions, headers: RequestHeaders, cache: "no-store", signal: Controller.signal
+                ...RequestOptions, credentials: "include", headers: RequestHeaders, cache: "no-store", signal: Controller.signal
             });
         } catch (Error) {
             if (Attempt < MaxAttempts - 1) {
@@ -816,7 +787,7 @@ async function ApiRequest(Path, Options = {}) {
         let Data = {};
         try { Data = await Response.json(); } catch {}
         if (!Response.ok) {
-            if (Response.status === 401 && !PreserveAuthOn401) SetAuthToken("");
+            if (Response.status === 401) SetAuthToken("");
             const RequestError = new Error(Data.error || `Server request failed: ${Response.status}`);
             RequestError.status = Response.status;
             RequestError.data = Data;
@@ -832,7 +803,7 @@ async function RegisterAccount(Username, Password) {
         method: "POST",
         body: JSON.stringify({ username: Username, password: Password })
     });
-    SetAuthToken(Result.token);
+    SetAuthToken("cookie-session");
     StoreLastKnownProfileResult(Result);
     if (Result?.save) StoreLastKnownServerSave(Result.save);
     MarkAuthValidated();
@@ -847,7 +818,7 @@ async function LoginAccount(Username, Password) {
         method: "POST",
         body: JSON.stringify({ username: Username, password: Password })
     });
-    SetAuthToken(Result.token);
+    SetAuthToken("cookie-session");
     StoreLastKnownProfileResult(Result);
     if (Result?.save) StoreLastKnownServerSave(Result.save);
     MarkAuthValidated();
@@ -982,8 +953,8 @@ function ConnectStorySocket() {
     if (!ServerUrl) throw new Error("Multiplayer server is not configured.");
 
     const Socket = io(ServerUrl, {
+        withCredentials: true,
         auth: {
-            token: GetAuthToken(),
             deviceSignature: GetStoryDeviceSignature(),
             tabId: GetStoryTabId()
         },
