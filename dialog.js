@@ -342,8 +342,7 @@ async function RequestLeaveCurrentLevel(TargetPage = "levels.html", Trigger = nu
         if (!Confirmed) return;
 
         if (Shell?.Back) {
-            if (typeof StoryBeginNavigation === "function" && !StoryBeginNavigation(Trigger)) return;
-            Shell.Back(TargetPage);
+            Shell.Back(TargetPage, Trigger);
             return;
         }
 
@@ -431,7 +430,6 @@ function ToggleSentence(Index) {
 
     if (RoomCode) {
         if (!MultiplayerSocket) return;
-        StoryAudio.PlaySound("click");
         MultiplayerSocket.emit("game:vote", { index: Index });
         return;
     }
