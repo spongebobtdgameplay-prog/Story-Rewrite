@@ -39,15 +39,6 @@
     let CurrentAudioSettings = {};
     let CurrentHistoryDepth = 0;
     let GameplayAudioPaused = false;
-    let NavigationPending = false;
-    let NavigationPendingAt = 0;
-    let NavigationPendingFrame = null;
-    let NavigationPendingTarget = null;
-    let NavigationUnlockTimer = 0;
-    let LastInteractionTarget = null;
-    let LastInteractionFrame = null;
-    let LastInteractionAt = 0;
-    const NavigationControlStates = new Map();
     let ShellPauseState = false;
     const GameplayPauseButton = document.getElementById("StoryShellPauseButton");
 
@@ -338,108 +329,6 @@
         return Promise.resolve(null);
     }
 
-    function GetInteractiveControl(Target) {
-        return Target?.closest?.(
-            "button,[role='button'],a[href],input[type='button'],input[type='submit'],summary"
-        ) || null;
-    }
-
-    function RememberInteraction(Frame, Target) {
-        LastInteractionTarget = Target;
-        LastInteractionFrame = Frame;
-        LastInteractionAt = Date.now();
-    }
-
-    function ResolveNavigationTarget(Trigger = null) {
-        if (Trigger?.nodeType === 1) return Trigger;
-        if (
-            LastInteractionTarget?.isConnected &&
-            LastInteractionFrame === ActiveFrame &&
-            Date.now() - LastInteractionAt < 2500
-        ) return LastInteractionTarget;
-        return null;
-    }
-
-    function LockNavigationButton(Trigger = null) {
-        const Target = ResolveNavigationTarget(Trigger);
-        if (!Target) return true;
-        if (NavigationControlStates.has(Target)) return true;
-        if ("disabled" in Target && Target.disabled) return false;
-
-        const State = {
-            disabled: "disabled" in Target ? Target.disabled : null,
-            ariaBusy: Target.getAttribute("aria-busy"),
-            ariaDisabled: Target.getAttribute("aria-disabled"),
-            pointerEvents: Target.style?.pointerEvents || ""
-        };
-        NavigationControlStates.set(Target, State);
-        Target.classList.add("StoryNavigationPending");
-        Target.setAttribute("aria-busy", "true");
-        Target.setAttribute("aria-disabled", "true");
-        if (State.disabled !== null) Target.disabled = true;
-        else Target.style.pointerEvents = "none";
-        return true;
-    }
-
-    function ClearNavigationLock() {
-        NavigationPending = false;
-        NavigationPendingAt = 0;
-        NavigationPendingFrame = null;
-        NavigationPendingTarget = null;
-        if (NavigationUnlockTimer) {
-            clearTimeout(NavigationUnlockTimer);
-            NavigationUnlockTimer = 0;
-        }
-
-        for (const [Target, State] of NavigationControlStates) {
-            Target.classList.remove("StoryNavigationPending");
-            if (State.ariaBusy === null) Target.removeAttribute("aria-busy");
-            else Target.setAttribute("aria-busy", State.ariaBusy);
-            if (State.ariaDisabled === null) Target.removeAttribute("aria-disabled");
-            else Target.setAttribute("aria-disabled", State.ariaDisabled);
-            if (State.disabled !== null) Target.disabled = State.disabled;
-            if (Target.style) Target.style.pointerEvents = State.pointerEvents;
-            NavigationControlStates.delete(Target);
-        }
-    }
-
-    function BeginNavigation(Trigger = null) {
-        const Target = ResolveNavigationTarget(Trigger);
-        if (NavigationPending) {
-            return NavigationPendingFrame === ActiveFrame
-                && NavigationPendingTarget === Target
-                && Date.now() - NavigationPendingAt < 1800;
-        }
-
-        if (!LockNavigationButton(Target)) return false;
-        NavigationPending = true;
-        NavigationPendingAt = Date.now();
-        NavigationPendingFrame = ActiveFrame;
-        NavigationPendingTarget = Target;
-        NavigationUnlockTimer = window.setTimeout(ClearNavigationLock, 15000);
-        return true;
-    }
-
-    function ExposeShellNavigationEngine(Frame) {
-        try {
-            const ChildWindow = Frame.contentWindow;
-            ChildWindow.StoryLockNavigationButton = LockNavigationButton;
-            ChildWindow.StoryBeginNavigation = BeginNavigation;
-            ChildWindow.StoryClearNavigationLock = ClearNavigationLock;
-        } catch {}
-    }
-
-    function HandleEngineClick(Event, Frame = null) {
-        if (!Event.isTrusted) return;
-        const Target = GetInteractiveControl(Event.target);
-        if (!Target || Target.disabled || Target.getAttribute("aria-disabled") === "true") return;
-        if (Target.closest("#ChatForm, #GameChatForm")) return;
-
-        if (Frame) RememberInteraction(Frame, Target);
-        NotifyInteraction(true);
-        PlaySound("click");
-    }
-
     function WireFrameInteractionBridge(Frame) {
         let ChildDocument;
         try {
@@ -453,15 +342,23 @@
 
         const ResumePersistentMusic = Event => {
             if (!Event.isTrusted) return;
-            NotifyInteraction(true);
+            try { NotifyInteraction(true); } catch {}
         };
+        const PlayEngineClick = Event => {
+            if (!Event.isTrusted) return;
+            const Control = Event.target?.closest?.(
+                "button,[role='button'],a[href],input[type='button'],input[type='submit'],summary"
+            );
+            if (!Control || Control.disabled || Control.getAttribute("aria-disabled") === "true") return;
+            if (Control.closest("#ChatForm, #GameChatForm")) return;
+            try { PlaySound("click"); } catch {}
+        };
+
         ChildDocument.addEventListener("pointerdown", ResumePersistentMusic, { capture: true, passive: true });
         ChildDocument.addEventListener("touchstart", ResumePersistentMusic, { capture: true, passive: true });
         ChildDocument.addEventListener("keydown", ResumePersistentMusic, { capture: true });
-        ChildDocument.addEventListener("click", Event => HandleEngineClick(Event, Frame), { capture: true });
+        ChildDocument.addEventListener("click", PlayEngineClick, { capture: true });
     }
-
-    document.addEventListener("click", Event => HandleEngineClick(Event), { capture: true });
 
     function RouteFromFrame(Frame) {
         try {
@@ -646,7 +543,6 @@
         Frame.removeAttribute("aria-hidden");
         ActiveFrame = Frame;
         if (PendingFrame === Frame) PendingFrame = null;
-        ClearNavigationLock();
 
         SyncGameplayPauseButton();
         GameplayPauseButton?.removeAttribute("aria-busy");
@@ -708,7 +604,6 @@
         }
 
         Frame.dataset.storyLoaded = "1";
-        ExposeShellNavigationEngine(Frame);
         InstallResponsiveUiEngine(Frame);
         // The initial frame is deliberately hidden while it loads to prevent FOUC.
         // Reveal it as soon as its load event confirms the document is ready.
@@ -840,7 +735,6 @@
             return true;
         }
 
-        if (!BeginNavigation(Options.trigger)) return false;
         return LoadRoute(Normalized, Options);
     }
 
@@ -874,8 +768,7 @@
         else window.location.href = Url.href;
     }
 
-    function Back(Fallback = "main.html", Trigger = null) {
-        if (!BeginNavigation(Trigger)) return false;
+    function Back(Fallback = "main.html") {
         const NormalizedFallback = NormalizeRoute(Fallback) || "main.html";
         const HistoryState = window.history.state || {};
         const StateBackRoute = NormalizeRoute(
