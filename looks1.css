@@ -35,8 +35,26 @@
 }
 
 html {
+    position: relative;
+    isolation: isolate;
     min-height: 100%;
     scroll-behavior: smooth;
+    background: var(--PageDeep);
+}
+
+/* One viewport-pinned backdrop for every page using the shared visual engine. */
+html::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+        radial-gradient(circle at 15% 7%, rgba(255, 240, 207, .24), transparent 24%),
+        radial-gradient(circle at 84% 16%, rgba(60, 30, 14, .19), transparent 28%),
+        linear-gradient(155deg, #b38b61 0%, var(--Page) 42%, #6e4c33 72%, var(--PageDeep) 100%);
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
 }
 
 body {
@@ -45,10 +63,7 @@ body {
     overflow-x: hidden;
     color: var(--Ink);
     font-family: Georgia, "Times New Roman", serif;
-    background:
-        radial-gradient(circle at 15% 7%, rgba(255, 240, 207, .24), transparent 24%),
-        radial-gradient(circle at 84% 16%, rgba(60, 30, 14, .19), transparent 28%),
-        linear-gradient(155deg, #b38b61 0%, var(--Page) 42%, #6e4c33 72%, var(--PageDeep) 100%);
+    background: transparent;
 }
 
 body::before {
