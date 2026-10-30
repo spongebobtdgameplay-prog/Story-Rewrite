@@ -210,7 +210,6 @@ const StoryAudio = (() => {
     }
 
     function PlaySound(Name = "click") {
-        if (String(Name) === "click" && ClickSoundHandledForCurrentEvent) return Promise.resolve(false);
         if (SoundsPaused || !SoundSettingsReady || SoundVolume <= 0) return Promise.resolve(false);
 
         if (String(Name) === "timerBell") {
