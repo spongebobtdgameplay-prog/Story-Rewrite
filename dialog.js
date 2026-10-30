@@ -474,10 +474,10 @@ function RenderLives() {
     for (let Index = 0; Index < MaxLives; Index += 1) {
         const Active = Index < Lives;
         const Heart = document.createElement("span");
-        Heart.className = `LifeHeart ${(!RoomCode || Active) ? "StoryHeartActive" : "StoryHeartEmpty Empty"}`;
+        Heart.className = `LifeHeart ${Active ? "StoryHeartActive" : "StoryHeartEmpty Empty"}`;
         Heart.setAttribute("aria-hidden", "true");
-        Heart.style.setProperty("color", (!RoomCode || Active) ? "#ff1738" : "#6d625d", "important");
-        Heart.innerHTML = `<svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="${HeartPath}" style="fill:${(!RoomCode || Active) ? "#ff1738" : "#6d625d"}"></path></svg>`;
+        Heart.style.setProperty("color", Active ? "#ff1738" : "#6d625d", "important");
+        Heart.innerHTML = `<svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="${HeartPath}" style="fill:${Active ? "#ff1738" : "#6d625d"}"></path></svg>`;
         Container.appendChild(Heart);
     }
 }
@@ -592,9 +592,13 @@ function BuildTimeoutSolutionMarkup(Result) {
 
 function ApplyFailureOutcome(Result) {
     const TimedOut = Boolean(Result?.timedOut);
+    const LivesRemaining = Number(
+        Result?.lives ?? (RoomCode ? MultiplayerState?.lives : Save?.lives) ?? 0
+    );
+    const IsGameOver = Number.isFinite(LivesRemaining) && LivesRemaining <= 0;
     LastCheckFailed = true;
     LastFailureResult = Result;
-    StoryAudio.PlaySound(TimedOut ? "fail" : (Result.gameOver ? "life" : "fail"));
+    StoryAudio.PlaySound(TimedOut ? "fail" : (IsGameOver ? "life" : "fail"));
     StoryAudio.PlayMusic("danger");
 
     const FailureReason = TimedOut
@@ -603,25 +607,26 @@ function ApplyFailureOutcome(Result) {
 
     const Status = document.getElementById("StatusText");
     Status.className = "StatusText Bad";
-    Status.textContent = TimedOut ? `You died. ${FailureReason}` : `${FailureReason} Life lost.`;
+    Status.textContent = TimedOut
+        ? `${IsGameOver ? "You died." : "The timer expired. One heart lost."} ${FailureReason}`
+        : `${FailureReason} Life lost.`;
 
     const Aftermath = document.getElementById("Aftermath");
     Aftermath.classList.remove("Hidden");
     Aftermath.innerHTML = TimedOut
-        ? `<strong>Death</strong>${EscapeText(FailureReason)}${BuildTimeoutSolutionMarkup(Result)}`
+        ? `<strong>${IsGameOver ? "Death" : "Life lost"}</strong>${EscapeText(FailureReason)}${BuildTimeoutSolutionMarkup(Result)}`
         : `<strong>Bad outcome</strong>${EscapeText(Result.aftermath)}`;
     RenderIllustration();
     RenderLives();
     ShakeBook();
 
-    if (Result.gameOver || TimedOut) {
+    if (IsGameOver) {
         document.getElementById("GameOverText").textContent = TimedOut
-            ? `${FailureReason} The timer expired before the rewrite was checked. Replay the level to try again.`
+            ? `${FailureReason} Your last heart is gone. Replay the level to try again.`
             : `${FailureReason} ${Result.aftermath} No lives remain. Replay the level to try again.`;
         document.getElementById("GameOverOverlay").classList.add("Show");
     }
 }
-
 function ShakeBook() {
     document.getElementById("Book").animate([
         { transform: "translateX(0)" },
