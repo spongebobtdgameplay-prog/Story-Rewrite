@@ -140,14 +140,17 @@ const StoryAudio = (() => {
         PlayClick();
     }
 
-    // The persistent shell owns managed-page click playback. Check at the
-    // moment of the click so script load order cannot create duplicate audio.
-    document.addEventListener("click", Event => {
-        try {
-            if (window.parent !== window && window.parent.StoryShell?.IsPersistentShell) return;
-        } catch {}
-        PlayClickFromStandalonePage(Event);
-    }, { capture: true });
+    // The persistent shell owns click playback for managed iframe pages.
+    // Standalone pages keep this local fallback.
+    let IsManagedByStoryShell = false;
+    try {
+        IsManagedByStoryShell = Boolean(
+            window.parent !== window && window.parent.StoryShell?.IsPersistentShell
+        );
+    } catch {}
+    if (!IsManagedByStoryShell) {
+        document.addEventListener("click", PlayClickFromStandalonePage, { capture: true });
+    }
 
     function Configure(Settings = {}) {
         const NextSoundVolume = Number(Settings.soundVolume);
