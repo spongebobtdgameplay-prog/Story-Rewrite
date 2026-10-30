@@ -34,6 +34,7 @@ let StoryConfirmCloser = null;
 let StoryLinkObserver = null;
 let StoryNavigationPending = false;
 let StoryNavigationUnlockTimer = 0;
+let StoryNavigationActivationTarget = null;
 const StoryNavigationLocks = new Map();
 
 function EnsureStoryNavigationStyles() {
@@ -71,6 +72,7 @@ function EnsureStoryNavigationStyles() {
 
 function ResolveStoryNavigationTrigger(Trigger = null) {
     if (Trigger && Trigger.nodeType === 1) return Trigger;
+    if (StoryNavigationActivationTarget?.isConnected) return StoryNavigationActivationTarget;
     const Active = document.activeElement;
     if (
         Active instanceof HTMLButtonElement ||
@@ -135,6 +137,20 @@ function StoryBeginNavigation(Trigger = null) {
     StoryNavigationUnlockTimer = window.setTimeout(ClearStoryNavigationLock, 15000);
     return true;
 }
+
+// Remember the control that initiated this click for handlers that call
+// StoryNavigate() without explicitly passing their button (notably Firefox,
+// where a pointer click does not always focus the button).
+document.addEventListener("click", Event => {
+    const Target = Event.target?.closest?.(
+        "button,a[href],[role='button'],input[type='button'],input[type='submit'],summary,[data-story-go],[data-story-back]"
+    );
+    if (!Target) return;
+    StoryNavigationActivationTarget = Target;
+    Promise.resolve().then(() => {
+        if (StoryNavigationActivationTarget === Target) StoryNavigationActivationTarget = null;
+    });
+}, true);
 
 window.StoryLockNavigationButton = StoryLockNavigationButton;
 window.StoryBeginNavigation = StoryBeginNavigation;
