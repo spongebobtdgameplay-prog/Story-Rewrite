@@ -342,7 +342,8 @@ async function RequestLeaveCurrentLevel(TargetPage = "levels.html", Trigger = nu
         if (!Confirmed) return;
 
         if (Shell?.Back) {
-            Shell.Back(TargetPage, Trigger);
+            if (typeof StoryBeginNavigation === "function" && !StoryBeginNavigation(Trigger)) return;
+            Shell.Back(TargetPage);
             return;
         }
 
