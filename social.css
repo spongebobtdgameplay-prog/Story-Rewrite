@@ -1592,29 +1592,16 @@ body.StorySocialPage { height:auto!important; min-height:100vh; overflow-x:hidde
 }
 
 
-/* Stable scroll backdrop: keep the lighting gradient on the root canvas,
-   not on a transformed fixed pseudo-element that can flash while scrolling. */
+/* Social uses the same viewport-pinned backdrop as every other page. */
 html:has(body.StorySocialPage) {
-    background: #4d301f !important;
+    background: var(--PageDeep) !important;
 }
 body.StorySocialPage {
-    position: relative !important;
-    isolation: isolate !important;
+    position: static !important;
+    isolation: auto !important;
     background: transparent !important;
 }
 body.StorySocialPage::before {
-    content: "" !important;
-    display: block !important;
-    position: fixed !important;
-    inset: 0 !important;
-    z-index: -1 !important;
-    pointer-events: none !important;
-    background:
-        radial-gradient(circle at 15% 7%, rgba(255, 240, 207, .24), transparent 24%),
-        radial-gradient(circle at 84% 16%, rgba(60, 30, 14, .19), transparent 28%),
-        linear-gradient(155deg, #b38b61 0%, #8b6848 42%, #6e4c33 72%, #4d301f 100%) !important;
-    background-repeat: no-repeat !important;
-    background-size: 100% 100% !important;
-    transform: none !important;
-    will-change: auto !important;
+    content: none !important;
+    display: none !important;
 }
