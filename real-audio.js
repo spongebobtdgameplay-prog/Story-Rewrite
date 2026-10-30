@@ -27,13 +27,6 @@
             ShellHost.StoryShell.ConfigureAudio(Settings);
         };
 
-        StoryAudio.PlaySound = function(Name = "click") {
-            if (String(Name) === "click" && StoryAudio.IsClickSoundHandled?.()) {
-                return Promise.resolve(false);
-            }
-            return ShellHost.StoryShell.PlaySound(Name);
-        };
-
         StoryAudio.PlayMusic = function(Name) {
             ShellHost.StoryShell.PlayMusic(Name);
         };
@@ -60,12 +53,6 @@
             }
             return Promise.resolve(false);
         };
-
-        if (/(?:Firefox|FxiOS)\//i.test(navigator.userAgent)) {
-            document.addEventListener("click", () => {
-                ShellHost.StoryShell.NotifyInteraction(true);
-            }, { capture: true });
-        }
 
         return;
     }
