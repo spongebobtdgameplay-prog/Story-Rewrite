@@ -1,7 +1,8 @@
 let AccountMode = "register";
 
-window.addEventListener("DOMContentLoaded", () => {
-    if (GetAuthToken()) {
+window.addEventListener("DOMContentLoaded", async () => {
+    const Session = await (window.StoryCookieSessionReady || Promise.resolve({ authenticated: false }));
+    if (Session?.authenticated || GetAuthToken()) {
         window.location.replace(BuildStoryUrl("index.html"));
         return;
     }
@@ -14,6 +15,7 @@ window.addEventListener("DOMContentLoaded", () => {
     document.getElementById("AccountForm").addEventListener("submit", SubmitAccount);
     document.getElementById("SaveServerButton").addEventListener("click", SaveServerUrl);
     RenderSavedAccounts();
+    if (Session?.unavailable) ShowStatus("The server could not be reached. Check your connection and try again.", false);
 });
 
 function SetMode(Mode) {
@@ -80,19 +82,14 @@ function RenderSavedAccounts() {
         SwitchButton.className = "SecondaryButton SavedAccountButton";
         SwitchButton.type = "button";
         SwitchButton.textContent = Account.username;
-        SwitchButton.addEventListener("click", async () => {
-            SwitchButton.disabled = true;
-            ShowStatus(`Switching to ${Account.username}...`, true);
-
-            try {
-                await SwitchSavedAccount(Account.username);
-                window.location.replace(BuildStoryUrl("index.html"));
-            } catch (Error) {
-                ShowStatus(Error.message, false);
-                RenderSavedAccounts();
-            } finally {
-                SwitchButton.disabled = false;
-            }
+        SwitchButton.addEventListener("click", () => {
+            SetMode("login");
+            const UsernameInput = document.getElementById("UsernameInput");
+            const PasswordInput = document.getElementById("PasswordInput");
+            UsernameInput.value = Account.username;
+            document.getElementById("AccountForm")?.scrollIntoView({ behavior: "smooth", block: "center" });
+            setTimeout(() => PasswordInput?.focus(), 120);
+            ShowStatus("Enter the password to sign in to " + Account.username + ".", true);
         });
 
         const ForgetButton = document.createElement("button");
