@@ -112,7 +112,6 @@ function RenderWorldRail() {
 
     Rail.querySelectorAll(".WorldTab:not(.Locked)").forEach(Button => {
         Button.addEventListener("click", () => {
-            StoryAudio.PlaySound("click");
             LevelPageState.SelectedWorldId = Button.dataset.worldId;
             LevelPageState.SelectedStageId = GetDefaultStageId(LevelPageState.SelectedWorldId);
             RenderLevelsPage();
@@ -158,7 +157,6 @@ function RenderSelectedWorld() {
 
     Mount.querySelectorAll(".StageNode:not(.Locked)").forEach(Button => {
         Button.addEventListener("click", () => {
-            StoryAudio.PlaySound("click");
             LevelPageState.SelectedStageId = Button.dataset.stageNode;
             RenderSelectedWorld();
         });
@@ -168,7 +166,6 @@ function RenderSelectedWorld() {
     if (PlayButton) {
         PlayButton.addEventListener("click", () => {
             const StageId = PlayButton.dataset.stageId;
-            StoryAudio.PlaySound("click");
             StoryNavigate(`dialog.html?stage=${encodeURIComponent(StageId)}`, PlayButton);
         });
     }
