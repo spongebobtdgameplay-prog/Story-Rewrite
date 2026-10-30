@@ -1,15 +1,12 @@
 html {
     min-height: 100%;
     max-width: 100%;
-    background:
-        radial-gradient(circle at 15% 7%, rgba(255, 240, 207, .24), transparent 24%),
-        radial-gradient(circle at 84% 16%, rgba(60, 30, 14, .19), transparent 28%),
-        linear-gradient(155deg, #b38b61 0%, #8b6848 42%, #6e4c33 72%, #4d301f 100%);
-    background-repeat: no-repeat;
-    background-size: 100% 100%;
+    background: #4d301f;
 }
 
 body {
+    position: relative;
+    isolation: isolate;
     min-height: 100vh;
     background: transparent;
     overflow-x: hidden;
@@ -482,3 +479,19 @@ body {
     font-variant-numeric: tabular-nums;
 }
 .StorySocialUnreadBadge[hidden] { display: none !important; }
+
+
+/* Viewport-pinned lighting layer without transform/GPU promotion. */
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+        radial-gradient(circle at 15% 7%, rgba(255, 240, 207, .24), transparent 24%),
+        radial-gradient(circle at 84% 16%, rgba(60, 30, 14, .19), transparent 28%),
+        linear-gradient(155deg, #b38b61 0%, #8b6848 42%, #6e4c33 72%, #4d301f 100%);
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+}
