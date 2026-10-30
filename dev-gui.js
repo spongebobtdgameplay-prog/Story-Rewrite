@@ -319,10 +319,18 @@
         try { await EnsureMultiplayerReady(); } catch { return; }
         if (typeof io !== "function" || typeof GetServerUrl !== "function") return;
         const ServerUrl = GetServerUrl();
-        const Token = typeof GetAuthToken === "function" ? GetAuthToken() : "";
-        if (!ServerUrl || !Token) return;
+        const Authenticated = typeof GetAuthToken === "function" && Boolean(GetAuthToken());
+        if (!ServerUrl || !Authenticated) return;
 
-        Socket = io(ServerUrl, { autoConnect:false, auth:{token:Token}, transports:["websocket","polling"] });
+        Socket = io(ServerUrl, {
+            autoConnect: false,
+            withCredentials: true,
+            auth: {
+                deviceSignature: typeof GetStoryDeviceSignature === "function" ? GetStoryDeviceSignature() : "",
+                tabId: typeof GetStoryTabId === "function" ? GetStoryTabId() : ""
+            },
+            transports: ["websocket", "polling"]
+        });
         Socket.on("connect", () => RefreshRooms(Boolean(SelectedCode)));
         Socket.on("disconnect", () => SetStatus("Disconnected · reconnecting…"));
         Socket.on("connect_error", () => SetStatus("Unable to connect to developer monitor."));
