@@ -1508,41 +1508,43 @@ body.StorySocialPage { height:auto!important; min-height:100vh; overflow-x:hidde
 }
 
 
-/* Social sidebar scrolling: keep the inbox and lower player list reachable inside the panel. */
+/* Social sidebar and inbox: independently scrollable without clipping hovered rows. */
 @media (min-width: 761px) {
     .StorySocialLayout {
         height: min(860px, calc(100vh - 180px));
-        min-height: min(620px, calc(100vh - 180px));
+        min-height: 700px;
     }
 
     .StorySocialSidebar {
+        height: 100%;
         min-height: 0;
         max-height: 100%;
         overflow-x: hidden;
         overflow-y: auto;
         overscroll-behavior-y: contain;
+        scrollbar-gutter: stable;
         scrollbar-width: thin;
         scrollbar-color: #8c6341 rgba(68, 42, 25, .08);
         -webkit-overflow-scrolling: touch;
         touch-action: pan-y;
     }
 
-    .StorySocialChat,
-    .StorySocialChatEmpty,
-    .StorySocialChatView {
-        height: 100%;
-        min-height: 0;
-    }
-
     .StorySocialInboxList {
-        height: min(240px, 30vh);
-        min-height: 110px;
-        max-height: 240px;
+        display: grid;
+        align-content: start;
+        gap: 7px;
+        height: auto;
+        min-height: 0;
+        max-height: min(38vh, 320px);
         overflow-x: hidden;
         overflow-y: auto;
         overscroll-behavior-y: contain;
+        scrollbar-gutter: stable;
+        scrollbar-width: thin;
+        scrollbar-color: #8c6341 transparent;
         -webkit-overflow-scrolling: touch;
         touch-action: pan-y;
+        padding: 4px 5px 5px 2px;
         border: 1px solid rgba(105, 71, 37, .18);
         border-radius: 10px;
         background: rgba(255, 251, 239, .36);
@@ -1556,16 +1558,35 @@ body.StorySocialPage { height:auto!important; min-height:100vh; overflow-x:hidde
     }
 
     .StorySocialSidebar {
+        height: auto;
         max-height: none;
         overflow: visible;
     }
 
     .StorySocialInboxList {
-        height: min(210px, 26vh);
-        min-height: 96px;
-        max-height: 210px;
+        height: auto;
+        min-height: 0;
+        max-height: min(36vh, 240px);
+        overflow-x: hidden;
         overflow-y: auto;
+        overscroll-behavior-y: contain;
+        scrollbar-gutter: stable;
         -webkit-overflow-scrolling: touch;
         touch-action: pan-y;
+        padding: 4px 5px 5px 2px;
     }
+}
+
+/* Hover feedback stays inside the inbox frame instead of scaling into its edges. */
+.StorySocialInboxButton {
+    box-sizing: border-box;
+    transform: none !important;
+    transition: background .16s ease, border-color .16s ease, box-shadow .16s ease;
+}
+
+.StorySocialInboxButton:hover {
+    transform: none !important;
+    background: #fff5dc;
+    border-color: rgba(105, 71, 37, .3);
+    box-shadow: 0 2px 7px rgba(65, 36, 14, .08);
 }

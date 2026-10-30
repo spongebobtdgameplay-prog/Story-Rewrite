@@ -27,14 +27,6 @@
             ShellHost.StoryShell.ConfigureAudio(Settings);
         };
 
-        const PlayLocalSound = StoryAudio.PlaySound.bind(StoryAudio);
-        StoryAudio.PlaySound = function(Name = "click") {
-            if (typeof ShellHost.StoryShell.PlaySound === "function") {
-                return ShellHost.StoryShell.PlaySound(Name);
-            }
-            return PlayLocalSound(Name);
-        };
-
         StoryAudio.PlayMusic = function(Name) {
             ShellHost.StoryShell.PlayMusic(Name);
         };

@@ -44,7 +44,7 @@ const StoryAudio = (() => {
     }
 
     function DrawClick(Context) {
-        if (!Context || Context.state === "closed" || SoundVolume <= 0) return false;
+        if (!Context || Context.state !== "running" || SoundVolume <= 0) return false;
 
         const StartTime = Context.currentTime;
         const EndTime = StartTime + 0.08;
@@ -118,20 +118,10 @@ const StoryAudio = (() => {
         if (SoundsPaused || !SoundSettingsReady || SoundVolume <= 0) return Promise.resolve(false);
 
         const CurrentTime = Date.now();
-        // Filter duplicate calls from the delegated click listener and page handlers,
-        // without suppressing normal consecutive clicks.
-        if (CurrentTime - LastClickAt < 55) return Promise.resolve(false);
+        if (CurrentTime - LastClickAt < 120) return Promise.resolve(false);
         LastClickAt = CurrentTime;
 
-        const Context = GetContext();
-        if (!Context) return Promise.resolve(false);
-
-        // Resume is requested synchronously, while the browser still considers
-        // the click a user gesture. Schedule the original tone immediately too;
-        // it can be queued while the context transitions from suspended to running.
-        const ResumePromise = ResumeAudio();
-        const WasScheduled = DrawClick(Context);
-        return ResumePromise.then(Resumed => Boolean(WasScheduled && Resumed));
+        return ResumeAudio().then(Context => DrawClick(Context));
     }
 
     function ClickableTarget(Target) {
@@ -148,36 +138,13 @@ const StoryAudio = (() => {
         return Clickable;
     }
 
-    function GetPersistentShellAudioHost() {
-        try {
-            const Shell = window.parent !== window ? window.parent.StoryShell : null;
-            if (
-                Shell?.IsPersistentShell &&
-                window.frameElement?.id !== "StoryShellFrame" &&
-                typeof Shell.PlaySound === "function"
-            ) return Shell;
-        } catch {}
-        return null;
-    }
-
     function PlayClickFromCompletedClick(Event) {
         if (!ClickableTarget(Event.target)) return;
         AudioUnlocked = true;
-
-        // Play from the persistent shell host so route changes do not cut off the sound.
-        const Shell = GetPersistentShellAudioHost();
-        if (Shell) {
-            Shell.PlaySound("click");
-            return;
-        }
-
         PlayClick();
     }
 
     document.addEventListener("click", PlayClickFromCompletedClick, { capture: true });
-
-    // Preload the UI effect before the first interaction.
-    GetClickAudio();
 
     function Configure(Settings = {}) {
         const NextSoundVolume = Number(Settings.soundVolume);
