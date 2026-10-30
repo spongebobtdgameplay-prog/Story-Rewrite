@@ -258,7 +258,8 @@
 
     function PlaySound(Name) {
         const Host = GetAudioHost();
-        if (Host && typeof Host.PlaySound === "function") Host.PlaySound(Name);
+        if (Host && typeof Host.PlaySound === "function") return Host.PlaySound(Name);
+        return Promise.resolve(false);
     }
 
     function PlayMusic(Name) {
