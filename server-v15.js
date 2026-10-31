@@ -28,14 +28,6 @@ Module.prototype._compile = function(Content, Filename) {
         }
         GeneratedSource = GeneratedSource.replace(RuntimeAnchor, RuntimeSource + "\n\n" + RuntimeAnchor);
 
-        const LoginAnchor = "            const Account = await GetAccountByUsername(Body.username);\n            if (!Account || !ValidatePassword(Body.password) || !PasswordMatches(Body.password, Account.passwordHash)) {";
-        if (GeneratedSource.split(LoginAnchor).length !== 2) {
-            throw new Error("server-v15 Silicon Valley patch failed: login restriction anchor.");
-        }
-        GeneratedSource = GeneratedSource.replace(LoginAnchor,
-            "            const Account = await GetAccountByUsername(Body.username);\n            if (!Account || !ValidatePassword(Body.password) || !PasswordMatches(Body.password, Account.passwordHash)) {"
-        );
-
         const LoginSuccessAnchor = "            Account.save = NormalizeSave(Account.save);\n            await SaveAccount(Account);\n            const StoryIssuedToken = CreateToken(Account.username);";
         if (GeneratedSource.split(LoginSuccessAnchor).length !== 2) throw new Error("server-v15 login success anchor.");
         GeneratedSource = GeneratedSource.replace(LoginSuccessAnchor, "            if (await GetThinkRuntime().isRestricted(Account.username)) return SendJson(Response, 403, { error: \"Account access is temporarily restricted. Contact Story Rewrite support.\" }, Origin);\n" + LoginSuccessAnchor);
