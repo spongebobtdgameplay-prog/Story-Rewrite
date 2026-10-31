@@ -18,6 +18,17 @@
         }
     }
 
+    // Keep a very recent, previously validated browser session available when
+    // the Render cold start/network temporarily fails. A real 401 still signs
+    // the browser out; only transport/server unavailability can use this grace.
+    const PreviousSessionMarker = (() => {
+        try { return localStorage.getItem(SessionMarkerKey) === "1"; } catch { return false; }
+    })();
+    const PreviousValidatedAt = (() => {
+        try { return Number(localStorage.getItem(ValidatedAtKey) || 0); } catch { return 0; }
+    })();
+    const PreviousProfile = ReadJson(ProfileKey)?.profile || null;
+
     function SaveSafeAccountNames() {
         const Existing = ReadJson(SavedNamesKey);
         const Legacy = ReadJson(LegacyAccountsKey);
@@ -120,6 +131,28 @@
         }
     }
 
+    async function FetchSessionWithRetry() {
+        let Result = await FetchSession();
+        if (Result.authenticated || !Result.unavailable) return Result;
+
+        // GitHub Pages reaches the backend cross-origin, so its first request
+        // can hit a sleeping Render instance. Retry once before deciding.
+        await new Promise(Resolve => window.setTimeout(Resolve, 1200));
+        Result = await FetchSession();
+        if (Result.authenticated || !Result.unavailable) return Result;
+
+        const PreviousSessionIsFresh = PreviousSessionMarker
+            && PreviousProfile?.username
+            && PreviousValidatedAt > 0
+            && Date.now() - PreviousValidatedAt < 10 * 60 * 1000;
+        if (PreviousSessionIsFresh) {
+            try { localStorage.setItem(SessionMarkerKey, "1"); } catch {}
+            return { authenticated: true, profile: PreviousProfile, stale: true };
+        }
+
+        return Result;
+    }
+
     function CompleteSession(Data) {
         const Profile = Data?.profile || null;
         if (!Profile?.username) return { authenticated: false, unavailable: true };
@@ -131,5 +164,5 @@
         return { authenticated: true, profile: Profile };
     }
 
-    window.StoryCookieSessionReady = FetchSession();
+    window.StoryCookieSessionReady = FetchSessionWithRetry();
 })();
