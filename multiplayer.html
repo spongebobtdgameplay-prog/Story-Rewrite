@@ -144,7 +144,7 @@
             <p>Create a code, invite up to four other players, chat, vote on numbered story options, and share three team lives.</p>
         </div>
         <div class="RoomFooterActions MultiplayerHeroNavigation">
-            <button class="UiButton" type="button" data-story-go="think.html" id="ThinkConsoleButton" hidden>Silicon Valley</button>
+            <button class="UiButton" type="button" data-story-go="think.html" id="ThinkConsoleButton" hidden>Silicon Valley Think</button>
             <button class="UiButton" type="button" data-story-go="terms.html">Terms of Service</button>
             <button class="IconNavButton" type="button" data-story-go="account.html?from=multiplayer" data-account-icon aria-label="Account"></button>
         </div>
@@ -242,30 +242,47 @@
 <script src="audio.js?v=20261030-engine6"></script>
 <script src="real-audio.js?v=20261030-cookie2"></script>
 <script src="shell-ui.js?v=20261031-githubfix1"></script>
-<script src="multiplayer.js?v=20261020-1"></script>
+<script src="multiplayer.js?v=20261031-preloadmp1"></script>
 <script src="multiplayer-polish.js?v=20260930-1"></script>
 <script src="multiplayer-session-ui.js?v=20260930-1"></script>
-<script src="multiplayer-connection.js?v=20261030-cookie2"></script>
+<script src="multiplayer-connection.js?v=20261031-preloadmp1"></script>
 <script src="moderation-version.js?v=20261018-2"></script>
 <script src="host-controls.js?v=20260930-1"></script>
 <script src="ai-chat.js?v=20261030-cookie2"></script>
 <script src="reporting.js?v=20261018-3"></script>
 <script src="host-moderation-v20.js?v=20260930-1"></script>
-<script src="dev-gui.js?v=20261030-cookie2"></script>
+<script src="dev-gui.js?v=20261031-think-console1"></script>
 <script>
 (async () => {
     const Button = document.getElementById("ThinkConsoleButton");
     if (!Button || typeof GetServerUrl !== "function") return;
-    try {
-        const Server = GetServerUrl();
-        if (!Server) return;
-        const Response = await fetch(Server + "/api/think/overview", {
-            method: "GET",
-            credentials: "include",
-            cache: "no-store"
-        });
-        if (Response.ok) Button.hidden = false;
-    } catch {}
+    const Server = GetServerUrl();
+    if (!Server) return;
+
+    // Multiplayer is preloaded in the shell, so check Think access while the
+    // player is still on the previous page. Retry temporary cold-start errors.
+    for (let Attempt = 0; Attempt < 4; Attempt += 1) {
+        const Controller = new AbortController();
+        const Timeout = window.setTimeout(() => Controller.abort(), 9000);
+        try {
+            const Response = await fetch(Server + "/api/think/overview", {
+                method: "GET",
+                credentials: "include",
+                cache: "no-store",
+                signal: Controller.signal
+            });
+            if (Response.ok) {
+                Button.hidden = false;
+                return;
+            }
+            if (Response.status === 401 || Response.status === 403 || Response.status < 500) return;
+        } catch {
+            // Retry only temporary network or server startup failures.
+        } finally {
+            window.clearTimeout(Timeout);
+        }
+        if (Attempt < 3) await new Promise(Resolve => window.setTimeout(Resolve, 1200));
+    }
 })();
 </script>
 </body>
