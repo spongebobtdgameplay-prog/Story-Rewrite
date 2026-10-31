@@ -272,7 +272,14 @@
             } else if (Button.dataset.requestReview) {
                 const RequestId = Number(Button.dataset.requestId);
                 const Decision = Button.dataset.requestReview;
-                const Note = Decision === "approve" ? "Approved after review in Silicon Valley." : "Rejected after review in Silicon Valley.";
+                const Note = window.prompt(
+                    Decision === "approve"
+                        ? "Explain why the evidence justifies this action (at least 25 characters):"
+                        : "Add an optional reason for rejecting this request:",
+                    ""
+                );
+                if (Decision === "approve" && (!Note || Note.trim().length < 25)) return;
+                if (Note === null) return;
                 await Post("/api/think/requests/" + RequestId + "/review", { decision: Decision, note: Note, durationMinutes: 1440 });
                 await Load();
             } else if (Button.dataset.accessReview) {
