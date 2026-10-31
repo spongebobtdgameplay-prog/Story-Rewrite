@@ -23,7 +23,9 @@ window.STORY_REWRITE_CANONICAL_URL = "https://story-rewrite-iota.vercel.app";
         "rules.html",
         "terms.html",
         "account.html",
-        "social.html"
+        "social.html",
+        "think.html",
+        "hackers.html"
     ]);
 
     const PageName = (window.location.pathname.split("/").pop() || "").trim();
