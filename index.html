@@ -24,7 +24,10 @@ body,
 html {
     overflow: hidden;
     overscroll-behavior: none;
-    background: #8a6749;
+    background:
+        radial-gradient(circle at 15% 7%, rgba(255,240,207,.24), transparent 24%),
+        radial-gradient(circle at 84% 16%, rgba(60,30,14,.19), transparent 28%),
+        linear-gradient(155deg, #b38b61 0%, #8b6848 42%, #6e4c33 72%, #4d301f 100%);
 }
 
 body {
@@ -248,7 +251,7 @@ body {
     }
 
     await LoadScript("cache-guard.js?v=20261030-cookie1");
-    await LoadScript("shell.js?v=20261031-loopfix1");
+    await LoadScript("shell.js?v=20261031-preloadmp1");
 })().catch(Error => {
     console.error("Story Rewrite startup failed", Error);
 });
