@@ -14,7 +14,9 @@
         "terms.html",
         "account.html",
         "settings.html",
-        "social.html"
+        "social.html",
+        "think.html",
+        "hackers.html"
     ]);
 
     const PersistentPages = new Set([
@@ -26,7 +28,9 @@
         "terms.html",
         "account.html",
         "settings.html",
-        "social.html"
+        "social.html",
+        "think.html",
+        "hackers.html"
     ]);
 
     const PersistentFrames = new Map();

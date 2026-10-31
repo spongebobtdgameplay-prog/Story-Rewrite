@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Silicon Valley — Story Rewrite Think</title>
+<link rel="stylesheet" href="think.css?v=20261031-1">
+</head>
+<body class="ThinkPage" data-think-page="dashboard">
+<div class="ThinkShell" id="ThinkApp">
+    <header class="ThinkHeader">
+        <div class="ThinkBrand">
+            <div class="ThinkMark" aria-hidden="true">SV</div>
+            <div>
+                <div class="ThinkEyebrow">Silicon Valley / Story Rewrite Think</div>
+                <h1>Developer Operations</h1>
+                <p>Authorized developer workspace · evidence-led security review</p>
+            </div>
+        </div>
+        <nav class="ThinkNav" aria-label="Developer navigation">
+            <a href="hackers.html" data-story-go="hackers.html">Investigations</a>
+            <button type="button" class="ThinkReload">Refresh</button>
+            <button type="button" data-story-back="multiplayer.html">Back to Story Rewrite</button>
+        </nav>
+    </header>
+
+    <main class="ThinkMain">
+        <section class="ThinkHero">
+            <div>
+                <div class="ThinkEyebrow">Private developer workspace</div>
+                <h2>Silicon Valley: Story Rewrite Think</h2>
+                <p>Coordinate developer ideas, moderator oversight, investigation cases, and higher-action requests. Player access and account enforcement are controlled by the backend permission system.</p>
+            </div>
+            <div>
+                <div class="ThinkStatus" id="ThinkConnectionStatus">Checking authorization…</div>
+                <div class="ThinkRole" id="ThinkRoleBadge">Loading role</div>
+            </div>
+        </section>
+
+        <section class="ThinkMetrics" id="ThinkMetrics" aria-label="Workspace totals">
+            <div class="ThinkMetric"><span>Investigation cases</span><strong id="MetricCases">—</strong></div>
+            <div class="ThinkMetric"><span>Pending action requests</span><strong id="MetricRequests">—</strong></div>
+            <div class="ThinkMetric"><span>Developer roster</span><strong id="MetricStaff">—</strong></div>
+            <div class="ThinkMetric"><span>StoryBot notices</span><strong id="MetricAlerts">—</strong></div>
+        </section>
+
+        <section class="ThinkCard full" id="ThinkAlertsCard">
+            <div class="ThinkCardHead"><div><h2>StoryBot oversight notices</h2><p>Warnings are based on recorded actions and evidence completeness.</p></div></div>
+            <div class="ThinkList" id="ThinkAlerts"></div>
+        </section>
+
+        <div class="ThinkGrid">
+            <section class="ThinkCard">
+                <div class="ThinkCardHead"><div><h2>StoryBot policy checkpoint</h2><p>Before and after high-level moderator actions.</p></div><span class="ThinkRole">Oversight</span></div>
+                <div class="ThinkNotice">StoryBot checks that each high-level request is linked to a matching case, has a specific reason and evidence context, and follows the review process. Top-tier moderators are monitored. Darius56 is the owner and is exempt from StoryBot moderator oversight.</div>
+                <p class="ThinkSubtle">StoryBot reviews recorded moderation activity only. It does not secretly access a player's camera, microphone, screen, or private device activity.</p>
+            </section>
+
+            <section class="ThinkCard">
+                <div class="ThinkCardHead"><div><h2>Developer roster</h2><p>Role assignments are stored server-side.</p></div></div>
+                <div class="ThinkList" id="ThinkRoster"></div>
+            </section>
+        </div>
+
+        <section class="ThinkCard full" id="ThinkStaffManageCard" hidden>
+            <div class="ThinkCardHead"><div><h2>Developer appointment</h2><p>Owner-only · appoint, promote, or remove staff access.</p></div><span class="ThinkRole">Darius56 only</span></div>
+            <form class="ThinkForm" id="ThinkStaffForm">
+                <div class="ThinkFormGrid">
+                    <div class="ThinkField"><label for="StaffUsername">Existing account username</label><input id="StaffUsername" name="username" maxlength="20" required autocomplete="off" placeholder="Username"></div>
+                    <div class="ThinkField"><label for="StaffRole">Developer tier</label><select id="StaffRole" name="role"><option value="developer">Developer · read-only</option><option value="moderator">Moderator · reports and requests</option><option value="top_moderator">Top-tier moderator · review actions</option><option value="remove">Remove developer access</option></select></div>
+                </div>
+                <button class="ThinkButton primary" type="submit">Save appointment</button>
+                <div class="ThinkSubtle" id="ThinkStaffFeedback" aria-live="polite"></div>
+            </form>
+        </section>
+
+        <section class="ThinkCard full" id="ThinkCreateCaseCard" hidden>
+            <div class="ThinkCardHead"><div><h2>Add an investigation case</h2><p>Moderator and top-tier moderator access · a report is not proof of wrongdoing.</p></div></div>
+            <form class="ThinkForm" id="ThinkCaseForm">
+                <div class="ThinkFormGrid">
+                    <div class="ThinkField"><label for="CaseTarget">Account username</label><input id="CaseTarget" name="targetUsername" maxlength="20" required autocomplete="off" placeholder="Player username"></div>
+                    <div class="ThinkField"><label for="CaseCategory">Category</label><select id="CaseCategory" name="category"><option value="suspected_cheating">Suspected cheating</option><option value="harassment">Harassment</option><option value="spam">Spam</option><option value="account_abuse">Account abuse</option><option value="other">Other / needs review</option></select></div>
+                </div>
+                <div class="ThinkField"><label for="CaseReason">Reason for the report</label><textarea id="CaseReason" name="reason" minlength="12" maxlength="1200" required placeholder="Describe the specific reported behaviour."></textarea></div>
+                <div class="ThinkField"><label for="CaseEvidence">Evidence and context</label><textarea id="CaseEvidence" name="evidence" minlength="30" maxlength="4000" required placeholder="Record the relevant message or event, when it happened, and its surrounding context. Do not include passwords, tokens, or unrelated private information."></textarea></div>
+                <button class="ThinkButton primary" type="submit">Add investigation case</button>
+                <div class="ThinkSubtle" id="ThinkCaseFeedback" aria-live="polite"></div>
+            </form>
+        </section>
+
+        <section class="ThinkCard full" id="ThinkActionRequestCard">
+            <div class="ThinkCardHead"><div><h2>Request higher-level action</h2><p>Lower tiers cannot ban accounts or terminate sessions directly.</p></div></div>
+            <form class="ThinkForm" id="ThinkRequestForm">
+                <div class="ThinkFormGrid">
+                    <div class="ThinkField"><label for="RequestCase">Investigation case</label><select id="RequestCase" name="caseId" required><option value="">Choose a case</option></select></div>
+                    <div class="ThinkField"><label for="RequestAction">Requested action</label><select id="RequestAction" name="actionType"><option value="terminate_sessions">Terminate active sessions</option><option value="suspend_account">Suspend account (24 hours by default)</option></select></div>
+                </div>
+                <div class="ThinkField"><label for="RequestReason">Why is this action necessary?</label><textarea id="RequestReason" name="reason" minlength="20" maxlength="1200" required placeholder="Explain the policy concern and why this action is proportionate."></textarea></div>
+                <div class="ThinkField"><label for="RequestEvidence">Evidence relevant to this action</label><textarea id="RequestEvidence" name="evidence" minlength="30" maxlength="4000" required placeholder="Summarize the specific evidence and context."></textarea></div>
+                <button class="ThinkButton primary" type="submit">Submit for higher-tier review</button>
+                <div class="ThinkSubtle" id="ThinkRequestFeedback" aria-live="polite"></div>
+            </form>
+        </section>
+
+        <section class="ThinkCard full" id="ThinkRequestsCard">
+            <div class="ThinkCardHead"><div><h2>Higher-action requests</h2><p>Approvals are human-reviewed and rechecked by StoryBot immediately before execution.</p></div></div>
+            <div class="ThinkList" id="ThinkRequests"></div>
+        </section>
+
+        <section class="ThinkCard full" id="ThinkAccessCard">
+            <div class="ThinkCardHead"><div><h2>Request higher developer access</h2><p>Lower tiers can request the next tier. Only the owner can approve appointments.</p></div></div>
+            <form class="ThinkForm" id="ThinkAccessForm">
+                <div class="ThinkField"><label for="AccessReason">Why do you need higher access?</label><textarea id="AccessReason" name="reason" minlength="15" maxlength="1000" required placeholder="Explain the responsibilities you need to perform."></textarea></div>
+                <button class="ThinkButton" type="submit">Request next tier</button>
+                <div class="ThinkSubtle" id="ThinkAccessFeedback" aria-live="polite"></div>
+            </form>
+            <div class="ThinkList" id="ThinkAccessRequests"></div>
+        </section>
+
+        <div class="ThinkGrid">
+            <section class="ThinkCard">
+                <div class="ThinkCardHead"><div><h2>Developer ideas</h2><p>Submit improvements for the team to review.</p></div></div>
+                <form class="ThinkForm" id="ThinkIdeaForm">
+                    <div class="ThinkField"><label for="IdeaTitle">Idea title</label><input id="IdeaTitle" name="title" maxlength="120" required></div>
+                    <div class="ThinkField"><label for="IdeaBody">Description</label><textarea id="IdeaBody" name="body" minlength="15" maxlength="3000" required></textarea></div>
+                    <button class="ThinkButton primary" type="submit">Submit idea</button>
+                    <div class="ThinkSubtle" id="ThinkIdeaFeedback" aria-live="polite"></div>
+                </form>
+                <div class="ThinkList" id="ThinkIdeas"></div>
+            </section>
+
+            <section class="ThinkCard">
+                <div class="ThinkCardHead"><div><h2>Security audit trail</h2><p>Recorded actions and decisions.</p></div></div>
+                <div class="ThinkList" id="ThinkAudit"></div>
+            </section>
+        </div>
+    </main>
+    <footer class="ThinkFooter">Silicon Valley: Story Rewrite Think · All privileged operations are checked by the server and recorded in the audit trail.</footer>
+</div>
+
+<script src="server-config.js?v=20261031-socket1"></script>
+<script src="network.js?v=20261031-think1"></script>
+<script src="shell-ui.js?v=20261031-think1"></script>
+<script src="think.js?v=20261031-1"></script>
+</body>
+</html>
