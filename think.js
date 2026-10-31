@@ -265,8 +265,9 @@
             if (Button.dataset.caseStatus) {
                 const CaseId = Number(Button.dataset.caseId);
                 const Note = Button.dataset.caseStatus === "confirmed"
-                    ? "Reviewed the submitted evidence and context."
+                    ? window.prompt("Explain why the evidence supports a confirmed finding (at least 25 characters):", "")
                     : "Investigation status updated after review.";
+                if (Button.dataset.caseStatus === "confirmed" && (!Note || Note.trim().length < 25)) return;
                 await Post("/api/think/cases/" + CaseId + "/status", { status: Button.dataset.caseStatus, note: Note });
                 await Load();
             } else if (Button.dataset.requestReview) {
