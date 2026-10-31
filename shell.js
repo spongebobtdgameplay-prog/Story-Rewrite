@@ -641,7 +641,7 @@
             Frame.setAttribute("aria-hidden", "true");
         } else {
             Frame.style.display = "block";
-            Frame.style.visibility = "hidden";
+            Frame.style.visibility = "visible";
             Frame.style.pointerEvents = "auto";
             Frame.removeAttribute("aria-hidden");
         }
