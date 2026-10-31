@@ -2,9 +2,9 @@ let MultiplayerReconnectAttempts = 0;
 let MultiplayerReconnectTimer = null;
 let MultiplayerRoomRejoinInFlight = false;
 
-const MULTIPLAYER_BACKEND_RETRIES = 8;
-const MULTIPLAYER_SOCKET_WAIT_MS = 45000;
-const MULTIPLAYER_SCRIPT_RETRIES = 4;
+const MULTIPLAYER_BACKEND_RETRIES = 3;
+const MULTIPLAYER_SOCKET_WAIT_MS = 20000;
+const MULTIPLAYER_SCRIPT_RETRIES = 3;
 const MULTIPLAYER_ACK_RETRIES = 2;
 
 function MultiplayerSleep(Milliseconds) {
@@ -60,7 +60,7 @@ EnsureBackendVersion = async function() {
 
     for (let Attempt = 0; Attempt < MULTIPLAYER_BACKEND_RETRIES; Attempt += 1) {
         try {
-            const Health = await ApiRequest("/api/health", { timeoutMs: 45000 });
+            const Health = await ApiRequest("/api/health", { timeoutMs: 7000 });
             const Version = Number(Health?.version || 0);
 
             if (!Health?.ok || !Health?.multiplayer) {
@@ -194,7 +194,14 @@ InitializeMultiplayer = async function() {
 
     MultiplayerSocket = ConnectStorySocket();
     BindSocket(MultiplayerSocket);
-    await WaitForSocketConnection(MultiplayerSocket, MULTIPLAYER_SOCKET_WAIT_MS);
+    try {
+        await WaitForSocketConnection(MultiplayerSocket, MULTIPLAYER_SOCKET_WAIT_MS);
+    } catch (Error) {
+        const FailedSocket = MultiplayerSocket;
+        MultiplayerSocket = null;
+        FailedSocket?.disconnect();
+        throw Error;
+    }
     SetMultiplayerConnectionStatus("", "lobby");
     return MultiplayerSocket;
 };
