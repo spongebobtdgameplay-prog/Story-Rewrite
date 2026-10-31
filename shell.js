@@ -1,5 +1,5 @@
 (() => {
-    const FrontendVersion = "20261031.1";
+    const FrontendVersion = "20261031.2";
     const Root = document.getElementById("StoryShellRoot");
     const InitialFrame = document.getElementById("StoryShellFrame");
     if (!Root || !InitialFrame) return;
@@ -652,9 +652,11 @@
 
     function CreateFrame(Route) {
         const Frame = document.createElement("iframe");
-        Frame.src = RouteUrl(Route);
         PrepareFrame(Frame, Route);
         Root.appendChild(Frame);
+        // Attach the load handler and connect the frame before starting navigation.
+        // A fast cached response can otherwise load before the listener exists.
+        Frame.src = RouteUrl(Route);
         return Frame;
     }
 
