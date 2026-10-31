@@ -82,7 +82,6 @@
 
     function RenderCases() {
         const Container = $("ThinkCases");
-        if (!Container) return;
         const Search = String($("CaseSearch")?.value || "").trim().toLowerCase();
         const Filter = String($("CaseStatusFilter")?.value || "all");
         const Items = (Overview.cases || []).filter(Case => {
@@ -90,7 +89,7 @@
             if (!Search) return true;
             return [Case.target_username, Case.category, Case.reason, Case.evidence, Case.filed_by].some(Value => String(Value || "").toLowerCase().includes(Search));
         });
-        Container.innerHTML = Items.length ? Items.map(Case =>
+        if (Container) Container.innerHTML = Items.length ? Items.map(Case =>
             '<article class="ThinkRow"><div class="ThinkRowMain"><strong>#' + Esc(Case.id) + " · " + Esc(Case.target_username) + '</strong><div class="ThinkMeta">' + Badge(Case.status) + '<span>' + Esc(Case.category) + '</span><span>Reported by ' + Esc(Case.filed_by) + '</span><span>' + Esc(DateText(Case.created_at)) + '</span></div><p><b>Reason:</b> ' + Esc(Case.reason) + '</p><p><b>Evidence:</b> ' + Esc(Case.evidence) + '</p>' + (Case.review_note ? '<p><b>Review note:</b> ' + Esc(Case.review_note) + '</p>' : "") + CaseActions(Case) + '</div></article>'
         ).join("") : Empty("No investigation cases match this filter.");
         const Select = $("RequestCase");
@@ -293,4 +292,7 @@
     });
 
     Load();
+    window.setInterval(() => {
+        if (document.visibilityState === "visible") Load();
+    }, 20000);
 })();
