@@ -57,6 +57,7 @@ let MultiplayerState = null;
 let CurrentProfile = null;
 let LocalReady = false;
 let MultiplayerReadyPromise = null;
+let MultiplayerReconnectPromise = null;
 let SocketClientPromise = null;
 let StartingRoom = false;
 let RoomNoticeFadeTimer = 0;
@@ -220,25 +221,52 @@ async function EnsureBackendVersion() {
 async function EnsureMultiplayerReady() {
     if (MultiplayerSocket?.connected && CurrentProfile) return MultiplayerSocket;
 
-    // A persistent iframe may keep a resolved initialization promise after
-    // Socket.IO disconnects while the user is on another shell page. Wait for
-    // its automatic reconnect first; recreate the socket only if it stopped.
+    // Share an in-progress initial connection among DOM startup, background
+    // preloading, and later shell activations.
+    if (MultiplayerReadyPromise) {
+        const PendingInitialization = MultiplayerReadyPromise;
+        try {
+            const Socket = await PendingInitialization;
+            if (MultiplayerReadyPromise === PendingInitialization) MultiplayerReadyPromise = null;
+            return Socket;
+        } catch (Error) {
+            if (MultiplayerReadyPromise === PendingInitialization) MultiplayerReadyPromise = null;
+            throw Error;
+        }
+    }
+
+    // A persistent iframe can remain alive after leaving Multiplayer. Its
+    // socket may be reconnecting even though the original initialization has
+    // already completed, so wait for that reconnect before creating a new one.
     if (MultiplayerSocket && CurrentProfile && !MultiplayerSocket.connected) {
         if (MultiplayerSocket.active) {
-            try {
-                await WaitForSocketConnection(MultiplayerSocket, 45000);
-                return MultiplayerSocket;
-            } catch (Error) {
-                if (Error?.message === "Other Session found" || Error?.data?.code === "OTHER_SESSION_FOUND") {
-                    throw Error;
-                }
+            if (!MultiplayerReconnectPromise) {
+                const ReconnectingSocket = MultiplayerSocket;
+                MultiplayerReconnectPromise = WaitForSocketConnection(ReconnectingSocket, 45000)
+                    .then(() => ReconnectingSocket)
+                    .catch(Error => {
+                        if (Error?.message === "Other Session found" || Error?.data?.code === "OTHER_SESSION_FOUND") {
+                            throw Error;
+                        }
+                        if (MultiplayerSocket === ReconnectingSocket) {
+                            ReconnectingSocket.removeAllListeners();
+                            ReconnectingSocket.disconnect();
+                            MultiplayerSocket = null;
+                        }
+                        return null;
+                    })
+                    .finally(() => {
+                        MultiplayerReconnectPromise = null;
+                    });
             }
-        }
 
-        MultiplayerSocket.removeAllListeners();
-        MultiplayerSocket.disconnect();
-        MultiplayerSocket = null;
-        MultiplayerReadyPromise = null;
+            const ReconnectedSocket = await MultiplayerReconnectPromise;
+            if (ReconnectedSocket?.connected) return ReconnectedSocket;
+        } else {
+            MultiplayerSocket.removeAllListeners();
+            MultiplayerSocket.disconnect();
+            MultiplayerSocket = null;
+        }
     }
 
     if (!MultiplayerReadyPromise) {
@@ -247,7 +275,9 @@ async function EnsureMultiplayerReady() {
 
     const PendingInitialization = MultiplayerReadyPromise;
     try {
-        return await PendingInitialization;
+        const Socket = await PendingInitialization;
+        if (MultiplayerReadyPromise === PendingInitialization) MultiplayerReadyPromise = null;
+        return Socket;
     } catch (Error) {
         if (MultiplayerReadyPromise === PendingInitialization) MultiplayerReadyPromise = null;
         throw Error;
