@@ -1,5 +1,5 @@
 (() => {
-    const FrontendVersion = "20261030.7";
+    const FrontendVersion = "20261031.1";
     const Root = document.getElementById("StoryShellRoot");
     const InitialFrame = document.getElementById("StoryShellFrame");
     if (!Root || !InitialFrame) return;
@@ -540,6 +540,7 @@
         SyncGameplayPauseButton();
         GameplayPauseButton?.removeAttribute("aria-busy");
         UpdateTitle(Frame);
+        try { window.parent.dispatchEvent(new Event("StoryShellReady")); } catch {}
 
         const ResumeContinue = ConsumeContinueResumeRequest(Route);
         if (ResumeContinue) {
