@@ -76,6 +76,14 @@ window.addEventListener("DOMContentLoaded", () => {
     });
 });
 
+window.addEventListener("StoryShellActivate", Event => {
+    const Route = String(Event?.detail?.route || "");
+    if (!Route.startsWith("multiplayer.html")) return;
+    EnsureMultiplayerReady().then(HideLobbyStatus).catch(Error => {
+        ShowLobbyStatus(FriendlyConnectionError(Error), false);
+    });
+});
+
 
 function ById(Id) {
     return document.getElementById(Id);
@@ -212,14 +220,36 @@ async function EnsureBackendVersion() {
 async function EnsureMultiplayerReady() {
     if (MultiplayerSocket?.connected && CurrentProfile) return MultiplayerSocket;
 
+    // A persistent iframe may keep a resolved initialization promise after
+    // Socket.IO disconnects while the user is on another shell page. Wait for
+    // its automatic reconnect first; recreate the socket only if it stopped.
+    if (MultiplayerSocket && CurrentProfile && !MultiplayerSocket.connected) {
+        if (MultiplayerSocket.active) {
+            try {
+                await WaitForSocketConnection(MultiplayerSocket, 45000);
+                return MultiplayerSocket;
+            } catch (Error) {
+                if (Error?.message === "Other Session found" || Error?.data?.code === "OTHER_SESSION_FOUND") {
+                    throw Error;
+                }
+            }
+        }
+
+        MultiplayerSocket.removeAllListeners();
+        MultiplayerSocket.disconnect();
+        MultiplayerSocket = null;
+        MultiplayerReadyPromise = null;
+    }
+
     if (!MultiplayerReadyPromise) {
         MultiplayerReadyPromise = InitializeMultiplayer();
     }
 
+    const PendingInitialization = MultiplayerReadyPromise;
     try {
-        return await MultiplayerReadyPromise;
+        return await PendingInitialization;
     } catch (Error) {
-        MultiplayerReadyPromise = null;
+        if (MultiplayerReadyPromise === PendingInitialization) MultiplayerReadyPromise = null;
         throw Error;
     }
 }
