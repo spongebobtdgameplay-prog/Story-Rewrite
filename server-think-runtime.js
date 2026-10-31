@@ -275,6 +275,10 @@ function createThinkRuntime(Dependencies) {
                 SendJson(Response, 400, { error: "Choose approve or reject." }, Origin);
                 return true;
             }
+            if (Decision === "approve" && ReviewNote.length < 25) {
+                SendJson(Response, 400, { error: "Add a review note of at least 25 characters explaining why this action is justified." }, Origin);
+                return true;
+            }
             const PendingResult = await Database.query("SELECT * FROM story_rewrite_think_requests WHERE id = $1 AND status = 'pending' LIMIT 1", [Number(RequestReviewMatch[1])]);
             if (!PendingResult.rowCount) {
                 SendJson(Response, 404, { error: "Pending action request not found." }, Origin);
