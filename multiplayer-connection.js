@@ -176,7 +176,7 @@ ConnectStorySocket = function() {
 InitializeMultiplayer = async function() {
     SetMultiplayerConnectionStatus("Connecting to multiplayer...", "lobby", "neutral");
 
-    await EnsureBackendVersion();
+    await WarmMultiplayerDependencies();
 
     const ProfileResult = await RetryMultiplayerAction(() => RequireAccount(), 4);
     CurrentProfile = ProfileResult.profile;
@@ -184,10 +184,8 @@ InitializeMultiplayer = async function() {
     const Save = await RetryMultiplayerAction(() => FetchServerSave(), 4);
     if (window.StoryAudio) {
         StoryAudio.Configure(Save.settings);
-        StoryAudio.PlayMusic("lobby");
+        if (MultiplayerShellActive) StoryAudio.PlayMusic("lobby");
     }
-
-    await LoadSocketClient();
 
     if (MultiplayerSocket) {
         MultiplayerSocket.removeAllListeners();
