@@ -477,7 +477,14 @@ function RenderLives() {
         Heart.className = `LifeHeart ${Active ? "StoryHeartActive" : "StoryHeartEmpty Empty"}`;
         Heart.setAttribute("aria-hidden", "true");
         Heart.style.setProperty("color", Active ? "#ff1738" : "#6d625d", "important");
-        Heart.innerHTML = `<svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="${HeartPath}" style="fill:${Active ? "#ff1738" : "#6d625d"}"></path></svg>`;
+        Heart.style.setProperty(
+            "animation",
+            Active ? "LifeHeartBeat .86s cubic-bezier(.34,1.56,.64,1) infinite" : "none",
+            "important"
+        );
+        Heart.style.setProperty("transform-origin", "center", "important");
+        Heart.style.setProperty("will-change", Active ? "transform, filter" : "auto", "important");
+        Heart.innerHTML = `<svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="${HeartPath}" style="fill:${Active ? "#ff1738" : "#6d625d"} !important;color:${Active ? "#ff1738" : "#6d625d"} !important"></path></svg>`;
         Container.appendChild(Heart);
     }
 }
