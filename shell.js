@@ -1,5 +1,5 @@
 (() => {
-    const FrontendVersion = "20261031.11";
+    const FrontendVersion = "20261031.12";
     const Root = document.getElementById("StoryShellRoot");
     const InitialFrame = document.getElementById("StoryShellFrame");
     if (!Root || !InitialFrame) return;
@@ -584,12 +584,18 @@
         if (!ActualRoute) {
             Frame.dataset.storyLoaded = "0";
             Frame.dataset.storyLoadFailed = "1";
+            const IsCurrentNavigation = Frame === ActiveFrame || Frame === PendingFrame;
             try {
                 const PageName = Frame.contentWindow.location.pathname.split("/").pop();
-                if (PageName === "auth.html" && (Frame === ActiveFrame || Frame === PendingFrame)) {
+                if (PageName === "auth.html" && IsCurrentNavigation) {
                     Exit("auth.html", true);
+                    return;
                 }
             } catch {}
+            if (PendingFrame === Frame) {
+                PendingFrame = null;
+                GameplayPauseButton?.removeAttribute("aria-busy");
+            }
             return;
         }
 
@@ -663,15 +669,36 @@
             Frame.removeAttribute("aria-hidden");
         }
 
-        Frame.addEventListener("load", () => HandleFrameLoad(Frame));
+        Frame.addEventListener("load", () => {
+            if (Frame._storyLoadTimer) {
+                clearTimeout(Frame._storyLoadTimer);
+                Frame._storyLoadTimer = 0;
+            }
+            HandleFrameLoad(Frame);
+        });
+    }
+
+    function StartFrameLoadWatchdog(Frame) {
+        if (Frame._storyLoadTimer) clearTimeout(Frame._storyLoadTimer);
+        Frame.dataset.storyLoadFailed = "0";
+        Frame._storyLoadTimer = window.setTimeout(() => {
+            if (Frame.dataset.storyLoaded === "1") return;
+            Frame.dataset.storyLoadFailed = "1";
+            if (PendingFrame === Frame) {
+                PendingFrame = null;
+                GameplayPauseButton?.removeAttribute("aria-busy");
+            }
+        }, 25000);
     }
 
     function CreateFrame(Route) {
         const Frame = document.createElement("iframe");
+        Frame.loading = "eager";
         PrepareFrame(Frame, Route);
         Root.appendChild(Frame);
         // Attach the load handler and connect the frame before starting navigation.
         // A fast cached response can otherwise load before the listener exists.
+        StartFrameLoadWatchdog(Frame);
         Frame.src = RouteUrl(Route);
         return Frame;
     }
@@ -682,6 +709,7 @@
             if (Existing.dataset.storyLoadFailed === "1") {
                 Existing.dataset.storyLoadFailed = "0";
                 Existing.dataset.storyLoaded = "0";
+                StartFrameLoadWatchdog(Existing);
                 Existing.src = RouteUrl(Route);
             }
             return Existing;
@@ -703,6 +731,7 @@
             TransientFrame.dataset.storyLoaded = "0";
             TransientFrame.dataset.storyLoadFailed = "0";
             TransientFrame.dataset.storyRoute = Route;
+            StartFrameLoadWatchdog(TransientFrame);
             TransientFrame.src = RouteUrl(Route);
         }
 
@@ -759,7 +788,12 @@
         const Normalized = NormalizeRoute(Value);
         if (!Normalized) return false;
 
-        if (Normalized === CurrentRoute && ActiveFrame?.dataset.storyRoute === Normalized) {
+        if (
+            Normalized === CurrentRoute &&
+            ActiveFrame?.dataset.storyRoute === Normalized &&
+            ActiveFrame.dataset.storyLoaded === "1" &&
+            ActiveFrame.dataset.storyLoadFailed !== "1"
+        ) {
             DispatchFrameEvent(ActiveFrame, "StoryShellActivate", Normalized);
             return true;
         }
@@ -898,6 +932,7 @@
     ApplyRouteMusic(InitialRoute);
     SyncGameplayPauseButton();
 
-    // The load listener was installed by PrepareFrame before navigation starts.
+    // Reveal only after HandleFrameLoad confirms the selected document is ready.
+    StartFrameLoadWatchdog(InitialFrame);
     InitialFrame.src = RouteUrl(InitialRoute);
 })();
