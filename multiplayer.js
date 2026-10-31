@@ -286,7 +286,7 @@ async function EnsureMultiplayerReady() {
         if (MultiplayerSocket.active) {
             if (!MultiplayerReconnectPromise) {
                 const ReconnectingSocket = MultiplayerSocket;
-                MultiplayerReconnectPromise = WaitForSocketConnection(ReconnectingSocket, 45000)
+                MultiplayerReconnectPromise = WaitForSocketConnection(ReconnectingSocket, 20000)
                     .then(() => ReconnectingSocket)
                     .catch(Error => {
                         if (Error?.message === "Other Session found" || Error?.data?.code === "OTHER_SESSION_FOUND") {
