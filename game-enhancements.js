@@ -147,6 +147,7 @@ function EnsureReviveUi() {
     Button.id = "ReviveButton";
     Button.type = "button";
     Button.className = "PrimaryButton ReviveButton";
+    Button.title = "Restore one heart and keep your current level choices.";
     Button.innerHTML = `
         <span class="ReviveIcon" aria-hidden="true">
             <svg viewBox="0 0 24 24"><path d="M12 3v6M9 6h6"></path><path d="M5.5 11.5A7 7 0 1 0 18.5 9"></path><path d="m18.5 5.5.2 4.1-4.1.2"></path></svg>
