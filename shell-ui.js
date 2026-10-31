@@ -1,4 +1,4 @@
-const STORY_FRONTEND_VERSION = "v2.69";
+const STORY_FRONTEND_VERSION = "v2.70";
 const STORY_BACK_ICON = `
 <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
     <path d="M14.5 5 7.5 12l7 7" />
@@ -179,13 +179,15 @@ function StoryNavigate(Page, Trigger = null) {
         const Shell = window.parent !== window && window.parent.StoryShell?.IsPersistentShell
             ? window.parent.StoryShell
             : null;
-        if (
-            Shell &&
-            typeof Shell.Navigate === "function" &&
-            typeof Shell.CanHandle === "function" &&
-            Shell.CanHandle(Requested) &&
-            Shell.Navigate(Requested)
-        ) return true;
+        if (Shell && typeof Shell.Navigate === "function" && typeof Shell.CanHandle === "function") {
+            if (Shell.CanHandle(Requested)) {
+                // A shell-owned route must stay inside the existing iframe
+                // router. Never fall back to reloading the child HTML page.
+                if (Shell.Navigate(Requested)) return true;
+                ClearStoryNavigationLock();
+                return false;
+            }
+        }
     } catch {}
 
     window.location.href = typeof BuildStoryUrl === "function"
