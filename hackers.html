@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Story Rewrite — Security Investigations</title>
+<link rel="stylesheet" href="think.css?v=20261031-1">
+</head>
+<body class="ThinkPage" data-think-page="hackers">
+<div class="ThinkShell" id="ThinkApp">
+    <header class="ThinkHeader">
+        <div class="ThinkBrand">
+            <div class="ThinkMark" aria-hidden="true">SV</div>
+            <div>
+                <div class="ThinkEyebrow">Silicon Valley / Story Rewrite Think</div>
+                <h1>Security Investigations</h1>
+                <p>Cases reported by moderators · authorized developer access only</p>
+            </div>
+        </div>
+        <nav class="ThinkNav" aria-label="Developer navigation">
+            <a href="think.html" data-story-go="think.html">Operations dashboard</a>
+            <button type="button" class="ThinkReload">Refresh</button>
+            <button type="button" data-story-back="think.html">Back to Think</button>
+        </nav>
+    </header>
+
+    <main class="ThinkMain">
+        <section class="ThinkHero">
+            <div>
+                <div class="ThinkEyebrow">Moderator-added reports</div>
+                <h2>Investigated accounts</h2>
+                <p>This page lists reported accounts and the evidence notes submitted by authorized staff. A report is an allegation, not a finding. Cases must be reviewed before any higher-level action.</p>
+            </div>
+            <div>
+                <div class="ThinkStatus" id="ThinkConnectionStatus">Checking authorization…</div>
+                <div class="ThinkRole" id="ThinkRoleBadge">Loading role</div>
+            </div>
+        </section>
+
+        <section class="ThinkCard full" id="ThinkAlertsCard">
+            <div class="ThinkCardHead"><div><h2>StoryBot oversight notices</h2><p>Professionalism reminders based on recorded moderator actions.</p></div></div>
+            <div class="ThinkList" id="ThinkAlerts"></div>
+        </section>
+
+        <section class="ThinkCard full">
+            <div class="ThinkCardHead">
+                <div><h2>Hackers added by moderators</h2><p>Reported / Under review / Confirmed / Cleared · review status is visible to authorized staff.</p></div>
+            </div>
+            <div class="ThinkToolbar">
+                <input class="ThinkSearch" id="CaseSearch" type="search" placeholder="Search username, report, or evidence…" autocomplete="off">
+                <select class="ThinkSearch" id="CaseStatusFilter" aria-label="Filter cases by status">
+                    <option value="all">All statuses</option>
+                    <option value="reported">Reported</option>
+                    <option value="under_review">Under review</option>
+                    <option value="confirmed">Confirmed</option>
+                    <option value="cleared">Cleared</option>
+                </select>
+            </div>
+            <div class="ThinkList" id="ThinkCases"></div>
+        </section>
+
+        <section class="ThinkCard full" id="ThinkCreateCaseCard" hidden>
+            <div class="ThinkCardHead"><div><h2>Add an investigation report</h2><p>Moderator and top-tier moderator access · record evidence rather than assumptions.</p></div></div>
+            <form class="ThinkForm" id="ThinkCaseForm">
+                <div class="ThinkFormGrid">
+                    <div class="ThinkField"><label for="CaseTarget">Account username</label><input id="CaseTarget" name="targetUsername" maxlength="20" required autocomplete="off" placeholder="Player username"></div>
+                    <div class="ThinkField"><label for="CaseCategory">Category</label><select id="CaseCategory" name="category"><option value="suspected_cheating">Suspected cheating</option><option value="harassment">Harassment</option><option value="spam">Spam</option><option value="account_abuse">Account abuse</option><option value="other">Other / needs review</option></select></div>
+                </div>
+                <div class="ThinkField"><label for="CaseReason">Reason for the report</label><textarea id="CaseReason" name="reason" minlength="12" maxlength="1200" required placeholder="Describe the specific reported behaviour."></textarea></div>
+                <div class="ThinkField"><label for="CaseEvidence">Evidence and context</label><textarea id="CaseEvidence" name="evidence" minlength="30" maxlength="4000" required placeholder="Record the relevant message or event and its surrounding context. Do not include passwords, tokens, or unrelated private information."></textarea></div>
+                <button class="ThinkButton primary" type="submit">Add investigation case</button>
+                <div class="ThinkSubtle" id="ThinkCaseFeedback" aria-live="polite"></div>
+            </form>
+        </section>
+
+        <section class="ThinkCard full">
+            <div class="ThinkCardHead"><div><h2>Investigation rules</h2><p>Safeguards applied across all developer tiers.</p></div></div>
+            <div class="ThinkNotice">Lower-tier developers can read investigation records but cannot change case status or carry out enforcement. Moderators can submit reports and request higher-level action. Top-tier moderators can change investigation status and review action requests, with StoryBot checks still applied. Only Darius56 can appoint or remove developer roles.</div>
+            <p class="ThinkSubtle">This page does not provide player screen, camera, microphone, or private-device monitoring. Evidence must be deliberately recorded as part of a legitimate investigation, and calls require the player's manual acceptance.</p>
+        </section>
+    </main>
+    <footer class="ThinkFooter">A reported account is not automatically guilty. Use evidence, context, proportional decisions, and the audit trail.</footer>
+</div>
+
+<script src="server-config.js?v=20261031-socket1"></script>
+<script src="network.js?v=20261031-think1"></script>
+<script src="shell-ui.js?v=20261031-think1"></script>
+<script src="think.js?v=20261031-1"></script>
+</body>
+</html>
