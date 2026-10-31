@@ -30,9 +30,9 @@ Module.prototype._compile = function(Content, Filename) {
         const RegisterReplacement = "const StoryIssuedToken = CreateToken(Username);\n            await StoreStoryAuthSession(Username, StoryIssuedToken);\n            SetStorySessionCookie(Response, StoryIssuedToken);\n            return SendJson(Response, 201, {";
         GeneratedSource = GeneratedSource.replace(RegisterTokenAnchor, RegisterReplacement);
 
-        const LoginTokenAnchor = "return SendJson(Response, 200, { token: CreateToken(Account.username),";
+        const LoginTokenAnchor = "            return SendJson(Response, 200, {\n                token: CreateToken(Account.username),\n                profile: PublicProfile(Account),\n                save: Account.save\n            }, Origin);";
         if (GeneratedSource.split(LoginTokenAnchor).length !== 2) throw new Error("server-v13 cookie patch failed: login token issue anchor.");
-        const LoginReplacement = "const StoryIssuedToken = CreateToken(Account.username);\n            await StoreStoryAuthSession(Account.username, StoryIssuedToken);\n            SetStorySessionCookie(Response, StoryIssuedToken);\n            return SendJson(Response, 200, {";
+        const LoginReplacement = "            const StoryIssuedToken = CreateToken(Account.username);\n            await StoreStoryAuthSession(Account.username, StoryIssuedToken);\n            SetStorySessionCookie(Response, StoryIssuedToken);\n            return SendJson(Response, 200, {\n                profile: PublicProfile(Account),\n                save: Account.save\n            }, Origin);";
         GeneratedSource = GeneratedSource.replace(LoginTokenAnchor, LoginReplacement);
 
         const SocketAuthAnchor = "Io.use(async (Socket, Next) => {\n    try {\n        if (!Database) return Next(new Error(\"DATABASE_UNAVAILABLE\"));\n        const Username = VerifyToken(Socket.handshake.auth?.token);\n        if (!Username) return Next(new Error(\"AUTH_REQUIRED\"));\n        const Account = await GetAccountByUsername(Username);\n        if (!Account) return Next(new Error(\"AUTH_REQUIRED\"));\n        Socket.data.username = Account.username;\n        Socket.data.chatTimes = [];\n        Next();\n    } catch (Error) {\n        console.error(\"Socket authentication failed\", Error);\n        Next(new Error(\"DATABASE_UNAVAILABLE\"));\n    }\n});";
