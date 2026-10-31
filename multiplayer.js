@@ -58,6 +58,9 @@ let CurrentProfile = null;
 let LocalReady = false;
 let MultiplayerReadyPromise = null;
 let MultiplayerReconnectPromise = null;
+let MultiplayerWarmupPromise = null;
+let MultiplayerWarmupStartedAt = 0;
+let MultiplayerShellActive = false;
 let SocketClientPromise = null;
 let StartingRoom = false;
 let RoomNoticeFadeTimer = 0;
@@ -72,17 +75,28 @@ window.addEventListener("DOMContentLoaded", () => {
     EnsureLobbyEnhancements();
     BindUi();
 
-    EnsureMultiplayerReady().catch(Error => {
-        ShowLobbyStatus(FriendlyConnectionError(Error), false);
-    });
+    // Warm page dependencies while hidden, but do not claim a multiplayer
+    // socket session until the player actually opens this page.
+    WarmMultiplayerDependencies().catch(() => {});
 });
 
 window.addEventListener("StoryShellActivate", Event => {
     const Route = String(Event?.detail?.route || "");
     if (!Route.startsWith("multiplayer.html")) return;
-    EnsureMultiplayerReady().then(HideLobbyStatus).catch(Error => {
+    MultiplayerShellActive = true;
+    EnsureMultiplayerReady().then(() => {
+        HideLobbyStatus();
+        StoryAudio?.PlayMusic?.("lobby");
+    }).catch(Error => {
         ShowLobbyStatus(FriendlyConnectionError(Error), false);
     });
+});
+
+window.addEventListener("StoryShellDeactivate", Event => {
+    const Route = String(Event?.detail?.route || "");
+    if (!Route.startsWith("multiplayer.html")) return;
+    MultiplayerShellActive = false;
+    StoryAudio?.StopMusic?.();
 });
 
 
@@ -100,6 +114,22 @@ function On(Id, EventName, Handler) {
 function SetText(Id, Text) {
     const Element = ById(Id);
     if (Element) Element.textContent = Text;
+}
+
+function WarmMultiplayerDependencies() {
+    const Now = Date.now();
+    if (MultiplayerWarmupPromise && Now - MultiplayerWarmupStartedAt < 30000) {
+        return MultiplayerWarmupPromise;
+    }
+
+    MultiplayerWarmupStartedAt = Now;
+    const Pending = Promise.all([EnsureBackendVersion(), LoadSocketClient()]);
+    const Wrapped = Pending.catch(Error => {
+        if (MultiplayerWarmupPromise === Wrapped) MultiplayerWarmupPromise = null;
+        throw Error;
+    });
+    MultiplayerWarmupPromise = Wrapped;
+    return Wrapped;
 }
 
 function EnsureMultiplayerConnectionBadge() {
