@@ -1,5 +1,5 @@
 (() => {
-    const FrontendVersion = "20261031.8";
+    const FrontendVersion = "20261031.9";
     const Root = document.getElementById("StoryShellRoot");
     const InitialFrame = document.getElementById("StoryShellFrame");
     if (!Root || !InitialFrame) return;
@@ -7,6 +7,7 @@
     const ManagedPages = new Set([
         "main.html",
         "levels.html",
+        "dialog.html",
         "multiplayer.html",
         "tutorial.html",
         "rules.html",
@@ -19,7 +20,6 @@
     const PersistentPages = new Set([
         "main.html",
         "levels.html",
-        "dialog.html",
         "multiplayer.html",
         "tutorial.html",
         "rules.html",
