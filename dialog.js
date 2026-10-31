@@ -758,41 +758,39 @@ async function ReturnToSelectWithTrail(Event) {
 }
 
 function ReplayStage() {
-    if (TransitionBusy || !Stage) return;
-    TransitionBusy = true;
+    if (!Stage) return;
 
-    document.getElementById("CompleteOverlay")?.classList.remove("Show");
-    document.getElementById("GameOverOverlay")?.classList.remove("Show");
-    document.getElementById("TbcOverlay")?.classList.remove("Show");
-    document.getElementById("ChapterOverlay")?.classList.remove("Show");
-    document.getElementById("TravelOverlay")?.classList.remove("Show");
+    if (RoomCode) {
+        const Status = document.getElementById("StatusText");
+        if (MultiplayerState?.hostUsername !== Profile?.username) {
+            if (Status) {
+                Status.className = "StatusText";
+                Status.textContent = `Waiting for ${MultiplayerState?.hostUsername || "the host"} to replay the level.`;
+            }
+            return;
+        }
+        if (!MultiplayerSocket?.connected) {
+            if (Status) {
+                Status.className = "StatusText Bad";
+                Status.textContent = "The multiplayer room is reconnecting. Try replay again when it reconnects.";
+            }
+            return;
+        }
+        if (Number(MultiplayerState?.lives || 0) <= 0) {
+            if (Status) {
+                Status.className = "StatusText Bad";
+                Status.textContent = "The team has no lives left. Use an available revive before retrying.";
+            }
+            return;
+        }
 
-    RemovedSentences.clear();
-    LastCheckFailed = false;
-    LastFailureResult = null;
-    NextStageOverride = "";
-
-    try {
-        GamePaused = false;
-        GamePauseReason = "";
-    } catch {}
-
-    if (typeof ResetStoryAttemptV12 === "function") {
-        ResetStoryAttemptV12();
-    } else if (typeof ResetStoryDangerAfterReviveV12 === "function") {
-        ResetStoryDangerAfterReviveV12();
+        MultiplayerSocket.emit("game:retry");
+        return;
     }
 
-    document.getElementById("Aftermath")?.classList.add("Hidden");
-    document.getElementById("StatusText").className = "StatusText";
-    document.getElementById("StatusText").textContent = "Level replayed. The page is reset and ready.";
-    StoryAudio.PlayMusic(World.theme || "menu");
-    RenderStage();
-    RenderGamePauseState();
-
-    requestAnimationFrame(() => {
-        TransitionBusy = false;
-    });
+    // Recreate all attempt state from the saved stage URL, including timers and
+    // injected gameplay controls, instead of relying on a partial in-place reset.
+    window.location.reload();
 }
 
 function StartMultiplayer() {
