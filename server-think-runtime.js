@@ -207,6 +207,10 @@ function createThinkRuntime(Dependencies) {
                 SendJson(Response, 400, { error: "Invalid investigation status." }, Origin);
                 return true;
             }
+            if (Status === "confirmed" && Note.length < 25) {
+                SendJson(Response, 400, { error: "Add a review note explaining why the evidence supports a confirmed finding." }, Origin);
+                return true;
+            }
             const Updated = await Database.query(
                 "UPDATE story_rewrite_think_cases SET status = $1, updated_at = NOW(), reviewed_by = $2, review_note = $3 WHERE id = $4 RETURNING id,target_username,status",
                 [Status, Account.username, Note, Number(CaseStatusMatch[1])]
