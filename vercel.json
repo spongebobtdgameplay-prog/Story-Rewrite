@@ -4,10 +4,6 @@
     {
       "source": "/api/:path*",
       "destination": "https://story-rewrite-backend.onrender.com/api/:path*"
-    },
-    {
-      "source": "/socket.io/:path*",
-      "destination": "https://story-rewrite-backend.onrender.com/socket.io/:path*"
     }
   ]
 }
