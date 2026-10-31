@@ -200,6 +200,27 @@ body {
     }
     #StoryShellPauseButton { display: none !important; }
 }
+
+
+#StoryBootStatus {
+    position: fixed;
+    inset: 0;
+    z-index: 20000;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    box-sizing: border-box;
+    color: #f7e6c8;
+    text-align: center;
+    background: radial-gradient(ellipse at 50% 35%, #55351f, #21140d 72%, #100906);
+    font: 600 16px/1.5 system-ui, sans-serif;
+}
+#StoryBootStatus[hidden] { display: none !important; }
+.StoryBootCard { max-width: 420px; padding: 28px; border: 1px solid rgba(219,171,103,.48); border-radius: 20px; background: rgba(31,20,14,.9); box-shadow: 0 20px 60px rgba(0,0,0,.4); }
+.StoryBootCard h1 { margin: 0 0 10px; color: #ffe5b7; font: 700 26px/1.2 Georgia,serif; }
+.StoryBootCard p { margin: 0; color: #d0b695; }
+#StoryBootRetry { margin-top: 18px; padding: 11px 18px; border: 1px solid #d7a65f; border-radius: 10px; color: #24150c; background: #e3b76f; font: 800 14px system-ui,sans-serif; cursor: pointer; }
+
 </style>
 <script src="server-config.js?v=20261031-socket1"></script>
 <script src="auth-bootstrap.js?v=20261030-cookie1"></script>
@@ -213,6 +234,9 @@ body {
         </svg>
     </button>
     <iframe id="StoryShellFrame" class="StoryShellFrame" scrolling="auto" title="Story Rewrite"></iframe>
+    <section id="StoryBootStatus" role="status" aria-live="polite">
+        <div class="StoryBootCard"><h1 id="StoryBootTitle">Loading Story Rewrite</h1><p id="StoryBootMessage">Restoring your game. This usually takes a moment.</p><button id="StoryBootRetry" type="button" hidden onclick="window.location.reload()">Reload game</button></div>
+    </section>
     <div id="StoryLandscapeGuard" role="alert" aria-live="assertive">
         <div class="StoryLandscapeCard">
             <svg viewBox="0 0 64 64" aria-hidden="true" focusable="false">
@@ -225,6 +249,20 @@ body {
     </div>
 </div>
 <script>
+const StoryBootStatus = document.getElementById("StoryBootStatus");
+const StoryBootTitle = document.getElementById("StoryBootTitle");
+const StoryBootMessage = document.getElementById("StoryBootMessage");
+const StoryBootRetry = document.getElementById("StoryBootRetry");
+const StoryBootTimeout = window.setTimeout(() => {
+    if (StoryBootStatus.hidden) return;
+    StoryBootTitle.textContent = "The game is taking longer than expected";
+    StoryBootMessage.textContent = "Your saved page is still loading. Reload to try again.";
+    StoryBootRetry.hidden = false;
+}, 12000);
+window.addEventListener("StoryShellReady", () => {
+    window.clearTimeout(StoryBootTimeout);
+    StoryBootStatus.hidden = true;
+}, { once: true });
 (async () => {
     const Session = await window.StoryCookieSessionReady;
     if (!Session?.authenticated) {
@@ -242,7 +280,11 @@ body {
 
     await LoadScript("cache-guard.js?v=20261030-cookie1");
     await LoadScript("shell.js?v=20261030-cookie2");
-})().catch(() => window.location.replace("auth.html"));
+})().catch(() => {
+    StoryBootTitle.textContent = "The game could not start";
+    StoryBootMessage.textContent = "Check your connection, then reload the game.";
+    StoryBootRetry.hidden = false;
+});
 </script>
 </body>
 </html>
