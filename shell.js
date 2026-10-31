@@ -45,9 +45,6 @@
     let GameplayAudioPaused = false;
     let ShellPauseState = false;
     const GameplayPauseButton = document.getElementById("StoryShellPauseButton");
-    const FrameLoadTimers = new WeakMap();
-    let ShellLoadErrorPanel = null;
-    let ShellLoadErrorFrame = null;
 
     function GetBaseUrl() {
         return new URL(".", window.location.href);
@@ -582,91 +579,18 @@
         Head.appendChild(Runtime);
     }
 
-    function ClearFrameLoadTimeout(Frame) {
-        const Timeout = FrameLoadTimers.get(Frame);
-        if (Timeout) window.clearTimeout(Timeout);
-        FrameLoadTimers.delete(Frame);
-    }
-
-    function ClearShellLoadError(Frame = null) {
-        if (Frame && ShellLoadErrorFrame !== Frame) return;
-        ShellLoadErrorPanel?.remove();
-        ShellLoadErrorPanel = null;
-        ShellLoadErrorFrame = null;
-    }
-
-    function ShowShellLoadError(Frame, Route) {
-        if (Frame !== ActiveFrame && Frame !== PendingFrame) return;
-        ClearShellLoadError();
-        const Panel = document.createElement("section");
-        Panel.setAttribute("role", "alert");
-        Panel.setAttribute("aria-live", "assertive");
-        Panel.style.cssText = "position:absolute;inset:0;z-index:2147483000;display:grid;place-items:center;box-sizing:border-box;padding:24px;color:#f7e6c8;text-align:center;background:radial-gradient(circle at 50% 15%,rgba(213,161,90,.18),transparent 42%),linear-gradient(145deg,#20140e,#100b08 78%);";
-        const Card = document.createElement("div");
-        Card.style.cssText = "width:min(100%,440px);box-sizing:border-box;padding:28px;border:1px solid rgba(219,171,103,.42);border-radius:20px;background:linear-gradient(145deg,rgba(65,42,27,.97),rgba(31,20,14,.99));box-shadow:0 24px 70px rgba(0,0,0,.42);";
-        const Heading = document.createElement("h1");
-        Heading.textContent = "This page is taking too long to load";
-        Heading.style.cssText = "margin:0 0 10px;color:#ffe5b7;font:800 24px/1.2 Georgia,'Times New Roman',serif;";
-        const Message = document.createElement("p");
-        Message.textContent = "The page did not finish loading. You can retry it without signing out.";
-        Message.style.cssText = "margin:0;color:#d0b695;font:600 14px/1.55 system-ui,sans-serif;";
-        const Actions = document.createElement("div");
-        Actions.style.cssText = "display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:20px;";
-        const MakeButton = (Label) => {
-            const Button = document.createElement("button");
-            Button.type = "button";
-            Button.textContent = Label;
-            Button.style.cssText = "padding:11px 18px;border:1px solid #d7a35d;border-radius:10px;color:#28180d;background:linear-gradient(180deg,#f0cf91,#c98b48);font:800 14px system-ui,sans-serif;cursor:pointer;";
-            return Button;
-        };
-        const Retry = MakeButton("Retry page");
-        Retry.addEventListener("click", () => {
-            ClearShellLoadError(Frame);
-            Frame.dataset.storyLoaded = "0";
-            Frame.dataset.storyRoute = Route;
-            Frame.src = RouteUrl(Route);
-            StartFrameLoadTimeout(Frame, Route);
-        });
-        const Home = MakeButton("Return Home");
-        Home.addEventListener("click", () => {
-            ClearShellLoadError(Frame);
-            if (Route === "main.html") window.location.reload();
-            else Navigate("main.html", { replace: true });
-        });
-        Actions.append(Retry, Home);
-        Card.append(Heading, Message, Actions);
-        Panel.appendChild(Card);
-        Root.appendChild(Panel);
-        ShellLoadErrorPanel = Panel;
-        ShellLoadErrorFrame = Frame;
-    }
-
-    function StartFrameLoadTimeout(Frame, Route) {
-        ClearFrameLoadTimeout(Frame);
-        const Timeout = window.setTimeout(() => {
-            if (Frame.dataset.storyLoaded === "1" || Frame.dataset.storyRoute !== Route) return;
-            ShowShellLoadError(Frame, Route);
-        }, 20000);
-        FrameLoadTimers.set(Frame, Timeout);
-    }
-
     function HandleFrameLoad(Frame) {
-        ClearFrameLoadTimeout(Frame);
         const ActualRoute = RouteFromFrame(Frame);
         if (!ActualRoute) {
             Frame.dataset.storyLoaded = "0";
             try {
                 const PageName = Frame.contentWindow.location.pathname.split("/").pop();
                 if (PageName === "auth.html" && (Frame === ActiveFrame || Frame === PendingFrame)) {
-                    ClearShellLoadError(Frame);
                     Exit("auth.html", true);
-                    return;
                 }
             } catch {}
-            ShowShellLoadError(Frame, Frame.dataset.storyRoute || CurrentRoute);
             return;
         }
-        ClearShellLoadError(Frame);
 
         const PreviousRoute = Frame.dataset.storyRoute || "";
         const FrameNavigatedItself = Boolean(PreviousRoute && ActualRoute !== PreviousRoute);
@@ -741,7 +665,6 @@
         // Attach the load handler and connect the frame before starting navigation.
         // A fast cached response can otherwise load before the listener exists.
         Frame.src = RouteUrl(Route);
-        StartFrameLoadTimeout(Frame, Route);
         return Frame;
     }
 
@@ -765,7 +688,6 @@
             TransientFrame.dataset.storyLoaded = "0";
             TransientFrame.dataset.storyRoute = Route;
             TransientFrame.src = RouteUrl(Route);
-            StartFrameLoadTimeout(TransientFrame, Route);
         }
 
         return TransientFrame;
@@ -955,5 +877,4 @@
 
     // The load listener was installed by PrepareFrame before navigation starts.
     InitialFrame.src = RouteUrl(InitialRoute);
-    StartFrameLoadTimeout(InitialFrame, InitialRoute);
 })();
