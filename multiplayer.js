@@ -59,7 +59,8 @@ let LocalReady = false;
 let MultiplayerReadyPromise = null;
 let MultiplayerReconnectPromise = null;
 let MultiplayerWarmupPromise = null;
-let MultiplayerWarmupStartedAt = 0;
+let MultiplayerWarmupCompletedAt = 0;
+let MultiplayerWarmupPending = false;
 let MultiplayerShellActive = false;
 let SocketClientPromise = null;
 let StartingRoom = false;
@@ -118,16 +119,29 @@ function SetText(Id, Text) {
 
 function WarmMultiplayerDependencies() {
     const Now = Date.now();
-    if (MultiplayerWarmupPromise && Now - MultiplayerWarmupStartedAt < 30000) {
-        return MultiplayerWarmupPromise;
-    }
+    if (MultiplayerWarmupPromise && (
+        MultiplayerWarmupPending ||
+        Now - MultiplayerWarmupCompletedAt < 30000
+    )) return MultiplayerWarmupPromise;
 
-    MultiplayerWarmupStartedAt = Now;
-    const Pending = Promise.all([EnsureBackendVersion(), LoadSocketClient()]);
-    const Wrapped = Pending.catch(Error => {
-        if (MultiplayerWarmupPromise === Wrapped) MultiplayerWarmupPromise = null;
-        throw Error;
-    });
+    MultiplayerWarmupPending = true;
+    let Failed = false;
+    let Wrapped;
+    Wrapped = EnsureBackendVersion()
+        .then(Health => {
+            MultiplayerWarmupCompletedAt = Date.now();
+            return Health;
+        })
+        .catch(Error => {
+            Failed = true;
+            throw Error;
+        })
+        .finally(() => {
+            if (MultiplayerWarmupPromise === Wrapped) {
+                MultiplayerWarmupPending = false;
+                if (Failed) MultiplayerWarmupPromise = null;
+            }
+        });
     MultiplayerWarmupPromise = Wrapped;
     return Wrapped;
 }
