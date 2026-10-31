@@ -201,51 +201,10 @@ body {
     #StoryShellPauseButton { display: none !important; }
 }
 
-#StoryStartupStatus {
-    position: fixed;
-    inset: 0;
-    z-index: 2147483646;
-    display: grid;
-    place-items: center;
-    padding: 24px;
-    box-sizing: border-box;
-    color: #f7e6c8;
-    text-align: center;
-    background: radial-gradient(circle at 50% 15%, rgba(213,161,90,.18), transparent 42%), linear-gradient(145deg,#20140e,#100b08 78%);
-}
-#StoryStartupStatus[hidden] { display: none !important; }
-#StoryStartupStatus > div {
-    width: min(100%, 440px);
-    box-sizing: border-box;
-    padding: 28px;
-    border: 1px solid rgba(219,171,103,.42);
-    border-radius: 20px;
-    background: linear-gradient(145deg,rgba(65,42,27,.97),rgba(31,20,14,.99));
-    box-shadow: 0 24px 70px rgba(0,0,0,.42);
-}
-#StoryStartupStatus h1 {
-    margin: 0 0 10px;
-    color: #ffe5b7;
-    font: 800 24px/1.2 Georgia,"Times New Roman",serif;
-}
-#StoryStartupStatus p {
-    margin: 0;
-    color: #d0b695;
-    font: 600 14px/1.55 system-ui,sans-serif;
-}
-#StoryStartupRetry {
-    margin-top: 20px;
-    padding: 11px 20px;
-    border: 1px solid #d7a35d;
-    border-radius: 10px;
-    color: #28180d;
-    background: linear-gradient(180deg,#f0cf91,#c98b48);
-    font: 800 14px system-ui,sans-serif;
-    cursor: pointer;
-}
+
 </style>
 <script src="server-config.js?v=20261031-socket1"></script>
-<script src="auth-bootstrap.js?v=20261031-loopfix1"></script>
+<script src="auth-bootstrap.js?v=20261030-cookie1"></script>
 </head>
 <body>
 <div id="StoryShellRoot">
@@ -256,13 +215,6 @@ body {
         </svg>
     </button>
     <iframe id="StoryShellFrame" class="StoryShellFrame" scrolling="auto" title="Story Rewrite"></iframe>
-<div id="StoryStartupStatus" role="alert" aria-live="assertive">
-    <div>
-        <h1 id="StoryStartupTitle">Connecting to Story Rewrite…</h1>
-        <p id="StoryStartupMessage">Checking your secure sign-in and loading the app.</p>
-        <button id="StoryStartupRetry" type="button" hidden>Retry</button>
-    </div>
-</div>
 <div id="StoryLandscapeGuard" role="alert" aria-live="assertive">
         <div class="StoryLandscapeCard">
             <svg viewBox="0 0 64 64" aria-hidden="true" focusable="false">
@@ -276,64 +228,33 @@ body {
 </div>
 <script>
 (async () => {
-    const Status = document.getElementById("StoryStartupStatus");
-    const StatusTitle = document.getElementById("StoryStartupTitle");
-    const StatusMessage = document.getElementById("StoryStartupMessage");
-    const RetryButton = document.getElementById("StoryStartupRetry");
-
-    function ShowStartupIssue(Title, Message) {
-        StatusTitle.textContent = Title;
-        StatusMessage.textContent = Message;
-        RetryButton.hidden = false;
-        Status.hidden = false;
-    }
-
-    RetryButton.addEventListener("click", () => window.location.reload());
-
     const LoadScript = Source => new Promise((Resolve, Reject) => {
         const Script = document.createElement("script");
-        const Timeout = window.setTimeout(() => {
-            Script.remove();
-            Reject(new Error("A required Story Rewrite script timed out."));
-        }, 20000);
         Script.src = Source;
-        Script.onload = () => {
-            window.clearTimeout(Timeout);
-            Resolve();
-        };
-        Script.onerror = () => {
-            window.clearTimeout(Timeout);
-            Reject(new Error("A required Story Rewrite script could not load."));
-        };
+        Script.onload = Resolve;
+        Script.onerror = () => Reject(new Error("A required Story Rewrite script could not load."));
         document.body.appendChild(Script);
     });
 
-    try {
-        const Session = await (window.StoryCookieSessionReady
-            || Promise.resolve({ authenticated: false, unavailable: true }));
-
-        if (!Session?.authenticated) {
-            if (Session?.unavailable) {
-                ShowStartupIssue(
-                    "Can't connect right now",
-                    "Your sign-in was not cleared. The server did not respond in time. Check your connection and retry."
-                );
-                return;
-            }
-            window.location.replace("auth.html");
-            return;
-        }
-
+    const AppReady = (async () => {
         await LoadScript("cache-guard.js?v=20261030-cookie1");
         await LoadScript("shell.js?v=20261031-loopfix1");
-        Status.hidden = true;
-    } catch {
-        ShowStartupIssue(
-            "Story Rewrite couldn't finish loading",
-            "A required app file did not respond. Your account session has been left alone. Retry the page when your connection is ready."
-        );
+    })();
+
+    const Session = await (window.StoryCookieSessionReady
+        || Promise.resolve({ authenticated: false, unavailable: true }));
+
+    // A timeout/network failure is not proof that the account is signed out.
+    // Redirect only when the server conclusively reports no valid session.
+    if (!Session?.authenticated && !Session?.unavailable) {
+        window.location.replace("auth.html");
+        return;
     }
-})();
+
+    await AppReady;
+})().catch(Error => {
+    console.error("Story Rewrite startup failed", Error);
+});
 </script>
 </body>
 </html>
