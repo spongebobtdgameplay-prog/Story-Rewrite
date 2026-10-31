@@ -49,12 +49,17 @@ function createThinkRuntime(Dependencies) {
 
     async function isRestricted(Username) {
         if (!Username || !Database) return false;
-        await ensureSchema();
-        const Result = await Database.query(
-            "SELECT 1 FROM story_rewrite_think_restrictions WHERE username_key = $1 AND (expires_at IS NULL OR expires_at > NOW()) LIMIT 1",
-            [UsernameKey(Username)]
-        );
-        return Result.rowCount > 0;
+        try {
+            const Result = await Database.query(
+                "SELECT 1 FROM story_rewrite_think_restrictions WHERE username_key = $1 AND (expires_at IS NULL OR expires_at > NOW()) LIMIT 1",
+                [UsernameKey(Username)]
+            );
+            return Result.rowCount > 0;
+        } catch (Error) {
+            // Oversight storage must never break normal account sign-in.
+            console.error("Story Rewrite suspension lookup failed open", Error);
+            return false;
+        }
     }
 
     async function writeAudit(Staff, Action, TargetUsername, Details) {
