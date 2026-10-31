@@ -115,7 +115,15 @@ StartMultiplayer = function() {
         RenderStage();
     });
     MultiplayerSocket.on("game:stage", Payload => {
-        window.location.href = `dialog.html?stage=${encodeURIComponent(Payload.stageId)}&room=${encodeURIComponent(RoomCode)}`;
+        const Route = `dialog.html?stage=${encodeURIComponent(Payload.stageId)}&room=${encodeURIComponent(RoomCode)}`;
+        try {
+            const Shell = window.parent !== window && window.parent.StoryShell?.IsPersistentShell
+                ? window.parent.StoryShell
+                : null;
+            if (Shell?.CanHandle(Route) && Shell.Navigate(Route)) return;
+        } catch {}
+        if (typeof StoryNavigate === "function") StoryNavigate(Route);
+        else window.location.href = Route;
     });
     MultiplayerSocket.on("game:finished", () => document.getElementById("TbcOverlay")?.classList.add("Show"));
 };
