@@ -143,6 +143,7 @@
             <p>Create a code, invite up to four other players, chat, vote on numbered story options, and share three team lives.</p>
         </div>
         <div class="RoomFooterActions MultiplayerHeroNavigation">
+            <button class="UiButton" type="button" data-story-go="think.html" id="ThinkConsoleButton" hidden>Silicon Valley</button>
             <button class="UiButton" type="button" data-story-go="terms.html">Terms of Service</button>
             <button class="IconNavButton" type="button" data-story-go="account.html?from=multiplayer" data-account-icon aria-label="Account"></button>
         </div>
@@ -250,5 +251,15 @@
 <script src="reporting.js?v=20261018-3"></script>
 <script src="host-moderation-v20.js?v=20260930-1"></script>
 <script src="dev-gui.js?v=20261030-cookie2"></script>
+<script>
+(async () => {
+    const Button = document.getElementById("ThinkConsoleButton");
+    if (!Button || typeof ApiRequest !== "function") return;
+    try {
+        await ApiRequest("/api/think/overview");
+        Button.hidden = false;
+    } catch {}
+})();
+</script>
 </body>
 </html>
