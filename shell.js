@@ -1,5 +1,5 @@
 (() => {
-    const FrontendVersion = "20261031.10";
+    const FrontendVersion = "20261031.11";
     const Root = document.getElementById("StoryShellRoot");
     const InitialFrame = document.getElementById("StoryShellFrame");
     if (!Root || !InitialFrame) return;
@@ -583,6 +583,7 @@
         const ActualRoute = RouteFromFrame(Frame);
         if (!ActualRoute) {
             Frame.dataset.storyLoaded = "0";
+            Frame.dataset.storyLoadFailed = "1";
             try {
                 const PageName = Frame.contentWindow.location.pathname.split("/").pop();
                 if (PageName === "auth.html" && (Frame === ActiveFrame || Frame === PendingFrame)) {
@@ -608,12 +609,18 @@
         }
 
         Frame.dataset.storyLoaded = "1";
+        Frame.dataset.storyLoadFailed = "0";
         InstallResponsiveUiEngine(Frame);
         // The initial frame is deliberately hidden while it loads to prevent FOUC.
         // Reveal it as soon as its load event confirms the document is ready.
         if (Frame === ActiveFrame) Frame.style.visibility = "visible";
         WireFrameInteractionBridge(Frame);
-        if (Frame === InitialFrame) FlushAudioHost();
+        if (Frame === InitialFrame) {
+            FlushAudioHost();
+            if (PageForRoute(ActualRoute) !== "multiplayer.html") {
+                window.setTimeout(PreloadMultiplayerRoute, 0);
+            }
+        }
 
         if (ActualRoute !== PreviousRoute) {
             if (PreviousRoute && PersistentFrames.get(PreviousRoute) === Frame) {
@@ -641,6 +648,7 @@
         Frame.classList.add("StoryShellFrame");
         Frame.dataset.storyRoute = Route;
         Frame.dataset.storyLoaded = "0";
+        Frame.dataset.storyLoadFailed = "0";
         Frame.title = "Story Rewrite";
 
         if (!KeepVisible) {
@@ -670,7 +678,14 @@
 
     function GetPersistentFrame(Route) {
         const Existing = PersistentFrames.get(Route);
-        if (Existing) return Existing;
+        if (Existing) {
+            if (Existing.dataset.storyLoadFailed === "1") {
+                Existing.dataset.storyLoadFailed = "0";
+                Existing.dataset.storyLoaded = "0";
+                Existing.src = RouteUrl(Route);
+            }
+            return Existing;
+        }
 
         const Frame = CreateFrame(Route);
         PersistentFrames.set(Route, Frame);
@@ -684,13 +699,21 @@
         }
 
         const ExistingRoute = TransientFrame.dataset.storyRoute || "";
-        if (ExistingRoute !== Route) {
+        if (ExistingRoute !== Route || TransientFrame.dataset.storyLoadFailed === "1") {
             TransientFrame.dataset.storyLoaded = "0";
+            TransientFrame.dataset.storyLoadFailed = "0";
             TransientFrame.dataset.storyRoute = Route;
             TransientFrame.src = RouteUrl(Route);
         }
 
         return TransientFrame;
+    }
+
+    function PreloadMultiplayerRoute() {
+        if (!HasAuthenticatedSession() || PageForRoute(CurrentRoute) === "multiplayer.html") return;
+        const Existing = PersistentFrames.get("multiplayer.html");
+        if (Existing && (Existing.dataset.storyLoaded === "1" || Existing.dataset.storyLoadFailed !== "1")) return;
+        GetPersistentFrame("multiplayer.html");
     }
 
     function GetFrameForRoute(Route) {
@@ -853,7 +876,7 @@
     // A fresh shell starts directly on the saved route. This avoids loading a
     // hidden home page first and leaving a reloaded game route with no visible frame.
     PrepareFrame(InitialFrame, InitialRoute, true);
-    InitialFrame.style.visibility = "visible";
+    // Keep the first page hidden until its load event confirms it is ready.
     ActiveFrame = InitialFrame;
     PendingFrame = InitialFrame;
     if (IsPersistentRoute(InitialRoute)) PersistentFrames.set(InitialRoute, InitialFrame);
