@@ -585,6 +585,11 @@
         const ActualRoute = RouteFromFrame(Frame);
         if (!ActualRoute) {
             Frame.dataset.storyLoaded = "0";
+            Frame.dataset.storyLoadFailed = "1";
+            if (PendingFrame === Frame) {
+                PendingFrame = null;
+                GameplayPauseButton?.removeAttribute("aria-busy");
+            }
             try {
                 const PageName = Frame.contentWindow.location.pathname.split("/").pop();
                 if (PageName === "auth.html" && (Frame === ActiveFrame || Frame === PendingFrame)) {
@@ -799,7 +804,12 @@
         const Normalized = NormalizeRoute(Value);
         if (!Normalized) return false;
 
-        if (Normalized === CurrentRoute && ActiveFrame?.dataset.storyRoute === Normalized) {
+        if (
+            Normalized === CurrentRoute &&
+            ActiveFrame?.dataset.storyRoute === Normalized &&
+            ActiveFrame.dataset.storyLoaded === "1" &&
+            ActiveFrame.dataset.storyLoadFailed !== "1"
+        ) {
             DispatchFrameEvent(ActiveFrame, "StoryShellActivate", Normalized);
             return true;
         }
