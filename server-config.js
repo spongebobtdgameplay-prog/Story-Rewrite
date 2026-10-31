@@ -6,6 +6,9 @@ window.STORY_REWRITE_SAME_ORIGIN_API = StoryUsesSameOriginApi;
 window.STORY_REWRITE_SERVER_URL = StoryUsesSameOriginApi
     ? window.location.origin
     : "https://story-rewrite-backend.onrender.com";
+window.STORY_REWRITE_SOCKET_URL = StoryUsesSameOriginApi
+    ? "https://story-rewrite-backend.onrender.com"
+    : "";
 window.STORY_REWRITE_CANONICAL_URL = "https://story-rewrite-iota.vercel.app";
 
 (() => {
