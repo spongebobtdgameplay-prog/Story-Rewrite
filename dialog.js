@@ -367,7 +367,6 @@ function BindActions() {
     document.getElementById("ReplayButton").addEventListener("click", ReplayStage);
     document.getElementById("CompleteSelectButton").addEventListener("click", ReturnToSelectWithTrail);
     document.getElementById("TbcSelectButton").addEventListener("click", Event => StoryNavigate("levels.html", Event.currentTarget));
-    document.getElementById("ReplayDeathButton")?.addEventListener("click", ReplayStage);
     document.getElementById("GameOverMapButton").addEventListener("click", Event => StoryNavigate(RoomCode ? "multiplayer.html" : "levels.html", Event.currentTarget));
     document.getElementById("GameChatForm").addEventListener("submit", SendGameChat);
     document.getElementById("ToggleGameChatButton").addEventListener("click", ToggleGameChat);
@@ -629,8 +628,8 @@ function ApplyFailureOutcome(Result) {
 
     if (IsGameOver) {
         document.getElementById("GameOverText").textContent = TimedOut
-            ? `${FailureReason} Your last heart is gone. Revive restores one heart and keeps your choices; Restart Level clears your choices but does not restore a heart.`
-            : `${FailureReason} ${Result.aftermath} No lives remain. Revive restores one heart and keeps your choices; Restart Level clears your choices but does not restore a heart.`;
+            ? `${FailureReason} All hearts are gone. Revive restores full hearts and keeps your current choices and saved progress.`
+            : `${FailureReason} ${Result.aftermath} All hearts are gone. Revive restores full hearts and keeps your current choices and saved progress.`;
         document.getElementById("GameOverOverlay").classList.add("Show");
     }
 }
@@ -825,8 +824,8 @@ function StartMultiplayer() {
         document.getElementById("StatusText").textContent = Payload?.error || "Chat message was blocked.";
     });
     MultiplayerSocket.on("game:outcome", HandleMultiplayerOutcome);
-    MultiplayerSocket.on("game:retry", () => {
-        RemovedSentences.clear();
+    MultiplayerSocket.on("game:retry", Payload => {
+        if (!Payload?.revived) RemovedSentences.clear();
         LastCheckFailed = false;
         LastFailureResult = null;
         document.getElementById("CompleteOverlay").classList.remove("Show");

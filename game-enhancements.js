@@ -212,13 +212,14 @@ async function UseRevive() {
 
         const Result = await ApiRequest("/api/revive", { method: "POST" });
         Save = NormalizeSave(Data, Result.save);
+        ApplyStoryCosmetic(Save);
         LastCheckFailed = false;
         document.getElementById("GameOverOverlay")?.classList.remove("Show");
         ResetStoryDangerAfterReviveV12();
         SetStoryStatusV12(
             RemovedSentences.size
-                ? "Revived. Your crossed-out choices are still in place."
-                : "Revived. Your page is ready to continue."
+                ? "Revived with full hearts. Your current choices and saved progress are still in place."
+                : "Revived with full hearts. Your saved progress is ready to continue."
         );
         StoryAudio?.PlayMusic?.(World?.theme || "menu");
         RenderStage();

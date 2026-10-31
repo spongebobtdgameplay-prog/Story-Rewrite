@@ -152,8 +152,9 @@ const NewApplySuccessFunction = `function ApplySuccessToAccount(Account, StageId
 
 const StageEnterSearch = `        Account.save.currentStage = Stage.id;
         await SaveAccount(Account);`;
-const StageEnterReplacement = `        if (Account.save.currentStage !== Stage.id) Account.save.stageHeartsLost = 0;
-        Account.save.currentStage = Stage.id;
+const StageEnterReplacement = `        Account.save.currentStage = Stage.id;
+        Account.save.lives = Account.save.maxLives;
+        Account.save.stageHeartsLost = 0;
         await SaveAccount(Account);`;
 
 const SingleSuccessSearch = `        ApplySuccessToAccount(Account, Stage.id, Result.stars);
@@ -191,7 +192,8 @@ const ReviveRouteReplacement = `    if (RequestPath === "/api/revive" && Request
         if (Account.save.revives <= 0) return SendJson(Response, 409, { error: "No revives are available." }, Origin);
 
         Account.save.revives -= 1;
-        Account.save.lives = 1;
+        Account.save.lives = Account.save.maxLives;
+        Account.save.stageHeartsLost = 0;
         await SaveAccount(Account);
 
         return SendJson(Response, 200, {
@@ -422,6 +424,27 @@ const GameNextReplacement = `        Room.stageId = Stage.nextStage;
             Room.winsSinceHeartRefresh = 0;
         }`;
 
+const GameRetrySearch = `    Socket.on("game:retry", () => {
+        const Room = GetRoomForSocket(Socket);
+        if (!Room || Room.hostSocketId !== Socket.id || Room.lives <= 0) return;
+        Room.votes.clear();
+        Room.lastOutcome = null;
+        Room.status = "playing";
+        EmitRoom(Room);
+        Io.to(Room.code).emit("game:retry");
+    });`;
+const GameRetryReplacement = `    Socket.on("game:retry", () => {
+        const Room = GetRoomForSocket(Socket);
+        if (!Room || Room.hostSocketId !== Socket.id || Room.lives <= 0) return;
+        Room.lives = Room.maxLives;
+        Room.stageHeartsLost = 0;
+        Room.votes.clear();
+        Room.lastOutcome = null;
+        Room.status = "playing";
+        EmitRoom(Room);
+        Io.to(Room.code).emit("game:retry", { revived: false });
+    });`;
+
 const RestartGameSearch = `            Room.stageId = World.entryStage;
             Room.lives = Room.maxLives;
             Room.votes.clear();`;
@@ -439,8 +462,8 @@ const ReviveHandlerReplacement = `    Socket.on("game:revive", (Payload, Reply =
         if (Room.revives <= 0) return Reply({ ok: false, error: "The team has no revives." });
 
         Room.revives -= 1;
-        Room.lives = 1;
-        Room.votes.clear();
+        Room.lives = Room.maxLives;
+        Room.stageHeartsLost = 0;
         Room.lastOutcome = null;
         Room.status = "playing";
         EmitRoom(Room);
@@ -650,6 +673,7 @@ const V11PatchCode = [
     `ReplaceRequired(${JSON.stringify(OldVoteHandler)}, ${JSON.stringify(NewVoteHandler)}, "numbered vote handler");`,
     `ReplaceRequired(${JSON.stringify(OldGameCheckHandler)}, ${JSON.stringify(NewGameCheckHandler)}, "atomic multiplayer check");`,
     `ReplaceRequired(${JSON.stringify(GameNextSearch)}, ${JSON.stringify(GameNextReplacement)}, "next stage heart tracking");`,
+    `ReplaceRequired(${JSON.stringify(GameRetrySearch)}, ${JSON.stringify(GameRetryReplacement)}, "restart level heart refill");`,
     `ReplaceRequired(${JSON.stringify(RestartGameSearch)}, ${JSON.stringify(RestartGameReplacement)}, "restart stage heart tracking");`,
     `ReplaceRequired(${JSON.stringify(GameRestartHandlerSearch)}, ${JSON.stringify(ReviveHandlerReplacement)}, "team revive handler");`,
     `ReplaceRequired(${JSON.stringify(OldChatHandlerPrefix)}, ${JSON.stringify(NewChatHandlerPrefix)}, "AI chat safety and vote commands");`,

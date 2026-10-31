@@ -106,10 +106,10 @@ StartMultiplayer = function() {
         SetGameConnectionStatus(Payload?.error || "Chat message was blocked.", "bad");
     });
     MultiplayerSocket.on("game:outcome", HandleMultiplayerOutcome);
-    MultiplayerSocket.on("game:retry", () => {
-        RemovedSentences.clear();
+    MultiplayerSocket.on("game:retry", Payload => {
+        if (!Payload?.revived) RemovedSentences.clear();
         LastCheckFailed = false;
-        document.getElementById("Aftermath")?.classList.add("Hidden");
+        if (!Payload?.revived) document.getElementById("Aftermath")?.classList.add("Hidden");
         document.getElementById("CompleteOverlay")?.classList.remove("Show");
         StoryAudio.PlayMusic(World.theme || "menu");
         RenderStage();
