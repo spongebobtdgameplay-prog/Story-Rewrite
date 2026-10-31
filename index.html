@@ -24,7 +24,7 @@ body,
 html {
     overflow: hidden;
     overscroll-behavior: none;
-    background: #100906;
+    background: #8a6749;
 }
 
 body {
@@ -46,7 +46,7 @@ body {
     display: block;
     visibility: hidden;
     border: 0;
-    background: #100906;
+    background: #8a6749;
 }
 
 #StoryShellPauseButton[hidden] {
@@ -228,12 +228,6 @@ body {
 </div>
 <script>
 (async () => {
-    const Session = await window.StoryCookieSessionReady;
-    if (!Session?.authenticated) {
-        window.location.replace("auth.html");
-        return;
-    }
-
     const LoadScript = Source => new Promise((Resolve, Reject) => {
         const Script = document.createElement("script");
         Script.src = Source;
@@ -242,8 +236,22 @@ body {
         document.body.appendChild(Script);
     });
 
-    await LoadScript("cache-guard.js?v=20261030-cookie1");
-    await LoadScript("shell.js?v=20261031-reload7");
+    // Start rendering the saved route immediately. Session validation still
+    // decides whether the user may remain on the app, but it no longer blocks
+    // the shell and game from appearing behind a dark blank page.
+    const AppReady = (async () => {
+        await LoadScript("cache-guard.js?v=20261030-cookie1");
+        await LoadScript("shell.js?v=20261031-reload8");
+    })();
+    const Session = await Promise.race([
+        window.StoryCookieSessionReady,
+        new Promise(Resolve => window.setTimeout(() => Resolve({ authenticated: false }), 12000))
+    ]);
+    if (!Session?.authenticated) {
+        window.location.replace("auth.html");
+        return;
+    }
+    await AppReady;
 })().catch(() => window.location.replace("auth.html"));
 </script>
 </body>
