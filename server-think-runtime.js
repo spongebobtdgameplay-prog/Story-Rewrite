@@ -128,7 +128,10 @@ function createThinkRuntime(Dependencies) {
                 Database.query("SELECT id, case_id, action_type, target_username, reason, evidence, requested_by, status, storybot_json, reviewed_by, review_note, created_at, reviewed_at FROM story_rewrite_think_requests ORDER BY created_at DESC LIMIT 100"),
                 Database.query("SELECT id, title, body, submitted_by, status, created_at FROM story_rewrite_think_ideas ORDER BY created_at DESC LIMIT 50"),
                 Database.query("SELECT id, actor_username, actor_role, action, target_username, details_json, created_at FROM story_rewrite_think_audit ORDER BY created_at DESC LIMIT 100"),
-                Database.query("SELECT id, severity, message, source, created_at, acknowledged_at FROM story_rewrite_think_alerts WHERE recipient_username_key = $1 ORDER BY created_at DESC LIMIT 50", [UsernameKey(Account.username)])
+                Database.query("SELECT id, severity, message, source, created_at, acknowledged_at FROM story_rewrite_think_alerts WHERE recipient_username_key = $1 ORDER BY created_at DESC LIMIT 50", [UsernameKey(Account.username)]),
+                Staff.role === "owner"
+                    ? Database.query("SELECT id, requester_username, requested_role, reason, status, created_at FROM story_rewrite_think_access_requests ORDER BY created_at DESC LIMIT 50")
+                    : Database.query("SELECT id, requester_username, requested_role, reason, status, created_at FROM story_rewrite_think_access_requests WHERE requester_username_key = $1 ORDER BY created_at DESC LIMIT 20", [UsernameKey(Account.username)])
             ]);
             const Roster = [{ username: "Darius56", role: "owner", active: true }];
             for (const Row of Results[0].rows) if (UsernameKey(Row.username) !== OwnerKey) Roster.push(Row);
@@ -141,7 +144,8 @@ function createThinkRuntime(Dependencies) {
                 requests: Results[2].rows,
                 ideas: Results[3].rows,
                 audit: Results[4].rows,
-                alerts: Results[5].rows
+                alerts: Results[5].rows,
+                accessRequests: Results[6].rows
             }, Origin);
             return true;
         }
