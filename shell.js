@@ -20,6 +20,7 @@
     const PersistentPages = new Set([
         "main.html",
         "levels.html",
+        "dialog.html",
         "multiplayer.html",
         "tutorial.html",
         "rules.html",
