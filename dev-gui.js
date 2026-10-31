@@ -317,18 +317,15 @@
         const Username = String(ProfileResult && ProfileResult.profile && ProfileResult.profile.username || "").trim().toLowerCase();
         if (Username !== DEVELOPER_USERNAME) return;
         try { await EnsureMultiplayerReady(); } catch { return; }
-        if (typeof io !== "function" || typeof GetServerUrl !== "function") return;
-        const ServerUrl = GetServerUrl();
+        if (typeof io !== "function" || typeof GetStorySocketServerUrl !== "function" || typeof GetStorySocketAuth !== "function") return;
+        const ServerUrl = GetStorySocketServerUrl();
         const Authenticated = typeof GetAuthToken === "function" && Boolean(GetAuthToken());
         if (!ServerUrl || !Authenticated) return;
 
         Socket = io(ServerUrl, {
             autoConnect: false,
-            withCredentials: true,
-            auth: {
-                deviceSignature: typeof GetStoryDeviceSignature === "function" ? GetStoryDeviceSignature() : "",
-                tabId: typeof GetStoryTabId === "function" ? GetStoryTabId() : ""
-            },
+            withCredentials: false,
+            auth: GetStorySocketAuth,
             transports: ["websocket", "polling"]
         });
         Socket.on("connect", () => RefreshRooms(Boolean(SelectedCode)));
