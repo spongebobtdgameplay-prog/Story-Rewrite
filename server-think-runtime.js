@@ -357,6 +357,63 @@ function createThinkRuntime(Dependencies) {
             return true;
         }
 
+        if (RequestPath === "/api/think/access-requests" && Request.method === "POST") {
+            if (!["developer", "moderator"].includes(Staff.role)) {
+                SendJson(Response, 403, { error: "Your current tier cannot request further access." }, Origin);
+                return true;
+            }
+            const Body = await ReadJson(Request).catch(() => ({}));
+            const ExpectedRole = Staff.role === "developer" ? "moderator" : "top_moderator";
+            const RequestedRole = String(Body && Body.role || ExpectedRole);
+            const Reason = String(Body && Body.reason || "").trim().slice(0, 1000);
+            if (RequestedRole !== ExpectedRole || Reason.length < 15) {
+                SendJson(Response, 400, { error: "Request only the next developer tier and explain why you need it." }, Origin);
+                return true;
+            }
+            const Existing = await Database.query("SELECT id FROM story_rewrite_think_access_requests WHERE requester_username_key = $1 AND status = 'pending' LIMIT 1", [UsernameKey(Account.username)]);
+            if (Existing.rowCount) {
+                SendJson(Response, 409, { error: "You already have a pending access request." }, Origin);
+                return true;
+            }
+            const Inserted = await Database.query("INSERT INTO story_rewrite_think_access_requests (requester_username_key,requester_username,requested_role,reason) VALUES ($1,$2,$3,$4) RETURNING id", [UsernameKey(Account.username), Account.username, RequestedRole, Reason]);
+            await writeAudit(Staff, "think_access_requested", null, { requestId: Inserted.rows[0].id, requestedRole: RequestedRole });
+            SendJson(Response, 201, { ok: true, requestId: Inserted.rows[0].id }, Origin);
+            return true;
+        }
+
+        if (RequestPath.startsWith("/api/think/access-requests/") && RequestPath.endsWith("/review") && Request.method === "POST") {
+            if (Staff.role !== "owner") {
+                SendJson(Response, 403, { error: "Only Darius56 can approve developer access requests." }, Origin);
+                return true;
+            }
+            const AccessRequestId = Number(RequestPath.split("/")[4]);
+            const Body = await ReadJson(Request).catch(() => ({}));
+            const Decision = String(Body && Body.decision || "");
+            const Note = String(Body && Body.note || "").trim().slice(0, 1000);
+            if (!Number.isSafeInteger(AccessRequestId) || AccessRequestId <= 0 || !["approve", "reject"].includes(Decision)) {
+                SendJson(Response, 400, { error: "Choose a valid access request and approve or reject it." }, Origin);
+                return true;
+            }
+            const Pending = await Database.query("SELECT * FROM story_rewrite_think_access_requests WHERE id = $1 AND status = 'pending' LIMIT 1", [AccessRequestId]);
+            if (!Pending.rowCount) {
+                SendJson(Response, 404, { error: "Pending access request not found." }, Origin);
+                return true;
+            }
+            const RequestRow = Pending.rows[0];
+            if (Decision === "approve") {
+                const AccountRow = await Database.query("SELECT username FROM accounts WHERE username_key = $1 LIMIT 1", [RequestRow.requester_username_key]);
+                if (!AccountRow.rowCount) {
+                    SendJson(Response, 404, { error: "The requesting account no longer exists." }, Origin);
+                    return true;
+                }
+                await Database.query("INSERT INTO story_rewrite_think_staff (username_key,username,role,active,appointed_by) VALUES ($1,$2,$3,TRUE,$4) ON CONFLICT (username_key) DO UPDATE SET username = EXCLUDED.username, role = EXCLUDED.role, active = TRUE, appointed_by = EXCLUDED.appointed_by, updated_at = NOW()", [RequestRow.requester_username_key, AccountRow.rows[0].username, RequestRow.requested_role, Account.username]);
+            }
+            await Database.query("UPDATE story_rewrite_think_access_requests SET status = $1, reviewed_by = $2, review_note = $3, reviewed_at = NOW() WHERE id = $4", [Decision === "approve" ? "approved" : "rejected", Account.username, Note, RequestRow.id]);
+            await writeAudit(Staff, "think_access_" + Decision, RequestRow.requester_username, { requestId: RequestRow.id, requestedRole: RequestRow.requested_role, note: Note });
+            SendJson(Response, 200, { ok: true, status: Decision === "approve" ? "approved" : "rejected" }, Origin);
+            return true;
+        }
+
         if (RequestPath === "/api/think/ideas" && Request.method === "POST") {
             const Body = await ReadJson(Request).catch(() => ({}));
             const Title = String(Body && Body.title || "").trim().slice(0, 120);
