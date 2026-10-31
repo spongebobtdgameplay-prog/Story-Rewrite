@@ -445,7 +445,12 @@ const ReviveHandlerReplacement = `    Socket.on("game:revive", (Payload, Reply =
         Room.stageHeartsLost = 0;
         Room.lastOutcome = null;
         Room.status = "playing";
-        ResetRoomStageSystems(Room);
+        EnsureRoomSystems(Room);
+        ClearRoomDanger(Room);
+        const Stage = StagesData.stages[Room.stageId];
+        const Seconds = GetStageDangerSeconds(Stage);
+        Room.dangerEndsAt = Date.now() + Seconds * 1000;
+        Room.dangerTimer = setTimeout(() => ExpireRoomDanger(Room), Seconds * 1000);
         EmitRoom(Room);
         Io.to(Room.code).emit("game:retry", { revived: true, revives: Room.revives });
         Reply({ ok: true, lives: Room.lives, revives: Room.revives });
