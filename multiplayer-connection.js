@@ -153,15 +153,12 @@ LoadSocketClient = function() {
 ConnectStorySocket = function() {
     if (typeof io !== "function") throw new Error("Socket.IO client did not load.");
 
-    const ServerUrl = GetServerUrl();
+    const ServerUrl = GetStorySocketServerUrl();
     if (!ServerUrl) throw new Error("Multiplayer server is not configured.");
 
     return io(ServerUrl, {
-        withCredentials: true,
-        auth: {
-            deviceSignature: typeof GetStoryDeviceSignature === "function" ? GetStoryDeviceSignature() : "",
-            tabId: typeof GetStoryTabId === "function" ? GetStoryTabId() : ""
-        },
+        withCredentials: false,
+        auth: GetStorySocketAuth,
         transports: ["websocket", "polling"],
         tryAllTransports: true,
         upgrade: true,
