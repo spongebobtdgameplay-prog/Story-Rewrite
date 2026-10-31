@@ -176,7 +176,7 @@ ConnectStorySocket = function() {
 InitializeMultiplayer = async function() {
     SetMultiplayerConnectionStatus("Connecting to multiplayer...", "lobby", "neutral");
 
-    await WarmMultiplayerDependencies();
+    await Promise.all([WarmMultiplayerDependencies(), LoadSocketClient()]);
 
     const ProfileResult = await RetryMultiplayerAction(() => RequireAccount(), 4);
     CurrentProfile = ProfileResult.profile;

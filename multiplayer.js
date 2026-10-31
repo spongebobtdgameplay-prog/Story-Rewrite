@@ -57,6 +57,11 @@ let MultiplayerState = null;
 let CurrentProfile = null;
 let LocalReady = false;
 let MultiplayerReadyPromise = null;
+let MultiplayerReconnectPromise = null;
+let MultiplayerWarmupPromise = null;
+let MultiplayerWarmupCompletedAt = 0;
+let MultiplayerWarmupPending = false;
+let MultiplayerShellActive = false;
 let SocketClientPromise = null;
 let StartingRoom = false;
 let RoomNoticeFadeTimer = 0;
@@ -71,9 +76,28 @@ window.addEventListener("DOMContentLoaded", () => {
     EnsureLobbyEnhancements();
     BindUi();
 
-    EnsureMultiplayerReady().catch(Error => {
+    // Warm page dependencies while hidden, but do not claim a multiplayer
+    // socket session until the player actually opens this page.
+    WarmMultiplayerDependencies().catch(() => {});
+});
+
+window.addEventListener("StoryShellActivate", Event => {
+    const Route = String(Event?.detail?.route || "");
+    if (!Route.startsWith("multiplayer.html")) return;
+    MultiplayerShellActive = true;
+    EnsureMultiplayerReady().then(() => {
+        HideLobbyStatus();
+        StoryAudio?.PlayMusic?.("lobby");
+    }).catch(Error => {
         ShowLobbyStatus(FriendlyConnectionError(Error), false);
     });
+});
+
+window.addEventListener("StoryShellDeactivate", Event => {
+    const Route = String(Event?.detail?.route || "");
+    if (!Route.startsWith("multiplayer.html")) return;
+    MultiplayerShellActive = false;
+    StoryAudio?.StopMusic?.();
 });
 
 
@@ -91,6 +115,35 @@ function On(Id, EventName, Handler) {
 function SetText(Id, Text) {
     const Element = ById(Id);
     if (Element) Element.textContent = Text;
+}
+
+function WarmMultiplayerDependencies() {
+    const Now = Date.now();
+    if (MultiplayerWarmupPromise && (
+        MultiplayerWarmupPending ||
+        Now - MultiplayerWarmupCompletedAt < 30000
+    )) return MultiplayerWarmupPromise;
+
+    MultiplayerWarmupPending = true;
+    let Failed = false;
+    let Wrapped;
+    Wrapped = EnsureBackendVersion()
+        .then(Health => {
+            MultiplayerWarmupCompletedAt = Date.now();
+            return Health;
+        })
+        .catch(Error => {
+            Failed = true;
+            throw Error;
+        })
+        .finally(() => {
+            if (MultiplayerWarmupPromise === Wrapped) {
+                MultiplayerWarmupPending = false;
+                if (Failed) MultiplayerWarmupPromise = null;
+            }
+        });
+    MultiplayerWarmupPromise = Wrapped;
+    return Wrapped;
 }
 
 function EnsureMultiplayerConnectionBadge() {
@@ -212,14 +265,65 @@ async function EnsureBackendVersion() {
 async function EnsureMultiplayerReady() {
     if (MultiplayerSocket?.connected && CurrentProfile) return MultiplayerSocket;
 
+    // Share an in-progress initial connection among DOM startup, background
+    // preloading, and later shell activations.
+    if (MultiplayerReadyPromise) {
+        const PendingInitialization = MultiplayerReadyPromise;
+        try {
+            const Socket = await PendingInitialization;
+            if (MultiplayerReadyPromise === PendingInitialization) MultiplayerReadyPromise = null;
+            return Socket;
+        } catch (Error) {
+            if (MultiplayerReadyPromise === PendingInitialization) MultiplayerReadyPromise = null;
+            throw Error;
+        }
+    }
+
+    // A persistent iframe can remain alive after leaving Multiplayer. Its
+    // socket may be reconnecting even though the original initialization has
+    // already completed, so wait for that reconnect before creating a new one.
+    if (MultiplayerSocket && CurrentProfile && !MultiplayerSocket.connected) {
+        if (MultiplayerSocket.active) {
+            if (!MultiplayerReconnectPromise) {
+                const ReconnectingSocket = MultiplayerSocket;
+                MultiplayerReconnectPromise = WaitForSocketConnection(ReconnectingSocket, 45000)
+                    .then(() => ReconnectingSocket)
+                    .catch(Error => {
+                        if (Error?.message === "Other Session found" || Error?.data?.code === "OTHER_SESSION_FOUND") {
+                            throw Error;
+                        }
+                        if (MultiplayerSocket === ReconnectingSocket) {
+                            ReconnectingSocket.removeAllListeners();
+                            ReconnectingSocket.disconnect();
+                            MultiplayerSocket = null;
+                        }
+                        return null;
+                    })
+                    .finally(() => {
+                        MultiplayerReconnectPromise = null;
+                    });
+            }
+
+            const ReconnectedSocket = await MultiplayerReconnectPromise;
+            if (ReconnectedSocket?.connected) return ReconnectedSocket;
+        } else {
+            MultiplayerSocket.removeAllListeners();
+            MultiplayerSocket.disconnect();
+            MultiplayerSocket = null;
+        }
+    }
+
     if (!MultiplayerReadyPromise) {
         MultiplayerReadyPromise = InitializeMultiplayer();
     }
 
+    const PendingInitialization = MultiplayerReadyPromise;
     try {
-        return await MultiplayerReadyPromise;
+        const Socket = await PendingInitialization;
+        if (MultiplayerReadyPromise === PendingInitialization) MultiplayerReadyPromise = null;
+        return Socket;
     } catch (Error) {
-        MultiplayerReadyPromise = null;
+        if (MultiplayerReadyPromise === PendingInitialization) MultiplayerReadyPromise = null;
         throw Error;
     }
 }
