@@ -281,6 +281,10 @@ function createThinkRuntime(Dependencies) {
                 return true;
             }
             const Pending = PendingResult.rows[0];
+            if (Staff.role !== "owner" && Pending.requested_by_key === UsernameKey(Account.username)) {
+                SendJson(Response, 403, { error: "A top-tier moderator cannot approve their own higher-action request. Another reviewer must check it." }, Origin);
+                return true;
+            }
             const CaseResult = await Database.query("SELECT * FROM story_rewrite_think_cases WHERE id = $1 LIMIT 1", [Pending.case_id]);
             const CaseRow = CaseResult.rows[0] || null;
 
