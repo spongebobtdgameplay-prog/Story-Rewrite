@@ -1,5 +1,5 @@
 (() => {
-    const FrontendVersion = "20261031.2";
+    const FrontendVersion = "20261031.3";
     const Root = document.getElementById("StoryShellRoot");
     const InitialFrame = document.getElementById("StoryShellFrame");
     if (!Root || !InitialFrame) return;
@@ -540,7 +540,6 @@
         SyncGameplayPauseButton();
         GameplayPauseButton?.removeAttribute("aria-busy");
         UpdateTitle(Frame);
-        try { window.parent.dispatchEvent(new Event("StoryShellReady")); } catch {}
 
         const ResumeContinue = ConsumeContinueResumeRequest(Route);
         if (ResumeContinue) {
@@ -652,7 +651,7 @@
 
     function CreateFrame(Route) {
         const Frame = document.createElement("iframe");
-        PrepareFrame(Frame, Route);
+        PrepareFrame(Frame, Route, true);
         Root.appendChild(Frame);
         // Attach the load handler and connect the frame before starting navigation.
         // A fast cached response can otherwise load before the listener exists.
@@ -838,7 +837,7 @@
     });
 
     const InitialFrameHadSource = Boolean(InitialFrame.getAttribute("src"));
-    InitialFrame.style.visibility = "hidden";
+    InitialFrame.style.visibility = "visible";
     PrepareFrame(InitialFrame, "main.html", true);
     PersistentFrames.set("main.html", InitialFrame);
     ActiveFrame = InitialFrame;
