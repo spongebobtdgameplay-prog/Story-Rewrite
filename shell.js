@@ -1,5 +1,5 @@
 (() => {
-    const FrontendVersion = "20261031.5";
+    const FrontendVersion = "20261031.6";
     const Root = document.getElementById("StoryShellRoot");
     const InitialFrame = document.getElementById("StoryShellFrame");
     if (!Root || !InitialFrame) return;
@@ -836,28 +836,19 @@
         GetCurrentMusic: () => CurrentMusicName
     });
 
-    const InitialFrameHadSource = Boolean(InitialFrame.getAttribute("src"));
-    InitialFrame.style.visibility = "hidden";
-    PrepareFrame(InitialFrame, "main.html", true);
-    PersistentFrames.set("main.html", InitialFrame);
-    ActiveFrame = InitialFrame;
-
-    if (InitialFrameHadSource) {
-        try {
-            const ReadyState = InitialFrame.contentDocument?.readyState;
-            if (ReadyState === "interactive" || ReadyState === "complete") {
-                setTimeout(() => HandleFrameLoad(InitialFrame), 0);
-            }
-        } catch {}
-    } else {
-        InitialFrame.src = RouteUrl("main.html");
-    }
-
     const SavedShellState = ReadLastShellState();
     const InitialRoute = RouteFromLocation();
     CurrentRoute = InitialRoute;
     CurrentHistoryDepth = 0;
-    SyncGameplayPauseButton();
+
+    // A fresh shell starts directly on the saved route. This avoids loading a
+    // hidden home page first and leaving a reloaded game route with no visible frame.
+    PrepareFrame(InitialFrame, InitialRoute, true);
+    InitialFrame.style.visibility = "visible";
+    ActiveFrame = InitialFrame;
+    PendingFrame = InitialFrame;
+    if (IsPersistentRoute(InitialRoute)) PersistentFrames.set(InitialRoute, InitialFrame);
+    else TransientFrame = InitialFrame;
 
     if (!window.location.hash && SavedShellState?.route === InitialRoute) {
         const InitialBackRoute = SavedShellState.backRoute || "main.html";
@@ -873,15 +864,8 @@
         SetTopHistory(InitialRoute, true);
     }
     ApplyRouteMusic(InitialRoute);
+    SyncGameplayPauseButton();
 
-    if (InitialRoute === "main.html") {
-        if (InitialFrame.dataset.storyLoaded === "1") ActivateFrame(InitialFrame, InitialRoute);
-    } else {
-        const TargetFrame = GetFrameForRoute(InitialRoute);
-        if (TargetFrame.dataset.storyLoaded === "1") {
-            ActivateFrame(TargetFrame, InitialRoute);
-        } else {
-            PendingFrame = TargetFrame;
-        }
-    }
+    // The load listener was installed by PrepareFrame before navigation starts.
+    InitialFrame.src = RouteUrl(InitialRoute);
 })();
