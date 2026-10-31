@@ -1,5 +1,5 @@
 (() => {
-    const FrontendVersion = "20261031.7";
+    const FrontendVersion = "20261031.8";
     const Root = document.getElementById("StoryShellRoot");
     const InitialFrame = document.getElementById("StoryShellFrame");
     if (!Root || !InitialFrame) return;
@@ -7,7 +7,6 @@
     const ManagedPages = new Set([
         "main.html",
         "levels.html",
-        "dialog.html",
         "multiplayer.html",
         "tutorial.html",
         "rules.html",
@@ -593,10 +592,15 @@
         const FrameNavigatedItself = Boolean(PreviousRoute && ActualRoute !== PreviousRoute);
 
         if (FrameNavigatedItself && (Frame === ActiveFrame || Frame === PendingFrame)) {
-            Frame.dataset.storyLoaded = "0";
-            if (PendingFrame === Frame) PendingFrame = null;
-            LoadRoute(ActualRoute, { replace: true });
-            return;
+            // The child has already completed its own navigation. Adopt that
+            // document instead of assigning the same iframe URL again, which
+            // restarted loading and exposed the shell background a second time.
+            CurrentRoute = ActualRoute;
+            if (IsSinglePlayerGameRoute(ActualRoute) && PreviousRoute !== ActualRoute) {
+                ShellPauseState = false;
+            }
+            ApplyRouteMusic(ActualRoute);
+            SetTopHistory(ActualRoute, false, PreviousRoute);
         }
 
         Frame.dataset.storyLoaded = "1";
