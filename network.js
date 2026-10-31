@@ -55,7 +55,9 @@ const STORY_PROTECTED_PAGES = new Set([
     "rules.html",
     "account.html",
     "settings.html",
-    "social.html"
+    "social.html",
+    "think.html",
+    "hackers.html"
 ]);
 
 let AccountProfileRequestPromise = null;
