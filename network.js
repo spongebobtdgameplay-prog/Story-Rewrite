@@ -437,6 +437,35 @@ function GetServerUrl() {
     return "";
 }
 
+function GetStorySocketServerUrl() {
+    const Configured = String(window.STORY_REWRITE_SOCKET_URL || "").trim().replace(/\/$/, "");
+    return Configured || GetServerUrl();
+}
+
+function GetStorySocketAuth(Callback) {
+    let Completed = false;
+    const Finish = Payload => {
+        if (Completed) return;
+        Completed = true;
+        try { Callback(Payload); } catch {}
+    };
+    const DeviceSignature = GetStoryDeviceSignature();
+    const TabId = GetStoryTabId();
+
+    ApiRequest("/api/socket-ticket", {
+        method: "POST",
+        body: "{}",
+        timeoutMs: 15000
+    }).then(Result => {
+        const Ticket = String(Result?.ticket || "");
+        if (!Ticket) throw new Error("SOCKET_TICKET_UNAVAILABLE");
+        Finish({ ticket: Ticket, deviceSignature: DeviceSignature, tabId: TabId });
+    }).catch(Error => {
+        const AuthError = Error?.status === 401 ? "AUTH_REQUIRED" : "SOCKET_TICKET_UNAVAILABLE";
+        Finish({ ticket: "", socketAuthError: AuthError, deviceSignature: DeviceSignature, tabId: TabId });
+    });
+}
+
 function SetServerOverride(Value) {
     const Normalized = String(Value || "").trim().replace(/\/$/, "");
     if (Normalized) sessionStorage.setItem(STORY_SERVER_OVERRIDE_KEY, Normalized);
@@ -958,15 +987,12 @@ async function SaveAudioSettings(MusicVolume, SoundVolume) {
 
 function ConnectStorySocket() {
     if (typeof io !== "function") throw new Error("Socket.IO client did not load.");
-    const ServerUrl = GetServerUrl();
+    const ServerUrl = GetStorySocketServerUrl();
     if (!ServerUrl) throw new Error("Multiplayer server is not configured.");
 
     const Socket = io(ServerUrl, {
-        withCredentials: true,
-        auth: {
-            deviceSignature: GetStoryDeviceSignature(),
-            tabId: GetStoryTabId()
-        },
+        withCredentials: false,
+        auth: GetStorySocketAuth,
         transports: ["websocket", "polling"],
         tryAllTransports: true,
         rememberUpgrade: true,
