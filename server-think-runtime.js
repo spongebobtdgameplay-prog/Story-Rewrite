@@ -187,7 +187,7 @@ function createThinkRuntime(Dependencies) {
                 [UsernameKey(Account.username)]
             );
             await writeAudit(Staff, "think_case_created", RealTarget, { caseId: Inserted.rows[0].id, category: Category });
-            if (Number(Pace.rows[0] && Pace.rows[0].count || 0) >= 4) {
+            if (Staff.role !== "owner" && Number(Pace.rows[0] && Pace.rows[0].count || 0) >= 4) {
                 await addAlert(Account.username, "Pay more attention to what you're doing. Review the relevant messages and evidence before adding more investigation cases. Your activity is being reviewed.");
             }
             SendJson(Response, 201, { ok: true, caseId: Inserted.rows[0].id }, Origin);
