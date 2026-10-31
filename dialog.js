@@ -629,8 +629,8 @@ function ApplyFailureOutcome(Result) {
 
     if (IsGameOver) {
         document.getElementById("GameOverText").textContent = TimedOut
-            ? `${FailureReason} Your last heart is gone. Replay the level to try again.`
-            : `${FailureReason} ${Result.aftermath} No lives remain. Replay the level to try again.`;
+            ? `${FailureReason} Your last heart is gone. Revive restores one heart and keeps your choices; Restart Level clears your choices but does not restore a heart.`
+            : `${FailureReason} ${Result.aftermath} No lives remain. Revive restores one heart and keeps your choices; Restart Level clears your choices but does not restore a heart.`;
         document.getElementById("GameOverOverlay").classList.add("Show");
     }
 }
