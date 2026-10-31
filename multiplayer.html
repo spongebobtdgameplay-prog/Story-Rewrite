@@ -255,10 +255,16 @@
 <script>
 (async () => {
     const Button = document.getElementById("ThinkConsoleButton");
-    if (!Button || typeof ApiRequest !== "function") return;
+    if (!Button || typeof GetServerUrl !== "function") return;
     try {
-        await ApiRequest("/api/think/overview");
-        Button.hidden = false;
+        const Server = GetServerUrl();
+        if (!Server) return;
+        const Response = await fetch(Server + "/api/think/overview", {
+            method: "GET",
+            credentials: "include",
+            cache: "no-store"
+        });
+        if (Response.ok) Button.hidden = false;
     } catch {}
 })();
 </script>

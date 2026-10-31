@@ -28,9 +28,11 @@ Module.prototype._compile = function(Content, Filename) {
         }
         GeneratedSource = GeneratedSource.replace(RuntimeAnchor, RuntimeSource + "\n\n" + RuntimeAnchor);
 
-        const LoginSuccessAnchor = "            Account.save = NormalizeSave(Account.save);\n            await SaveAccount(Account);\n            const StoryIssuedToken = CreateToken(Account.username);";
-        if (GeneratedSource.split(LoginSuccessAnchor).length !== 2) throw new Error("server-v15 login success anchor.");
-        GeneratedSource = GeneratedSource.replace(LoginSuccessAnchor, "            if (await GetThinkRuntime().isRestricted(Account.username)) return SendJson(Response, 403, { error: \"Account access is temporarily restricted. Contact Story Rewrite support.\" }, Origin);\n" + LoginSuccessAnchor);
+        const LoginThrottleSuccessAnchor = "            ClearLoginFailure(LoginAccountFailures, AccountKey);\n            ClearLoginFailure(LoginIpFailures, IpKey);\n\n            Account.save = NormalizeSave(Account.save);";
+        if (GeneratedSource.split(LoginThrottleSuccessAnchor).length !== 2) throw new Error("server-v15 login throttle success anchor.");
+        GeneratedSource = GeneratedSource.replace(LoginThrottleSuccessAnchor,
+            "            ClearLoginFailure(LoginAccountFailures, AccountKey);\n            ClearLoginFailure(LoginIpFailures, IpKey);\n\n            if (await GetThinkRuntime().isRestricted(Account.username)) return SendJson(Response, 403, { error: \"Account access is temporarily restricted. Contact Story Rewrite support.\" }, Origin);\n\n            Account.save = NormalizeSave(Account.save);"
+        );
 
         const ApiGateAnchor = "    if (!Account) return SendJson(Response, 401, { error: \"Sign in required.\" }, Origin);";
         if (GeneratedSource.split(ApiGateAnchor).length !== 2) {
@@ -38,25 +40,7 @@ Module.prototype._compile = function(Content, Filename) {
         }
         GeneratedSource = GeneratedSource.replace(ApiGateAnchor,
             ApiGateAnchor + "\n" +
-            "    await GetThinkRuntime().ensureSchema();\n" +
-            "    if (await GetThinkRuntime().isRestricted(Account.username)) return SendJson(Response, 403, { error: \"Account access is temporarily restricted. Contact Story Rewrite support.\" }, Origin);\n" +
             "    if (RequestPath.startsWith(\"/api/think\")) return GetThinkRuntime().handle(Request, Response, RequestPath, Origin, Account);\n"
-        );
-
-        const ConnectionAnchor = 'Io.on("connection", Socket => {';
-        if (GeneratedSource.split(ConnectionAnchor).length !== 2) {
-            throw new Error("server-v15 Silicon Valley patch failed: Socket.IO restriction anchor.");
-        }
-        GeneratedSource = GeneratedSource.replace(ConnectionAnchor,
-            "Io.use(async (Socket, Next) => {\n" +
-            "    try {\n" +
-            "        if (await GetThinkRuntime().isRestricted(Socket.data && Socket.data.username || \"\")) return Next(new Error(\"ACCOUNT_RESTRICTED\"));\n" +
-            "        Next();\n" +
-            "    } catch (Error) {\n" +
-            "        console.error(\"Story Rewrite restriction check failed\", Error);\n" +
-            "        Next(new Error(\"AUTH_REQUIRED\"));\n" +
-            "    }\n" +
-            "});\n\n" + ConnectionAnchor
         );
 
         ThinkPatchApplied = true;
