@@ -1,5 +1,5 @@
 (() => {
-    const FrontendVersion = "20261031.10";
+    const FrontendVersion = "20261031.11";
     const Root = document.getElementById("StoryShellRoot");
     const InitialFrame = document.getElementById("StoryShellFrame");
     if (!Root || !InitialFrame) return;
@@ -42,6 +42,7 @@
     const LastShellStateKey = "StoryRewriteLastShellStateV1";
     let CurrentAudioSettings = {};
     let CurrentHistoryDepth = 0;
+    let ShellWarmupStarted = false;
     let GameplayAudioPaused = false;
     let ShellPauseState = false;
     const GameplayPauseButton = document.getElementById("StoryShellPauseButton");
@@ -551,6 +552,7 @@
         }
 
         DispatchFrameEvent(Frame, "StoryShellActivate", Route);
+        WarmPersistentRoutes();
 
         if (ResumeContinue) {
             DispatchFrameEvent(Frame, "StoryShellResumeGameplay", Route);
@@ -655,26 +657,80 @@
             Frame.removeAttribute("aria-hidden");
         }
 
-        Frame.addEventListener("load", () => HandleFrameLoad(Frame));
+        Frame.addEventListener("load", () => {
+            if (Frame._storyLoadTimer) {
+                clearTimeout(Frame._storyLoadTimer);
+                Frame._storyLoadTimer = 0;
+            }
+            Frame.dataset.storyLoadFailed = "0";
+            HandleFrameLoad(Frame);
+        });
+    }
+
+    function StartFrameLoadWatchdog(Frame) {
+        if (Frame._storyLoadTimer) clearTimeout(Frame._storyLoadTimer);
+        Frame.dataset.storyLoadFailed = "0";
+        Frame._storyLoadTimer = window.setTimeout(() => {
+            if (Frame.dataset.storyLoaded === "1") return;
+            Frame.dataset.storyLoadFailed = "1";
+            if (PendingFrame === Frame) {
+                PendingFrame = null;
+                GameplayPauseButton?.removeAttribute("aria-busy");
+            }
+        }, 25000);
     }
 
     function CreateFrame(Route) {
         const Frame = document.createElement("iframe");
+        Frame.loading = "eager";
         PrepareFrame(Frame, Route);
         Root.appendChild(Frame);
         // Attach the load handler and connect the frame before starting navigation.
         // A fast cached response can otherwise load before the listener exists.
+        StartFrameLoadWatchdog(Frame);
         Frame.src = RouteUrl(Route);
         return Frame;
     }
 
     function GetPersistentFrame(Route) {
-        const Existing = PersistentFrames.get(Route);
-        if (Existing) return Existing;
+        let Existing = PersistentFrames.get(Route);
+        if (Existing && Existing.dataset.storyLoadFailed !== "1") return Existing;
+
+        if (Existing) {
+            if (Existing._storyLoadTimer) clearTimeout(Existing._storyLoadTimer);
+            Existing.remove();
+            PersistentFrames.delete(Route);
+        }
 
         const Frame = CreateFrame(Route);
         PersistentFrames.set(Route, Frame);
         return Frame;
+    }
+
+    function WarmPersistentRoutes() {
+        if (ShellWarmupStarted) return;
+        ShellWarmupStarted = true;
+
+        const Warm = () => {
+            for (const Route of ["multiplayer.html", "think.html", "hackers.html"]) {
+                if (PageForRoute(Route) === PageForRoute(CurrentRoute)) continue;
+                const Frame = GetPersistentFrame(Route);
+                // Keep preloaded documents off-screen but actively loading and
+                // executing their existing permission/connection checks.
+                Frame.style.display = "block";
+                Frame.style.visibility = "hidden";
+                Frame.style.pointerEvents = "none";
+                Frame.setAttribute("aria-hidden", "true");
+                Frame.loading = "eager";
+                Frame.dataset.storyPreloaded = "1";
+            }
+        };
+
+        if (typeof window.requestIdleCallback === "function") {
+            window.requestIdleCallback(Warm, { timeout: 1200 });
+        } else {
+            window.setTimeout(Warm, 0);
+        }
     }
 
     function GetTransientFrame(Route) {
@@ -684,9 +740,16 @@
         }
 
         const ExistingRoute = TransientFrame.dataset.storyRoute || "";
+        if (TransientFrame.dataset.storyLoadFailed === "1") {
+            if (TransientFrame._storyLoadTimer) clearTimeout(TransientFrame._storyLoadTimer);
+            TransientFrame.remove();
+            TransientFrame = CreateFrame(Route);
+            return TransientFrame;
+        }
         if (ExistingRoute !== Route) {
             TransientFrame.dataset.storyLoaded = "0";
             TransientFrame.dataset.storyRoute = Route;
+            StartFrameLoadWatchdog(TransientFrame);
             TransientFrame.src = RouteUrl(Route);
         }
 
@@ -853,7 +916,6 @@
     // A fresh shell starts directly on the saved route. This avoids loading a
     // hidden home page first and leaving a reloaded game route with no visible frame.
     PrepareFrame(InitialFrame, InitialRoute, true);
-    InitialFrame.style.visibility = "visible";
     ActiveFrame = InitialFrame;
     PendingFrame = InitialFrame;
     if (IsPersistentRoute(InitialRoute)) PersistentFrames.set(InitialRoute, InitialFrame);
@@ -875,6 +937,7 @@
     ApplyRouteMusic(InitialRoute);
     SyncGameplayPauseButton();
 
-    // The load listener was installed by PrepareFrame before navigation starts.
+    // Reveal only from HandleFrameLoad, after the selected document is ready.
+    StartFrameLoadWatchdog(InitialFrame);
     InitialFrame.src = RouteUrl(InitialRoute);
 })();
