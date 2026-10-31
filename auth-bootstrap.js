@@ -65,17 +65,27 @@
         return { Response, Data };
     }
 
+    async function FetchResponseWithTimeout(Url, Options) {
+        const Controller = new AbortController();
+        const Timeout = window.setTimeout(() => Controller.abort(), 20000);
+        try {
+            const Response = await fetch(Url, { ...Options, signal: Controller.signal });
+            return await ReadResponse(Response);
+        } finally {
+            window.clearTimeout(Timeout);
+        }
+    }
+
     async function FetchSession() {
         const Server = String(window.STORY_REWRITE_SERVER_URL || "").trim().replace(/\/+$/, "");
         if (!Server) return { authenticated: false, unavailable: true };
 
         try {
-            const Existing = await fetch(Server + "/api/me", {
+            const ExistingResult = await FetchResponseWithTimeout(Server + "/api/me", {
                 method: "GET",
                 credentials: "include",
                 cache: "no-store"
             });
-            const ExistingResult = await ReadResponse(Existing);
             if (ExistingResult.Response.ok) {
                 return CompleteSession(ExistingResult.Data);
             }
@@ -87,7 +97,7 @@
                 return { authenticated: false };
             }
 
-            const Migrated = await fetch(Server + "/api/session/migrate", {
+            const MigratedResult = await FetchResponseWithTimeout(Server + "/api/session/migrate", {
                 method: "POST",
                 credentials: "include",
                 cache: "no-store",
@@ -97,7 +107,6 @@
                 },
                 body: "{}"
             });
-            const MigratedResult = await ReadResponse(Migrated);
             if (!MigratedResult.Response.ok) {
                 return {
                     authenticated: false,
