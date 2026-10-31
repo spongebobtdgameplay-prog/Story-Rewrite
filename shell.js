@@ -584,16 +584,18 @@
         if (!ActualRoute) {
             Frame.dataset.storyLoaded = "0";
             Frame.dataset.storyLoadFailed = "1";
+            const IsCurrentNavigation = Frame === ActiveFrame || Frame === PendingFrame;
+            try {
+                const PageName = Frame.contentWindow.location.pathname.split("/").pop();
+                if (PageName === "auth.html" && IsCurrentNavigation) {
+                    Exit("auth.html", true);
+                    return;
+                }
+            } catch {}
             if (PendingFrame === Frame) {
                 PendingFrame = null;
                 GameplayPauseButton?.removeAttribute("aria-busy");
             }
-            try {
-                const PageName = Frame.contentWindow.location.pathname.split("/").pop();
-                if (PageName === "auth.html" && (Frame === ActiveFrame || Frame === PendingFrame)) {
-                    Exit("auth.html", true);
-                }
-            } catch {}
             return;
         }
 
