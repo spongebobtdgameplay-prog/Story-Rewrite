@@ -800,19 +800,31 @@ async function ApiRequest(Path, Options = {}) {
     }
     throw new Error("The server request could not be completed.");
 }
+async function CompleteCookieAccountSignIn(Result, Username) {
+    // Do not navigate to the app just because /login or /register returned 200.
+    // Verify that the browser actually received and can use the HttpOnly session.
+    const Session = await ApiRequest("/api/me", { timeoutMs: 12000 });
+    if (!Session?.profile?.username) {
+        throw new Error("The server accepted the sign-in but did not establish a secure browser session. Please try again.");
+    }
+
+    const VerifiedResult = { ...Result, profile: Session.profile };
+    SetAuthToken("cookie-session");
+    StoreLastKnownProfileResult(VerifiedResult);
+    if (Result?.save) StoreLastKnownServerSave(Result.save);
+    MarkAuthValidated();
+    RememberAccountSession(VerifiedResult);
+    BroadcastStorySession(Session.profile.username || Username);
+    return VerifiedResult;
+}
+
 async function RegisterAccount(Username, Password) {
     ClearLastKnownStoryState();
     const Result = await ApiRequest("/api/register", {
         method: "POST",
         body: JSON.stringify({ username: Username, password: Password })
     });
-    SetAuthToken("cookie-session");
-    StoreLastKnownProfileResult(Result);
-    if (Result?.save) StoreLastKnownServerSave(Result.save);
-    MarkAuthValidated();
-    RememberAccountSession(Result);
-    BroadcastStorySession(Result?.profile?.username || Username);
-    return Result;
+    return CompleteCookieAccountSignIn(Result, Username);
 }
 
 async function LoginAccount(Username, Password) {
@@ -821,13 +833,7 @@ async function LoginAccount(Username, Password) {
         method: "POST",
         body: JSON.stringify({ username: Username, password: Password })
     });
-    SetAuthToken("cookie-session");
-    StoreLastKnownProfileResult(Result);
-    if (Result?.save) StoreLastKnownServerSave(Result.save);
-    MarkAuthValidated();
-    RememberAccountSession(Result);
-    BroadcastStorySession(Result?.profile?.username || Username);
-    return Result;
+    return CompleteCookieAccountSignIn(Result, Username);
 }
 
 async function GetAccountProfile() {
