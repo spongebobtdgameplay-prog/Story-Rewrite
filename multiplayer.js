@@ -96,8 +96,9 @@ window.addEventListener("StoryShellActivate", Event => {
 window.addEventListener("StoryShellDeactivate", Event => {
     const Route = String(Event?.detail?.route || "");
     if (!Route.startsWith("multiplayer.html")) return;
+    // The shell owns the shared soundtrack. Deactivating this persistent
+    // iframe must not stop music on the page that is becoming active.
     MultiplayerShellActive = false;
-    StoryAudio?.StopMusic?.();
 });
 
 
