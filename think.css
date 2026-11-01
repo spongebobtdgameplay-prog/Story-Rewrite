@@ -37,6 +37,8 @@ body.ThinkPage {
 .ThinkHeader h1 { margin: 4px 0 0; font: 800 clamp(23px, 3vw, 34px)/1.05 Georgia, "Times New Roman", serif; letter-spacing: -.02em; }
 .ThinkHeader p { margin: 6px 0 0; color: var(--think-muted); font-size: 12px; }
 .ThinkNav { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+.ThinkNav .ThinkBackButton { gap: 8px; padding-inline: 14px; white-space: nowrap; }
+.ThinkNav .ThinkBackButton svg { width: 17px; height: 17px; flex: 0 0 17px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
 .ThinkButton, .ThinkNav a, .ThinkNav button {
     min-height: 38px; padding: 9px 13px; display: inline-flex; align-items: center; justify-content: center;
     border: 1px solid var(--think-line); border-radius: 11px; color: var(--think-text);
