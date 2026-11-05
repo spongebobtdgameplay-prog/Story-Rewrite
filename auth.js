@@ -1,4 +1,5 @@
 let AccountMode = "register";
+let AccountStatusTimer = 0;
 
 window.addEventListener("DOMContentLoaded", async () => {
     const Session = await (window.StoryCookieSessionReady || Promise.resolve({ authenticated: false }));
@@ -13,6 +14,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     document.getElementById("RegisterTab").addEventListener("click", () => SetMode("register"));
     document.getElementById("LoginTab").addEventListener("click", () => SetMode("login"));
     document.getElementById("AccountForm").addEventListener("submit", SubmitAccount);
+    document.getElementById("PasswordInput").addEventListener("input", HandlePasswordInput);
     document.getElementById("SaveServerButton").addEventListener("click", SaveServerUrl);
     RenderSavedAccounts();
     if (Session?.unavailable) ShowStatus("The server could not be reached. Check your connection and try again.", false);
@@ -121,6 +123,11 @@ async function SubmitAccount(Event) {
     const Confirm = document.getElementById("ConfirmInput").value;
     const Button = document.getElementById("AccountSubmit");
 
+    if (AccountMode === "register" && (Password.length < 8 || Password.length > 128)) {
+        ShowStatus("Password must be 8 to 128 characters.", false);
+        return;
+    }
+
     if (AccountMode === "register" && Password !== Confirm) {
         ShowStatus("The passwords do not match.", false);
         return;
@@ -143,10 +150,36 @@ async function SubmitAccount(Event) {
 
 function ShowStatus(Text, Good) {
     const Status = document.getElementById("AccountStatus");
-    Status.className = `StatusText ${Good ? "Good" : "Bad"}`;
+    if (AccountStatusTimer) clearTimeout(AccountStatusTimer);
     Status.textContent = Text;
+    Status.className = `StatusText AccountStatusVisible ${Good ? "Good" : "Bad"}`;
+    AccountStatusTimer = window.setTimeout(HideStatus, 4500);
 }
 
 function HideStatus() {
-    document.getElementById("AccountStatus").className = "StatusText Hidden";
+    const Status = document.getElementById("AccountStatus");
+    if (!Status) return;
+    if (AccountStatusTimer) clearTimeout(AccountStatusTimer);
+    AccountStatusTimer = 0;
+    Status.classList.remove("AccountStatusVisible");
+    Status.classList.add("AccountStatusFading");
+    window.setTimeout(() => {
+        if (!Status.classList.contains("AccountStatusVisible")) {
+            Status.className = "StatusText Hidden";
+            Status.textContent = "";
+        }
+    }, 260);
+}
+
+function HandlePasswordInput() {
+    if (AccountMode !== "register") return;
+    const Password = document.getElementById("PasswordInput").value;
+    const Status = document.getElementById("AccountStatus");
+    if (
+        Password.length >= 8 &&
+        Password.length <= 128 &&
+        /password must be 8 to 128 characters/i.test(Status?.textContent || "")
+    ) {
+        HideStatus();
+    }
 }
