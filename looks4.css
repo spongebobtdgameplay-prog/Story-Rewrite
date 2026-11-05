@@ -433,3 +433,61 @@ button {
         max-width: 100%;
     }
 }
+
+
+/* Cross-device typography normalization.
+   Preserve each page's chosen typeface while preventing browser-synthesized
+   weights and mobile text autosizing from changing its appearance. */
+:root {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    font-synthesis: none;
+    font-optical-sizing: none;
+    font-kerning: normal;
+    font-variant-ligatures: common-ligatures;
+}
+html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    font-synthesis: none;
+}
+body,
+button,
+input,
+select,
+textarea {
+    font-synthesis: none;
+}
+button,
+input,
+select,
+textarea {
+    font-family: inherit;
+    font-size: inherit;
+    font-weight: inherit;
+    letter-spacing: inherit;
+}
+input,
+textarea,
+select {
+    -webkit-appearance: none;
+    appearance: none;
+}
+.AccountStatusVisible {
+    display: block !important;
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 240ms ease, visibility 240ms ease;
+}
+.AccountStatusFading {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none;
+    transition: opacity 240ms ease, visibility 240ms ease;
+}
+@media (prefers-reduced-motion: reduce) {
+    .AccountStatusVisible,
+    .AccountStatusFading {
+        transition-duration: 0ms;
+    }
+}
