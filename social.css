@@ -1679,3 +1679,192 @@ body.StorySocialPage::before {
         max-height: min(36vh, 240px);
     }
 }
+
+
+/* Landscape phones need a compact two-column layout, not desktop-sized cards. */
+@media (orientation: landscape) and (pointer: coarse) and (max-height: 600px) {
+    .StorySocialShell {
+        width: min(100% - 16px, 1240px);
+        padding: 10px 0 calc(var(--story-mobile-dock-height, 68px) + 18px);
+    }
+
+    .StorySocialHeader {
+        gap: 10px;
+        margin-bottom: 10px;
+        grid-template-columns: 40px minmax(0, 1fr) auto;
+    }
+
+    .StorySocialTitleMark {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+    }
+
+    .StorySocialTitleMark svg {
+        width: 22px;
+        height: 22px;
+    }
+
+    .StorySocialTitleBlock {
+        gap: 9px;
+    }
+
+    .StorySocialTitleBlock h1 {
+        font-size: clamp(1.3rem, 2.5vw, 1.8rem);
+    }
+
+    .StorySocialLayout {
+        grid-template-columns: minmax(250px, 34%) minmax(0, 1fr);
+        height: min(620px, calc(100vh - 112px));
+        min-height: 350px;
+        align-items: stretch;
+    }
+
+    .StorySocialSidebar {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        min-height: 0;
+        padding: 13px 12px 15px;
+        overflow-x: hidden;
+        overflow-y: auto;
+        overscroll-behavior-y: contain;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .StorySocialPaneHeader,
+    .StorySocialSearchBox,
+    .StorySocialSearchHint {
+        flex: 0 0 auto;
+    }
+
+    .StorySocialPaneHeader {
+        padding-bottom: 9px;
+    }
+
+    .StorySocialPaneHeader h2 {
+        font-size: 1.25rem;
+    }
+
+    .StorySocialSearchBox {
+        margin-top: 9px;
+        padding-block: 8px;
+    }
+
+    .StorySocialSearchHint {
+        min-height: 22px;
+        padding-top: 5px;
+    }
+
+    .StorySocialInbox {
+        box-sizing: border-box;
+        flex: 0 0 auto;
+        width: 100%;
+        min-height: 0;
+        max-height: none;
+        margin: 7px 0 9px;
+        padding: 9px;
+        overflow: visible;
+    }
+
+    .StorySocialInboxHeader {
+        margin-bottom: 6px;
+    }
+
+    .StorySocialInboxList {
+        box-sizing: border-box;
+        display: grid;
+        width: 100%;
+        height: auto;
+        min-height: 0;
+        max-height: min(22vh, 104px);
+        padding: 5px;
+        overflow-x: hidden;
+        overflow-y: auto;
+        overscroll-behavior-y: contain;
+        -webkit-overflow-scrolling: touch;
+        border: 1px solid rgba(105, 71, 37, .2);
+        border-radius: 9px;
+    }
+
+    .StorySocialInboxEmpty {
+        box-sizing: border-box;
+        min-height: 0;
+        padding: 7px 6px;
+        overflow-wrap: anywhere;
+    }
+
+    .StorySocialUserList {
+        flex: 1 1 auto;
+        min-height: 70px;
+        max-height: none;
+        padding: 4px;
+        overflow-x: hidden;
+        overflow-y: auto;
+        overscroll-behavior-y: contain;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .StorySocialUserButton {
+        box-sizing: border-box;
+        width: 100%;
+        min-height: 58px;
+        grid-template-columns: 38px minmax(0, 1fr) 10px;
+        gap: 8px;
+        align-items: center;
+        padding: 8px;
+    }
+
+    .StorySocialAvatar {
+        box-sizing: border-box;
+        width: 38px;
+        height: 38px;
+        min-width: 38px;
+        min-height: 38px;
+        flex: 0 0 38px;
+    }
+
+    .StorySocialUserCopy {
+        min-width: 0;
+        overflow: hidden;
+    }
+
+    .StorySocialUserMeta {
+        font-size: .58rem;
+    }
+
+    .StorySocialChat {
+        height: 100%;
+        min-width: 0;
+        min-height: 0;
+        overflow: hidden;
+    }
+
+    .StorySocialChatEmpty {
+        height: 100%;
+        min-height: 0;
+        padding: 24px 16px;
+    }
+
+    .StorySocialEmptyBook {
+        width: 64px;
+        height: 64px;
+        margin-bottom: 10px;
+        border-radius: 16px;
+    }
+
+    .StorySocialEmptyBook svg {
+        width: 42px;
+        height: 42px;
+    }
+
+    .StorySocialChatEmpty h2 {
+        font-size: clamp(1.3rem, 2vw, 1.8rem);
+    }
+
+    .StorySocialChatView {
+        height: 100%;
+        min-height: 0;
+        max-height: 100%;
+    }
+}
