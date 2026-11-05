@@ -43,7 +43,7 @@ body.paper-body {
 
 .select-hero-copy h1 {
     margin: 5px 0 7px;
-    font-size: clamp(36px,5vw,58px);
+    font-size: clamp(2.25rem,5vw,3.625rem);
     line-height: .98;
 }
 
@@ -72,7 +72,7 @@ body.paper-body {
 
 .hero-stat-label {
     color: #cdb796;
-    font: 800 9px/1.2 system-ui,sans-serif;
+    font: 800 0.5625rem/1.2 system-ui,sans-serif;
     letter-spacing: .1em;
     text-transform: uppercase;
 }
@@ -80,18 +80,18 @@ body.paper-body {
 .hero-stat-value {
     margin-top: 5px;
     color: #ffdda2;
-    font-size: 24px;
+    font-size: 1.5rem;
     font-weight: 900;
 }
 
 .hero-stat-value span {
     color: #cfb38b;
-    font-size: 13px;
+    font-size: 0.8125rem;
 }
 
 .hero-stat-value.small {
     max-width: 180px;
-    font-size: 16px;
+    font-size: 1rem;
     line-height: 1.2;
 }
 
@@ -114,13 +114,13 @@ body.paper-body {
 
 .world-rail-title h2 {
     margin: 0;
-    font-size: 27px;
+    font-size: 1.6875rem;
 }
 
 .world-rail-title p {
     margin: 0;
     color: #60452f;
-    font-size: 13px;
+    font-size: 0.8125rem;
 }
 
 .world-rail {
@@ -167,7 +167,7 @@ body.paper-body {
 
 .world-chip-index {
     color: #8a562c;
-    font: 900 9px/1.2 system-ui,sans-serif;
+    font: 900 0.5625rem/1.2 system-ui,sans-serif;
     letter-spacing: .1em;
     text-transform: uppercase;
 }
@@ -179,7 +179,7 @@ body.paper-body {
 .world-chip-name {
     overflow: hidden;
     max-width: 100%;
-    font-size: 16px;
+    font-size: 1rem;
     font-weight: 900;
     white-space: nowrap;
     text-overflow: ellipsis;
@@ -187,7 +187,7 @@ body.paper-body {
 
 .world-chip-meta {
     color: #74583f;
-    font-size: 11px;
+    font-size: 0.6875rem;
     font-weight: 700;
 }
 
@@ -218,7 +218,7 @@ body.paper-body {
 .chapter-panel-copy h2 {
     margin: 5px 0 7px;
     color: #fff0d2;
-    font-size: clamp(31px,4vw,45px);
+    font-size: clamp(1.9375rem,4vw,2.8125rem);
 }
 
 .chapter-panel-copy p {
@@ -246,7 +246,7 @@ body.paper-body {
 .chapter-stat-label {
     display: block;
     color: #bba580;
-    font: 800 8px/1.2 system-ui,sans-serif;
+    font: 800 0.5rem/1.2 system-ui,sans-serif;
     letter-spacing: .1em;
     text-transform: uppercase;
 }
@@ -255,7 +255,7 @@ body.paper-body {
     display: block;
     margin-top: 4px;
     color: #ffdda0;
-    font-size: 16px;
+    font-size: 1rem;
     font-weight: 900;
 }
 
@@ -318,7 +318,7 @@ body.paper-body {
     align-items: center;
     justify-content: center;
     border-radius: 7px;
-    font: 900 8px/1.2 system-ui,sans-serif;
+    font: 900 0.5rem/1.2 system-ui,sans-serif;
     letter-spacing: .1em;
     text-transform: uppercase;
 }
@@ -342,7 +342,7 @@ body.paper-body {
 .level-index {
     margin-bottom: 3px;
     color: #825127;
-    font: 900 9px/1.2 system-ui,sans-serif;
+    font: 900 0.5625rem/1.2 system-ui,sans-serif;
     letter-spacing: .1em;
     text-transform: uppercase;
 }
@@ -350,7 +350,7 @@ body.paper-body {
 .level-title-block h3 {
     margin: 0;
     color: #29170e;
-    font-size: 20px;
+    font-size: 1.25rem;
     line-height: 1.08;
 }
 
@@ -385,7 +385,7 @@ body.paper-body {
 .level-info-line span {
     padding-top: 2px;
     color: #805027;
-    font: 900 8px/1.2 system-ui,sans-serif;
+    font: 900 0.5rem/1.2 system-ui,sans-serif;
     letter-spacing: .08em;
     text-transform: uppercase;
 }
@@ -394,7 +394,7 @@ body.paper-body {
     margin: 0;
     overflow: hidden;
     color: #5b402d;
-    font-size: 12px;
+    font-size: 0.75rem;
     line-height: 1.35;
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -417,7 +417,7 @@ body.paper-body {
 
 .star {
     color: #c9aa7f;
-    font-size: 15px;
+    font-size: 0.9375rem;
 }
 
 .star.filled {
@@ -682,17 +682,17 @@ body.paper-body {
 
 .CosmeticCopy strong {
     color: #321a0e;
-    font: 900 15px/1.1 Georgia, "Times New Roman", serif;
+    font: 900 0.9375rem/1.1 Georgia, "Times New Roman", serif;
 }
 
 .CosmeticCopy small {
     color: #64432d;
-    font: 800 12px/1.3 system-ui, sans-serif;
+    font: 800 0.75rem/1.3 system-ui, sans-serif;
 }
 
 .CosmeticState {
     color: var(--StoryCosmeticAccent, #7b431f);
-    font: 900 11px/1 system-ui, sans-serif;
+    font: 900 0.6875rem/1 system-ui, sans-serif;
     letter-spacing: .06em;
     text-transform: uppercase;
 }
