@@ -344,7 +344,7 @@ html:has(body.AccountSettingsPage) {
 
 .AccountToggleCopy small {
     color: #b9956e;
-    font: 700 12px/1.35 system-ui, sans-serif;
+    font: 700 0.75rem/1.35 system-ui, sans-serif;
 }
 
 .AccountToggleButton {
@@ -386,7 +386,7 @@ html:has(body.AccountSettingsPage) {
 
 .AccountToggleButton strong {
     min-width: 25px;
-    font: 900 13px/1 Georgia, "Times New Roman", serif;
+    font: 900 0.8125rem/1 Georgia, "Times New Roman", serif;
 }
 
 .AccountToggleButton[aria-checked="true"] {
@@ -506,7 +506,7 @@ body.StoryWarningOpen {
 .StoryWarningKicker {
     margin-bottom: 5px;
     color: #b98b58;
-    font: 900 9px/1.2 system-ui, sans-serif;
+    font: 900 0.5625rem/1.2 system-ui, sans-serif;
     letter-spacing: .16em;
     text-transform: uppercase;
 }
@@ -757,7 +757,7 @@ body.StoryWarningOpen {
     border-radius: 10px;
     background: linear-gradient(180deg, #ffe8bd, #e7bd7c);
     box-shadow: inset 0 1px rgba(255, 255, 255, .58), 0 3px 8px rgba(24, 10, 4, .22);
-    font: 900 16px/1 Georgia, "Times New Roman", serif;
+    font: 900 1rem/1 Georgia, "Times New Roman", serif;
     font-variant-numeric: tabular-nums;
     text-align: center;
 }
@@ -830,7 +830,7 @@ body.StoryWarningOpen {
     border-radius: 999px;
     background: linear-gradient(180deg, #f7dca8, #dba25b);
     box-shadow: inset 0 1px rgba(255, 255, 255, .55);
-    font: 900 10px/1 system-ui, sans-serif;
+    font: 900 0.625rem/1 system-ui, sans-serif;
     letter-spacing: .04em;
     vertical-align: middle;
     white-space: nowrap;
@@ -855,7 +855,7 @@ body.StoryWarningOpen {
         min-height: 18px;
         margin-left: 6px;
         padding: 2px 6px;
-        font-size: 9px;
+        font-size: 0.5625rem;
     }
 }
 
