@@ -1868,3 +1868,289 @@ body.StorySocialPage::before {
         max-height: 100%;
     }
 }
+
+
+/* Phone-first Social controls and scroll areas. */
+.StorySocialMobileNav {
+    display: none;
+}
+
+.StorySocialMessages {
+    scrollbar-width: auto;
+    scrollbar-color: #bd9160 rgba(17, 11, 7, .32);
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+}
+
+.StorySocialMessages::-webkit-scrollbar,
+.StorySocialInboxList::-webkit-scrollbar,
+.StorySocialUserList::-webkit-scrollbar,
+.StorySocialSidebar::-webkit-scrollbar {
+    width: 9px;
+    height: 9px;
+}
+
+.StorySocialMessages::-webkit-scrollbar-track,
+.StorySocialInboxList::-webkit-scrollbar-track,
+.StorySocialUserList::-webkit-scrollbar-track,
+.StorySocialSidebar::-webkit-scrollbar-track {
+    border-radius: 999px;
+    background: rgba(17, 11, 7, .28);
+}
+
+.StorySocialMessages::-webkit-scrollbar-thumb,
+.StorySocialInboxList::-webkit-scrollbar-thumb,
+.StorySocialUserList::-webkit-scrollbar-thumb,
+.StorySocialSidebar::-webkit-scrollbar-thumb {
+    border: 2px solid rgba(17, 11, 7, .24);
+    border-radius: 999px;
+    background: #bd9160;
+}
+
+@media (max-width: 760px), (pointer: coarse) and (max-width: 900px) {
+    .StorySocialMobileNav {
+        position: sticky;
+        top: 6px;
+        z-index: 20;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+        margin: 0 0 10px;
+        padding: 5px;
+        border: 1px solid rgba(226, 181, 111, .32);
+        border-radius: 13px;
+        background: rgba(37, 23, 15, .95);
+        box-shadow: 0 8px 20px rgba(24, 10, 3, .2);
+    }
+
+    .StorySocialMobileNav a {
+        box-sizing: border-box;
+        display: flex;
+        min-width: 0;
+        min-height: 42px;
+        align-items: center;
+        justify-content: center;
+        padding: 8px 12px;
+        border: 1px solid rgba(211, 159, 91, .25);
+        border-radius: 9px;
+        color: #f1d6a8;
+        background: linear-gradient(180deg, #55351f, #342116);
+        font: 900 .75rem/1.1 system-ui, sans-serif;
+        text-decoration: none;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+        touch-action: manipulation;
+    }
+
+    .StorySocialMobileNav a:active {
+        background: linear-gradient(180deg, #efc982, #c8873f);
+        color: #2a170d;
+    }
+
+    #SocialSidebar,
+    #SocialChatPane {
+        scroll-margin-top: 62px;
+    }
+}
+
+/* Portrait phones: use a vertical page flow, with a dedicated scrollable chat. */
+@media (max-width: 760px) and (orientation: portrait) {
+    .StorySocialLayout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        height: auto;
+        min-height: 0;
+        overflow: visible;
+    }
+
+    .StorySocialSidebar {
+        display: block;
+        height: auto;
+        max-height: none;
+        min-height: 0;
+        overflow: visible;
+        padding: 16px 14px;
+    }
+
+    .StorySocialInbox {
+        min-height: 170px;
+        margin: 12px 0;
+        padding: 12px;
+    }
+
+    .StorySocialInboxList {
+        box-sizing: border-box;
+        width: 100%;
+        min-height: 92px;
+        max-height: 190px;
+        padding: 7px;
+        overflow-x: hidden;
+        overflow-y: auto;
+    }
+
+    .StorySocialUserList {
+        max-height: min(42vh, 320px);
+        min-height: 80px;
+        padding: 5px;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        touch-action: pan-y;
+    }
+
+    .StorySocialChat {
+        height: auto;
+        min-height: 0;
+        overflow: visible;
+    }
+
+    .StorySocialChatEmpty {
+        min-height: 260px;
+        padding: 30px 18px;
+    }
+
+    .StorySocialChatView {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        height: min(68dvh, 620px);
+        min-height: 360px;
+        max-height: 620px;
+        overflow: hidden;
+    }
+
+    .StorySocialChatHeader {
+        flex: 0 0 auto;
+        padding: 12px 14px;
+    }
+
+    .StorySocialProfileCard,
+    .StorySocialConversationLabel,
+    .StorySocialComposer,
+    .StorySocialChatStatus {
+        flex: 0 0 auto;
+    }
+
+    .StorySocialMessages {
+        display: flex;
+        flex: 1 1 0;
+        height: 0;
+        min-height: 100px;
+        max-height: none;
+        overflow-x: hidden;
+        overflow-y: scroll;
+        overscroll-behavior-y: contain;
+        scrollbar-gutter: stable;
+        -webkit-overflow-scrolling: touch;
+        touch-action: pan-y;
+        padding: 12px 14px 16px;
+    }
+
+    .StorySocialMessage {
+        max-width: min(92%, 560px);
+        overflow-wrap: anywhere;
+    }
+
+    .StorySocialComposer {
+        grid-template-columns: minmax(0, 1fr) auto;
+        padding: 10px 10px 6px;
+    }
+
+    .StorySocialSendButton {
+        min-width: 76px;
+    }
+}
+
+/* Landscape phones: give the inbox a taller frame and the conversation a real scroll viewport. */
+@media (orientation: landscape) and (pointer: coarse) and (max-height: 720px) {
+    .StorySocialInbox {
+        flex: 0 0 auto;
+        min-height: 164px;
+        padding: 10px 11px 12px;
+    }
+
+    .StorySocialInboxHeader {
+        min-height: 24px;
+        margin-bottom: 8px;
+    }
+
+    .StorySocialInboxList {
+        height: auto;
+        min-height: 98px;
+        max-height: min(30vh, 150px);
+        padding: 7px;
+        overflow-x: hidden;
+        overflow-y: auto;
+    }
+
+    .StorySocialInboxEmpty {
+        min-height: 76px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+    }
+
+    .StorySocialChat {
+        min-height: 0;
+        height: 100%;
+    }
+
+    .StorySocialChatView {
+        display: flex;
+        flex-direction: column;
+        flex: 1 1 auto;
+        height: 100%;
+        min-height: 0;
+        max-height: 100%;
+        overflow: hidden;
+    }
+
+    .StorySocialChatHeader {
+        flex: 0 0 auto;
+        gap: 9px;
+        padding: 10px 12px;
+    }
+
+    .StorySocialProfileCard,
+    .StorySocialConversationLabel,
+    .StorySocialComposer,
+    .StorySocialChatStatus {
+        flex: 0 0 auto;
+    }
+
+    .StorySocialProfileCard {
+        padding: 8px 12px;
+    }
+
+    .StorySocialConversationLabel {
+        padding: 7px 12px 0;
+    }
+
+    .StorySocialMessages {
+        display: flex;
+        flex: 1 1 0;
+        height: 0;
+        min-height: 88px;
+        max-height: none;
+        overflow-x: hidden;
+        overflow-y: scroll;
+        overscroll-behavior-y: contain;
+        scrollbar-gutter: stable;
+        -webkit-overflow-scrolling: touch;
+        touch-action: pan-y;
+        padding: 10px 12px;
+    }
+
+    .StorySocialMessage {
+        max-width: min(88%, 560px);
+        overflow-wrap: anywhere;
+    }
+
+    .StorySocialComposer {
+        padding: 8px 10px 5px;
+    }
+
+    .StorySocialComposerField input {
+        min-height: 40px;
+    }
+}
