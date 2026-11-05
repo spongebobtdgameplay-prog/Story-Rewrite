@@ -191,12 +191,12 @@ body {
     }
 
     .HomeTitle {
-        font-size: clamp(38px, 11.5vw, 58px);
+        font-size: clamp(2.375rem, 11.5vw, 3.625rem);
         line-height: .94;
     }
 
     .HomeText {
-        font-size: clamp(15px, 4.4vw, 18px);
+        font-size: clamp(0.9375rem, 4.4vw, 1.125rem);
         line-height: 1.52;
     }
 
@@ -209,7 +209,7 @@ body {
     .HomeActions button {
         min-height: clamp(44px, 12vw, 48px);
         padding: 10px clamp(10px, 3.5vw, 18px);
-        font-size: clamp(13px, 3.6vw, 15px);
+        font-size: clamp(0.8125rem, 3.6vw, 0.9375rem);
     }
 
     .HomeStats {
@@ -221,7 +221,7 @@ body {
     }
 
     .StatNumber {
-        font-size: clamp(27px, 8vw, 33px);
+        font-size: clamp(1.6875rem, 8vw, 2.0625rem);
     }
 }
 
@@ -242,11 +242,11 @@ body {
     }
 
     .HomeTitle {
-        font-size: clamp(35px, 11vw, 48px);
+        font-size: clamp(2.1875rem, 11vw, 3rem);
     }
 
     .HomeText {
-        font-size: 15px;
+        font-size: 0.9375rem;
     }
 
     .HomeActions {
@@ -313,7 +313,7 @@ body {
     min-height: 50.4px;
     max-height: 50.4px;
     padding: 10.8px 12px;
-    font-size: 14.4px;
+    font-size: 0.9rem;
     line-height: 1.1;
     letter-spacing: 0;
     white-space: nowrap;
@@ -359,7 +359,7 @@ body {
         display: none;
     }
     #App > .TopBar .BrandTitle {
-        font-size: 18px;
+        font-size: 1.125rem;
     }
     #App > .TopBar > .TopActions {
         flex: 1 1 100%;
@@ -374,7 +374,7 @@ body {
         min-height: 48px;
         max-height: 48px;
         padding: 9.6px 6px;
-        font-size: 13.2px;
+        font-size: 0.825rem;
     }
     #App > .TopBar > .TopActions > .SettingsNavButton {
         flex-basis: 48px;
@@ -411,7 +411,7 @@ body {
     }
     #App > .TopBar .BrandSub {
         display: block;
-        font-size: 9px;
+        font-size: 0.5625rem;
         letter-spacing: .08em;
     }
     #App > .TopBar > .TopActions {
@@ -428,7 +428,7 @@ body {
         height: auto;
         min-height: clamp(38px, 6svh, 48px);
         max-height: none;
-        font-size: clamp(11px, 1.8vw, 14.4px);
+        font-size: clamp(0.6875rem, 1.8vw, 0.9rem);
         padding: clamp(7px, 1.2svh, 10px) clamp(8px, 1.6vw, 12px);
     }
     #App > .TopBar > .TopActions > .SettingsNavButton {
@@ -473,7 +473,7 @@ body {
     color: #fff6e4;
     background: linear-gradient(180deg, #d84a43, #a92624);
     box-shadow: 0 0 0 2px rgba(142, 36, 28, .18), 0 0 10px rgba(235, 63, 49, .4);
-    font: 900 10px/1 system-ui, sans-serif;
+    font: 900 0.625rem/1 system-ui, sans-serif;
     font-variant-numeric: tabular-nums;
 }
 .StorySocialUnreadBadge[hidden] { display: none !important; }
