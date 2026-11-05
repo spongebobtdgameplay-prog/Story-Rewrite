@@ -14,7 +14,7 @@
     border: 1px solid rgba(122, 80, 45, .3);
     background: rgba(79, 45, 25, .08);
     color: #7f4c2f;
-    font: 900 14px/1 system-ui, sans-serif;
+    font: 900 0.875rem/1 system-ui, sans-serif;
 }
 
 .SentenceOptionContent {
@@ -38,7 +38,7 @@
 .SentenceVoters {
     min-width: 0;
     color: #8b765f;
-    font: 700 10px/1.3 system-ui, sans-serif;
+    font: 700 0.625rem/1.3 system-ui, sans-serif;
     overflow-wrap: anywhere;
 }
 
@@ -57,14 +57,14 @@
     padding-top: 8px;
     border-top: 1px solid rgba(161, 111, 72, .22);
     color: #c8aa80;
-    font: 800 10px/1.2 system-ui, sans-serif;
+    font: 800 0.625rem/1.2 system-ui, sans-serif;
     letter-spacing: .08em;
     text-transform: uppercase;
 }
 
 .ReviveMeta strong {
     color: #f0cc8d;
-    font-size: 13px;
+    font-size: 0.8125rem;
 }
 
 .ReviveButton {
@@ -96,7 +96,7 @@
     padding: 0 6px;
     border-radius: 999px;
     background: rgba(25, 12, 8, .18);
-    font: 900 10px/1 system-ui, sans-serif;
+    font: 900 0.625rem/1 system-ui, sans-serif;
 }
 
 .ChatMessage.VoteActivityMessage {
@@ -115,7 +115,7 @@
     padding: 28px 16px;
     color: #806d59;
     text-align: center;
-    font: 800 12px/1.4 system-ui, sans-serif;
+    font: 800 0.75rem/1.4 system-ui, sans-serif;
 }
 
 @media (max-width: 700px), (pointer: coarse) and (max-width: 1000px) {
@@ -127,11 +127,11 @@
     .SentenceOptionNumber {
         width: 34px;
         height: 34px;
-        font-size: 13px;
+        font-size: 0.8125rem;
     }
 
     .SentenceVoters {
-        font-size: 9px;
+        font-size: 0.5625rem;
     }
 
 }
@@ -164,19 +164,19 @@
     justify-content: space-between;
     gap: 10px;
     color: #62371f;
-    font: 900 12px/1.05 Georgia, "Times New Roman", serif;
+    font: 900 0.75rem/1.05 Georgia, "Times New Roman", serif;
     letter-spacing: .045em;
     text-transform: uppercase;
 }
 
 .PowerPanelHeading strong {
     color: #87502b;
-    font-size: 11px;
+    font-size: 0.6875rem;
 }
 
 .DangerTimerTop strong {
     color: #9a302c;
-    font-size: 15px;
+    font-size: 0.9375rem;
     letter-spacing: .03em;
 }
 
@@ -237,14 +237,14 @@
 }
 
 .PowerButton span {
-    font-size: 14px;
+    font-size: 0.875rem;
     line-height: 1;
 }
 
 .PowerButton small {
     min-width: 0;
     color: #744122;
-    font: 800 10px/1.1 system-ui, sans-serif;
+    font: 800 0.625rem/1.1 system-ui, sans-serif;
     text-align: right;
     overflow-wrap: anywhere;
 }
@@ -277,7 +277,7 @@
 .TeamClueCard p {
     margin: 7px 0 0;
     color: #275260;
-    font: 700 13px/1.4 system-ui, sans-serif;
+    font: 700 0.8125rem/1.4 system-ui, sans-serif;
 }
 
 .NumberedSentence.IsRevealed {
@@ -322,15 +322,15 @@
     }
 
     .DangerTimerTop {
-        font-size: 13px;
+        font-size: 0.8125rem;
     }
 
     .DangerTimerTop strong {
-        font-size: 19px;
+        font-size: 1.1875rem;
     }
 
     .PowerPanelHeading {
-        font-size: 13px;
+        font-size: 0.8125rem;
     }
 
     .PowerButton {
@@ -338,11 +338,11 @@
     }
 
     .PowerButton span {
-        font-size: 16px;
+        font-size: 1rem;
     }
 
     .PowerButton small {
-        font-size: 11px;
+        font-size: 0.6875rem;
     }
 }
 
@@ -390,7 +390,7 @@
 
 .PauseCard h2 {
     margin: 0;
-    font: 900 clamp(30px, 6vw, 46px)/.95 Georgia, "Times New Roman", serif;
+    font: 900 clamp(1.875rem, 6vw, 2.875rem)/.95 Georgia, "Times New Roman", serif;
     letter-spacing: -.02em;
 }
 
@@ -398,7 +398,7 @@
     max-width: 36ch;
     margin: 14px auto 22px;
     color: #c7b497;
-    font: 600 13px/1.5 system-ui, sans-serif;
+    font: 600 0.8125rem/1.5 system-ui, sans-serif;
 }
 
 .PauseResumeButton {
@@ -472,13 +472,13 @@
 }
 
 .PauseCard h2 {
-    font-size: clamp(36px, 6vw, 52px);
+    font-size: clamp(2.25rem, 6vw, 3.25rem);
 }
 
 .PauseCard p {
     max-width: 42ch;
     margin-top: 17px;
-    font-size: 14px;
+    font-size: 0.875rem;
 }
 
 .PauseGlyph {
