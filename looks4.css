@@ -6,11 +6,11 @@
 }
 
 html {
-    font-size: 18px;
+    font-size: 1.125rem;
 }
 
 .BrandTitle {
-    font-size: 23px;
+    font-size: 1.4375rem;
 }
 
 .BrandSub,
@@ -22,16 +22,16 @@ html {
 .DifficultyBadge,
 .InfoLabel,
 .StatLabel {
-    font-size: 12px;
+    font-size: 0.75rem;
 }
 
 .HomeText {
-    font-size: 21px;
+    font-size: 1.3125rem;
     line-height: 1.58;
 }
 
 .Sentence {
-    font-size: 20px;
+    font-size: 1.25rem;
 }
 
 .EraseHint,
@@ -43,12 +43,12 @@ html {
 .BranchPanel p,
 .RemainingStory,
 .SceneDescription {
-    font-size: 18px;
+    font-size: 1.125rem;
 }
 
 .Small,
 .SidebarWorld {
-    font-size: 16px;
+    font-size: 1rem;
 }
 
 .UiButton,
@@ -59,19 +59,19 @@ html {
 .BranchChoice,
 .enter-level-button,
 .BriefingPlay {
-    font-size: 17px;
+    font-size: 1.0625rem;
 }
 
 .CosmeticName {
-    font-size: 17px;
+    font-size: 1.0625rem;
 }
 
 .CosmeticDescription {
-    font-size: 14px;
+    font-size: 0.875rem;
 }
 
 .CosmeticState {
-    font-size: 12px;
+    font-size: 0.75rem;
 }
 
 html,body{scrollbar-color:#6d472e transparent;scrollbar-width:thin}
@@ -94,7 +94,7 @@ html::-webkit-scrollbar-thumb,body::-webkit-scrollbar-thumb,.Sidebar::-webkit-sc
 }
 
 html {
-    font-size: clamp(16px, 1.25vw, 18px);
+    font-size: clamp(1rem, 1.25vw, 1.125rem);
 
 }
 
@@ -127,11 +127,11 @@ body {
 }
 
 .BrandTitle {
-    font-size: clamp(18px, 1.6vw, 23px);
+    font-size: clamp(1.125rem, 1.6vw, 1.4375rem);
 }
 
 .BrandSub {
-    font-size: clamp(9px, .84vw, 12px);
+    font-size: clamp(0.5625rem, .84vw, 0.75rem);
 }
 
 .TopActions {
@@ -145,7 +145,7 @@ body {
     min-height: var(--StoryFluidControl);
     padding: clamp(9px, 1vw, 13px) clamp(12px, 1.35vw, 18px);
     border-radius: clamp(10px, 1vw, 12px);
-    font-size: clamp(14px, 1.18vw, 17px);
+    font-size: clamp(0.875rem, 1.18vw, 1.0625rem);
 }
 
 .Main {
@@ -168,7 +168,7 @@ body {
 
 .Sentence {
     padding: clamp(9px, 1vw, 14px);
-    font-size: clamp(16px, 1.4vw, 20px);
+    font-size: clamp(1rem, 1.4vw, 1.25rem);
     line-height: 1.48;
 }
 
@@ -180,12 +180,12 @@ body {
 .BranchPanel p,
 .RemainingStory,
 .SceneDescription {
-    font-size: clamp(14px, 1.25vw, 18px);
+    font-size: clamp(0.875rem, 1.25vw, 1.125rem);
 }
 
 .Small,
 .SidebarWorld {
-    font-size: clamp(12px, 1.1vw, 16px);
+    font-size: clamp(0.75rem, 1.1vw, 1rem);
 }
 
 @media (max-width: 1180px) {
@@ -226,7 +226,7 @@ body {
     }
 
     body.GamePage .SceneFocus h3 {
-        font-size: clamp(25px, 6.5vw, 52px);
+        font-size: clamp(1.5625rem, 6.5vw, 3.25rem);
     }
 
     body.GamePage .LivesBar {
@@ -265,7 +265,7 @@ body {
     }
 
     .BrandTitle {
-        font-size: clamp(17px, 5vw, 20px);
+        font-size: clamp(1.0625rem, 5vw, 1.25rem);
     }
 
     .UiButton,
@@ -274,7 +274,7 @@ body {
     .DangerButton {
         min-height: 42px;
         padding: 9px clamp(10px, 3.2vw, 14px);
-        font-size: clamp(13px, 3.6vw, 15px);
+        font-size: clamp(0.8125rem, 3.6vw, 0.9375rem);
     }
 
     .Main {
@@ -293,7 +293,7 @@ body {
     body.GamePage .Sentence {
         min-height: clamp(52px, 14vw, 58px);
         padding: clamp(11px, 3.6vw, 15px);
-        font-size: clamp(15px, 4.35vw, 18px);
+        font-size: clamp(0.9375rem, 4.35vw, 1.125rem);
     }
 
     body.GamePage .Scene,
@@ -314,7 +314,7 @@ body {
     }
 
     body.GamePage .SceneFocus h3 {
-        font-size: clamp(24px, 8vw, 43px);
+        font-size: clamp(1.5rem, 8vw, 2.6875rem);
     }
 
     .OverlayCard {
