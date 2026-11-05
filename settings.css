@@ -211,3 +211,35 @@ html::-webkit-scrollbar-thumb,body::-webkit-scrollbar-thumb,.StorySettingsPage .
     .StoryBotAppearanceGrid { grid-template-columns: 1fr; gap: 14px; }
     .StoryBotAppearancePreview { padding: 12px; }
 }
+
+/* Keep the Settings page readable on narrow screens. */
+@media (max-width: 700px) {
+    .StorySettingsPresence {
+        padding: 18px 20px 20px;
+    }
+
+    .StorySettingsPresenceIntro {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .StoryPresenceChoices {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .StoryPresenceChoice {
+        min-height: 58px;
+        padding: 14px;
+    }
+
+    .StoryPresenceDurationRow {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .StoryPresenceDurationRow select {
+        width: 100%;
+        min-height: 42px;
+    }
+}
