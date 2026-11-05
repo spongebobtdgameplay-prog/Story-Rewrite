@@ -13,7 +13,7 @@
 <link rel="stylesheet" href="looks3.css?v=20260930-1">
 <link rel="stylesheet" href="looks4.css?v=20261104-typography3">
 <link rel="stylesheet" href="shell-ui.css?v=20261018-7">
-<link rel="stylesheet" href="social.css?v=20261105-social-landscape2">
+<link rel="stylesheet" href="social.css?v=20261105-social-mobile3">
 </head>
 <body class="AccountSettingsPage StorySocialPage">
 <main class="StorySocialShell">
@@ -43,8 +43,13 @@
         </button>
     </header>
 
+    <nav class="StorySocialMobileNav" aria-label="Social shortcuts">
+        <a href="#SocialSidebar">Players</a>
+        <a href="#SocialChatPane">Messages</a>
+    </nav>
+
     <section class="StorySocialLayout" aria-label="Story Rewrite social">
-        <aside class="StorySocialSidebar" aria-label="Players">
+        <aside id="SocialSidebar" class="StorySocialSidebar" aria-label="Players">
             <div class="StorySocialPaneHeader">
                 <h2>Find players</h2>
             </div>
@@ -86,7 +91,7 @@
             </div>
         </aside>
 
-        <section class="StorySocialChat" aria-label="Direct messages">
+        <section id="SocialChatPane" class="StorySocialChat" aria-label="Direct messages">
             <div id="SocialChatEmpty" class="StorySocialChatEmpty">
                 <div class="StorySocialEmptyBook" aria-hidden="true">
                     <svg viewBox="0 0 52 52">
