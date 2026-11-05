@@ -6,7 +6,7 @@
     padding: 26px 18px;
     color: #806b54;
     text-align: center;
-    font: 700 12px/1.5 system-ui, sans-serif;
+    font: 700 0.75rem/1.5 system-ui, sans-serif;
     letter-spacing: .02em;
 }
 
@@ -59,7 +59,7 @@
     border: 1px solid rgba(198, 148, 77, .16);
     border-radius: 9px;
     background: rgba(49, 31, 18, .72);
-    font: 700 12px/1.3 system-ui, sans-serif;
+    font: 700 0.75rem/1.3 system-ui, sans-serif;
 }
 
 .StoryBotMark {
@@ -165,12 +165,12 @@
 
 .StoryBotCommandCopy strong {
     color: #ffe0a3;
-    font-size: 13px;
+    font-size: 0.8125rem;
 }
 
 .StoryBotCommandCopy small {
     color: #a9947a;
-    font-size: 11px;
+    font-size: 0.6875rem;
 }
 
 .StoryBotRobotIcon {
@@ -192,7 +192,7 @@
     border-radius: 9px;
     color: #d6aa9b;
     background: rgba(70, 31, 24, .7);
-    font: 600 11px/1.45 system-ui, sans-serif;
+    font: 600 0.6875rem/1.45 system-ui, sans-serif;
     overflow-wrap: anywhere;
 }
 
@@ -241,7 +241,7 @@
     background: linear-gradient(180deg, rgba(84, 54, 32, .98), rgba(62, 39, 24, .99));
     color: #f7e4c5;
     caret-color: #f0c989;
-    font: 600 11px/1.35 system-ui, sans-serif;
+    font: 600 0.6875rem/1.35 system-ui, sans-serif;
 }
 
 .StoryBotQuestionInput::placeholder {
@@ -263,7 +263,7 @@
     border-radius: 7px;
     background: linear-gradient(180deg, #8a6237, #684522);
     color: #ffe5b4;
-    font: 800 9px/1 system-ui, sans-serif;
+    font: 800 0.5625rem/1 system-ui, sans-serif;
     cursor: pointer;
 }
 
@@ -281,7 +281,7 @@
     border-radius: 7px;
     color: #f0d1a1;
     background: linear-gradient(180deg, #6e4b2b, #52331f);
-    font: 800 17px/1 Georgia, "Times New Roman", serif;
+    font: 800 1.0625rem/1 Georgia, "Times New Roman", serif;
     cursor: pointer;
 }
 
@@ -378,7 +378,7 @@
     border-radius: 7px;
     color: #f0d1a1;
     background: linear-gradient(180deg, #6e4b2b, #52331f);
-    font: 800 18px/1 Georgia, "Times New Roman", serif;
+    font: 800 1.125rem/1 Georgia, "Times New Roman", serif;
     cursor: pointer;
 }
 
@@ -415,7 +415,7 @@
 /* StoryBot answers: readable Markdown blocks with user-customizable typography and theme. */
 :root {
     --storybot-font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    --storybot-font-size: 14px;
+    --storybot-font-size: 0.875rem;
     --storybot-message-background: linear-gradient(135deg, rgba(83, 55, 33, .78), rgba(48, 31, 20, .92));
     --storybot-border: rgba(221, 177, 100, .34);
     --storybot-accent: rgba(215, 168, 94, .75);
@@ -539,7 +539,7 @@ html[data-storybot-theme="paper"] {
     padding: 4px 8px;
     border-bottom: 1px solid var(--storybot-code-border);
     color: var(--storybot-code-label);
-    font: 800 10px/1.2 system-ui, sans-serif;
+    font: 800 0.625rem/1.2 system-ui, sans-serif;
     letter-spacing: .04em;
     text-transform: uppercase;
 }
@@ -571,7 +571,7 @@ html[data-storybot-theme="paper"] {
     white-space: pre;
     tab-size: 4;
     color: var(--storybot-text-color);
-    font: 12px/1.5 ui-monospace, SFMono-Regular, Consolas, monospace;
+    font: 0.75rem/1.5 ui-monospace, SFMono-Regular, Consolas, monospace;
 }
 
 .StoryBotCodeFrame pre code {
@@ -592,7 +592,7 @@ html[data-storybot-theme="paper"] {
     border-radius: 7px;
     background: rgba(0, 0, 0, .16);
     color: var(--storybot-text-color, #f7e4c5);
-    font: 700 12px/1.2 system-ui, sans-serif;
+    font: 700 0.75rem/1.2 system-ui, sans-serif;
     cursor: pointer;
 }
 .StoryBotListenButton:hover,
