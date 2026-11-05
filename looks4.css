@@ -434,45 +434,42 @@ button {
     }
 }
 
-
-/* Cross-device typography normalization.
-   Preserve each page's chosen typeface while preventing browser-synthesized
-   weights and mobile text autosizing from changing its appearance. */
-:root {
-    -webkit-text-size-adjust: 100%;
-    text-size-adjust: 100%;
-    font-synthesis: none;
-    font-optical-sizing: none;
-    font-kerning: normal;
-    font-variant-ligatures: common-ligatures;
-}
+/* Keep text sizing stable across viewport sizes without overriding control skins. */
 html {
+    font-size: 1.125rem;
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
-    font-synthesis: none;
 }
-body,
-button,
-input,
-select,
-textarea {
-    font-synthesis: none;
-}
-button,
-input,
-select,
-textarea {
-    font-family: inherit;
-    font-size: inherit;
-    font-weight: inherit;
-    letter-spacing: inherit;
-}
-input,
-textarea,
-select {
-    -webkit-appearance: none;
-    appearance: none;
-}
+
+.BrandTitle { font-size: 1.4375rem; }
+.BrandSub { font-size: 0.75rem; }
+.HomeText { font-size: 1.3125rem; }
+.Sentence,
+body.GamePage .Sentence { font-size: 1.25rem; }
+.EraseHint,
+.SceneCaption,
+.Aftermath,
+.InfoBox p,
+.StatusText,
+.TeamClueCard p,
+.BranchPanel p,
+.RemainingStory,
+.SceneDescription { font-size: 1.125rem; }
+.Small,
+.SidebarWorld { font-size: 1rem; }
+.UiButton,
+.PrimaryButton,
+.SecondaryButton,
+.DangerButton,
+.PowerButton,
+.BranchChoice,
+.enter-level-button,
+.BriefingPlay { font-size: 1.0625rem; }
+.CosmeticName { font-size: 1.0625rem; }
+.CosmeticDescription { font-size: 0.875rem; }
+.CosmeticState { font-size: 0.75rem; }
+
+/* Account status transitions are intentionally local to the account form. */
 .AccountStatusVisible {
     display: block !important;
     opacity: 1;
