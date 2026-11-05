@@ -58,7 +58,7 @@
 
 .ChapterLabel {
     color: #765035;
-    font: 900 9px/1.2 system-ui, sans-serif;
+    font: 900 0.5625rem/1.2 system-ui, sans-serif;
     letter-spacing: .12em;
     text-transform: uppercase;
 }
@@ -71,7 +71,7 @@
     border: 1px solid #50301d;
     border-radius: 7px;
     background: #654025;
-    font: 900 9px/1.2 system-ui, sans-serif;
+    font: 900 0.5625rem/1.2 system-ui, sans-serif;
     letter-spacing: .08em;
     text-transform: uppercase;
 }
@@ -101,7 +101,7 @@
     border: 1px solid transparent;
     border-radius: 8px;
     background: transparent;
-    font-size: 17px;
+    font-size: 1.0625rem;
     line-height: 1.48;
 }
 
@@ -134,7 +134,7 @@
     border: 1px dashed #a78358;
     border-radius: 9px;
     background: #ead6b3;
-    font-size: 12px;
+    font-size: 0.75rem;
     line-height: 1.45;
 }
 
@@ -161,7 +161,7 @@
     border: 1px solid #b99568;
     border-radius: 9px;
     background: #f0dfbf;
-    font-size: 13px;
+    font-size: 0.8125rem;
     line-height: 1.5;
 }
 
@@ -180,7 +180,7 @@
     display: block;
     margin-bottom: 4px;
     color: #72231d;
-    font: 900 9px/1.2 system-ui, sans-serif;
+    font: 900 0.5625rem/1.2 system-ui, sans-serif;
     letter-spacing: .1em;
     text-transform: uppercase;
 }
@@ -220,13 +220,13 @@
 .SidebarTop h3 {
     margin: 0 0 4px;
     color: #2c180e;
-    font-size: 22px;
+    font-size: 1.375rem;
     line-height: 1.2;
 }
 
 .SidebarWorld {
     color: #65452f;
-    font-size: 12px;
+    font-size: 0.75rem;
     font-weight: 700;
 }
 
@@ -243,7 +243,7 @@
     display: block;
     margin-bottom: 5px;
     color: #70431f;
-    font: 900 9px/1.2 system-ui, sans-serif;
+    font: 900 0.5625rem/1.2 system-ui, sans-serif;
     letter-spacing: .14em;
     text-transform: uppercase;
 }
@@ -251,7 +251,7 @@
 .InfoBox p {
     margin: 0;
     color: #46301f;
-    font-size: 13px;
+    font-size: 0.8125rem;
     line-height: 1.43;
 }
 
@@ -270,7 +270,7 @@
     justify-content: space-between;
     gap: 15px;
     color: #dbc7a8;
-    font-size: 12px;
+    font-size: 0.75rem;
 }
 
 .StatLine + .StatLine {
@@ -290,7 +290,7 @@
     border-left: 4px solid #704c32;
     border-radius: 9px;
     background: #ead3ac;
-    font-size: 12px;
+    font-size: 0.75rem;
     line-height: 1.43;
 }
 
@@ -364,7 +364,7 @@
 
 .CompleteCard h2 {
     margin: 8px 0 7px;
-    font-size: 38px;
+    font-size: 2.375rem;
 }
 
 .CompleteCard p {
@@ -375,7 +375,7 @@
 .StarRow {
     margin: 14px 0 17px;
     color: #a96e19;
-    font-size: 38px;
+    font-size: 2.375rem;
     letter-spacing: 5px;
 }
 
@@ -394,7 +394,7 @@
 .TravelTitle {
     margin: 7px 0 0;
     color: #2b170e;
-    font-size: clamp(28px,5vw,43px);
+    font-size: clamp(1.75rem,5vw,2.6875rem);
 }
 
 .TravelCaption {
@@ -466,7 +466,7 @@
 
 .ChapterCard h2 {
     margin: 7px 0 16px;
-    font-size: clamp(31px,5vw,48px);
+    font-size: clamp(1.9375rem,5vw,3rem);
 }
 
 .ChapterArt {
@@ -505,7 +505,7 @@
 
 .TbcTitle {
     margin: 8px 0 10px;
-    font-size: clamp(44px,9vw,82px);
+    font-size: clamp(2.75rem,9vw,5.125rem);
 }
 
 .TbcCard p {
@@ -522,7 +522,7 @@
 .TutorialShell h1,
 .RulesShell h1 {
     margin: 6px 0 12px;
-    font-size: clamp(36px,6vw,60px);
+    font-size: clamp(2.25rem,6vw,3.75rem);
 }
 
 .TutorialSteps,
