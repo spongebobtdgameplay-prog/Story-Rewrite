@@ -30,7 +30,7 @@
     border: 1px solid transparent;
     border-radius: 12px;
     background: transparent;
-    font: 900 12px/1 system-ui, sans-serif;
+    font: 900 0.75rem/1 system-ui, sans-serif;
     letter-spacing: .06em;
     text-transform: uppercase;
     transition: background .16s ease, border-color .16s ease, color .16s ease, transform .16s ease;
@@ -81,7 +81,7 @@
     border: 1px solid rgba(255, 218, 147, .55);
     border-radius: 999px;
     background: rgba(17, 12, 9, .72);
-    font-size: 11px;
+    font-size: 0.6875rem;
     letter-spacing: .13em;
     text-shadow: 0 1px 8px rgba(255, 194, 95, .18);
 }
@@ -110,7 +110,7 @@
 .TutorialCategoryHeader h2 {
     margin: 3px 0 6px;
     color: #ffe9c3;
-    font-size: clamp(25px, 4vw, 36px);
+    font-size: clamp(1.5625rem, 4vw, 2.25rem);
 }
 
 .TutorialCategoryHeader p {
@@ -144,7 +144,7 @@
     border: 1px solid rgba(214, 164, 95, .16);
     border-radius: 11px;
     background: rgba(15, 9, 6, .32);
-    font: 700 12px/1.5 system-ui, sans-serif;
+    font: 700 0.75rem/1.5 system-ui, sans-serif;
 }
 
 .TutorialBotTag {
@@ -155,7 +155,7 @@
     color: #2b170d;
     border-radius: 999px;
     background: #e3b66f;
-    font: 900 10px/1 system-ui, sans-serif;
+    font: 900 0.625rem/1 system-ui, sans-serif;
 }
 
 @media (max-width: 760px) {
