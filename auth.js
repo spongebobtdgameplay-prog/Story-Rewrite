@@ -178,7 +178,7 @@ function HandlePasswordInput() {
     if (
         Password.length >= 8 &&
         Password.length <= 128 &&
-        /password must be 8 to 128 characters/i.test(Status?.textContent || "")
+        /password must be/i.test(Status?.textContent || "")
     ) {
         HideStatus();
     }
