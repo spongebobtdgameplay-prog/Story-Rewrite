@@ -78,7 +78,7 @@ body.LevelSelectPage {
 
 .GameHeaderEyebrow {
     color: var(--GameGold);
-    font: 900 10px/1.2 system-ui, sans-serif;
+    font: 900 0.625rem/1.2 system-ui, sans-serif;
     letter-spacing: .18em;
     text-transform: uppercase;
 }
@@ -86,14 +86,14 @@ body.LevelSelectPage {
 .GameHeaderCopy h1 {
     margin: 5px 0 4px;
     color: #fff0d3;
-    font-size: clamp(30px, 4vw, 48px);
+    font-size: clamp(1.875rem, 4vw, 3rem);
     line-height: .98;
 }
 
 .GameHeaderCopy p {
     margin: 0;
     color: #cbb596;
-    font-size: 13px;
+    font-size: 0.8125rem;
 }
 
 .GameHeaderActions {
@@ -124,14 +124,14 @@ body.LevelSelectPage {
 
 .GameStatLabel {
     color: #a99376;
-    font: 800 9px/1.2 system-ui, sans-serif;
+    font: 800 0.5625rem/1.2 system-ui, sans-serif;
     letter-spacing: .11em;
     text-transform: uppercase;
 }
 
 .GameStatValue {
     color: #ffd999;
-    font-size: 18px;
+    font-size: 1.125rem;
     font-weight: 900;
 }
 
@@ -188,7 +188,7 @@ body.LevelSelectPage {
 
 .WorldTabNumber {
     color: #b78246;
-    font: 900 9px/1.2 system-ui, sans-serif;
+    font: 900 0.5625rem/1.2 system-ui, sans-serif;
     letter-spacing: .12em;
     text-transform: uppercase;
 }
@@ -196,7 +196,7 @@ body.LevelSelectPage {
 .WorldTabName {
     overflow: hidden;
     width: 100%;
-    font-size: 15px;
+    font-size: 0.9375rem;
     font-weight: 900;
     white-space: nowrap;
     text-overflow: ellipsis;
@@ -204,7 +204,7 @@ body.LevelSelectPage {
 
 .WorldTabProgress {
     color: #9e8b72;
-    font-size: 10px;
+    font-size: 0.625rem;
     font-weight: 700;
 }
 
@@ -235,7 +235,7 @@ body.LevelSelectPage {
     right: 18px;
     top: -31px;
     color: rgba(255, 228, 185, .045);
-    font: 900 150px/1 system-ui, sans-serif;
+    font: 900 9.375rem/1 system-ui, sans-serif;
     pointer-events: none;
 }
 
@@ -247,7 +247,7 @@ body.LevelSelectPage {
 
 .ChapterGameKicker {
     color: #d2a25f;
-    font: 900 9px/1.2 system-ui, sans-serif;
+    font: 900 0.5625rem/1.2 system-ui, sans-serif;
     letter-spacing: .16em;
     text-transform: uppercase;
 }
@@ -255,7 +255,7 @@ body.LevelSelectPage {
 .ChapterGameTitle {
     margin: 5px 0 6px;
     color: #fff0d3;
-    font-size: clamp(28px, 4vw, 44px);
+    font-size: clamp(1.75rem, 4vw, 2.75rem);
     line-height: 1;
 }
 
@@ -263,7 +263,7 @@ body.LevelSelectPage {
     max-width: 850px;
     margin: 0;
     color: #c7b398;
-    font-size: 13px;
+    font-size: 0.8125rem;
     line-height: 1.5;
 }
 
@@ -275,7 +275,7 @@ body.LevelSelectPage {
     border: 1px solid rgba(219, 169, 95, .4);
     border-radius: 10px;
     background: rgba(15, 9, 6, .6);
-    font: 800 11px/1.2 system-ui, sans-serif;
+    font: 800 0.6875rem/1.2 system-ui, sans-serif;
 }
 
 .ChapterMapLayout {
@@ -304,7 +304,7 @@ body.LevelSelectPage {
     position: relative;
     z-index: 3;
     color: #d8c2a3;
-    font: 900 10px/1.2 system-ui, sans-serif;
+    font: 900 0.625rem/1.2 system-ui, sans-serif;
     letter-spacing: .15em;
     text-transform: uppercase;
 }
@@ -372,7 +372,7 @@ body.LevelSelectPage {
     border-radius: 50%;
     background: radial-gradient(circle at 34% 27%, #67432a, #301c12 70%);
     box-shadow: 0 9px 20px rgba(0, 0, 0, .28), inset 0 0 0 4px rgba(255, 230, 186, .05);
-    font: 900 24px/1 system-ui, sans-serif;
+    font: 900 1.5rem/1 system-ui, sans-serif;
     transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease;
 }
 
@@ -454,7 +454,7 @@ body.LevelSelectPage {
     min-height: 34px;
     color: #c9b496;
     text-align: center;
-    font-size: 11px;
+    font-size: 0.6875rem;
     line-height: 1.25;
 }
 
@@ -479,7 +479,7 @@ body.LevelSelectPage {
 
 .BriefingLevel {
     color: #c58e4d;
-    font: 900 9px/1.2 system-ui, sans-serif;
+    font: 900 0.5625rem/1.2 system-ui, sans-serif;
     letter-spacing: .14em;
     text-transform: uppercase;
 }
@@ -487,7 +487,7 @@ body.LevelSelectPage {
 .BriefingTitle {
     margin: 6px 0 8px;
     color: #fff0d5;
-    font-size: 30px;
+    font-size: 1.875rem;
     line-height: 1.03;
 }
 
@@ -503,7 +503,7 @@ body.LevelSelectPage {
     border: 1px solid #674329;
     border-radius: 7px;
     background: #3b2418;
-    font: 900 8px/1.2 system-ui, sans-serif;
+    font: 900 0.5rem/1.2 system-ui, sans-serif;
     letter-spacing: .08em;
     text-transform: uppercase;
 }
@@ -523,7 +523,7 @@ body.LevelSelectPage {
     display: block;
     margin-bottom: 5px;
     color: #bd8a4c;
-    font: 900 8px/1.2 system-ui, sans-serif;
+    font: 900 0.5rem/1.2 system-ui, sans-serif;
     letter-spacing: .12em;
     text-transform: uppercase;
 }
@@ -531,14 +531,14 @@ body.LevelSelectPage {
 .BriefingSection p {
     margin: 0;
     color: #cdb99d;
-    font-size: 13px;
+    font-size: 0.8125rem;
     line-height: 1.48;
 }
 
 .BriefingStars {
     margin-top: 16px;
     color: #806c54;
-    font-size: 24px;
+    font-size: 1.5rem;
     letter-spacing: 3px;
 }
 
@@ -762,7 +762,7 @@ body.LevelSelectPage {
     justify-content: space-between;
     gap: 12px;
     color: rgba(245, 231, 208, .76);
-    font: 900 9px/1.2 system-ui, sans-serif;
+    font: 900 0.5625rem/1.2 system-ui, sans-serif;
     letter-spacing: .13em;
     text-transform: uppercase;
 }
@@ -798,7 +798,7 @@ body.LevelSelectPage {
 
 .SceneChapter {
     color: #e1b46e;
-    font: 900 10px/1.2 system-ui, sans-serif;
+    font: 900 0.625rem/1.2 system-ui, sans-serif;
     letter-spacing: .15em;
     text-transform: uppercase;
 }
@@ -806,7 +806,7 @@ body.LevelSelectPage {
 .SceneFocus h3 {
     margin: 7px 0 8px;
     color: #fff3dc;
-    font-size: clamp(31px, 5vw, 55px);
+    font-size: clamp(1.9375rem, 5vw, 3.4375rem);
     line-height: .95;
     text-shadow: 0 3px 14px rgba(0,0,0,.5);
 }
@@ -815,7 +815,7 @@ body.LevelSelectPage {
     max-width: 560px;
     margin: 0;
     color: rgba(242,231,213,.76);
-    font-size: 13px;
+    font-size: 0.8125rem;
     line-height: 1.48;
     text-shadow: 0 2px 8px rgba(0,0,0,.65);
 }
@@ -838,7 +838,7 @@ body.LevelSelectPage {
     border-left: 3px solid #b7864e;
     border-radius: 5px;
     background: rgba(255,248,231,.55);
-    font-size: 12px;
+    font-size: 0.75rem;
     line-height: 1.42;
 }
 
@@ -871,8 +871,8 @@ body.LevelSelectPage {
     .ChapterGameHeader { grid-template-columns: 1fr; }
     .StageMapArea { padding: 16px 8px; }
     .StageRoute { grid-template-columns: repeat(5, minmax(54px,1fr)); gap: 26px 4px; }
-    .StageNode { width: 56px; height: 56px; font-size: 18px; }
-    .StageNodeLabel { width: 72px; font-size: 9px; }
+    .StageNode { width: 56px; height: 56px; font-size: 1.125rem; }
+    .StageNodeLabel { width: 72px; font-size: 0.5625rem; }
 }
 
 @media (max-width: 560px) {
