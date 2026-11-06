@@ -282,10 +282,22 @@ async function DisconnectYouTubeAccount() {
     const StatusLine = document.getElementById("YouTubeConnectionStatus");
     const Button = document.getElementById("YouTubeDisconnectButton");
     if (Button) Button.disabled = true;
+    if (StatusLine) StatusLine.textContent = "Checking connection…";
     try {
-        await ApiRequest("/api/youtube/disconnect", { method: "POST", body: "{}" });
+        const Before = await ApiRequest("/api/youtube/status");
+        if (!Before.connected) {
+            if (StatusLine) StatusLine.textContent = "Your YouTube account is not connected. Nothing needed disconnecting.";
+            await LoadYouTubeConnection();
+            if (StatusLine) StatusLine.textContent = "Your YouTube account is not connected. Nothing needed disconnecting.";
+            return;
+        }
+        const Result = await ApiRequest("/api/youtube/disconnect", { method: "POST", body: "{}" });
         await LoadYouTubeConnection();
-        if (StatusLine) StatusLine.textContent = "YouTube account disconnected.";
+        if (StatusLine) {
+            StatusLine.textContent = Result.disconnected
+                ? "YouTube account disconnected successfully."
+                : "Your YouTube account was already disconnected.";
+        }
     } catch (Error) {
         if (StatusLine) StatusLine.textContent = Error.message || "Could not disconnect YouTube.";
     } finally {
