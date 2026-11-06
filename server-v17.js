@@ -17,7 +17,7 @@ Module.prototype._compile = function(Content, Filename) {
             'const YouTubeRuntimeFactory = require("./server-youtube-runtime.js");',
             "let YouTubeRuntimeInstance = null;",
             "function GetYouTubeRuntime() {",
-            "    if (!YouTubeRuntimeInstance) YouTubeRuntimeInstance = YouTubeRuntimeFactory.createYouTubeRuntime({ Database, ReadJson });",
+            "    if (!YouTubeRuntimeInstance) YouTubeRuntimeInstance = YouTubeRuntimeFactory.createYouTubeRuntime({ Database, SendJson });",
             "    return YouTubeRuntimeInstance;",
             "}"
         ].join("\n");
@@ -26,11 +26,11 @@ Module.prototype._compile = function(Content, Filename) {
 
         const PublicAnchor = '    if (Request.method === "OPTIONS") return SendJson(Response, 204, {}, Origin);';
         if (Source.split(PublicAnchor).length !== 2) throw new Error("server-v17 YouTube patch: public callback anchor missing.");
-        Source = Source.replace(PublicAnchor, PublicAnchor + '\n    if (RequestPath === "/api/youtube/callback" && Request.method === "GET") return GetYouTubeRuntime().handle(Request, Response, RequestPath, null);');
+        Source = Source.replace(PublicAnchor, PublicAnchor + '\n    if (RequestPath === "/api/youtube/callback" && Request.method === "GET") return GetYouTubeRuntime().handle(Request, Response, RequestPath, null, Origin);');
 
         const AuthAnchor = '    if (!Account) return SendJson(Response, 401, { error: "Sign in required." }, Origin);';
         if (Source.split(AuthAnchor).length !== 2) throw new Error("server-v17 YouTube patch: auth gate anchor missing.");
-        Source = Source.replace(AuthAnchor, AuthAnchor + '\n    if (RequestPath.startsWith("/api/youtube/") && await GetYouTubeRuntime().handle(Request, Response, RequestPath, Account)) return;');
+        Source = Source.replace(AuthAnchor, AuthAnchor + '\n    if (RequestPath.startsWith("/api/youtube/") && await GetYouTubeRuntime().handle(Request, Response, RequestPath, Account, Origin)) return;');
 
         YouTubePatchApplied = true;
         return OriginalCompile.call(this, Source, Filename);
