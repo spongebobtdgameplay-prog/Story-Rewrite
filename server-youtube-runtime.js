@@ -139,9 +139,12 @@ function createYouTubeRuntime({ Database, ReadJson }) {
         }
 
         if (RequestPath === "/api/youtube/disconnect" && Request.method === "POST") {
-            await Database.query("DELETE FROM story_youtube_connections WHERE username_key = $1", [Account.usernameKey || Account.username.toLowerCase()]);
+            const Removed = await Database.query(
+                "DELETE FROM story_youtube_connections WHERE username_key = $1",
+                [Account.usernameKey || Account.username.toLowerCase()]
+            );
             Response.writeHead(200, { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" });
-            Response.end(JSON.stringify({ ok: true }));
+            Response.end(JSON.stringify({ ok: true, disconnected: Removed.rowCount > 0 }));
             return true;
         }
         return false;
