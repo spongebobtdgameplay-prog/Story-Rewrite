@@ -134,6 +134,26 @@
 
         
 
+        <section class="StoryYouTubeSettings" aria-labelledby="YouTubeSettingsTitle">
+            <div class="StoryYouTubeIntro">
+                <div>
+                    <div class="Kicker">Account connection</div>
+                    <h2 id="YouTubeSettingsTitle">YouTube</h2>
+                    <p>Connect your YouTube channel securely to your Story Rewrite account.</p>
+                </div>
+                <span class="StorySettingsApply">You control access.</span>
+            </div>
+            <div class="StoryYouTubeBody">
+                <p id="YouTubeConnectedChannel" class="StoryYouTubeChannel" hidden></p>
+                <div id="YouTubeConnectionStatus" class="StoryYouTubeStatus" aria-live="polite">Checking YouTube connection…</div>
+                <div class="StoryYouTubeActions">
+                    <button id="YouTubeConnectButton" class="SecondaryButton" type="button">Connect YouTube</button>
+                    <button id="YouTubeDisconnectButton" class="SecondaryButton" type="button" hidden>Disconnect</button>
+                </div>
+                <small>Google handles sign-in. Story Rewrite stores an encrypted refresh token and your channel ID/title; it never stores your Google password.</small>
+            </div>
+        </section>
+
         <section class="StorySettingsPresence">
             <div class="StorySettingsPresenceIntro">
                 <div>
