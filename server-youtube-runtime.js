@@ -1,6 +1,6 @@
 const crypto = require("crypto");
 
-function createYouTubeRuntime({ Database, ReadJson }) {
+function createYouTubeRuntime({ Database, SendJson }) {
     let SchemaReady = null;
     const RedirectUri = () => String(process.env.GOOGLE_REDIRECT_URI || "").trim();
     const ClientId = () => String(process.env.GOOGLE_CLIENT_ID || "").trim();
@@ -45,7 +45,7 @@ function createYouTubeRuntime({ Database, ReadJson }) {
         return { ciphertext: Ciphertext.toString("base64"), iv: Iv.toString("base64"), tag: Cipher.getAuthTag().toString("base64") };
     }
 
-    async function handle(Request, Response, RequestPath, Account) {
+    async function handle(Request, Response, RequestPath, Account, Origin = "") {
         await ensureSchema();
 
         if (RequestPath === "/api/youtube/callback" && Request.method === "GET") {
@@ -106,8 +106,7 @@ function createYouTubeRuntime({ Database, ReadJson }) {
 
         if (RequestPath === "/api/youtube/connect" && Request.method === "POST") {
             if (!ClientId() || !ClientSecret() || !RedirectUri()) {
-                Response.writeHead(503, { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" });
-                Response.end(JSON.stringify({ error: "YouTube connection is not configured on the server." }));
+                SendJson(Response, 503, { error: "YouTube connection is not configured on the server." }, Origin);
                 return true;
             }
             const State = crypto.randomBytes(32).toString("base64url");
@@ -122,8 +121,7 @@ function createYouTubeRuntime({ Database, ReadJson }) {
                 scope: "openid email profile https://www.googleapis.com/auth/youtube.readonly",
                 access_type: "offline", prompt: "consent", include_granted_scopes: "true", state: State
             });
-            Response.writeHead(200, { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" });
-            Response.end(JSON.stringify({ url: "https://accounts.google.com/o/oauth2/v2/auth?" + Params.toString() }));
+            SendJson(Response, 200, { url: "https://accounts.google.com/o/oauth2/v2/auth?" + Params.toString() }, Origin);
             return true;
         }
 
@@ -133,8 +131,7 @@ function createYouTubeRuntime({ Database, ReadJson }) {
                 [Account.usernameKey || Account.username.toLowerCase()]
             );
             const Row = Result.rows[0];
-            Response.writeHead(200, { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" });
-            Response.end(JSON.stringify({ connected: Boolean(Row), channel: Row ? { id: Row.channel_id, title: Row.channel_title, connectedAt: Row.connected_at } : null }));
+            SendJson(Response, 200, { connected: Boolean(Row), channel: Row ? { id: Row.channel_id, title: Row.channel_title, connectedAt: Row.connected_at } : null }, Origin);
             return true;
         }
 
@@ -143,8 +140,7 @@ function createYouTubeRuntime({ Database, ReadJson }) {
                 "DELETE FROM story_youtube_connections WHERE username_key = $1",
                 [Account.usernameKey || Account.username.toLowerCase()]
             );
-            Response.writeHead(200, { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" });
-            Response.end(JSON.stringify({ ok: true, disconnected: Removed.rowCount > 0 }));
+            SendJson(Response, 200, { ok: true, disconnected: Removed.rowCount > 0 }, Origin);
             return true;
         }
         return false;
