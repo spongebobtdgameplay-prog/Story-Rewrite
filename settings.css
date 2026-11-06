@@ -243,3 +243,16 @@ html::-webkit-scrollbar-thumb,body::-webkit-scrollbar-thumb,.StorySettingsPage .
         min-height: 42px;
     }
 }
+
+
+.StoryYouTubeSettings{padding:20px 26px 22px;border-top:1px solid rgba(221,169,108,.14)}
+.StoryYouTubeIntro{display:flex;align-items:flex-end;justify-content:space-between;gap:18px}
+.StoryYouTubeIntro h2{margin:4px 0 5px;color:#fff0d3;font:900 clamp(1.25rem,3vw,1.65rem)/1.05 Georgia,'Times New Roman',serif}
+.StoryYouTubeIntro p{margin:0;color:#b9956e;font-size:.84rem}
+.StoryYouTubeBody{margin-top:14px;padding:16px;border:1px solid rgba(221,169,108,.16);border-radius:14px;background:rgba(34,20,14,.32)}
+.StoryYouTubeStatus{color:#caa97e;font-size:.82rem}
+.StoryYouTubeChannel{margin:0 0 7px;color:#f1d19c;font-weight:900}
+.StoryYouTubeActions{display:flex;flex-wrap:wrap;gap:9px;margin:13px 0}
+.StoryYouTubeActions button:disabled{opacity:.6;cursor:wait}
+.StoryYouTubeBody>small{display:block;color:#9f8060;font-size:.72rem;line-height:1.5}
+@media(max-width:700px){.StoryYouTubeSettings{padding:18px 20px}.StoryYouTubeIntro{align-items:flex-start;flex-direction:column}.StoryYouTubeActions button{width:100%}}
