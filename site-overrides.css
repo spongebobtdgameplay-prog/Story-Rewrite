@@ -1,0 +1,4 @@
+/* Hide the public hosting badge injected after the page loads. */
+iframe#nl-badge-frame {
+    display: none !important;
+}
