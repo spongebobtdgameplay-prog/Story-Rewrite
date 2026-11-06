@@ -236,6 +236,63 @@ async function SaveVolumes() {
     }
 }
 
+
+async function LoadYouTubeConnection() {
+    const StatusLine = document.getElementById("YouTubeConnectionStatus");
+    const ChannelLine = document.getElementById("YouTubeConnectedChannel");
+    const ConnectButton = document.getElementById("YouTubeConnectButton");
+    const DisconnectButton = document.getElementById("YouTubeDisconnectButton");
+    if (!StatusLine || !ConnectButton) return;
+    StatusLine.textContent = "Checking YouTube connection…";
+    try {
+        const Result = await ApiRequest("/api/youtube/status");
+        if (Result.connected && Result.channel) {
+            StatusLine.textContent = "Your YouTube account is connected.";
+            ChannelLine.textContent = Result.channel.title || "Connected channel";
+            ChannelLine.hidden = false;
+            ConnectButton.textContent = "Reconnect YouTube";
+            DisconnectButton.hidden = false;
+        } else {
+            StatusLine.textContent = "No YouTube account is connected.";
+            ChannelLine.hidden = true;
+            ConnectButton.textContent = "Connect YouTube";
+            DisconnectButton.hidden = true;
+        }
+    } catch (Error) {
+        StatusLine.textContent = Error.message || "Could not check YouTube connection.";
+    }
+}
+
+async function ConnectYouTubeAccount() {
+    const Button = document.getElementById("YouTubeConnectButton");
+    const StatusLine = document.getElementById("YouTubeConnectionStatus");
+    if (Button) Button.disabled = true;
+    if (StatusLine) StatusLine.textContent = "Opening Google sign-in…";
+    try {
+        const Result = await ApiRequest("/api/youtube/connect", { method: "POST", body: "{}" });
+        if (!Result.url) throw new Error("Google did not return a sign-in link.");
+        window.location.assign(Result.url);
+    } catch (Error) {
+        if (StatusLine) StatusLine.textContent = Error.message || "Could not start YouTube connection.";
+        if (Button) Button.disabled = false;
+    }
+}
+
+async function DisconnectYouTubeAccount() {
+    const StatusLine = document.getElementById("YouTubeConnectionStatus");
+    const Button = document.getElementById("YouTubeDisconnectButton");
+    if (Button) Button.disabled = true;
+    try {
+        await ApiRequest("/api/youtube/disconnect", { method: "POST", body: "{}" });
+        await LoadYouTubeConnection();
+        if (StatusLine) StatusLine.textContent = "YouTube account disconnected.";
+    } catch (Error) {
+        if (StatusLine) StatusLine.textContent = Error.message || "Could not disconnect YouTube.";
+    } finally {
+        if (Button) Button.disabled = false;
+    }
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
     MusicSlider = document.getElementById("MusicVolumeSlider");
     SoundSlider = document.getElementById("SoundVolumeSlider");
@@ -294,6 +351,19 @@ document.addEventListener("DOMContentLoaded", async () => {
         const Save = CachedSave || await FetchServerSave();
         SettingsData = Data;
         SettingsSave = NormalizeSave(SettingsData, CloneSettingsSave(Save));
+        document.getElementById("YouTubeConnectButton")?.addEventListener("click", ConnectYouTubeAccount);
+        document.getElementById("YouTubeDisconnectButton")?.addEventListener("click", DisconnectYouTubeAccount);
+        const YouTubeResult = new URLSearchParams(window.location.search).get("youtube");
+        if (YouTubeResult === "connected") {
+            const Line = document.getElementById("YouTubeConnectionStatus");
+            if (Line) Line.textContent = "YouTube connected successfully.";
+            window.history.replaceState({}, "", window.location.pathname);
+        } else if (YouTubeResult === "error") {
+            const Line = document.getElementById("YouTubeConnectionStatus");
+            if (Line) Line.textContent = "YouTube connection failed: " + (new URLSearchParams(window.location.search).get("reason") || "Please try again.");
+            window.history.replaceState({}, "", window.location.pathname);
+        }
+        await LoadYouTubeConnection();
         RenderSettings();
 
         MusicSlider.addEventListener("input", () => {
