@@ -40,7 +40,7 @@ Module.prototype._compile = function(Content, Filename) {
         }
         GeneratedSource = GeneratedSource.replace(ApiGateAnchor,
             ApiGateAnchor + "\n" +
-            "    if (RequestPath.startsWith(\"/api/think\")) return GetThinkRuntime().handle(Request, Response, RequestPath, Origin, Account);\n"
+            "    if (RequestPath.startsWith(\"/api/think\") || RequestPath.startsWith(\"/api/safetybot\")) return GetThinkRuntime().handle(Request, Response, RequestPath, Origin, Account);\n"
         );
 
         ThinkPatchApplied = true;
