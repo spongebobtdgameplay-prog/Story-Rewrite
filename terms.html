@@ -17,9 +17,7 @@ html{min-height:100%;overscroll-behavior-y:none}
 body.TermsPage{min-height:100vh;margin:0;overflow-x:hidden;overscroll-behavior-y:none;box-sizing:border-box;background:transparent;color:#f7e7c7;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:1rem}
 .TermsShell{width:min(61.25rem,calc(100% - 2rem));margin:0 auto;padding:24px 0 48px;box-sizing:border-box}
 .TermsFrame{border:1px solid rgba(221,169,108,.23);border-radius:24px;background:rgba(43,20,13,.97);box-shadow:0 24px 60px rgba(0,0,0,.32)}
-.TermsHero{display:grid;grid-template-columns:52px minmax(0,1fr);align-items:start;gap:16px;padding:clamp(22px,4vw,32px);border-bottom:1px solid rgba(221,169,108,.15)}
-.TermsBack{width:52px;height:52px;min-width:52px;flex:0 0 52px;padding:0;margin:0;border-radius:14px;align-self:start}
-.TermsBack svg{width:24px;height:24px;stroke-width:2.25}
+.TermsHero{display:grid;grid-template-columns:44px minmax(0,1fr);align-items:start;gap:16px;padding:clamp(22px,4vw,32px);border-bottom:1px solid rgba(221,169,108,.15)}
 .TermsEyebrow{color:#d9a967;font-size:0.6875rem;font-weight:900;letter-spacing:.16em;text-transform:uppercase}
 .TermsHero h1{margin:10px 0 12px;font:800 clamp(1.875rem,5vw,2.75rem)/1.05 Georgia,"Times New Roman",serif;color:#fff0d5}
 .TermsHero p{max-width:760px;margin:0;color:#e0d0ba;font-size:clamp(0.9375rem,1vw,1rem);line-height:1.75}
@@ -34,16 +32,16 @@ body.TermsPage{min-height:100vh;margin:0;overflow-x:hidden;overscroll-behavior-y
 .TermsNotice{margin-top:14px;padding:14px 16px;border-left:3px solid #c18b4d;border-radius:0 10px 10px 0;background:rgba(193,139,77,.09);color:#ead6b9;font-size:0.8125rem;line-height:1.6}
 .TermsFooter{padding:20px clamp(22px,3vw,28px) 24px;color:#9d8161;font-size:0.75rem;line-height:1.6}
 .TermsLink{color:#f2ca8f;text-decoration:underline;text-underline-offset:3px}
-@media(max-width:560px){.TermsShell{width:calc(100% - 24px);padding:12px 0 28px}.TermsHero{grid-template-columns:48px minmax(0,1fr);gap:12px;padding:20px 16px}.TermsBack{width:48px;height:48px;min-width:48px;flex-basis:48px}.TermsBack svg{width:23px;height:23px}.TermsHero h1{font-size:clamp(1.75rem,8vw,2.125rem)}.TermsSections{padding:0 1rem}.TermsSection h2{font-size:1.1875rem}.TermsSection p,.TermsSection li{font-size:0.8125rem}.TermsFooter{padding:1.125rem 1rem 1.25rem}}
+@media(max-width:560px){.TermsShell{width:calc(100% - 24px);padding:12px 0 28px}.TermsHero{grid-template-columns:44px minmax(0,1fr);gap:12px;padding:20px 16px}.TermsHero h1{font-size:clamp(1.75rem,8vw,2.125rem)}.TermsSections{padding:0 1rem}.TermsSection h2{font-size:1.1875rem}.TermsSection p,.TermsSection li{font-size:0.8125rem}.TermsFooter{padding:1.125rem 1rem 1.25rem}}
 </style>
 </head>
 <body class="TermsPage">
 <main class="TermsShell">
     <div class="TermsFrame">
     <header class="TermsHero">
-        <button class="TermsBack IconBackButton" type="button" data-story-go="multiplayer.html" aria-label="Back to Multiplayer"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14.5 5 7.5 12l7 7" /></svg></button>
+        <button class="IconBackButton" type="button" data-story-back="main.html" aria-label="Go back"></button>
         <div class="TermsHeroCopy">
-            <div class="TermsEyebrow">Story Rewrite · Multiplayer</div>
+            <div class="TermsEyebrow">Story Rewrite · Community</div>
             <h1>Terms of Service</h1>
             <p>Story Rewrite is a shared story game. Keep multiplayer chat welcoming, play fairly, and report harmful messages instead of escalating the situation. These rules apply to chat, usernames, room activity, and other player-facing content.</p>
             <div class="TermsUpdated">Community rules · Applies to multiplayer features</div>
@@ -99,6 +97,6 @@ body.TermsPage{min-height:100vh;margin:0;overflow-x:hidden;overscroll-behavior-y
     </div>
 </main>
 <script src="server-config.js?v=20261106-sameorigin1"></script>
-<script src="shell-ui.js?v=20261031-githubfix1"></script>
+<script src="shell-ui.js?v=20261106-legalnav1"></script>
 </body>
 </html>
