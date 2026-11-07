@@ -170,6 +170,12 @@ function createThinkRuntime(Dependencies) {
 
     async function handle(Request, Response, RequestPath, Origin, Account) {
         if (RequestPath === "/api/safetybot/chat" && Request.method === "POST") {
+            await ensureSchema();
+            const SafetyBotStaff = await getStaff(Account.username);
+            if (!SafetyBotStaff || !canRead(SafetyBotStaff.role)) {
+                SendJson(Response, 403, { error: "SafetyBot is available only inside the authorized Silicon Valley developer workspace." }, Origin);
+                return true;
+            }
             const Body = await ReadJson(Request).catch(() => ({}));
             const Question = String(Body && Body.question || "").trim().slice(0, 1200);
             const Messages = Array.isArray(Body && Body.messages)
