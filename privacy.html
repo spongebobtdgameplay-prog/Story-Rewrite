@@ -11,15 +11,14 @@
 <link rel="stylesheet" href="looks2.css?v=20261018-2">
 <link rel="stylesheet" href="looks3.css?v=20261018-2">
 <link rel="stylesheet" href="looks4.css?v=20261104-typography3">
+<link rel="stylesheet" href="shell-ui.css?v=20261106-legalnav1">
 <style>
 html{min-height:100%;overscroll-behavior-y:none}
 body.PrivacyPage{min-height:100vh;margin:0;overflow-x:hidden;overscroll-behavior-y:none;box-sizing:border-box;background:transparent;color:#f7e7c7;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:1rem}
 .PrivacyShell{width:min(61.25rem,calc(100% - 2rem));margin:0 auto;padding:24px 0 48px;box-sizing:border-box}
 .PrivacyFrame{border:1px solid rgba(221,169,108,.23);border-radius:24px;background:rgba(43,20,13,.97);box-shadow:0 24px 60px rgba(0,0,0,.32);overflow:hidden}
-.PrivacyHero{display:grid;grid-template-columns:52px minmax(0,1fr);align-items:start;gap:16px;padding:clamp(22px,4vw,32px);border-bottom:1px solid rgba(221,169,108,.15)}
-.PrivacyBack{width:52px;height:52px;min-width:52px;display:grid;place-items:center;box-sizing:border-box;border:1px solid rgba(221,169,108,.35);border-radius:14px;color:#f2ca8f;background:rgba(193,139,77,.08);font-size:1.7rem;font-weight:800;text-decoration:none}
-.PrivacyBack:hover{background:rgba(193,139,77,.16);border-color:#d9a967}
-.PrivacyBack:focus-visible,.PrivacyLink:focus-visible{outline:3px solid #f2ca8f;outline-offset:3px}
+.PrivacyHero{display:grid;grid-template-columns:44px minmax(0,1fr);align-items:start;gap:16px;padding:clamp(22px,4vw,32px);border-bottom:1px solid rgba(221,169,108,.15)}
+.PrivacyLink:focus-visible{outline:3px solid #f2ca8f;outline-offset:3px}
 .PrivacyEyebrow{color:#d9a967;font-size:.6875rem;font-weight:900;letter-spacing:.16em;text-transform:uppercase}
 .PrivacyHero h1{margin:10px 0 12px;font:800 clamp(1.875rem,5vw,2.75rem)/1.05 Georgia,"Times New Roman",serif;color:#fff0d5}
 .PrivacyHero p{max-width:760px;margin:0;color:#e0d0ba;font-size:clamp(.9375rem,1vw,1rem);line-height:1.75}
@@ -36,14 +35,14 @@ body.PrivacyPage{min-height:100vh;margin:0;overflow-x:hidden;overscroll-behavior
 .PrivacyLink{color:#f2ca8f;text-decoration:underline;text-underline-offset:3px;overflow-wrap:anywhere}
 .PrivacyFooter{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;padding:20px clamp(22px,3vw,28px) 24px;color:#9d8161;font-size:.8125rem;line-height:1.6}
 .PrivacyFooter a{color:#f2ca8f;text-decoration:underline;text-underline-offset:3px}
-@media(max-width:560px){.PrivacyShell{width:calc(100% - 24px);padding:12px 0 28px}.PrivacyHero{grid-template-columns:44px minmax(0,1fr);gap:12px;padding:20px 16px}.PrivacyBack{width:44px;height:44px;min-width:44px}.PrivacyHero h1{font-size:clamp(1.75rem,8vw,2.125rem)}.PrivacySections{padding:0 1rem}.PrivacySection h2{font-size:1.1875rem}.PrivacySection p,.PrivacySection li{font-size:.875rem}.PrivacyFooter{padding:1.125rem 1rem 1.25rem}}
+@media(max-width:560px){.PrivacyShell{width:calc(100% - 24px);padding:12px 0 28px}.PrivacyHero{grid-template-columns:44px minmax(0,1fr);gap:12px;padding:20px 16px}.PrivacyHero h1{font-size:clamp(1.75rem,8vw,2.125rem)}.PrivacySections{padding:0 1rem}.PrivacySection h2{font-size:1.1875rem}.PrivacySection p,.PrivacySection li{font-size:.875rem}.PrivacyFooter{padding:1.125rem 1rem 1.25rem}}
 </style>
 </head>
 <body class="PrivacyPage">
 <main class="PrivacyShell">
 <div class="PrivacyFrame">
 <header class="PrivacyHero">
-    <a class="PrivacyBack" href="/" aria-label="Back to Story Rewrite" title="Back to Story Rewrite">←</a>
+    <button class="IconBackButton" type="button" data-story-back="main.html" aria-label="Go back"></button>
     <div>
         <div class="PrivacyEyebrow">Story Rewrite · Privacy</div>
         <h1>Privacy Policy</h1>
@@ -161,10 +160,11 @@ body.PrivacyPage{min-height:100vh;margin:0;overflow-x:hidden;overscroll-behavior
 </div>
 
 <footer class="PrivacyFooter">
-    <span>Story Rewrite · Privacy Policy</span>
+    <span>Story Rewrite · Privacy Policy · <a href="about.html">About</a></span>
     <span>Questions? <a href="mailto:ilikegamingalot3329@gmail.com">Contact support</a></span>
 </footer>
 </div>
 </main>
+<script src="shell-ui.js?v=20261106-legalnav1"></script>
 </body>
 </html>
