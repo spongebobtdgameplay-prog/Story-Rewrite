@@ -169,31 +169,31 @@ function createThinkRuntime(Dependencies) {
     }
 
     function buildSafetyBotReply(Question, Context = []) {
-        const Current = String(Question || "").replace(/[\\u0000-\\u001F\\u007F]/g, " ").trim().slice(0, 1200);
+        const Current = String(Question || "").replace(/[\u0000-\u001F\u007F]/g, " ").trim().slice(0, 1200);
         const Prior = (Array.isArray(Context) ? Context : [])
             .slice(-4)
-            .map(Value => String(Value || "").replace(/[\\u0000-\\u001F\\u007F]/g, " ").trim().slice(0, 500))
+            .map(Value => String(Value || "").replace(/[\u0000-\u001F\u007F]/g, " ").trim().slice(0, 500))
             .filter(Boolean);
-        const ReviewText = [...Prior, Current].join("\\n").toLowerCase();
-        const FictionContext = /\\b(?:fictional|in the story|story scene|roleplay|role-play|character|villain|monster|imaginary|game plot)\\b/i.test(ReviewText);
+        const ReviewText = [...Prior, Current].join("\n").toLowerCase();
+        const FictionContext = /\b(?:fictional|in the story|story scene|roleplay|role-play|character|villain|monster|imaginary|game plot)\b/i.test(ReviewText);
         const Findings = [];
         const AddFinding = (rule, detail, severity = "review") => {
             if (!Findings.some(Item => Item.rule === rule)) Findings.push({ rule, detail, severity });
         };
 
-        const CredentialOrSecret = /\\b(?:password|passcode|api[_ -]?key|access[_ -]?token|refresh[_ -]?token|session[_ -]?(?:id|token|cookie))\\b\\s*[:=]\\s*\\S+|\\bbearer\\s+[a-z0-9._~+/-]{20,}|\\bsk-[a-z0-9_-]{16,}\\b|-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/i.test(ReviewText);
-        const PersonalInfo = /\\b(?:my|his|her|their|someone's|someones)\\s+(?:home\\s+)?(?:address|phone number|email address|credit card|bank account)\\s+is\\b|\\b(?:doxx(?:ed|ing)?|publish(?:ed|ing)?\\s+(?:their|someone's)\\s+(?:address|phone|email))\\b/i.test(ReviewText);
-        const ExplicitThreat = /\\b(?:i(?:'m| am)?\\s+(?:going to|gonna|will)\\s+(?:kill|hurt|shoot|stab|attack|beat)\\s+(?:you|him|her|them)|i(?:'m| am)?\\s+going to make you pay|you(?:'re| are) dead)\\b/i.test(ReviewText);
-        const EncouragementOfHarm = /\\b(?:kill yourself|go kill yourself|you should die|hurt yourself|make them suffer)\\b/i.test(ReviewText);
-        const TargetedHarassment = /\\b(?:shut up|you are (?:a )?(?:loser|idiot|stupid|worthless)|nobody likes you|go away nobody wants you|i hate you)\\b/i.test(ReviewText);
-        const HateOrSlurReference = /\\b(?:racial slur|ethnic slur|homophobic slur|transphobic slur|slur|hate speech|racist attack|discriminatory insult)\\b/i.test(ReviewText);
-        const SexualHarassment = /\\b(?:send (?:me )?(?:nudes|explicit photos)|sexual harassment|unwanted sexual comments|sexually threaten(?:ed|ing)?)\\b/i.test(ReviewText);
-        const Profanity = /\\b(?:fuck(?:ing|ed)?|shit(?:ty)?|bitch(?:es)?|asshole|bastard)\\b/i.test(ReviewText);
-        const Spam = /\\b(?:spam(?:ming)?|flood(?:ing)? the chat|message\\s+the\\s+same\\s+thing\\s+(?:over and over|repeatedly))\\b/i.test(ReviewText);
-        const Impersonation = /\\b(?:impersonat(?:e|ing|ed)|pretend to be (?:a moderator|the owner|another player)|fake (?:staff|moderator|owner) account)\\b/i.test(ReviewText);
-        const Evasion = /\\b(?:evad(?:e|ing) (?:a |the )?(?:mute|timeout|ban|restriction)|bypass (?:a |the )?(?:mute|timeout|ban|restriction)|ban evasion|avoid moderation)\\b/i.test(ReviewText);
-        const FalseReport = /\\b(?:false report|make up (?:a )?report|retaliatory report|report (?:them|him|her) just to get (?:them|him|her) banned)\\b/i.test(ReviewText);
-        const ThreatContext = /\\b(?:real life|outside the game|in real life|at school|at their house|in person)\\b/i.test(ReviewText);
+        const CredentialOrSecret = /\b(?:password|passcode|api[_ -]?key|access[_ -]?token|refresh[_ -]?token|session[_ -]?(?:id|token|cookie))\b\s*[:=]\s*\S+|\bbearer\s+[a-z0-9._~+/-]{20,}|\bsk-[a-z0-9_-]{16,}\b|-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/i.test(ReviewText);
+        const PersonalInfo = /\b(?:my|his|her|their|someone's|someones)\s+(?:home\s+)?(?:address|phone number|email address|credit card|bank account)\s+is\b|\b(?:doxx(?:ed|ing)?|publish(?:ed|ing)?\s+(?:their|someone's)\s+(?:address|phone|email))\b/i.test(ReviewText);
+        const ExplicitThreat = /\b(?:i(?:'m| am)?\s+(?:going to|gonna|will)\s+(?:kill|hurt|shoot|stab|attack|beat)\s+(?:you|him|her|them)|i(?:'m| am)?\s+going to make you pay|you(?:'re| are) dead)\b/i.test(ReviewText);
+        const EncouragementOfHarm = /\b(?:kill yourself|go kill yourself|you should die|hurt yourself|make them suffer)\b/i.test(ReviewText);
+        const TargetedHarassment = /\b(?:shut up|you are (?:a )?(?:loser|idiot|stupid|worthless)|nobody likes you|go away nobody wants you|i hate you)\b/i.test(ReviewText);
+        const HateOrSlurReference = /\b(?:racial slur|ethnic slur|homophobic slur|transphobic slur|slur|hate speech|racist attack|discriminatory insult)\b/i.test(ReviewText);
+        const SexualHarassment = /\b(?:send (?:me )?(?:nudes|explicit photos)|sexual harassment|unwanted sexual comments|sexually threaten(?:ed|ing)?)\b/i.test(ReviewText);
+        const Profanity = /\b(?:fuck(?:ing|ed)?|shit(?:ty)?|bitch(?:es)?|asshole|bastard)\b/i.test(ReviewText);
+        const Spam = /\b(?:spam(?:ming)?|flood(?:ing)? the chat|message\s+the\s+same\s+thing\s+(?:over and over|repeatedly))\b/i.test(ReviewText);
+        const Impersonation = /\b(?:impersonat(?:e|ing|ed)|pretend to be (?:a moderator|the owner|another player)|fake (?:staff|moderator|owner) account)\b/i.test(ReviewText);
+        const Evasion = /\b(?:evad(?:e|ing) (?:a |the )?(?:mute|timeout|ban|restriction)|bypass (?:a |the )?(?:mute|timeout|ban|restriction)|ban evasion|avoid moderation)\b/i.test(ReviewText);
+        const FalseReport = /\b(?:false report|make up (?:a )?report|retaliatory report|report (?:them|him|her) just to get (?:them|him|her) banned)\b/i.test(ReviewText);
+        const ThreatContext = /\b(?:real life|outside the game|in real life|at school|at their house|in person)\b/i.test(ReviewText);
 
         if (CredentialOrSecret) AddFinding("Protect personal information and credentials", "The description appears to contain a password, authentication token, API key, or other secret. Remove it and do not repost it.", "high");
         if (PersonalInfo) AddFinding("Do not share private information", "The description may involve exposing another person's address, phone number, email, or financial details. Avoid repeating the information and report the original message.", "high");
@@ -208,7 +208,7 @@ function createThinkRuntime(Dependencies) {
         if (Evasion) AddFinding("Evading moderation", "Trying to get around a mute, timeout, ban, or other restriction is prohibited. Use the normal review or appeal process instead.", "high");
         if (FalseReport) AddFinding("False or retaliatory reporting", "Reports must be made honestly and for review, not invented or used to retaliate against another player.", "review");
 
-        const IsRulesQuestion = /\\b(?:what are the rules|list (?:the )?rules|which rules|what rules|what can you check|what do you check|help me understand the rules)\\b/i.test(Current);
+        const IsRulesQuestion = /\b(?:what are the rules|list (?:the )?rules|which rules|what rules|what can you check|what do you check|help me understand the rules)\b/i.test(Current);
         if (IsRulesQuestion && Findings.length === 0) {
             return {
                 ok: true,
