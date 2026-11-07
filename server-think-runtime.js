@@ -250,9 +250,11 @@ function createThinkRuntime(Dependencies) {
         if (RequestPath === "/api/safetybot/chat" && Request.method === "POST") {
             const Body = await ReadJson(Request).catch(() => ({}));
             const Question = String(Body && Body.question || "").trim().slice(0, 1200);
-            const Context = Array.isArray(Body && Body.context) ? Body.context : [];
+            const Messages = Array.isArray(Body && Body.messages)
+                ? Body.messages
+                : (Array.isArray(Body && Body.context) ? Body.context.map(Text => ({ role: "user", text: Text })) : []);
             if (!Question) {
-                SendJson(Response, 400, { error: "Write a situation or rule question for SafetyBot." }, Origin);
+                SendJson(Response, 400, { error: "Write a message for SafetyBot." }, Origin);
                 return true;
             }
             const Now = Date.now();
@@ -266,8 +268,15 @@ function createThinkRuntime(Dependencies) {
             } else {
                 Window.count += 1;
             }
-            const Reply = buildSafetyBotReply(Question, Context);
-            SendJson(Response, 200, Reply, Origin);
+            try {
+                const SafetyBotGemini = require("./storybot-gemini-guest.js");
+                const Answer = await SafetyBotGemini.askSafetyBotGemini({ username: Account.username, question: Question, messages: Messages });
+                if (!Answer) throw new Error("The model returned an empty reply.");
+                SendJson(Response, 200, { ok: true, outcome: "conversation", answer: Answer.slice(0, 4000), findings: [] }, Origin);
+            } catch (Error) {
+                console.error("SafetyBot conversation request failed:", String(Error?.message || Error).slice(0, 220));
+                SendJson(Response, 503, { error: "SafetyBot is temporarily unavailable. Please try again." }, Origin);
+            }
             return true;
         }
 
