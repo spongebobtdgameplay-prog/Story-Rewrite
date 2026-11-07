@@ -46,16 +46,16 @@
             <div class="ThinkMetric"><span>Investigation cases</span><strong id="MetricCases">—</strong></div>
             <div class="ThinkMetric"><span>Pending action requests</span><strong id="MetricRequests">—</strong></div>
             <div class="ThinkMetric"><span>Developer roster</span><strong id="MetricStaff">—</strong></div>
-            <div class="ThinkMetric"><span>SafetyBot notices</span><strong id="MetricAlerts">—</strong></div>
+            <div class="ThinkMetric" id="ThinkSafetyBotMetric" hidden><span>SafetyBot notices</span><strong id="MetricAlerts">—</strong></div>
         </section>
 
-        <section class="ThinkCard full" id="ThinkAlertsCard">
+        <section class="ThinkCard full" id="ThinkAlertsCard" hidden>
             <div class="ThinkCardHead"><div><h2>SafetyBot oversight notices</h2><p>Warnings are based on recorded actions and evidence completeness.</p></div></div>
             <div class="ThinkList" id="ThinkAlerts"></div>
         </section>
 
         <div class="ThinkGrid">
-            <section class="ThinkCard">
+            <section class="ThinkCard" id="ThinkSafetyPolicyCard" hidden>
                 <div class="ThinkCardHead"><div><h2>SafetyBot policy checkpoint</h2><p>Before and after high-level moderator actions.</p></div><span class="ThinkRole">Oversight</span></div>
                 <div class="ThinkNotice">SafetyBot checks privacy, rule context, evidence quality, and action severity. Authorized humans make moderation decisions.</div>
                 <p class="ThinkSubtle" id="ThinkSafetyBotPolicyStatus">Checking SafetyBot status…</p>
@@ -79,7 +79,7 @@
             </form>
         </section>
 
-        <section class="ThinkCard full ThinkSafetyBot" id="ThinkSafetyBotCard">
+        <section class="ThinkCard full ThinkSafetyBot" id="ThinkSafetyBotCard" hidden>
             <div class="ThinkCardHead"><div><h2>SafetyBot safeguards</h2><p>Community-safety guidance, privacy protection, and action-severity checks.</p></div><span class="ThinkRole">Safety checks</span></div>
             <div class="ThinkNotice">SafetyBot checks for exposed passwords, API keys, bearer tokens, session cookies, and private keys in submitted evidence. It also requires a confirmed finding before an account suspension. A human reviewer must still approve each action.</div>
             <p class="ThinkSubtle" id="ThinkSafetyBotStatus">Checking SafetyBot status…</p>

@@ -192,6 +192,9 @@
         if (RoleBadge) RoleBadge.textContent = RoleText(Role);
         if ($("ThinkStaffManageCard")) $("ThinkStaffManageCard").hidden = !Overview.permissions.canManageStaff;
         if ($("ThinkCreateCaseCard")) $("ThinkCreateCaseCard").hidden = !Overview.permissions.canCreateCase;
+        for (const Id of ["ThinkSafetyBotMetric", "ThinkAlertsCard", "ThinkSafetyPolicyCard", "ThinkSafetyBotCard"]) {
+            if ($(Id)) $(Id).hidden = false;
+        }
         if ($("ThinkAccessForm")) $("ThinkAccessForm").hidden = !["developer", "moderator"].includes(Role);
         RenderAlerts();
         RenderRoster();
@@ -293,6 +296,11 @@
         } catch (Error) {
             if (Status) Status.textContent = Error.status === 403 ? "Access not authorized" : (Error.message || "Could not load workspace");
             if (Error.status === 401) return;
+            if (Error.status === 403) {
+                for (const Id of ["ThinkSafetyBotMetric", "ThinkAlertsCard", "ThinkSafetyPolicyCard", "ThinkSafetyBotCard"]) {
+                    if ($(Id)) $(Id).hidden = true;
+                }
+            }
             Root.querySelectorAll("form").forEach(Form => { Form.hidden = true; });
             const Existing = Root.querySelector(".ThinkMain");
             if (Existing) Existing.insertAdjacentHTML("afterbegin", '<div class="ThinkNotice warning">' + Esc(Error.message || "Your account is not an authorized Story Rewrite developer.") + "</div>");
