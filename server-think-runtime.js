@@ -183,16 +183,20 @@ function createThinkRuntime(Dependencies) {
 
         const CredentialOrSecret = /\b(?:password|passcode|api[_ -]?key|access[_ -]?token|refresh[_ -]?token|session[_ -]?(?:id|token|cookie))\b\s*[:=]\s*\S+|\bbearer\s+[a-z0-9._~+/-]{20,}|\bsk-[a-z0-9_-]{16,}\b|-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/i.test(ReviewText);
         const PersonalInfo = /\b(?:my|his|her|their|someone's|someones)\s+(?:home\s+)?(?:address|phone number|email address|credit card|bank account)\s+is\b|\b(?:doxx(?:ed|ing)?|publish(?:ed|ing)?\s+(?:their|someone's)\s+(?:address|phone|email))\b/i.test(ReviewText);
-        const ExplicitThreat = /\b(?:i(?:'m| am)?\s+(?:going to|gonna|will)\s+(?:kill|hurt|shoot|stab|attack|beat)\s+(?:you|him|her|them)|i(?:'m| am)?\s+going to make you pay|you(?:'re| are) dead)\b/i.test(ReviewText);
+        const DirectThreat = /\b(?:i(?:'m| am)?\s+(?:going to|gonna|will)\s+(?:kill|hurt|shoot|stab|attack|beat)\s+(?:you|him|her|them)|i(?:'m| am)?\s+going to make you pay|you(?:'re| are) dead)\b/i.test(ReviewText);
+        const ReportedThreat = /\b(?:someone|a player|another player|he|she|they)\s+(?:said|wrote|messaged|told me|threatened)\b.{0,100}\b(?:will|would|is going to|was going to|to)\s+(?:kill|hurt|shoot|stab|attack|beat)\s+(?:me|you|him|her|them)\b/i.test(ReviewText);
+        const ThreatenedToHarm = /\bthreaten(?:ed|ing)?\s+(?:to\s+)?(?:kill|hurt|shoot|stab|attack|beat)\s+(?:me|you|him|her|them)\b/i.test(ReviewText);
+        const ExplicitThreat = DirectThreat || ReportedThreat || ThreatenedToHarm;
         const EncouragementOfHarm = /\b(?:kill yourself|go kill yourself|you should die|hurt yourself|make them suffer)\b/i.test(ReviewText);
         const TargetedHarassment = /\b(?:shut up|you are (?:a )?(?:loser|idiot|stupid|worthless)|nobody likes you|go away nobody wants you|i hate you)\b/i.test(ReviewText);
-        const HateOrSlurReference = /\b(?:racial slur|ethnic slur|homophobic slur|transphobic slur|slur|hate speech|racist attack|discriminatory insult)\b/i.test(ReviewText);
+        const HateOrSlurReference = /\b(?:racial slur|ethnic slur|homophobic slur|transphobic slur|slur|hate speech|racist attack|discriminatory insult|go back to (?:your )?country|your race is inferior|people like you do not belong here)\b/i.test(ReviewText);
         const SexualHarassment = /\b(?:send (?:me )?(?:nudes|explicit photos)|sexual harassment|unwanted sexual comments|sexually threaten(?:ed|ing)?)\b/i.test(ReviewText);
         const Profanity = /\b(?:fuck(?:ing|ed)?|shit(?:ty)?|bitch(?:es)?|asshole|bastard)\b/i.test(ReviewText);
         const Spam = /\b(?:spam(?:ming)?|flood(?:ing)? the chat|message\s+the\s+same\s+thing\s+(?:over and over|repeatedly))\b/i.test(ReviewText);
         const Impersonation = /\b(?:impersonat(?:e|ing|ed)|pretend to be (?:a moderator|the owner|another player)|fake (?:staff|moderator|owner) account)\b/i.test(ReviewText);
         const Evasion = /\b(?:evad(?:e|ing) (?:a |the )?(?:mute|timeout|ban|restriction)|bypass (?:a |the )?(?:mute|timeout|ban|restriction)|ban evasion|avoid moderation)\b/i.test(ReviewText);
         const FalseReport = /\b(?:false report|make up (?:a )?report|retaliatory report|report (?:them|him|her) just to get (?:them|him|her) banned)\b/i.test(ReviewText);
+        const FairPlayConcern = /\b(?:cheat(?:ing)?|using (?:a )?(?:hack|exploit|bot) to gain an advantage|unfair advantage|game exploit)\b/i.test(ReviewText);
         const ThreatContext = /\b(?:real life|outside the game|in real life|at school|at their house|in person)\b/i.test(ReviewText);
 
         if (CredentialOrSecret) AddFinding("Protect personal information and credentials", "The description appears to contain a password, authentication token, API key, or other secret. Remove it and do not repost it.", "high");
@@ -207,6 +211,7 @@ function createThinkRuntime(Dependencies) {
         if (Impersonation) AddFinding("Impersonation", "Pretending to be another player, the owner, or a moderator may mislead others and is prohibited.", "high");
         if (Evasion) AddFinding("Evading moderation", "Trying to get around a mute, timeout, ban, or other restriction is prohibited. Use the normal review or appeal process instead.", "high");
         if (FalseReport) AddFinding("False or retaliatory reporting", "Reports must be made honestly and for review, not invented or used to retaliate against another player.", "review");
+        if (FairPlayConcern) AddFinding("Possible fair-play concern", "This may be a cheating or unfair-advantage concern. A bug report, accessibility tool, or ordinary testing is not automatically misconduct; review the actual game behaviour and context.", "review");
 
         const IsRulesQuestion = /\b(?:what are the rules|list (?:the )?rules|which rules|what rules|what can you check|what do you check|help me understand the rules)\b/i.test(Current);
         if (IsRulesQuestion && Findings.length === 0) {
