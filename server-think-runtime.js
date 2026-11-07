@@ -17,6 +17,7 @@ function createThinkRuntime(Dependencies) {
                 await Database.query("CREATE TABLE IF NOT EXISTS story_rewrite_think_cases (id BIGSERIAL PRIMARY KEY, target_username_key TEXT NOT NULL, target_username TEXT NOT NULL, category TEXT NOT NULL, reason TEXT NOT NULL, evidence TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'reported' CHECK (status IN ('reported','under_review','confirmed','cleared')), filed_by_key TEXT NOT NULL, filed_by TEXT NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), reviewed_by TEXT, review_note TEXT)");
                 await Database.query("CREATE INDEX IF NOT EXISTS story_rewrite_think_cases_target_idx ON story_rewrite_think_cases (target_username_key, created_at DESC)");
                 await Database.query("CREATE TABLE IF NOT EXISTS story_rewrite_think_requests (id BIGSERIAL PRIMARY KEY, case_id BIGINT NOT NULL REFERENCES story_rewrite_think_cases(id), action_type TEXT NOT NULL CHECK (action_type IN ('suspend_account','terminate_sessions')), target_username_key TEXT NOT NULL, target_username TEXT NOT NULL, reason TEXT NOT NULL, evidence TEXT NOT NULL, requested_by_key TEXT NOT NULL, requested_by TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','approved','rejected')), storybot_json JSONB NOT NULL DEFAULT '{}'::jsonb, reviewed_by TEXT, review_note TEXT, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), reviewed_at TIMESTAMPTZ)");
+                await Database.query("ALTER TABLE story_rewrite_think_requests ADD COLUMN IF NOT EXISTS safetybot_json JSONB NOT NULL DEFAULT '{}'::jsonb");
                 await Database.query("CREATE INDEX IF NOT EXISTS story_rewrite_think_requests_status_idx ON story_rewrite_think_requests (status, created_at DESC)");
                 await Database.query("CREATE TABLE IF NOT EXISTS story_rewrite_think_ideas (id BIGSERIAL PRIMARY KEY, title TEXT NOT NULL, body TEXT NOT NULL, submitted_by_key TEXT NOT NULL, submitted_by TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'submitted' CHECK (status IN ('submitted','reviewing','accepted','declined')), created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())");
                 await Database.query("CREATE TABLE IF NOT EXISTS story_rewrite_think_audit (id BIGSERIAL PRIMARY KEY, actor_username_key TEXT NOT NULL, actor_username TEXT NOT NULL, actor_role TEXT NOT NULL, action TEXT NOT NULL, target_username TEXT, details_json JSONB NOT NULL DEFAULT '{}'::jsonb, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())");
@@ -69,12 +70,13 @@ function createThinkRuntime(Dependencies) {
         );
     }
 
-    async function addAlert(Username, Message, Severity) {
+    async function addAlert(Username, Message, Severity, Source = "storybot") {
         const Name = String(Username || "").trim().slice(0, 32);
         if (!Name) return;
+        const SafeSource = Source === "safetybot" ? "safetybot" : "storybot";
         await Database.query(
-            "INSERT INTO story_rewrite_think_alerts (recipient_username_key, recipient_username, severity, message, source) VALUES ($1,$2,$3,$4,'storybot')",
-            [UsernameKey(Name), Name, Severity || "warning", String(Message || "").slice(0, 500)]
+            "INSERT INTO story_rewrite_think_alerts (recipient_username_key, recipient_username, severity, message, source) VALUES ($1,$2,$3,$4,$5)",
+            [UsernameKey(Name), Name, Severity || "warning", String(Message || "").slice(0, 500), SafeSource]
         );
     }
 
@@ -109,6 +111,54 @@ function createThinkRuntime(Dependencies) {
         };
     }
 
+    async function preActionSafetyReview(Reviewer, RequestRow, CaseRow) {
+        const Blockers = [];
+        const Warnings = [];
+        if (!Reviewer || Reviewer.role === "owner") {
+            return {
+                allowed: true,
+                exempt: true,
+                warnings: [],
+                blockers: [],
+                summary: "Owner review is logged separately from moderator-only SafetyBot checks."
+            };
+        }
+
+        const EvidenceText = [
+            RequestRow?.reason,
+            RequestRow?.evidence,
+            CaseRow?.reason,
+            CaseRow?.evidence
+        ].map(Value => String(Value || "")).join("\n");
+
+        const ContainsCredential = [
+            /\b(?:password|passcode|api[_ -]?key|access[_ -]?token|refresh[_ -]?token|session[_ -]?(?:id|token|cookie))\b\s*[:=]\s*\S+/i,
+            /\bBearer\s+[A-Za-z0-9._~+/-]{20,}/i,
+            /\bsk-[A-Za-z0-9_-]{16,}\b/,
+            /-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/i
+        ].some(Pattern => Pattern.test(EvidenceText));
+
+        if (ContainsCredential) {
+            Blockers.push("Remove passwords, API keys, bearer tokens, session cookies, and private keys from the case evidence before continuing.");
+        }
+        if (RequestRow?.action_type === "suspend_account" && String(CaseRow?.status || "") !== "confirmed") {
+            Blockers.push("SafetyBot requires a confirmed investigation finding before an account suspension can be approved.");
+        }
+        if (RequestRow?.action_type === "terminate_sessions" && CaseRow && CaseRow.status === "under_review") {
+            Warnings.push("Session termination signs the account out of active sessions. Confirm that this limited action is proportionate to the evidence.");
+        }
+
+        return {
+            allowed: Blockers.length === 0,
+            exempt: false,
+            warnings: Warnings,
+            blockers: Blockers,
+            summary: Blockers.length
+                ? "SafetyBot blocked this request until its privacy or action-severity checks are addressed."
+                : "SafetyBot's privacy and action-severity checks passed. Human approval is still required."
+        };
+    }
+
     async function disconnectTargetSessions(Username) {
         const Key = UsernameKey(Username);
         await Database.query("DELETE FROM story_rewrite_sessions WHERE username_key = $1", [Key]);
@@ -130,7 +180,7 @@ function createThinkRuntime(Dependencies) {
             const Results = await Promise.all([
                 Database.query("SELECT username, role, active, created_at FROM story_rewrite_think_staff WHERE active = TRUE ORDER BY CASE role WHEN 'top_moderator' THEN 1 WHEN 'moderator' THEN 2 ELSE 3 END, username"),
                 Database.query("SELECT id, target_username, category, reason, evidence, status, filed_by, created_at, updated_at, reviewed_by, review_note FROM story_rewrite_think_cases ORDER BY created_at DESC LIMIT 100"),
-                Database.query("SELECT id, case_id, action_type, target_username, reason, evidence, requested_by, status, storybot_json, reviewed_by, review_note, created_at, reviewed_at FROM story_rewrite_think_requests ORDER BY created_at DESC LIMIT 100"),
+                Database.query("SELECT id, case_id, action_type, target_username, reason, evidence, requested_by, status, storybot_json, safetybot_json, reviewed_by, review_note, created_at, reviewed_at FROM story_rewrite_think_requests ORDER BY created_at DESC LIMIT 100"),
                 Database.query("SELECT id, title, body, submitted_by, status, created_at FROM story_rewrite_think_ideas ORDER BY created_at DESC LIMIT 50"),
                 Database.query("SELECT id, actor_username, actor_role, action, target_username, details_json, created_at FROM story_rewrite_think_audit ORDER BY created_at DESC LIMIT 100"),
                 Database.query("SELECT id, severity, message, source, created_at, acknowledged_at FROM story_rewrite_think_alerts WHERE recipient_username_key = $1 ORDER BY created_at DESC LIMIT 50", [UsernameKey(Account.username)]),
@@ -257,13 +307,24 @@ function createThinkRuntime(Dependencies) {
             const Preliminary = await preActionReview(Staff, {
                 case_id: CaseId, target_username: Target, requested_by: Account.username, reason: Reason, evidence: Evidence
             }, CaseRow);
-            const StoredReview = Object.assign({}, Preliminary, { checkedAt: new Date().toISOString(), stage: "submission" });
+            const SafetyPreliminary = await preActionSafetyReview(Staff, {
+                case_id: CaseId, action_type: ActionType, target_username: Target,
+                requested_by: Account.username, reason: Reason, evidence: Evidence
+            }, CaseRow);
+            const CheckedAt = new Date().toISOString();
+            const StoredReview = Object.assign({}, Preliminary, { checkedAt: CheckedAt, stage: "submission" });
+            const StoredSafetyReview = Object.assign({}, SafetyPreliminary, { checkedAt: CheckedAt, stage: "submission" });
             const Inserted = await Database.query(
-                "INSERT INTO story_rewrite_think_requests (case_id,action_type,target_username_key,target_username,reason,evidence,requested_by_key,requested_by,storybot_json) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb) RETURNING id",
-                [CaseId, ActionType, UsernameKey(Target), Target, Reason, Evidence, UsernameKey(Account.username), Account.username, JSON.stringify(StoredReview)]
+                "INSERT INTO story_rewrite_think_requests (case_id,action_type,target_username_key,target_username,reason,evidence,requested_by_key,requested_by,storybot_json,safetybot_json) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb,$10::jsonb) RETURNING id",
+                [CaseId, ActionType, UsernameKey(Target), Target, Reason, Evidence, UsernameKey(Account.username), Account.username, JSON.stringify(StoredReview), JSON.stringify(StoredSafetyReview)]
             );
-            await writeAudit(Staff, "think_action_requested", Target, { requestId: Inserted.rows[0].id, caseId: CaseId, actionType: ActionType, storybotAllowed: Preliminary.allowed });
-            SendJson(Response, 201, { ok: true, requestId: Inserted.rows[0].id, storybot: StoredReview }, Origin);
+            await writeAudit(Staff, "think_action_requested", Target, {
+                requestId: Inserted.rows[0].id, caseId: CaseId, actionType: ActionType,
+                storybotAllowed: Preliminary.allowed, safetybotAllowed: SafetyPreliminary.allowed
+            });
+            SendJson(Response, 201, {
+                ok: true, requestId: Inserted.rows[0].id, storybot: StoredReview, safetybot: StoredSafetyReview
+            }, Origin);
             return true;
         }
 
@@ -305,11 +366,28 @@ function createThinkRuntime(Dependencies) {
             }
 
             const BotReview = await preActionReview(Staff, Pending, CaseRow);
-            await Database.query("UPDATE story_rewrite_think_requests SET storybot_json = $1::jsonb WHERE id = $2", [JSON.stringify(Object.assign({}, BotReview, { checkedAt: new Date().toISOString(), stage: "approval" })), Pending.id]);
-            if (!BotReview.allowed) {
-                if (BotReview.warnings && BotReview.warnings.length) await addAlert(Account.username, BotReview.warnings.join(" "));
-                await writeAudit(Staff, "think_action_blocked_by_storybot", Pending.target_username, { requestId: Pending.id, blockers: BotReview.blockers });
-                SendJson(Response, 409, { error: BotReview.summary, storybot: BotReview }, Origin);
+            const SafetyReview = await preActionSafetyReview(Staff, Pending, CaseRow);
+            const CheckedAt = new Date().toISOString();
+            const StoredBotReview = Object.assign({}, BotReview, { checkedAt: CheckedAt, stage: "approval" });
+            const StoredSafetyReview = Object.assign({}, SafetyReview, { checkedAt: CheckedAt, stage: "approval" });
+            await Database.query(
+                "UPDATE story_rewrite_think_requests SET storybot_json = $1::jsonb, safetybot_json = $2::jsonb WHERE id = $3",
+                [JSON.stringify(StoredBotReview), JSON.stringify(StoredSafetyReview), Pending.id]
+            );
+            if (!BotReview.allowed || !SafetyReview.allowed) {
+                if (BotReview.warnings?.length) await addAlert(Account.username, BotReview.warnings.join(" "), "warning", "storybot");
+                if (SafetyReview.warnings?.length) await addAlert(Account.username, SafetyReview.warnings.join(" "), "warning", "safetybot");
+                if (!BotReview.allowed) {
+                    await writeAudit(Staff, "think_action_blocked_by_storybot", Pending.target_username, { requestId: Pending.id, blockers: BotReview.blockers });
+                }
+                if (!SafetyReview.allowed) {
+                    await writeAudit(Staff, "think_action_blocked_by_safetybot", Pending.target_username, { requestId: Pending.id, blockers: SafetyReview.blockers });
+                }
+                SendJson(Response, 409, {
+                    error: !BotReview.allowed ? BotReview.summary : SafetyReview.summary,
+                    storybot: StoredBotReview,
+                    safetybot: StoredSafetyReview
+                }, Origin);
                 return true;
             }
 
