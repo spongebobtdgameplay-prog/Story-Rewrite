@@ -919,9 +919,9 @@ function UpdateStoryBotDedicatedComposer(Composer) {
     if (!Input) return;
     if (Count) Count.textContent = String(Input.value.length) + "/1200";
     Input.style.height = "auto";
-    Input.style.height = Math.min(110, Math.max(28, Input.scrollHeight)) + "px";
+    Input.style.height = Math.min(110, Math.max(34, Input.scrollHeight)) + "px";
     const Slot = Input.closest(".StoryBotInputSlot");
-    if (Slot) Slot.style.height = Math.max(36, Math.min(118, Input.scrollHeight + 10)) + "px";
+    if (Slot) Slot.style.height = Math.max(50, Math.min(130, Input.scrollHeight + 16)) + "px";
 }
 
 function FocusStoryBotDedicatedComposer(Input, Question = "") {
