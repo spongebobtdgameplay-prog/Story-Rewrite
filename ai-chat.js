@@ -1160,7 +1160,10 @@ function WrapStoryBotRenderers() {
             const Composer = DetachStoryBotComposer(Container);
             const Result = BaseRenderRoom(...Arguments);
             RestoreStoryBotComposer(Container, Composer);
-            queueMicrotask(() => RefreshQuietChatState(Container));
+            queueMicrotask(() => {
+                RefreshQuietChatState(Container);
+                RenderSafetyBotHistory(Container);
+            });
             return Result;
         };
         WrappedRenderRoom.StoryBotWrapped = true;
@@ -1174,7 +1177,10 @@ function WrapStoryBotRenderers() {
             const Composer = DetachStoryBotComposer(Container);
             const Result = BaseApplyRoomState(...Arguments);
             RestoreStoryBotComposer(Container, Composer);
-            queueMicrotask(() => RefreshQuietChatState(Container));
+            queueMicrotask(() => {
+                RefreshQuietChatState(Container);
+                RenderSafetyBotHistory(Container);
+            });
             return Result;
         };
         WrappedApplyRoomState.StoryBotChatWrapped = true;
@@ -1404,9 +1410,298 @@ function InitializeStoryBotUi() {
     ConfigureStoryBotInputs();
     BindStoryBotMentionNormalization();
     BindStoryBotCommandPopups();
+    BindSafetyBotLoadout();
     SetStoryBotConnectionState("offline");
     RefreshStoryBotComposerLock();
     RefreshQuietChatState();
+}
+
+
+const SafetyBotConversations = new Map();
+const SafetyBotBusyComposers = new WeakSet();
+
+function SafetyBotIconMarkup() {
+    return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8 19 5.5v5.7c0 4.7-3 8.3-7 10-4-1.7-7-5.3-7-10V5.5l7-2.7Z"></path><path d="m8.6 11.9 2.2 2.2 4.7-5"></path></svg>';
+}
+function ChatBotsIconMarkup() {
+    return '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4.5" y="7" width="15" height="12" rx="3"></rect><path d="M9 7V4.8h6V7M8.5 12h.01M15.5 12h.01M8.5 15h7M2.5 12h2M19.5 12h2"></path></svg>';
+}
+function SetSafetyBotComposerStatus(Composer, Message, State = "") {
+    const Status = Composer?.querySelector(".SafetyBotComposerStatus");
+    if (!Status) return;
+    Status.textContent = Message || "";
+    if (State) Status.dataset.state = State;
+    else delete Status.dataset.state;
+}
+function GetSafetyBotHistoryKey(Input) {
+    return GetStoryBotContainerForInput(Input)?.id || "ChatMessages";
+}
+function RenderSafetyBotHistory(Container) {
+    if (!Container) return;
+    const History = SafetyBotConversations.get(Container.id || "ChatMessages") || [];
+    for (const Entry of History) {
+        const Exists = [...Container.querySelectorAll("[data-safetybot-entry]")].some(Node => Node.dataset.safetybotEntry === Entry.id);
+        if (Exists) continue;
+        const Group = document.createElement("section");
+        Group.className = "SafetyBotLocalExchange";
+        Group.dataset.safetybotEntry = Entry.id;
+
+        const Question = document.createElement("div");
+        Question.className = "SafetyBotLocalQuestion";
+        const QuestionLabel = document.createElement("strong");
+        QuestionLabel.textContent = "You";
+        const QuestionText = document.createElement("p");
+        QuestionText.textContent = Entry.question;
+        Question.append(QuestionLabel, QuestionText);
+
+        const Reply = document.createElement("div");
+        Reply.className = "SafetyBotLocalReply";
+        const Header = document.createElement("div");
+        Header.className = "SafetyBotLocalHeader";
+        const Identity = document.createElement("span");
+        Identity.className = "SafetyBotIdentity";
+        const Icon = document.createElement("span");
+        Icon.className = "SafetyBotMessageIcon";
+        Icon.innerHTML = SafetyBotIconMarkup();
+        const Name = document.createElement("strong");
+        Name.textContent = "SafetyBot";
+        Identity.append(Icon, Name);
+        const Private = document.createElement("span");
+        Private.className = "SafetyBotPrivateLabel";
+        Private.textContent = "Private check";
+        Header.append(Identity, Private);
+
+        const Answer = document.createElement("p");
+        Answer.className = "SafetyBotAnswerText";
+        Answer.textContent = Entry.answer;
+        Reply.append(Header, Answer);
+
+        if (Entry.findings.length) {
+            const List = document.createElement("ul");
+            List.className = "SafetyBotFindings";
+            for (const Finding of Entry.findings) {
+                const Item = document.createElement("li");
+                const Rule = document.createElement("strong");
+                Rule.textContent = Finding.rule;
+                const Detail = document.createElement("span");
+                Detail.textContent = Finding.detail;
+                Item.append(Rule, Detail);
+                List.appendChild(Item);
+            }
+            Reply.appendChild(List);
+        }
+        if (Entry.note) {
+            const Note = document.createElement("p");
+            Note.className = "SafetyBotNote";
+            Note.textContent = Entry.note;
+            Reply.appendChild(Note);
+        }
+        Group.append(Question, Reply);
+        Container.appendChild(Group);
+    }
+    Container.scrollTop = Container.scrollHeight;
+}
+function AddSafetyBotTyping(Container) {
+    if (!Container || Container.querySelector(".SafetyBotTyping")) return;
+    const Node = document.createElement("div");
+    Node.className = "SafetyBotTyping";
+    const Icon = document.createElement("span");
+    Icon.className = "SafetyBotMessageIcon";
+    Icon.innerHTML = SafetyBotIconMarkup();
+    const TextNode = document.createElement("span");
+    TextNode.textContent = "SafetyBot is checking the rule context…";
+    Node.append(Icon, TextNode);
+    Container.appendChild(Node);
+    Container.scrollTop = Container.scrollHeight;
+}
+function RemoveSafetyBotTyping(Container) {
+    Container?.querySelector(".SafetyBotTyping")?.remove();
+}
+function CloseSafetyBotComposer(Input) {
+    const Form = Input?.closest(".ChatForm");
+    Form?.querySelector(".SafetyBotComposer")?.remove();
+    if (Input) {
+        Input.dataset.safetyBotComposerActive = "0";
+        Input.focus({ preventScroll: true });
+    }
+}
+function CreateSafetyBotComposer(Input) {
+    if (!Input) return null;
+    const Form = Input.closest(".ChatForm");
+    const Container = GetStoryBotContainerForInput(Input);
+    const Slot = EnsureStoryBotInputSlot(Form, Input);
+    if (!Form || !Container || !Slot) return null;
+    const Existing = Form.querySelector(".SafetyBotComposer");
+    if (Existing) return Existing;
+
+    Form.querySelector(".StoryBotComposer")?.remove();
+    Input.dataset.storyBotComposerActive = "0";
+    RemoveQuietChatState(Container);
+
+    const Composer = document.createElement("div");
+    Composer.className = "SafetyBotComposer";
+    Composer.setAttribute("role", "group");
+    Composer.setAttribute("aria-label", "Private SafetyBot rules check");
+    Composer.innerHTML = [
+        '<span class="SafetyBotInlineIcon" aria-hidden="true">' + SafetyBotIconMarkup() + '</span>',
+        '<input class="SafetyBotQuestionInput" maxlength="1200" type="text" placeholder="Describe a situation for SafetyBot..." autocomplete="off" spellcheck="true" aria-label="Ask SafetyBot to check a situation against the community rules">',
+        '<button class="SafetyBotSendButton" type="button">Check</button>',
+        '<button class="SafetyBotCloseButton" type="button" aria-label="Close SafetyBot">×</button>'
+    ].join("");
+    Slot.appendChild(Composer);
+
+    const Field = Composer.querySelector(".SafetyBotQuestionInput");
+    const Send = Composer.querySelector(".SafetyBotSendButton");
+    const Close = Composer.querySelector(".SafetyBotCloseButton");
+    if (!Field || !Send || !Close) {
+        Composer.remove();
+        return null;
+    }
+    Input.dataset.safetyBotComposerActive = "1";
+    Field.addEventListener("input", () => {
+        SetSafetyBotComposerStatus(Composer, Field.value.trim()
+            ? "Ready for a private rule check."
+            : "Only the text you send is checked.");
+    });
+    Field.addEventListener("keydown", Event => {
+        if (Event.key === "Enter" && !Event.shiftKey) {
+            Event.preventDefault();
+            void SubmitSafetyBotQuestion(Composer);
+        } else if (Event.key === "Escape") {
+            Event.preventDefault();
+            CloseSafetyBotComposer(Input);
+        }
+    });
+    Send.addEventListener("click", () => void SubmitSafetyBotQuestion(Composer));
+    Close.addEventListener("click", () => CloseSafetyBotComposer(Input));
+    Field.focus({ preventScroll: true });
+    return Composer;
+}
+function FocusSafetyBotComposer(Input, Question = "") {
+    const Composer = CreateSafetyBotComposer(Input);
+    const Field = Composer?.querySelector(".SafetyBotQuestionInput");
+    if (!Composer || !Field) return false;
+    Field.value = NormalizeStoryBotQuestionText(Question);
+    SetSafetyBotComposerStatus(Composer, "Only the text you send is checked.");
+    Field.focus({ preventScroll: true });
+    try { Field.setSelectionRange(Field.value.length, Field.value.length); } catch {}
+    return true;
+}
+async function SubmitSafetyBotQuestion(Composer) {
+    const Field = Composer?.querySelector(".SafetyBotQuestionInput");
+    const Send = Composer?.querySelector(".SafetyBotSendButton");
+    if (!Field || !Send || SafetyBotBusyComposers.has(Composer)) return;
+    const Question = NormalizeStoryBotQuestionText(Field.value);
+    if (!Question) {
+        SetSafetyBotComposerStatus(Composer, "Write a situation or ask about a community rule.", "error");
+        Field.focus({ preventScroll: true });
+        return;
+    }
+
+    const NormalInput = Composer.closest(".ChatForm")?.querySelector(".ChatInput");
+    const Container = GetStoryBotContainerForInput(NormalInput);
+    const HistoryKey = GetSafetyBotHistoryKey(NormalInput);
+    if (!Container) {
+        SetSafetyBotComposerStatus(Composer, "The chat panel is unavailable right now.", "error");
+        return;
+    }
+
+    SafetyBotBusyComposers.add(Composer);
+    Send.disabled = true;
+    Field.disabled = true;
+    SetSafetyBotComposerStatus(Composer, "Checking the community rules…");
+    AddSafetyBotTyping(Container);
+
+    try {
+        const Previous = SafetyBotConversations.get(HistoryKey) || [];
+        const Context = Previous.slice(-4).map(Entry => Entry.question);
+        const Result = await ApiRequest("/api/safetybot/chat", {
+            method: "POST",
+            timeoutMs: 30000,
+            body: JSON.stringify({ question: Question, context: Context })
+        });
+        RemoveSafetyBotTyping(Container);
+        const Entry = {
+            id: "safety-" + Date.now() + "-" + Math.random().toString(36).slice(2, 9),
+            question: Question,
+            answer: String(Result.answer || "I could not complete that rules check."),
+            findings: Array.isArray(Result.findings) ? Result.findings : [],
+            note: String(Result.note || "")
+        };
+        SafetyBotConversations.set(HistoryKey, [...Previous, Entry].slice(-12));
+        RenderSafetyBotHistory(Container);
+        Field.value = "";
+        SetSafetyBotComposerStatus(Composer, "Ready. You can ask a follow-up.");
+    } catch (Error) {
+        RemoveSafetyBotTyping(Container);
+        const Entry = {
+            id: "safety-error-" + Date.now() + "-" + Math.random().toString(36).slice(2, 9),
+            question: Question,
+            answer: Error.message || "SafetyBot could not check that right now.",
+            findings: [],
+            note: "This message was not submitted to the public room chat."
+        };
+        const Previous = SafetyBotConversations.get(HistoryKey) || [];
+        SafetyBotConversations.set(HistoryKey, [...Previous, Entry].slice(-12));
+        RenderSafetyBotHistory(Container);
+        SetSafetyBotComposerStatus(Composer, "That check didn't go through. You can retry.", "error");
+    } finally {
+        SafetyBotBusyComposers.delete(Composer);
+        Send.disabled = false;
+        Field.disabled = false;
+        if (Composer.isConnected) Field.focus({ preventScroll: true });
+    }
+}
+function BindSafetyBotLoadout() {
+    document.querySelectorAll(".ChatForm").forEach(Form => {
+        const Input = Form.querySelector(".ChatInput");
+        const Submit = Form.querySelector('.PrimaryButton[type="submit"]');
+        if (!Input || !Submit || Form.dataset.safetyBotLoadoutBound === "1") return;
+        Form.dataset.safetyBotLoadoutBound = "1";
+
+        const Loadout = document.createElement("div");
+        Loadout.className = "ChatBotLoadout";
+        Loadout.innerHTML = [
+            '<button class="ChatBotLoadoutTrigger" type="button" aria-haspopup="menu" aria-expanded="false" aria-label="Open bot loadout" title="Choose a chat bot">' + ChatBotsIconMarkup() + '<span>Bots</span></button>',
+            '<div class="ChatBotLoadoutMenu" role="menu" hidden>',
+            '<div class="ChatBotLoadoutHeading">Choose a chat bot</div>',
+            '<button class="ChatBotLoadoutOption" type="button" role="menuitem" data-chat-bot="story"><span class="ChatBotLoadoutIcon Story">' + ChatBotsIconMarkup() + '</span><span class="ChatBotLoadoutCopy"><strong>StoryBot</strong><small>Story and game helper</small></span></button>',
+            '<button class="ChatBotLoadoutOption" type="button" role="menuitem" data-chat-bot="safety"><span class="ChatBotLoadoutIcon Safety">' + SafetyBotIconMarkup() + '</span><span class="ChatBotLoadoutCopy"><strong>SafetyBot</strong><small>Check community rules</small></span></button>',
+            '<p class="ChatBotLoadoutFoot">SafetyBot checks are private to you.</p></div>'
+        ].join("");
+        Form.insertBefore(Loadout, Submit);
+
+        const Trigger = Loadout.querySelector(".ChatBotLoadoutTrigger");
+        const Menu = Loadout.querySelector(".ChatBotLoadoutMenu");
+        Trigger.addEventListener("click", () => {
+            const Open = Menu.hidden;
+            Menu.hidden = !Open;
+            Trigger.setAttribute("aria-expanded", Open ? "true" : "false");
+        });
+        Loadout.querySelectorAll("[data-chat-bot]").forEach(Option => {
+            Option.addEventListener("click", () => {
+                Menu.hidden = true;
+                Trigger.setAttribute("aria-expanded", "false");
+                if (Option.dataset.chatBot === "safety") {
+                    FocusSafetyBotComposer(Input);
+                } else {
+                    Form.querySelector(".SafetyBotComposer")?.remove();
+                    Input.dataset.safetyBotComposerActive = "0";
+                    FocusStoryBotDedicatedComposer(Input);
+                }
+            });
+        });
+    });
+    if (!document.documentElement.dataset.safetyBotLoadoutOutsideBound) {
+        document.documentElement.dataset.safetyBotLoadoutOutsideBound = "1";
+        document.addEventListener("click", Event => {
+            if (Event.target.closest(".ChatBotLoadout")) return;
+            document.querySelectorAll(".ChatBotLoadoutMenu:not([hidden])").forEach(Menu => {
+                Menu.hidden = true;
+                Menu.closest(".ChatBotLoadout")?.querySelector(".ChatBotLoadoutTrigger")?.setAttribute("aria-expanded", "false");
+            });
+        });
+    }
 }
 
 window.AskAI = AskAI;

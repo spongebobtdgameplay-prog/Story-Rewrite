@@ -601,3 +601,92 @@ html[data-storybot-theme="paper"] {
     outline-offset: 2px;
     background: rgba(255, 255, 255, .08);
 }
+
+
+/* Private SafetyBot loadout and rule-check composer */
+.ChatBotLoadout { position:relative; flex:0 0 auto; display:flex; align-items:center; }
+.ChatBotLoadoutTrigger {
+    min-width:48px; height:34px; display:inline-flex; align-items:center; justify-content:center; gap:5px;
+    padding:0 8px; border:1px solid rgba(123,168,151,.45); border-radius:8px;
+    background:linear-gradient(180deg,#29483e,#1e332e); color:#d7f0e4;
+    font:800 .62rem/1 system-ui,sans-serif; cursor:pointer; transition:transform .14s ease,border-color .14s ease,background .14s ease;
+}
+.ChatBotLoadoutTrigger svg { width:17px; height:17px; fill:none; stroke:currentColor; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round; }
+.ChatBotLoadoutTrigger:hover,.ChatBotLoadoutTrigger[aria-expanded="true"] { border-color:rgba(151,213,184,.85); background:linear-gradient(180deg,#355b4e,#28463c); }
+.ChatBotLoadoutTrigger:active { transform:scale(.96); }
+.ChatBotLoadoutMenu {
+    position:absolute; right:0; bottom:calc(100% + 9px); z-index:50; width:min(250px,calc(100vw - 28px)); box-sizing:border-box;
+    padding:8px; border:1px solid rgba(171,190,174,.3); border-radius:13px;
+    background:linear-gradient(155deg,#1d2b28,#14201f); box-shadow:0 16px 44px rgba(0,0,0,.42);
+}
+.ChatBotLoadoutMenu[hidden] { display:none !important; }
+.ChatBotLoadoutHeading { padding:5px 7px 8px; color:#b8cbbf; font:800 .62rem/1.2 system-ui,sans-serif; letter-spacing:.08em; text-transform:uppercase; }
+.ChatBotLoadoutOption {
+    width:100%; min-height:48px; display:flex; align-items:center; gap:10px; padding:7px 8px;
+    border:1px solid transparent; border-radius:9px; background:transparent; color:#edf5ef; text-align:left; cursor:pointer;
+}
+.ChatBotLoadoutOption:hover,.ChatBotLoadoutOption:focus-visible { border-color:rgba(150,195,168,.28); background:rgba(255,255,255,.06); outline:none; }
+.ChatBotLoadoutIcon { width:31px; height:31px; flex:0 0 31px; display:grid; place-items:center; border-radius:9px; }
+.ChatBotLoadoutIcon svg { width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round; }
+.ChatBotLoadoutIcon.Story { color:#e9c17c; background:rgba(160,112,51,.2); }
+.ChatBotLoadoutIcon.Safety { color:#9bdec2; background:rgba(63,137,108,.22); }
+.ChatBotLoadoutCopy { min-width:0; display:grid; gap:3px; }
+.ChatBotLoadoutCopy strong { color:#f5ead7; font:800 .74rem/1.2 system-ui,sans-serif; }
+.ChatBotLoadoutCopy small { color:#a9b9ae; font:600 .62rem/1.2 system-ui,sans-serif; }
+.ChatBotLoadoutFoot { margin:7px 7px 2px; color:#8ea79a; font:600 .59rem/1.4 system-ui,sans-serif; }
+.SafetyBotComposer {
+    position:absolute; inset:0; z-index:11; width:100%; min-width:0; height:100%; min-height:0; box-sizing:border-box;
+    display:flex; align-items:center; gap:5px; padding:4px 5px; overflow:visible;
+    border:1px solid rgba(111,177,147,.56); border-radius:9px;
+    background:linear-gradient(180deg,rgba(38,77,62,.99),rgba(25,52,44,.99));
+    box-shadow:inset 0 1px 0 rgba(218,255,235,.06),0 3px 10px rgba(0,0,0,.2);
+}
+.ChatForm:has(.SafetyBotComposer) > .PrimaryButton[type="submit"] { display:none !important; }
+.SafetyBotInlineIcon { flex:0 0 20px; width:20px; height:20px; display:grid; place-items:center; color:#9bdec2; }
+.SafetyBotInlineIcon svg { width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:1.65; stroke-linecap:round; stroke-linejoin:round; }
+.SafetyBotQuestionInput {
+    flex:1 1 auto; min-width:0; width:auto; height:28px; min-height:28px; max-height:28px; box-sizing:border-box;
+    padding:5px 8px; border:1px solid rgba(142,194,166,.38); border-radius:7px; outline:none;
+    background:rgba(9,24,18,.62); color:#e5f4e9; font:600 .7rem/1.2 system-ui,sans-serif;
+}
+.SafetyBotQuestionInput::placeholder { color:#9db9a7; }
+.SafetyBotQuestionInput:focus { border-color:#a5dfbd; box-shadow:0 0 0 2px rgba(125,196,155,.13); }
+.SafetyBotSendButton {
+    flex:0 0 auto; min-width:45px; height:28px; min-height:28px; padding:0 8px;
+    border:1px solid rgba(142,210,176,.42); border-radius:7px; background:linear-gradient(180deg,#42775d,#315c49);
+    color:#effff4; font:800 .56rem/1 system-ui,sans-serif; cursor:pointer;
+}
+.SafetyBotSendButton:disabled { opacity:.55; cursor:wait; }
+.SafetyBotCloseButton {
+    flex:0 0 28px; width:28px; min-width:28px; height:28px; padding:0; border:1px solid rgba(154,204,173,.42);
+    border-radius:7px; color:#ddf5e4; background:linear-gradient(180deg,#355e4c,#274437); font:800 1.05rem/1 Georgia,serif; cursor:pointer;
+}
+.SafetyBotLocalExchange { display:grid; gap:6px; margin:8px 0; }
+.SafetyBotLocalQuestion,.SafetyBotLocalReply { min-width:0; padding:9px 11px; border:1px solid rgba(122,163,138,.25); border-radius:10px; overflow-wrap:anywhere; }
+.SafetyBotLocalQuestion { margin-left:14%; background:rgba(54,77,61,.35); color:#eadcc4; }
+.SafetyBotLocalQuestion strong { color:#e7c98f; font:800 .65rem/1.2 system-ui,sans-serif; }
+.SafetyBotLocalQuestion p { margin:4px 0 0; color:#f0e6d7; font:600 .72rem/1.45 system-ui,sans-serif; white-space:pre-wrap; }
+.SafetyBotLocalReply { margin-right:5%; border-color:rgba(111,177,147,.34); background:linear-gradient(145deg,rgba(30,60,48,.82),rgba(20,41,34,.92)); color:#e4f2e7; }
+.SafetyBotLocalHeader { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:6px; }
+.SafetyBotIdentity { display:flex; align-items:center; gap:6px; color:#a9e1c5; font:800 .68rem/1.2 system-ui,sans-serif; }
+.SafetyBotMessageIcon { width:17px; height:17px; display:inline-grid; place-items:center; flex:0 0 17px; color:#9bdec2; }
+.SafetyBotMessageIcon svg { width:17px; height:17px; fill:none; stroke:currentColor; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round; }
+.SafetyBotPrivateLabel { padding:3px 6px; border:1px solid rgba(130,187,151,.3); border-radius:99px; color:#a9d7bb; font:750 .54rem/1 system-ui,sans-serif; white-space:nowrap; }
+.SafetyBotAnswerText { margin:0; color:#e2eee4; font:600 .72rem/1.5 system-ui,sans-serif; white-space:pre-wrap; }
+.SafetyBotFindings { display:grid; gap:7px; margin:8px 0 0; padding-left:17px; }
+.SafetyBotFindings li { padding-left:2px; color:#d5e5d8; font:600 .65rem/1.45 system-ui,sans-serif; }
+.SafetyBotFindings strong,.SafetyBotFindings span { display:block; }
+.SafetyBotFindings strong { color:#b0dfc2; margin-bottom:2px; }
+.SafetyBotNote { margin:8px 0 0; padding-top:7px; border-top:1px solid rgba(137,186,153,.2); color:#a6c7af; font:600 .61rem/1.45 system-ui,sans-serif; }
+.SafetyBotTyping { display:flex; align-items:center; gap:7px; margin:7px 0; padding:8px 10px; border:1px solid rgba(111,177,147,.26); border-radius:9px; background:rgba(25,52,42,.7); color:#b3d7bf; font:700 .67rem/1.3 system-ui,sans-serif; }
+@media (max-width:520px) {
+    .ChatBotLoadoutTrigger { min-width:39px; height:31px; padding:0 6px; gap:3px; font-size:.55rem; }
+    .ChatBotLoadoutTrigger svg { width:15px; height:15px; }
+    .SafetyBotComposer { gap:4px; padding:3px 4px; }
+    .SafetyBotInlineIcon { flex-basis:17px; width:17px; }
+    .SafetyBotQuestionInput,.SafetyBotSendButton,.SafetyBotCloseButton { height:27px; min-height:27px; }
+    .SafetyBotSendButton { min-width:41px; }
+    .SafetyBotCloseButton { flex-basis:27px; width:27px; min-width:27px; }
+    .SafetyBotLocalQuestion { margin-left:7%; }
+}
+@media (prefers-reduced-motion:reduce) { .ChatBotLoadoutTrigger { transition:none; } }
