@@ -637,6 +637,13 @@ body.paper-body {
     color: #3a2012;
     text-align: left;
     cursor: pointer;
+    transform: scale(1);
+    transform-origin: center;
+    transition: transform .16s cubic-bezier(.2,.8,.2,1), box-shadow .16s ease, border-color .16s ease;
+}
+.CosmeticCard:active:not(:disabled) { transform: scale(.975); }
+@media (prefers-reduced-motion: reduce) {
+    .CosmeticCard { transition: none; }
 }
 
 .CosmeticCard:hover:not(:disabled),

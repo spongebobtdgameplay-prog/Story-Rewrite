@@ -1218,6 +1218,8 @@ async function AskAI(PromptText) {
         let Accepted = false;
         let Finished = false;
         let Timer = null;
+        let EarlyAnswer = "";
+        let EarlyBotError = "";
 
         const Cleanup = () => {
             if (Timer !== null) window.clearTimeout(Timer);
@@ -1234,14 +1236,23 @@ async function AskAI(PromptText) {
         };
 
         const OnChat = Message => {
-            if (!Accepted || !Message?.bot || Message.username !== STORY_BOT_NAME) return;
+            if (!Message?.bot || Message.username !== STORY_BOT_NAME) return;
             const Answer = CleanStoryBotDisplayText(Message.text);
-            if (Answer) Finish(null, Answer);
+            if (!Answer) return;
+            if (!Accepted) {
+                EarlyAnswer = Answer;
+                return;
+            }
+            Finish(null, Answer);
         };
 
         const OnBotError = Payload => {
-            if (!Accepted) return;
-            Finish(new Error(String(Payload?.error || "StoryBot could not answer right now.")));
+            const ErrorText = String(Payload?.error || "StoryBot could not answer right now.");
+            if (!Accepted) {
+                EarlyBotError = ErrorText;
+                return;
+            }
+            Finish(new Error(ErrorText));
         };
 
         Socket.on("room:chat", OnChat);
@@ -1268,7 +1279,10 @@ async function AskAI(PromptText) {
                 Accepted = Boolean(Reply.accepted);
                 if (!Accepted) {
                     Finish(new Error("StoryBot accepted no response for this request."));
+                    return;
                 }
+                if (EarlyBotError) Finish(new Error(EarlyBotError));
+                else if (EarlyAnswer) Finish(null, EarlyAnswer);
             });
         } catch (ErrorValue) {
             Finish(ErrorValue instanceof Error ? ErrorValue : new Error(String(ErrorValue)));

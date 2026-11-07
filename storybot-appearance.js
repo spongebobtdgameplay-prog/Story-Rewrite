@@ -27,6 +27,17 @@ function ReadStoryBotAppearance() {
     }
 }
 
+function UpdateStoryBotAppearanceIndicator(Preferences) {
+    const FontLabels = { system: "System", serif: "Serif", rounded: "Rounded", mono: "Monospace" };
+    const Label = document.getElementById("StoryBotEquippedFont");
+    if (Label) {
+        Label.textContent = "Equipped font: " + (FontLabels[Preferences?.font] || "System");
+        Label.dataset.font = Preferences?.font || "system";
+    }
+    const Preview = document.getElementById("StoryBotAppearancePreview");
+    if (Preview) Preview.dataset.storybotFont = Preferences?.font || "system";
+}
+
 function ApplyStoryBotAppearance(Preferences = ReadStoryBotAppearance()) {
     const Root = document.documentElement;
     if (!Root) return Preferences;
@@ -38,8 +49,10 @@ function ApplyStoryBotAppearance(Preferences = ReadStoryBotAppearance()) {
         theme: STORY_BOT_THEMES.has(Preferences?.theme) ? Preferences.theme : STORY_BOT_APPEARANCE_DEFAULTS.theme
     };
     Root.dataset.storybotTheme = Safe.theme;
+    Root.dataset.storybotFont = Safe.font;
     Root.style.setProperty("--storybot-font-family", STORY_BOT_FONT_STACKS[Safe.font]);
     Root.style.setProperty("--storybot-font-size", Safe.size + "px");
+    UpdateStoryBotAppearanceIndicator(Safe);
     return Safe;
 }
 
