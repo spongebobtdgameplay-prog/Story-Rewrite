@@ -18,6 +18,7 @@
 <link rel="stylesheet" href="shell-ui.css?v=20261018-7">
 <link rel="stylesheet" href="scene-fix.css" data-story-scene-fix="1">
 
+<style>.StoryPublicFooter{position:fixed;left:max(14px,env(safe-area-inset-left));bottom:max(12px,env(safe-area-inset-bottom));z-index:10020;display:flex;align-items:center;gap:9px;padding:8px 13px;border:1px solid rgba(221,169,108,.27);border-radius:999px;background:rgba(32,18,11,.91);box-shadow:0 8px 24px rgba(0,0,0,.24);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);font:750 12px/1.2 system-ui,sans-serif}.StoryPublicFooter a{color:#f2ca8f;text-decoration:none;padding:3px 2px}.StoryPublicFooter a:hover{text-decoration:underline;text-underline-offset:3px}.StoryPublicFooter a:focus-visible{outline:2px solid #f2ca8f;outline-offset:3px;border-radius:4px}.StoryPublicFooter .StoryFooterDivider{color:rgba(242,202,143,.45);user-select:none}@media(max-width:520px){.StoryPublicFooter{left:max(10px,env(safe-area-inset-left));bottom:max(10px,env(safe-area-inset-bottom));gap:7px;padding:7px 10px;font-size:11px}}</style>
 </head>
 <body>
 <div id="App">
@@ -36,7 +37,6 @@
         <button class="UiButton" type="button" data-story-go="tutorial.html">Tutorial</button>
         <button class="UiButton StorySocialNotificationButton" type="button" data-story-go="social.html"><span>Social</span><span class="StorySocialUnreadBadge" data-social-notification-badge hidden></span></button>
         <button class="UiButton" type="button" data-story-go="terms.html">Terms of Service</button>
-        <a class="UiButton" href="privacy.html">Privacy Policy</a>
         <button class="UiButton SettingsNavButton" type="button" data-story-go="settings.html" aria-label="Open Settings" title="Settings">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.35 3.45 10.4 2.3h3.2l1.05 1.15 1.55.65 1.5-.18 2.25 2.25-.18 1.5.65 1.55L21.6 10.4v3.2l-1.18 1.05-.65 1.55.18 1.5-2.25 2.25-1.5-.18-1.55.65-1.05 1.18h-3.2L9.35 20.42l-1.55-.65-1.5.18-2.25-2.25.18-1.5-.65-1.55L2.4 13.6v-3.2l1.18-1.05.65-1.55-.18-1.5L6.3 4.05l1.5.18 1.55-.78ZM12 8.4a3.6 3.6 0 1 0 0 7.2 3.6 3.6 0 0 0 0-7.2Z"/></svg>
         </button>
@@ -74,6 +74,9 @@
     </section>
 </main>
 </div>
+<nav class="StoryPublicFooter" aria-label="About and privacy">
+    <a href="about.html">About</a><span class="StoryFooterDivider" aria-hidden="true">·</span><a href="privacy.html">Privacy</a>
+</nav>
 <script src="server-config.js?v=20261106-sameorigin1"></script>
 <script src="network.js?v=20261031-socket1"></script>
 <script src="app.js?v=20261001-2"></script>
