@@ -54,22 +54,16 @@
 
     function RenderAlerts() {
         const Items = Overview.alerts || [];
-        const StoryItems = Items.filter(Item => String(Item.source || "storybot").toLowerCase() !== "safetybot");
-        const SafetyItems = Items.filter(Item => String(Item.source || "").toLowerCase() === "safetybot");
         const Container = $("ThinkAlerts");
-        if (Container) Container.innerHTML = StoryItems.length ? StoryItems.map(Item =>
-            '<article class="ThinkRow"><div class="ThinkRowMain"><strong>StoryBot · ' + Esc(Item.severity || "notice") + '</strong><p>' + Esc(Item.message) + '</p><div class="ThinkMeta">' + Esc(DateText(Item.created_at)) + '</div></div></article>'
-        ).join("") : Empty("No StoryBot notices for your account.");
-        const SafetyContainer = $("ThinkSafetyAlerts");
-        if (SafetyContainer) SafetyContainer.innerHTML = SafetyItems.length ? SafetyItems.map(Item =>
+        if (Container) Container.innerHTML = Items.length ? Items.map(Item =>
             '<article class="ThinkRow ThinkSafetyRow"><div class="ThinkRowMain"><strong>SafetyBot · ' + Esc(Item.severity || "notice") + '</strong><p>' + Esc(Item.message) + '</p><div class="ThinkMeta">' + Esc(DateText(Item.created_at)) + '</div></div></article>'
         ).join("") : Empty("No SafetyBot notices for your account.");
         const Metric = $("MetricAlerts");
         if (Metric) Metric.textContent = String(Items.length);
-        const StoryStatus = $("ThinkStoryBotStatus");
-        if (StoryStatus) StoryStatus.textContent = "Active · case matching, evidence quality, and review pace";
-        const SafetyStatus = $("ThinkSafetyBotStatus");
-        if (SafetyStatus) SafetyStatus.textContent = "Active · credential privacy and action-severity checks";
+        const Status = $("ThinkSafetyBotStatus");
+        if (Status) Status.textContent = "Active · conversational rule guidance, privacy checks, and action-severity review";
+        const PolicyStatus = $("ThinkSafetyBotPolicyStatus");
+        if (PolicyStatus) PolicyStatus.textContent = "Active · policy context, evidence quality, and fair review";
     }
 
     function RenderRoster() {
@@ -135,21 +129,23 @@
         if (!Container) return;
         const Items = Overview.requests || [];
         Container.innerHTML = Items.length ? Items.map(Item => {
-            const Bot = Item.storybot_json || {};
+            const Review = Item.storybot_json || {};
             const Safety = Item.safetybot_json || {};
             const DecisionControls = Overview.permissions.canReview && Item.status === "pending"
                 ? '<div class="ThinkActions"><button class="ThinkButton small primary" type="button" data-request-review="approve" data-request-id="' + Esc(Item.id) + '">Approve</button><button class="ThinkButton small danger" type="button" data-request-review="reject" data-request-id="' + Esc(Item.id) + '">Reject</button></div>' : "";
-            const BotText = Bot.summary || "StoryBot review pending at approval.";
-            const SafetyText = Safety.summary || "SafetyBot review pending at approval.";
-            const Blockers = Array.isArray(Bot.blockers) && Bot.blockers.length ? '<p><b>StoryBot checks:</b> ' + Esc(Bot.blockers.join(" ")) + "</p>" : "";
-            const SafetyBlockers = Array.isArray(Safety.blockers) && Safety.blockers.length ? '<p><b>SafetyBot checks:</b> ' + Esc(Safety.blockers.join(" ")) + "</p>" : "";
-            const Warnings = [
-                ...(Array.isArray(Bot.warnings) ? Bot.warnings.map(Text => "StoryBot: " + Text) : []),
-                ...(Array.isArray(Safety.warnings) ? Safety.warnings.map(Text => "SafetyBot: " + Text) : [])
+            const Summary = [Review.summary, Safety.summary].filter(Boolean).join(" ");
+            const Checks = [
+                ...(Array.isArray(Review.blockers) ? Review.blockers : []),
+                ...(Array.isArray(Safety.blockers) ? Safety.blockers : [])
             ];
-            const WarningText = Warnings.length ? '<p class="ThinkSubtle">' + Esc(Warnings.join(" ")) + "</p>" : "";
+            const BlockerText = Checks.length ? '<p><b>SafetyBot checks:</b> ' + Esc(Checks.join(" ")) + "</p>" : "";
+            const Warnings = [
+                ...(Array.isArray(Review.warnings) ? Review.warnings : []),
+                ...(Array.isArray(Safety.warnings) ? Safety.warnings : [])
+            ];
+            const WarningText = Warnings.length ? '<p class="ThinkSubtle"><b>SafetyBot:</b> ' + Esc(Warnings.join(" ")) + "</p>" : "";
             const CaseLink = '<div class="ThinkActions"><a class="ThinkButton small" href="hackers.html?case=' + encodeURIComponent(String(Item.case_id)) + '" data-story-go="hackers.html?case=' + encodeURIComponent(String(Item.case_id)) + '">View investigation</a></div>';
-            return '<article class="ThinkRow"><div class="ThinkRowMain"><strong>Request #' + Esc(Item.id) + " · " + Esc(Item.action_type === "suspend_account" ? "Suspend account" : "Terminate active sessions") + " · " + Esc(Item.target_username) + '</strong><div class="ThinkMeta">' + Badge(Item.status) + '<span>Case #' + Esc(Item.case_id) + '</span><span>Requested by ' + Esc(Item.requested_by) + '</span><span>' + Esc(DateText(Item.created_at)) + '</span></div><p><b>Reason:</b> ' + Esc(Item.reason) + '</p><p><b>Evidence:</b> ' + Esc(Item.evidence) + '</p><p><b>StoryBot:</b> ' + Esc(BotText) + '</p>' + Blockers + '<p><b>SafetyBot:</b> ' + Esc(SafetyText) + '</p>' + SafetyBlockers + WarningText + (Item.review_note ? '<p><b>Review note:</b> ' + Esc(Item.review_note) + '</p>' : "") + CaseLink + DecisionControls + '</div></article>';
+            return '<article class="ThinkRow"><div class="ThinkRowMain"><strong>Request #' + Esc(Item.id) + " · " + Esc(Item.action_type === "suspend_account" ? "Suspend account" : "Terminate active sessions") + " · " + Esc(Item.target_username) + '</strong><div class="ThinkMeta">' + Badge(Item.status) + '<span>Case #' + Esc(Item.case_id) + '</span><span>Requested by ' + Esc(Item.requested_by) + '</span><span>' + Esc(DateText(Item.created_at)) + '</span></div><p><b>Reason:</b> ' + Esc(Item.reason) + '</p><p><b>Evidence:</b> ' + Esc(Item.evidence) + '</p><p><b>SafetyBot review:</b> ' + Esc(Summary || "SafetyBot review pending at approval.") + '</p>' + BlockerText + WarningText + (Item.review_note ? '<p><b>Review note:</b> ' + Esc(Item.review_note) + '</p>' : "") + CaseLink + DecisionControls + '</div></article>';
         }).join("") : Empty("No higher-action requests have been submitted.");
         const Metric = $("MetricRequests");
         if (Metric) Metric.textContent = String(Items.filter(Item => Item.status === "pending").length);

@@ -91,16 +91,16 @@
         Send.disabled = Busy;
         NewChat.disabled = Busy;
         Form.classList.toggle("IsBusy", Busy);
-        Send.textContent = Busy ? "Checking…" : "Send to SafetyBot";
+        Send.textContent = Busy ? "Thinking…" : "Send to SafetyBot";
     }
 
     function ResetConversation() {
         if (Busy) return;
         History.length = 0;
         Messages.replaceChildren();
-        AddMessage("bot", "Hi. I’m SafetyBot. Ask me about a Story Rewrite rule or paste the exact message you want checked. Include enough context to distinguish a real threat from fictional story dialogue. Do not send passwords, tokens, or private personal information.");
+        AddMessage("bot", "Hey! What would you like to look into today?");
         Input.value = "";
-        SetStatus("Only the text you submit is checked. SafetyBot does not monitor players or file reports.");
+        SetStatus("Private conversation · Enter sends · Shift+Enter adds a new line.");
         Input.focus({ preventScroll: true });
     }
 
@@ -109,7 +109,7 @@
         if (Busy) return;
         const Question = String(Input.value || "").trim().slice(0, 1200);
         if (!Question) {
-            SetStatus("Write a rule question or describe the message you want checked.", "bad");
+            SetStatus("Write a message before sending.", "bad");
             Input.focus({ preventScroll: true });
             return;
         }
@@ -121,24 +121,24 @@
         AddMessage("user", Question);
         AddTyping();
         SetBusy(true);
-        SetStatus("Checking the community rules…");
+        SetStatus("SafetyBot is thinking…");
         try {
-            const Context = History.slice(-4).map(Entry => Entry.question);
             const Result = await ApiRequest("/api/safetybot/chat", {
                 method: "POST",
-                timeoutMs: 30000,
-                body: JSON.stringify({ question: Question, context: Context })
+                timeoutMs: 80000,
+                body: JSON.stringify({ question: Question, messages: History.slice(-12) })
             });
             RemoveTyping();
-            AddMessage("bot", String(Result?.answer || "I could not complete that rules check."), Result);
-            History.push({ question: Question, answer: String(Result?.answer || "") });
+            const Answer = String(Result?.answer || "I couldn't put together a reply just now.");
+            AddMessage("bot", Answer, Result);
+            History.push({ role: "user", text: Question }, { role: "assistant", text: Answer });
             if (History.length > MaxHistory) History.splice(0, History.length - MaxHistory);
             Input.value = "";
-            SetStatus("Ready. Ask a follow-up or start a new chat.", "good");
+            SetStatus("Ready. Keep chatting or start a new conversation.", "good");
         } catch (Error) {
             RemoveTyping();
-            AddMessage("bot", "I couldn’t reach the SafetyBot checker: " + String(Error?.message || "Request failed") + " You can retry your question.");
-            SetStatus("The check failed. Your text is still in the input so you can retry.", "bad");
+            AddMessage("bot", "I couldn’t reach the conversation service just now. You can retry that message.");
+            SetStatus("The reply failed. Your message is still here so you can retry.", "bad");
         } finally {
             SetBusy(false);
             if (!Input.value) Input.focus({ preventScroll: true });
@@ -147,7 +147,7 @@
 
     Form.addEventListener("submit", SubmitQuestion);
     Input.addEventListener("keydown", Event => {
-        if ((Event.ctrlKey || Event.metaKey) && Event.key === "Enter") {
+        if (Event.key === "Enter" && !Event.shiftKey) {
             Event.preventDefault();
             void SubmitQuestion(Event);
         }

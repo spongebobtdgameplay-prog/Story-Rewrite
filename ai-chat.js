@@ -611,8 +611,10 @@ function NormalizeStoryBotMentionText(Value) {
 
 function NormalizeStoryBotQuestionText(Value) {
     return String(Value || "")
-        .replace(/[\u0000-\u001F\u007F]/g, " ")
-        .replace(/\s+/g, " ")
+        .replace(/\r\n?/g, "\n")
+        .replace(/[\u0000-\u0008\u000B\u000C-\u001F\u007F]/g, " ")
+        .replace(/[\t\f\v ]+/g, " ")
+        .replace(/\n{3,}/g, "\n\n")
         .trim()
         .slice(0, STORY_BOT_MAX_QUESTION_LENGTH);
 }
@@ -832,9 +834,9 @@ function CreateStoryBotComposer(Input) {
                 <path d="M9 7V5h6v2M8 12h.01M16 12h.01M9 15h6"></path>
             </svg>
         </div>
-        <input class="StoryBotQuestionInput" maxlength="1200" type="text"
+        <textarea class="StoryBotQuestionInput" maxlength="1200" rows="1"
             placeholder="Ask StoryBot..." autocomplete="off" spellcheck="true"
-            aria-label="Ask StoryBot a question">
+            aria-label="Ask StoryBot a question"></textarea>
         <button class="StoryBotSendButton" type="button">Ask</button>
         <button class="StoryBotCloseButton" type="button" aria-label="Close StoryBot question">×</button>
     `;
@@ -871,6 +873,7 @@ function CreateStoryBotComposer(Input) {
             Event.preventDefault();
             Composer.remove();
             Input.dataset.storyBotComposerActive = "0";
+            Input.closest(".StoryBotInputSlot")?.style.removeProperty("height");
             Input.focus({ preventScroll: true });
         }
     });
@@ -882,6 +885,7 @@ function CreateStoryBotComposer(Input) {
     Close.addEventListener("click", () => {
         Composer.remove();
         Input.dataset.storyBotComposerActive = "0";
+        Input.closest(".StoryBotInputSlot")?.style.removeProperty("height");
         Input.hidden = false;
         Input.focus({ preventScroll: true });
     });
@@ -914,7 +918,10 @@ function UpdateStoryBotDedicatedComposer(Composer) {
     const Count = Composer?.querySelector(".StoryBotComposerCount");
     if (!Input) return;
     if (Count) Count.textContent = String(Input.value.length) + "/1200";
-    Input.style.height = "28px";
+    Input.style.height = "auto";
+    Input.style.height = Math.min(110, Math.max(28, Input.scrollHeight)) + "px";
+    const Slot = Input.closest(".StoryBotInputSlot");
+    if (Slot) Slot.style.height = Math.max(36, Math.min(118, Input.scrollHeight + 10)) + "px";
 }
 
 function FocusStoryBotDedicatedComposer(Input, Question = "") {
@@ -959,6 +966,7 @@ function DismissStoryBotComposer(Composer, NormalChatInput) {
         NormalChatInput.dataset.storyBotComposerActive = "0";
         try { NormalChatInput.focus({ preventScroll: true }); } catch { NormalChatInput.focus({ preventScroll: true }); }
     }
+    Composer.closest(".StoryBotInputSlot")?.style.removeProperty("height");
     Composer.remove();
 }
 
@@ -1523,6 +1531,7 @@ function CloseSafetyBotComposer(Input) {
     Form?.querySelector(".SafetyBotComposer")?.remove();
     if (Input) {
         Input.dataset.safetyBotComposerActive = "0";
+        Input.closest(".StoryBotInputSlot")?.style.removeProperty("height");
         Input.focus({ preventScroll: true });
     }
     RefreshQuietChatState(Container);
@@ -1537,6 +1546,7 @@ function CreateSafetyBotComposer(Input) {
     if (Existing) return Existing;
 
     Form.querySelector(".StoryBotComposer")?.remove();
+    Slot.style.removeProperty("height");
     Input.dataset.storyBotComposerActive = "0";
     RemoveQuietChatState(Container);
 
@@ -1546,7 +1556,7 @@ function CreateSafetyBotComposer(Input) {
     Composer.setAttribute("aria-label", "Private SafetyBot rules check");
     Composer.innerHTML = [
         '<span class="SafetyBotInlineIcon" aria-hidden="true">' + SafetyBotIconMarkup() + '</span>',
-        '<input class="SafetyBotQuestionInput" maxlength="1200" type="text" placeholder="Describe a situation for SafetyBot..." autocomplete="off" spellcheck="true" aria-label="Ask SafetyBot to check a situation against the community rules">',
+        '<textarea class="SafetyBotQuestionInput" maxlength="1200" rows="1" placeholder="Talk with SafetyBot..." autocomplete="off" spellcheck="true" aria-label="Send a message to SafetyBot"></textarea>',
         '<button class="SafetyBotSendButton" type="button">Check</button>',
         '<button class="SafetyBotCloseButton" type="button" aria-label="Close SafetyBot">×</button>',
         '<span class="SafetyBotComposerStatus" aria-live="polite"></span>'
@@ -1562,9 +1572,10 @@ function CreateSafetyBotComposer(Input) {
     }
     Input.dataset.safetyBotComposerActive = "1";
     Field.addEventListener("input", () => {
+        UpdateSafetyBotDedicatedComposer(Composer);
         SetSafetyBotComposerStatus(Composer, Field.value.trim()
-            ? "Ready for a private rule check."
-            : "Only the text you send is checked.");
+            ? "Ready to send a private message."
+            : "Your message goes directly to SafetyBot.");
     });
     Field.addEventListener("keydown", Event => {
         if (Event.key === "Enter" && !Event.shiftKey) {
@@ -1580,12 +1591,21 @@ function CreateSafetyBotComposer(Input) {
     Field.focus({ preventScroll: true });
     return Composer;
 }
+function UpdateSafetyBotDedicatedComposer(Composer) {
+    const Field = Composer?.querySelector(".SafetyBotQuestionInput");
+    const Slot = Field?.closest(".StoryBotInputSlot");
+    if (!Field) return;
+    Field.style.height = "auto";
+    Field.style.height = Math.min(110, Math.max(28, Field.scrollHeight)) + "px";
+    if (Slot) Slot.style.height = Math.max(36, Math.min(118, Field.scrollHeight + 10)) + "px";
+}
 function FocusSafetyBotComposer(Input, Question = "") {
     const Composer = CreateSafetyBotComposer(Input);
     const Field = Composer?.querySelector(".SafetyBotQuestionInput");
     if (!Composer || !Field) return false;
     Field.value = NormalizeStoryBotQuestionText(Question);
-    SetSafetyBotComposerStatus(Composer, "Only the text you send is checked.");
+    UpdateSafetyBotDedicatedComposer(Composer);
+    SetSafetyBotComposerStatus(Composer, "Your message goes directly to SafetyBot.");
     Field.focus({ preventScroll: true });
     try { Field.setSelectionRange(Field.value.length, Field.value.length); } catch {}
     return true;
@@ -1617,11 +1637,14 @@ async function SubmitSafetyBotQuestion(Composer) {
 
     try {
         const Previous = SafetyBotConversations.get(HistoryKey) || [];
-        const Context = Previous.slice(-4).map(Entry => Entry.question);
+        const Messages = Previous.slice(-6).flatMap(Entry => [
+            { role: "user", text: Entry.question },
+            { role: "assistant", text: Entry.answer }
+        ]);
         const Result = await ApiRequest("/api/safetybot/chat", {
             method: "POST",
-            timeoutMs: 30000,
-            body: JSON.stringify({ question: Question, context: Context })
+            timeoutMs: 80000,
+            body: JSON.stringify({ question: Question, messages: Messages })
         });
         RemoveSafetyBotTyping(Container);
         const Entry = {
@@ -1634,7 +1657,8 @@ async function SubmitSafetyBotQuestion(Composer) {
         SafetyBotConversations.set(HistoryKey, [...Previous, Entry].slice(-12));
         RenderSafetyBotHistory(Container);
         Field.value = "";
-        SetSafetyBotComposerStatus(Composer, "Ready. You can ask a follow-up.");
+        UpdateSafetyBotDedicatedComposer(Composer);
+        SetSafetyBotComposerStatus(Composer, "Ready. Keep chatting.");
     } catch (Error) {
         RemoveSafetyBotTyping(Container);
         const Entry = {
@@ -1690,6 +1714,7 @@ function BindSafetyBotLoadout() {
                 } else {
                     Form.querySelector(".SafetyBotComposer")?.remove();
                     Input.dataset.safetyBotComposerActive = "0";
+                    Input.closest(".StoryBotInputSlot")?.style.removeProperty("height");
                     FocusStoryBotDedicatedComposer(Input);
                 }
             });

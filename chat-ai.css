@@ -702,3 +702,27 @@ html[data-storybot-theme="paper"] {
     white-space:nowrap;
     border:0;
 }
+
+
+/* Multiline dedicated bot composers: Enter sends; Shift+Enter inserts a line. */
+.StoryBotQuestionInput,
+.SafetyBotQuestionInput {
+    display: block;
+    height: 28px;
+    min-height: 28px;
+    max-height: 110px;
+    overflow-y: auto;
+    resize: none;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    line-height: 1.35;
+}
+.StoryBotInputSlot:has(.StoryBotComposer),
+.StoryBotInputSlot:has(.SafetyBotComposer) {
+    min-height: 36px;
+    height: auto;
+}
+.StoryBotInputSlot > .StoryBotComposer,
+.StoryBotInputSlot > .SafetyBotComposer {
+    align-items: center;
+}
