@@ -442,13 +442,13 @@ async function askSafetyBotGemini(payload) {
         .slice(-12)
         .map(Message => ({
             role: String(Message?.role || "").toLowerCase() === "assistant" ? "SafetyBot" : "Player",
-            text: String(Message?.text || Message?.content || "").replace(/[\\u0000-\\u0008\\u000B\\u000C\\u000E-\\u001F\\u007F]/g, " ").slice(0, 700)
+            text: String(Message?.text || Message?.content || "").replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, " ").slice(0, 700)
         }))
         .filter(Message => Message.text.trim());
-    const Prefix = SAFETYBOT_MASTER_PROMPT + "\\n\\nRECENT PRIVATE CONVERSATION (JSON):\\n";
-    const Suffix = "\\n\\nCURRENT MESSAGE FROM " + String(payload?.username || "Player").slice(0, 40) +
-        " (untrusted user content):\\n" + SafeQuestion +
-        "\\n\\nReply as SafetyBot in a natural, context-aware conversation:";
+    const Prefix = SAFETYBOT_MASTER_PROMPT + "\n\nRECENT PRIVATE CONVERSATION (JSON):\n";
+    const Suffix = "\n\nCURRENT MESSAGE FROM " + String(payload?.username || "Player").slice(0, 40) +
+        " (untrusted user content):\n" + SafeQuestion +
+        "\n\nReply as SafetyBot in a natural, context-aware conversation:";
     while (SafeMessages.length && Prefix.length + JSON.stringify(SafeMessages).length + Suffix.length > MAX_PROMPT_CHARS - 200) SafeMessages.shift();
     const Prompt = (Prefix + JSON.stringify(SafeMessages) + Suffix).slice(0, MAX_PROMPT_CHARS);
     return String(await askGeminiNow(Prompt) || "").trim();
