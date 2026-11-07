@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <title>Silicon Valley Think — Story Rewrite</title>
-<link rel="stylesheet" href="think.css?v=20261031-backnav1">
+<link rel="stylesheet" href="think.css?v=20261106-safetybot-review1">
 </head>
 <body class="ThinkPage" data-think-page="dashboard">
 <div class="ThinkShell" id="ThinkApp">
@@ -57,8 +57,8 @@
         <div class="ThinkGrid">
             <section class="ThinkCard">
                 <div class="ThinkCardHead"><div><h2>StoryBot policy checkpoint</h2><p>Before and after high-level moderator actions.</p></div><span class="ThinkRole">Oversight</span></div>
-                <div class="ThinkNotice">StoryBot checks that each high-level request is linked to a matching case, has a specific reason and evidence context, and follows the review process. Top-tier moderators are monitored. Darius56 is the owner and is exempt from StoryBot moderator oversight.</div>
-                <p class="ThinkSubtle">StoryBot reviews recorded moderation activity only. It does not secretly access a player's camera, microphone, screen, or private device activity.</p>
+                <div class="ThinkNotice">StoryBot checks case matching, evidence quality, review pacing, and the recorded moderation workflow. Authorized humans make the final decisions.</div>
+                <p class="ThinkSubtle" id="ThinkStoryBotStatus">Checking StoryBot status…</p>
             </section>
 
             <section class="ThinkCard">
@@ -77,6 +77,13 @@
                 <button class="ThinkButton primary" type="submit">Save appointment</button>
                 <div class="ThinkSubtle" id="ThinkStaffFeedback" aria-live="polite"></div>
             </form>
+        </section>
+
+        <section class="ThinkCard full ThinkSafetyBot" id="ThinkSafetyBotCard">
+            <div class="ThinkCardHead"><div><h2>SafetyBot safeguards</h2><p>A separate privacy and action-severity review, independent of StoryBot.</p></div><span class="ThinkRole">Safety checks</span></div>
+            <div class="ThinkNotice">SafetyBot checks for exposed passwords, API keys, bearer tokens, session cookies, and private keys in submitted evidence. It also requires a confirmed finding before an account suspension. A human reviewer must still approve each action.</div>
+            <p class="ThinkSubtle" id="ThinkSafetyBotStatus">Checking SafetyBot status…</p>
+            <div class="ThinkList" id="ThinkSafetyAlerts"></div>
         </section>
 
         <section class="ThinkCard full" id="ThinkCreateCaseCard" hidden>
@@ -110,6 +117,7 @@
         <section class="ThinkCard full" id="ThinkRequestsCard">
             <div class="ThinkCardHead"><div><h2>Higher-action requests</h2><p>Approvals are human-reviewed and rechecked by StoryBot immediately before execution.</p></div></div>
             <div class="ThinkList" id="ThinkRequests"></div>
+            <div class="ThinkSubtle ThinkActionFeedback" id="ThinkActionFeedback" aria-live="polite"></div>
         </section>
 
         <section class="ThinkCard full" id="ThinkAccessCard">
@@ -140,12 +148,27 @@
             </section>
         </div>
     </main>
+    <div class="ThinkModal" id="ThinkReviewModal" hidden>
+        <button class="ThinkModalBackdrop" type="button" data-review-close aria-label="Close review form"></button>
+        <section class="ThinkModalCard" role="dialog" aria-modal="true" aria-labelledby="ThinkReviewModalTitle" aria-describedby="ThinkReviewModalIntro">
+            <form class="ThinkForm" id="ThinkReviewForm">
+                <div class="ThinkCardHead"><div><div class="ThinkEyebrow">Evidence review</div><h2 id="ThinkReviewModalTitle">Review decision</h2><p id="ThinkReviewModalIntro">Add the reason for this decision.</p></div></div>
+                <div class="ThinkField">
+                    <label for="ThinkReviewNoteInput" id="ThinkReviewNoteLabel">Review explanation</label>
+                    <textarea id="ThinkReviewNoteInput" name="note" rows="5" maxlength="1000" placeholder="Write your explanation…" aria-describedby="ThinkReviewNoteHint ThinkReviewNoteCount" required></textarea>
+                    <div class="ThinkReviewHelper"><span id="ThinkReviewNoteHint">Minimum 25 characters.</span><output id="ThinkReviewNoteCount">0 / 25 characters minimum</output></div>
+                    <div class="ThinkReviewFeedback" id="ThinkReviewNoteFeedback" aria-live="polite"></div>
+                </div>
+                <div class="ThinkActions"><button class="ThinkButton" type="button" data-review-close>Cancel</button><button class="ThinkButton primary" id="ThinkReviewSubmit" type="submit">Submit review</button></div>
+            </form>
+        </section>
+    </div>
     <footer class="ThinkFooter">Silicon Valley Think · All privileged operations are checked by the server and recorded in the audit trail.</footer>
 </div>
 
 <script src="server-config.js?v=20261106-sameorigin1"></script>
 <script src="network.js?v=20261031-think1"></script>
 <script src="shell-ui.js?v=20261031-githubfix1"></script>
-<script src="think.js?v=20261031-1"></script>
+<script src="think.js?v=20261106-safetybot-review1"></script>
 </body>
 </html>

@@ -8,6 +8,9 @@
     const $ = Id => document.getElementById(Id);
     const IsHackersPage = document.body.dataset.thinkPage === "hackers";
     let Overview = null;
+    let PendingReviewAction = null;
+    let ReviewReturnFocus = null;
+    let LastFocusedCaseId = "";
 
     function Esc(Value) {
         return String(Value === null || Value === undefined ? "" : Value)
@@ -51,13 +54,22 @@
 
     function RenderAlerts() {
         const Items = Overview.alerts || [];
+        const StoryItems = Items.filter(Item => String(Item.source || "storybot").toLowerCase() !== "safetybot");
+        const SafetyItems = Items.filter(Item => String(Item.source || "").toLowerCase() === "safetybot");
         const Container = $("ThinkAlerts");
-        if (!Container) return;
-        Container.innerHTML = Items.length ? Items.map(Item =>
+        if (Container) Container.innerHTML = StoryItems.length ? StoryItems.map(Item =>
             '<article class="ThinkRow"><div class="ThinkRowMain"><strong>StoryBot · ' + Esc(Item.severity || "notice") + '</strong><p>' + Esc(Item.message) + '</p><div class="ThinkMeta">' + Esc(DateText(Item.created_at)) + '</div></div></article>'
         ).join("") : Empty("No StoryBot notices for your account.");
+        const SafetyContainer = $("ThinkSafetyAlerts");
+        if (SafetyContainer) SafetyContainer.innerHTML = SafetyItems.length ? SafetyItems.map(Item =>
+            '<article class="ThinkRow ThinkSafetyRow"><div class="ThinkRowMain"><strong>SafetyBot · ' + Esc(Item.severity || "notice") + '</strong><p>' + Esc(Item.message) + '</p><div class="ThinkMeta">' + Esc(DateText(Item.created_at)) + '</div></div></article>'
+        ).join("") : Empty("No SafetyBot notices for your account.");
         const Metric = $("MetricAlerts");
         if (Metric) Metric.textContent = String(Items.length);
+        const StoryStatus = $("ThinkStoryBotStatus");
+        if (StoryStatus) StoryStatus.textContent = "Active · case matching, evidence quality, and review pace";
+        const SafetyStatus = $("ThinkSafetyBotStatus");
+        if (SafetyStatus) SafetyStatus.textContent = "Active · credential privacy and action-severity checks";
     }
 
     function RenderRoster() {
@@ -90,17 +102,32 @@
             return [Case.target_username, Case.category, Case.reason, Case.evidence, Case.filed_by].some(Value => String(Value || "").toLowerCase().includes(Search));
         });
         if (Container) Container.innerHTML = Items.length ? Items.map(Case =>
-            '<article class="ThinkRow"><div class="ThinkRowMain"><strong>#' + Esc(Case.id) + " · " + Esc(Case.target_username) + '</strong><div class="ThinkMeta">' + Badge(Case.status) + '<span>' + Esc(Case.category) + '</span><span>Reported by ' + Esc(Case.filed_by) + '</span><span>' + Esc(DateText(Case.created_at)) + '</span></div><p><b>Reason:</b> ' + Esc(Case.reason) + '</p><p><b>Evidence:</b> ' + Esc(Case.evidence) + '</p>' + (Case.review_note ? '<p><b>Review note:</b> ' + Esc(Case.review_note) + '</p>' : "") + CaseActions(Case) + '</div></article>'
+            '<article class="ThinkRow" data-investigation-case-id="' + Esc(Case.id) + '"><div class="ThinkRowMain"><strong>#' + Esc(Case.id) + " · " + Esc(Case.target_username) + '</strong><div class="ThinkMeta">' + Badge(Case.status) + '<span>' + Esc(Case.category) + '</span><span>Reported by ' + Esc(Case.filed_by) + '</span><span>' + Esc(DateText(Case.created_at)) + '</span></div><p><b>Reason:</b> ' + Esc(Case.reason) + '</p><p><b>Evidence:</b> ' + Esc(Case.evidence) + '</p>' + (Case.review_note ? '<p><b>Review note:</b> ' + Esc(Case.review_note) + '</p>' : "") + CaseActions(Case) + '</div></article>'
         ).join("") : Empty("No investigation cases match this filter.");
         const Select = $("RequestCase");
         if (Select) {
+            const PreviousValue = Select.value;
             const Available = (Overview.cases || []).filter(Case => Case.status !== "cleared");
             Select.innerHTML = '<option value="">Choose a case</option>' + Available.map(Case =>
                 '<option value="' + Esc(Case.id) + '">#' + Esc(Case.id) + " · " + Esc(Case.target_username) + " · " + Esc(StatusText(Case.status)) + "</option>"
             ).join("");
+            if ([...Select.options].some(Option => Option.value === PreviousValue)) Select.value = PreviousValue;
         }
         const Metric = $("MetricCases");
         if (Metric) Metric.textContent = String((Overview.cases || []).length);
+        if (IsHackersPage) {
+            const FocusCaseId = new URLSearchParams(window.location.search).get("case") || "";
+            if (/^\d+$/.test(FocusCaseId)) {
+                const Focused = Container?.querySelector('[data-investigation-case-id="' + FocusCaseId + '"]');
+                if (Focused) {
+                    Focused.classList.add("IsFocusedCase");
+                    if (LastFocusedCaseId !== FocusCaseId) {
+                        LastFocusedCaseId = FocusCaseId;
+                        window.setTimeout(() => Focused.scrollIntoView({ behavior: "smooth", block: "center" }), 80);
+                    }
+                }
+            }
+        }
     }
 
     function RenderRequests() {
@@ -109,14 +136,20 @@
         const Items = Overview.requests || [];
         Container.innerHTML = Items.length ? Items.map(Item => {
             const Bot = Item.storybot_json || {};
+            const Safety = Item.safetybot_json || {};
             const DecisionControls = Overview.permissions.canReview && Item.status === "pending"
-                ? '<div class="ThinkActions"><button class="ThinkButton small primary" type="button" data-request-review="approve" data-request-id="' + Esc(Item.id) + '">Approve</button><button class="ThinkButton small danger" type="button" data-request-review="reject" data-request-id="' + Esc(Item.id) + '">Reject</button></div>'
-                : "";
+                ? '<div class="ThinkActions"><button class="ThinkButton small primary" type="button" data-request-review="approve" data-request-id="' + Esc(Item.id) + '">Approve</button><button class="ThinkButton small danger" type="button" data-request-review="reject" data-request-id="' + Esc(Item.id) + '">Reject</button></div>' : "";
             const BotText = Bot.summary || "StoryBot review pending at approval.";
-            const Blockers = Array.isArray(Bot.blockers) && Bot.blockers.length
-                ? '<p><b>StoryBot checks:</b> ' + Esc(Bot.blockers.join(" ")) + "</p>"
-                : "";
-            return '<article class="ThinkRow"><div class="ThinkRowMain"><strong>Request #' + Esc(Item.id) + " · " + Esc(Item.action_type === "suspend_account" ? "Suspend account" : "Terminate active sessions") + " · " + Esc(Item.target_username) + '</strong><div class="ThinkMeta">' + Badge(Item.status) + '<span>Case #' + Esc(Item.case_id) + '</span><span>Requested by ' + Esc(Item.requested_by) + '</span><span>' + Esc(DateText(Item.created_at)) + '</span></div><p><b>Reason:</b> ' + Esc(Item.reason) + '</p><p><b>Evidence:</b> ' + Esc(Item.evidence) + '</p><p><b>StoryBot:</b> ' + Esc(BotText) + '</p>' + Blockers + (Item.review_note ? '<p><b>Review note:</b> ' + Esc(Item.review_note) + '</p>' : "") + DecisionControls + '</div></article>';
+            const SafetyText = Safety.summary || "SafetyBot review pending at approval.";
+            const Blockers = Array.isArray(Bot.blockers) && Bot.blockers.length ? '<p><b>StoryBot checks:</b> ' + Esc(Bot.blockers.join(" ")) + "</p>" : "";
+            const SafetyBlockers = Array.isArray(Safety.blockers) && Safety.blockers.length ? '<p><b>SafetyBot checks:</b> ' + Esc(Safety.blockers.join(" ")) + "</p>" : "";
+            const Warnings = [
+                ...(Array.isArray(Bot.warnings) ? Bot.warnings.map(Text => "StoryBot: " + Text) : []),
+                ...(Array.isArray(Safety.warnings) ? Safety.warnings.map(Text => "SafetyBot: " + Text) : [])
+            ];
+            const WarningText = Warnings.length ? '<p class="ThinkSubtle">' + Esc(Warnings.join(" ")) + "</p>" : "";
+            const CaseLink = '<div class="ThinkActions"><a class="ThinkButton small" href="hackers.html?case=' + encodeURIComponent(String(Item.case_id)) + '" data-story-go="hackers.html?case=' + encodeURIComponent(String(Item.case_id)) + '">View investigation</a></div>';
+            return '<article class="ThinkRow"><div class="ThinkRowMain"><strong>Request #' + Esc(Item.id) + " · " + Esc(Item.action_type === "suspend_account" ? "Suspend account" : "Terminate active sessions") + " · " + Esc(Item.target_username) + '</strong><div class="ThinkMeta">' + Badge(Item.status) + '<span>Case #' + Esc(Item.case_id) + '</span><span>Requested by ' + Esc(Item.requested_by) + '</span><span>' + Esc(DateText(Item.created_at)) + '</span></div><p><b>Reason:</b> ' + Esc(Item.reason) + '</p><p><b>Evidence:</b> ' + Esc(Item.evidence) + '</p><p><b>StoryBot:</b> ' + Esc(BotText) + '</p>' + Blockers + '<p><b>SafetyBot:</b> ' + Esc(SafetyText) + '</p>' + SafetyBlockers + WarningText + (Item.review_note ? '<p><b>Review note:</b> ' + Esc(Item.review_note) + '</p>' : "") + CaseLink + DecisionControls + '</div></article>';
         }).join("") : Empty("No higher-action requests have been submitted.");
         const Metric = $("MetricRequests");
         if (Metric) Metric.textContent = String(Items.filter(Item => Item.status === "pending").length);
@@ -172,6 +205,87 @@
         RenderAudit();
         RenderAccessRequests();
     }
+
+    function SetReviewModalFeedback(Message, Good = false) {
+        const Node = $("ThinkReviewNoteFeedback");
+        if (!Node) return;
+        Node.textContent = Message || "";
+        Node.className = "ThinkReviewFeedback" + (Good ? " Good" : Message ? " Bad" : "");
+    }
+    function UpdateReviewNoteCount() {
+        const Input = $("ThinkReviewNoteInput"), Count = $("ThinkReviewNoteCount"), Hint = $("ThinkReviewNoteHint");
+        if (!Input) return;
+        const Minimum = Number(PendingReviewAction?.minimum || 0), Length = Input.value.trim().length;
+        if (Count) Count.textContent = Minimum ? Length + " / " + Minimum + " characters minimum" : Length + " characters (optional)";
+        if (Hint) Hint.textContent = Minimum ? "Minimum " + Minimum + " characters. Explain the evidence and why the decision is justified." : "A reason is optional when rejecting this request.";
+    }
+    function CloseReviewNoteModal() {
+        const Modal = $("ThinkReviewModal");
+        if (Modal) Modal.hidden = true;
+        document.body.classList.remove("ThinkModalOpen");
+        PendingReviewAction = null;
+        if (ReviewReturnFocus?.isConnected) ReviewReturnFocus.focus({ preventScroll: true });
+        ReviewReturnFocus = null;
+    }
+    function OpenReviewNoteModal(Action) {
+        const Modal = $("ThinkReviewModal"), Input = $("ThinkReviewNoteInput");
+        const Title = $("ThinkReviewModalTitle"), Intro = $("ThinkReviewModalIntro");
+        const Label = $("ThinkReviewNoteLabel"), Submit = $("ThinkReviewSubmit");
+        if (!Modal || !Input || !Title || !Intro || !Label || !Submit) return;
+        PendingReviewAction = Action;
+        ReviewReturnFocus = document.activeElement;
+        const IsCase = Action.type === "case", IsRequired = Number(Action.minimum || 0) > 0;
+        Title.textContent = IsCase ? "Confirm investigation finding" : Action.decision === "approve" ? "Approve higher-action request" : "Reject higher-action request";
+        Intro.textContent = IsCase ? "Record the evidence-based reason for confirming this case." : "Record the review decision for this linked investigation.";
+        Label.textContent = IsCase ? "Why does the evidence support confirming this finding?" : Action.decision === "approve" ? "Explain why the evidence justifies this action" : "Reason for rejection (optional)";
+        Submit.textContent = IsCase ? "Confirm finding" : Action.decision === "approve" ? "Approve request" : "Reject request";
+        Input.value = "";
+        Input.required = IsRequired;
+        Input.minLength = IsRequired ? Number(Action.minimum) : 0;
+        SetReviewModalFeedback("");
+        UpdateReviewNoteCount();
+        Modal.hidden = false;
+        document.body.classList.add("ThinkModalOpen");
+        window.requestAnimationFrame(() => Input.focus({ preventScroll: true }));
+    }
+    async function SubmitReviewNote(Event) {
+        Event.preventDefault();
+        if (!PendingReviewAction) return;
+        const Input = $("ThinkReviewNoteInput"), Submit = $("ThinkReviewSubmit");
+        const Note = String(Input?.value || "").trim(), Minimum = Number(PendingReviewAction.minimum || 0);
+        if (Note.length < Minimum) {
+            SetReviewModalFeedback("Please enter at least " + Minimum + " characters before submitting.");
+            Input?.focus({ preventScroll: true });
+            UpdateReviewNoteCount();
+            return;
+        }
+        const Action = PendingReviewAction;
+        if (Submit) Submit.disabled = true;
+        SetReviewModalFeedback("Submitting review…", true);
+        try {
+            if (Action.type === "case") await Post("/api/think/cases/" + Action.id + "/status", { status: "confirmed", note: Note });
+            else await Post("/api/think/requests/" + Action.id + "/review", { decision: Action.decision, note: Note, durationMinutes: 1440 });
+            CloseReviewNoteModal();
+            await Load();
+        } catch (Error) {
+            const BotDetails = [
+                ...(Array.isArray(Error.data?.storybot?.blockers) ? Error.data.storybot.blockers : []),
+                ...(Array.isArray(Error.data?.safetybot?.blockers) ? Error.data.safetybot.blockers : [])
+            ];
+            SetReviewModalFeedback(BotDetails.length ? BotDetails.join(" ") : (Error.message || "The review could not be submitted."));
+            if (Error.data?.storybot || Error.data?.safetybot) await Load();
+        } finally {
+            if (Submit) Submit.disabled = false;
+        }
+    }
+    $("ThinkReviewNoteInput")?.addEventListener("input", UpdateReviewNoteCount);
+    $("ThinkReviewForm")?.addEventListener("submit", SubmitReviewNote);
+    $("ThinkReviewModal")?.addEventListener("click", Event => {
+        if (Event.target.closest("[data-review-close]")) CloseReviewNoteModal();
+    });
+    document.addEventListener("keydown", Event => {
+        if (Event.key === "Escape" && $("ThinkReviewModal") && !$("ThinkReviewModal").hidden) CloseReviewNoteModal();
+    });
 
     async function Load() {
         const Status = $("ThinkConnectionStatus");
@@ -263,38 +377,34 @@
         try {
             if (Button.dataset.caseStatus) {
                 const CaseId = Number(Button.dataset.caseId);
-                const Note = Button.dataset.caseStatus === "confirmed"
-                    ? window.prompt("Explain why the evidence supports a confirmed finding (at least 25 characters):", "")
-                    : "Investigation status updated after review.";
-                if (Button.dataset.caseStatus === "confirmed" && (!Note || Note.trim().length < 25)) return;
-                await Post("/api/think/cases/" + CaseId + "/status", { status: Button.dataset.caseStatus, note: Note });
+                if (Button.dataset.caseStatus === "confirmed") {
+                    OpenReviewNoteModal({ type: "case", id: CaseId, minimum: 25 });
+                    return;
+                }
+                await Post("/api/think/cases/" + CaseId + "/status", { status: Button.dataset.caseStatus, note: "Investigation status updated after review." });
                 await Load();
             } else if (Button.dataset.requestReview) {
-                const RequestId = Number(Button.dataset.requestId);
-                const Decision = Button.dataset.requestReview;
-                const Note = window.prompt(
-                    Decision === "approve"
-                        ? "Explain why the evidence justifies this action (at least 25 characters):"
-                        : "Add an optional reason for rejecting this request:",
-                    ""
-                );
-                if (Decision === "approve" && (!Note || Note.trim().length < 25)) return;
-                if (Note === null) return;
-                await Post("/api/think/requests/" + RequestId + "/review", { decision: Decision, note: Note, durationMinutes: 1440 });
-                await Load();
+                OpenReviewNoteModal({
+                    type: "request", id: Number(Button.dataset.requestId),
+                    decision: Button.dataset.requestReview,
+                    minimum: Button.dataset.requestReview === "approve" ? 25 : 0
+                });
             } else if (Button.dataset.accessReview) {
-                const AccessId = Number(Button.dataset.accessId);
-                const Decision = Button.dataset.accessReview;
+                const AccessId = Number(Button.dataset.accessId), Decision = Button.dataset.accessReview;
                 await Post("/api/think/access-requests/" + AccessId + "/review", { decision: Decision, note: "Reviewed by the owner." });
                 await Load();
             }
         } catch (Error) {
-            window.alert(Error.data?.storybot
-                ? Error.data.storybot.blockers.join("\n")
-                : (Error.message || "The action could not be completed."));
-            if (Error.data?.storybot && Error.data.storybot.warnings?.length) {
-                await Load();
+            const FeedbackNode = $("ThinkActionFeedback");
+            const BotDetails = [
+                ...(Array.isArray(Error.data?.storybot?.blockers) ? Error.data.storybot.blockers : []),
+                ...(Array.isArray(Error.data?.safetybot?.blockers) ? Error.data.safetybot.blockers : [])
+            ];
+            if (FeedbackNode) {
+                FeedbackNode.textContent = BotDetails.length ? BotDetails.join(" ") : (Error.message || "The action could not be completed.");
+                FeedbackNode.className = "ThinkSubtle ThinkActionFeedback Bad";
             }
+            if (Error.data?.storybot || Error.data?.safetybot) await Load();
         }
     });
 
