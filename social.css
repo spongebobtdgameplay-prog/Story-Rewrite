@@ -2154,3 +2154,73 @@ body.StorySocialPage::before {
         min-height: 40px;
     }
 }
+
+
+/* Final sidebar sizing: Inbox and player results get separate, non-overlapping scroll regions. */
+@media (min-width: 761px) {
+    .StorySocialLayout { align-items: stretch; }
+    .StorySocialSidebar {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        min-height: 0;
+        max-height: 100%;
+        overflow: hidden;
+    }
+    .StorySocialPaneHeader,
+    .StorySocialSearchBox,
+    .StorySocialSearchHint {
+        flex: 0 0 auto;
+        min-width: 0;
+    }
+    .StorySocialInbox {
+        flex: 0 0 auto;
+        min-width: 0;
+        max-height: none;
+        margin-bottom: 10px;
+    }
+    .StorySocialInboxList {
+        min-height: 0;
+        max-height: min(27vh, 210px);
+        overflow-y: auto;
+    }
+    .StorySocialUserList {
+        flex: 1 1 0;
+        min-height: 100px;
+        max-height: none;
+        margin-top: 0;
+        overflow-x: hidden;
+        overflow-y: auto;
+        overscroll-behavior-y: contain;
+    }
+}
+
+@media (max-width: 760px) {
+    .StorySocialLayout,
+    .StorySocialSidebar,
+    .StorySocialChat { min-width: 0; }
+    .StorySocialSidebar {
+        display: block;
+        height: auto;
+        max-height: none;
+        overflow: visible;
+    }
+    .StorySocialInbox,
+    .StorySocialUserList {
+        width: 100%;
+        min-width: 0;
+    }
+    .StorySocialInboxList {
+        min-height: 0;
+        max-height: min(34vh, 220px);
+        overflow-y: auto;
+        overscroll-behavior-y: contain;
+    }
+    .StorySocialUserList {
+        height: auto;
+        max-height: min(42vh, 340px);
+        min-height: 90px;
+        overflow-y: auto;
+        overscroll-behavior-y: contain;
+    }
+}
