@@ -853,7 +853,6 @@ function CreateStoryBotComposer(Input) {
     }
 
     Input.dataset.storyBotComposerActive = "1";
-    Input.hidden = true;
 
     QuestionInput.addEventListener("input", () => {
         UpdateStoryBotDedicatedComposer(Composer);
@@ -875,7 +874,6 @@ function CreateStoryBotComposer(Input) {
             Composer.remove();
             Input.dataset.storyBotComposerActive = "0";
             Input.closest(".StoryBotInputSlot")?.style.removeProperty("height");
-            Input.hidden = false;
             Input.focus({ preventScroll: true });
         }
     });
@@ -921,9 +919,9 @@ function UpdateStoryBotDedicatedComposer(Composer) {
     if (!Input) return;
     if (Count) Count.textContent = String(Input.value.length) + "/1200";
     Input.style.height = "auto";
-    Input.style.height = Math.min(120, Math.max(44, Input.scrollHeight)) + "px";
+    Input.style.height = Math.min(110, Math.max(28, Input.scrollHeight)) + "px";
     const Slot = Input.closest(".StoryBotInputSlot");
-    if (Slot) Slot.style.height = Math.max(68, Math.min(152, Input.scrollHeight + 24)) + "px";
+    if (Slot) Slot.style.height = Math.max(36, Math.min(118, Input.scrollHeight + 10)) + "px";
 }
 
 function FocusStoryBotDedicatedComposer(Input, Question = "") {
@@ -966,7 +964,6 @@ function DismissStoryBotComposer(Composer, NormalChatInput) {
     Composer.setAttribute("aria-hidden", "true");
     if (NormalChatInput) {
         NormalChatInput.dataset.storyBotComposerActive = "0";
-        NormalChatInput.hidden = false;
         try { NormalChatInput.focus({ preventScroll: true }); } catch { NormalChatInput.focus({ preventScroll: true }); }
     }
     Composer.closest(".StoryBotInputSlot")?.style.removeProperty("height");
