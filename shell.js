@@ -1,5 +1,5 @@
 (() => {
-    const FrontendVersion = "20261031.12";
+    const FrontendVersion = "20261106.1";
     const Root = document.getElementById("StoryShellRoot");
     const InitialFrame = document.getElementById("StoryShellFrame");
     if (!Root || !InitialFrame) return;
@@ -16,7 +16,9 @@
         "settings.html",
         "social.html",
         "think.html",
-        "hackers.html"
+        "hackers.html",
+        "about.html",
+        "privacy.html"
     ]);
 
     const PersistentPages = new Set([
@@ -30,7 +32,9 @@
         "settings.html",
         "social.html",
         "think.html",
-        "hackers.html"
+        "hackers.html",
+        "about.html",
+        "privacy.html"
     ]);
 
     const PersistentFrames = new Map();
