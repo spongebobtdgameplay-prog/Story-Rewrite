@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <title>Silicon Valley Think — Story Rewrite</title>
-<link rel="stylesheet" href="think.css?v=20261106-safetybot-review1">
+<link rel="stylesheet" href="think.css?v=20261107-safetybot-chat1">
 </head>
 <body class="ThinkPage" data-think-page="dashboard">
 <div class="ThinkShell" id="ThinkApp">
@@ -84,6 +84,25 @@
             <div class="ThinkNotice">SafetyBot checks for exposed passwords, API keys, bearer tokens, session cookies, and private keys in submitted evidence. It also requires a confirmed finding before an account suspension. A human reviewer must still approve each action.</div>
             <p class="ThinkSubtle" id="ThinkSafetyBotStatus">Checking SafetyBot status…</p>
             <div class="ThinkList" id="ThinkSafetyAlerts"></div>
+            <div class="ThinkSafetyChat">
+                <div class="ThinkSafetyChatHead">
+                    <div>
+                        <h3>Talk to SafetyBot</h3>
+                        <p>Ask about a community rule or check the wording and context of a message.</p>
+                    </div>
+                    <button class="ThinkButton small" id="SafetyBotChatNew" type="button">New chat</button>
+                </div>
+                <div class="ThinkSafetyChatMessages" id="SafetyBotChatMessages" role="log" aria-live="polite" aria-relevant="additions text" aria-label="SafetyBot conversation"></div>
+                <form class="ThinkSafetyChatForm" id="SafetyBotChatForm">
+                    <label for="SafetyBotChatInput">Message SafetyBot</label>
+                    <textarea id="SafetyBotChatInput" name="question" rows="3" maxlength="1200" required placeholder="Ask which rule applies, or paste the exact message and its context. Do not include passwords, tokens, or private personal information."></textarea>
+                    <div class="ThinkSafetyChatControls">
+                        <p id="SafetyBotChatStatus" role="status" aria-live="polite">Only the text you submit is checked. SafetyBot does not monitor players or file reports.</p>
+                        <button class="ThinkButton primary" id="SafetyBotChatSend" type="submit">Send to SafetyBot</button>
+                    </div>
+                    <p class="ThinkSafetyChatHint">Enter starts a new line. Press Ctrl+Enter to send.</p>
+                </form>
+            </div>
         </section>
 
         <section class="ThinkCard full" id="ThinkCreateCaseCard" hidden>
@@ -170,5 +189,6 @@
 <script src="network.js?v=20261031-think1"></script>
 <script src="shell-ui.js?v=20261031-githubfix1"></script>
 <script src="think.js?v=20261106-safetybot-review1"></script>
+<script src="safetybot-think.js?v=20261107-private-chat1"></script>
 </body>
 </html>

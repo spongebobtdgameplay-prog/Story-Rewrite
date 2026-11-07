@@ -148,3 +148,178 @@ body.ThinkPage {
 .ThinkReviewFeedback.Good { color:var(--think-green); }
 .ThinkModalOpen { overflow:hidden; }
 @media (max-width:560px) { .ThinkModal { padding-inline:9px; } .ThinkModalCard { padding:15px; border-radius:15px; } .ThinkReviewHelper { align-items:flex-start; flex-direction:column; } }
+
+
+/* Silicon Valley Think · private SafetyBot conversation */
+.ThinkSafetyChat {
+    display: grid;
+    gap: 12px;
+    margin-top: 16px;
+    padding: 15px;
+    border: 1px solid rgba(105,188,168,.25);
+    border-radius: 14px;
+    background: rgba(12,28,23,.38);
+}
+.ThinkSafetyChatHead {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+}
+.ThinkSafetyChatHead h3 {
+    margin: 0;
+    color: #d3eadf;
+    font: 800 .95rem/1.2 Georgia,serif;
+}
+.ThinkSafetyChatHead p {
+    margin: 5px 0 0;
+    color: #a9c9bc;
+    font-size: .72rem;
+    line-height: 1.45;
+}
+.ThinkSafetyChatMessages {
+    display: grid;
+    gap: 9px;
+    max-height: 390px;
+    min-height: 128px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 10px;
+    border: 1px solid rgba(105,188,168,.16);
+    border-radius: 11px;
+    background: rgba(8,17,14,.58);
+}
+.ThinkSafetyChatMessage {
+    min-width: 0;
+    max-width: min(92%, 760px);
+    padding: 10px 12px;
+    border: 1px solid rgba(105,188,168,.2);
+    border-radius: 11px;
+    background: rgba(39,76,63,.2);
+    overflow-wrap: anywhere;
+}
+.ThinkSafetyChatMessage.User {
+    justify-self: end;
+    border-color: rgba(229,185,120,.2);
+    background: rgba(153,104,53,.12);
+}
+.ThinkSafetyChatMessage.Bot { justify-self: start; }
+.ThinkSafetyChatMessageHead {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin-bottom: 5px;
+    color: #c5eadb;
+    font-size: .72rem;
+}
+.ThinkSafetyChatMessage.User .ThinkSafetyChatMessageHead { color: #f0d4aa; }
+.ThinkSafetyChatPrivate {
+    padding: 2px 6px;
+    border: 1px solid rgba(105,188,168,.22);
+    border-radius: 999px;
+    color: #9bcbb8;
+    font-size: .58rem;
+    font-weight: 800;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+}
+.ThinkSafetyChatMessage > p {
+    margin: 0;
+    color: #e5eadf;
+    font-size: .75rem;
+    line-height: 1.55;
+    white-space: pre-wrap;
+}
+.ThinkSafetyChatFindings {
+    display: grid;
+    gap: 7px;
+    margin: 9px 0 0;
+    padding: 0;
+    list-style: none;
+}
+.ThinkSafetyChatFindings li {
+    display: grid;
+    gap: 2px;
+    padding: 8px 9px;
+    border-left: 2px solid #81bfa5;
+    border-radius: 0 7px 7px 0;
+    background: rgba(105,188,168,.08);
+    color: #bfd8cc;
+    font-size: .69rem;
+    line-height: 1.45;
+}
+.ThinkSafetyChatFindings li strong { color: #d8efe3; }
+.ThinkSafetyChatMessage > p.ThinkSafetyChatNote {
+    margin-top: 8px;
+    color: #a8c7b9;
+    font-size: .66rem;
+}
+.ThinkSafetyChatTyping {
+    justify-self: start;
+    padding: 8px 10px;
+    border: 1px solid rgba(105,188,168,.2);
+    border-radius: 9px;
+    color: #a8d6c3;
+    background: rgba(39,76,63,.2);
+    font-size: .69rem;
+    animation: ThinkSafetyPulse 1.2s ease-in-out infinite;
+}
+@keyframes ThinkSafetyPulse { 50% { opacity: .55; } }
+.ThinkSafetyChatForm { display: grid; gap: 7px; }
+.ThinkSafetyChatForm > label {
+    color: #c2dfd2;
+    font-size: .68rem;
+    font-weight: 800;
+}
+.ThinkSafetyChatForm textarea {
+    width: 100%;
+    min-height: 82px;
+    resize: vertical;
+    padding: 11px 12px;
+    border: 1px solid rgba(105,188,168,.27);
+    border-radius: 10px;
+    outline: none;
+    color: #edf4ec;
+    background: rgba(8,17,14,.72);
+    font: .76rem/1.5 system-ui,sans-serif;
+}
+.ThinkSafetyChatForm textarea:focus {
+    border-color: rgba(135,208,177,.72);
+    box-shadow: 0 0 0 3px rgba(105,188,168,.1);
+}
+.ThinkSafetyChatForm textarea:disabled { opacity: .65; }
+.ThinkSafetyChatControls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 9px;
+}
+.ThinkSafetyChatControls p {
+    flex: 1 1 220px;
+    margin: 0;
+    color: #a9c9bc;
+    font-size: .66rem;
+    line-height: 1.4;
+}
+.ThinkSafetyChatControls p.Good { color: #b6d8ac; }
+.ThinkSafetyChatControls p.Bad { color: #edb2a5; }
+.ThinkSafetyChatHint {
+    margin: 0;
+    color: #829b8f;
+    font-size: .61rem;
+}
+.ThinkSafetyChatForm button:disabled,
+.ThinkSafetyChatHead button:disabled {
+    opacity: .58;
+    cursor: wait;
+    transform: none;
+}
+@media (max-width:560px) {
+    .ThinkSafetyChat { padding: 11px; }
+    .ThinkSafetyChatHead { align-items: flex-start; }
+    .ThinkSafetyChatMessages { max-height: 340px; padding: 8px; }
+    .ThinkSafetyChatMessage { max-width: 100%; }
+    .ThinkSafetyChatControls { align-items: stretch; flex-direction: column; }
+    .ThinkSafetyChatControls .ThinkButton { width: 100%; }
+}
