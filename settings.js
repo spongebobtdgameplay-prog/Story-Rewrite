@@ -271,7 +271,8 @@ async function ConnectYouTubeAccount() {
     try {
         const Result = await ApiRequest("/api/youtube/connect", { method: "POST", body: "{}" });
         if (!Result.url) throw new Error("Google did not return a sign-in link.");
-        window.location.assign(Result.url);
+        const NavigationWindow = window.top || window;
+        NavigationWindow.location.assign(Result.url);
     } catch (Error) {
         if (StatusLine) StatusLine.textContent = Error.message || "Could not start YouTube connection.";
         if (Button) Button.disabled = false;
