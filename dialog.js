@@ -330,7 +330,7 @@ async function RequestLeaveCurrentLevel(TargetPage = "levels.html", Trigger = nu
         const Confirmed = typeof StoryConfirm === "function"
             ? await StoryConfirm({
                 title: "Leave this level?",
-                message: "Your current progress on this level will be lost.",
+                message: "Your remaining threat-timer time will be saved. Return to this level to continue where you left off.",
                 confirmText: "Leave Level",
                 cancelText: "Stay",
                 danger: true,
@@ -340,6 +340,8 @@ async function RequestLeaveCurrentLevel(TargetPage = "levels.html", Trigger = nu
             : window.confirm("Leave this level? Your current progress on this level will be lost.");
 
         if (!Confirmed) return;
+
+        window.StorySaveRemainingDangerTimeV12?.();
 
         if (Shell?.Back) {
             if (typeof StoryBeginNavigation === "function" && !StoryBeginNavigation(Trigger)) return;

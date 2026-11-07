@@ -298,6 +298,7 @@ if (document.readyState === "loading") {
 
 
 const StoryPowerNamesV12 = ["reveal", "undo", "seal"];
+const StoryDangerResumeStorageKeyV12 = "StoryRewriteSingleDangerResumeV1";
 let StoryPowerChargesV12 = { reveal: 1, undo: 1, seal: 1 };
 let StoryPowerHistoryV12 = [];
 let StoryPowerSealedV12 = new Set();
@@ -335,6 +336,7 @@ function SetStoryGamePausedV12(Paused) {
     if (PauseStarted && StorySingleDangerEndV12 > 0) {
         StorySingleDangerEndV12 += Math.max(0, Date.now() - PauseStarted);
     }
+    ClearStoryDangerResumeV12();
 
     RefreshStoryDangerUiV12();
 }
@@ -621,6 +623,36 @@ function ClearStoryDangerTimerV12() {
     document.getElementById("Illustration")?.classList.remove("StoryDangerActive", "StoryDangerCritical");
 }
 
+function ReadStoryDangerResumeV12(StageId) {
+    try {
+        const Saved = JSON.parse(sessionStorage.getItem(StoryDangerResumeStorageKeyV12) || "null");
+        const SavedAt = Number(Saved?.savedAt || 0);
+        const Remaining = Number(Saved?.remainingMs);
+        if (Saved?.stageId !== String(StageId || "") || !Number.isFinite(Remaining) || Remaining < 0 ||
+            !Number.isFinite(SavedAt) || Date.now() - SavedAt > 24 * 60 * 60 * 1000) return null;
+        return { remainingMs: Remaining };
+    } catch { return null; }
+}
+
+function ClearStoryDangerResumeV12() {
+    try { sessionStorage.removeItem(StoryDangerResumeStorageKeyV12); } catch {}
+}
+
+function SaveStoryRemainingDangerTimeV12() {
+    if (RoomCode || !Stage || !StorySingleDangerEndV12 || StoryDangerExpiredV12) return false;
+    const EffectiveNow = StoryGamePausedV12 && StoryGamePauseStartedAtV12 ? StoryGamePauseStartedAtV12 : Date.now();
+    const Remaining = Math.max(0, StorySingleDangerEndV12 - EffectiveNow);
+    try {
+        sessionStorage.setItem(StoryDangerResumeStorageKeyV12, JSON.stringify({
+            stageId: String(Stage.id), remainingMs: Remaining, savedAt: Date.now()
+        }));
+        return true;
+    } catch { return false; }
+}
+
+window.StorySaveRemainingDangerTimeV12 = SaveStoryRemainingDangerTimeV12;
+window.addEventListener("pagehide", SaveStoryRemainingDangerTimeV12);
+
 function GetStoryDangerEndV12() {
     if (RoomCode) return Number(MultiplayerState?.dangerEndsAt || 0);
     return StorySingleDangerEndV12;
@@ -681,9 +713,15 @@ function StartSingleStoryDangerV12(Force = false) {
     if (RoomCode || !Stage || StoryGamePausedV12) return;
     if (!Force && StorySingleDangerStageIdV12 === Stage.id && StorySingleDangerEndV12 > Date.now()) return;
 
+    const SavedResume = Force ? null : ReadStoryDangerResumeV12(Stage.id);
+    if (Force) ClearStoryDangerResumeV12();
     ClearStoryDangerTimerV12();
     StorySingleDangerStageIdV12 = Stage.id;
-    StorySingleDangerEndV12 = Date.now() + GetStoryDangerSecondsV12() * 1000;
+    const RemainingMs = SavedResume
+        ? Math.max(0, Math.min(GetStoryDangerSecondsV12() * 1000, SavedResume.remainingMs))
+        : GetStoryDangerSecondsV12() * 1000;
+    ClearStoryDangerResumeV12();
+    StorySingleDangerEndV12 = Date.now() + RemainingMs;
     StoryDangerExpiredV12 = false;
     StoryDangerBell10V12 = false;
     StoryDangerBell5V12 = false;
@@ -695,6 +733,7 @@ async function ExpireSingleStoryDangerV12() {
     if (StoryDangerExpiredV12 || !Stage) return;
 
     StoryDangerExpiredV12 = true;
+    ClearStoryDangerResumeV12();
     ClearStoryDangerTimerV12();
     SetStoryStatusV12("The threat reached the page before the rewrite was checked.", "Bad");
 
@@ -786,8 +825,10 @@ if (typeof CheckServerStage === "function" && !CheckServerStage.V12Wrapped) {
     const WrappedCheckServerStageV12 = async function(StageId, RemovedIndexes, BranchId = GetSelectedBranchIdV12()) {
         const Result = await BaseCheckServerStageV12(StageId, RemovedIndexes, BranchId);
 
-        if (Result?.success) ClearStoryDangerTimerV12();
-        else if (!StoryDangerExpiredV12 && !Result?.gameOver) StartSingleStoryDangerV12(true);
+        if (Result?.success) {
+            ClearStoryDangerTimerV12();
+            if (!RoomCode) ClearStoryDangerResumeV12();
+        } else if (!StoryDangerExpiredV12 && !Result?.gameOver) StartSingleStoryDangerV12(true);
 
         return Result;
     };
