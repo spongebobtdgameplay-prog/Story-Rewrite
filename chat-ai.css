@@ -622,3 +622,109 @@ html[data-storybot-theme="paper"] {
 .StoryBotInputSlot > .StoryBotComposer {
     align-items: center;
 }
+
+
+/* StoryBot prompt: keep the regular chat field out of sight and give the prompt room. */
+.ChatForm:has(.StoryBotComposer) {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: stretch;
+}
+
+.StoryBotInputSlot {
+    min-height: 68px;
+}
+
+.StoryBotInputSlot > .ChatInput[hidden] {
+    display: none !important;
+}
+
+.StoryBotInputSlot > .StoryBotComposer {
+    min-height: 68px;
+    padding: 9px 10px !important;
+    gap: 9px;
+    border-radius: 12px;
+    background: linear-gradient(180deg, rgba(88, 57, 34, 1), rgba(48, 30, 19, 1)) !important;
+    border-color: rgba(210, 164, 99, .72) !important;
+    box-shadow: 0 8px 22px rgba(0, 0, 0, .34), inset 0 1px 0 rgba(255, 224, 170, .08);
+}
+
+.StoryBotInlineIcon {
+    flex: 0 0 26px;
+    width: 26px;
+    height: 26px;
+}
+
+.StoryBotInlineIcon svg {
+    width: 24px;
+    height: 24px;
+}
+
+.StoryBotQuestionInput {
+    height: 44px;
+    min-height: 44px;
+    max-height: 120px;
+    padding: 10px 11px;
+    border-radius: 9px;
+    font: 600 .875rem/1.4 system-ui, sans-serif;
+    overflow-y: auto;
+    resize: none;
+}
+
+.StoryBotSendButton {
+    min-width: 58px;
+    height: 40px;
+    min-height: 40px;
+    padding-inline: 12px;
+    border-radius: 9px;
+    font: 800 .75rem/1 system-ui, sans-serif;
+}
+
+.StoryBotCloseButton {
+    flex: 0 0 38px;
+    width: 38px;
+    min-width: 38px;
+    height: 40px;
+    border-radius: 9px;
+    font-size: 1.25rem;
+}
+
+@media (max-width: 520px) {
+    .StoryBotInputSlot > .StoryBotComposer {
+        min-height: 64px;
+        padding: 8px !important;
+        gap: 6px;
+    }
+
+    .StoryBotInlineIcon {
+        flex-basis: 22px;
+        width: 22px;
+        height: 22px;
+    }
+
+    .StoryBotInlineIcon svg {
+        width: 21px;
+        height: 21px;
+    }
+
+    .StoryBotQuestionInput {
+        height: 42px;
+        min-height: 42px;
+        padding: 8px;
+        font-size: .8125rem;
+    }
+
+    .StoryBotSendButton {
+        min-width: 50px;
+        height: 38px;
+        min-height: 38px;
+        padding-inline: 8px;
+        font-size: .6875rem;
+    }
+
+    .StoryBotCloseButton {
+        flex-basis: 32px;
+        width: 32px;
+        min-width: 32px;
+        height: 38px;
+    }
+}
