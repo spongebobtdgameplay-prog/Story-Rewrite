@@ -119,7 +119,7 @@ function createYouTubeRuntime({ Database, SendJson }) {
             const Params = new URLSearchParams({
                 client_id: ClientId(), redirect_uri: RedirectUri(), response_type: "code",
                 scope: "openid email profile https://www.googleapis.com/auth/youtube.readonly",
-                access_type: "offline", prompt: "consent", include_granted_scopes: "true", state: State
+                access_type: "offline", prompt: "select_account consent", include_granted_scopes: "true", state: State
             });
             SendJson(Response, 200, { url: "https://accounts.google.com/o/oauth2/v2/auth?" + Params.toString() }, Origin);
             return true;
