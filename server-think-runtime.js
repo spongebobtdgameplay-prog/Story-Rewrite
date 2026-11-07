@@ -218,7 +218,7 @@ function createThinkRuntime(Dependencies) {
             return {
                 ok: true,
                 outcome: "rules-overview",
-                answer: "I check Story Rewrite's community rules: respectful chat; no profanity, slurs, targeted harassment, sexual harassment, threats, or encouragement of harm; no sharing private information; no impersonation, spam, or moderation evasion; and honest use of reports. I also consider context: fictional story danger is not automatically a real-world threat, and quoted content used to report a problem is different from attacking someone.",
+                answer: "I check Story Rewrite's community rules: respectful chat; no profanity, slurs, targeted harassment, sexual harassment, threats, or encouragement of harm; no sharing private information; no impersonation, spam, or moderation evasion; and honest use of reports. I can also flag possible fair-play or cheating concerns for moderator review. I consider context: fictional story danger is not automatically a real-world threat, and quoted content used to report a problem is different from attacking someone.",
                 findings: [],
                 note: "I only assess the text and context you choose to provide. I do not inspect players or chat rooms in the background."
             };

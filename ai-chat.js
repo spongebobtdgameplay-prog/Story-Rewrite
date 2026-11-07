@@ -1519,11 +1519,13 @@ function RemoveSafetyBotTyping(Container) {
 }
 function CloseSafetyBotComposer(Input) {
     const Form = Input?.closest(".ChatForm");
+    const Container = GetStoryBotContainerForInput(Input);
     Form?.querySelector(".SafetyBotComposer")?.remove();
     if (Input) {
         Input.dataset.safetyBotComposerActive = "0";
         Input.focus({ preventScroll: true });
     }
+    RefreshQuietChatState(Container);
 }
 function CreateSafetyBotComposer(Input) {
     if (!Input) return null;
@@ -1546,7 +1548,8 @@ function CreateSafetyBotComposer(Input) {
         '<span class="SafetyBotInlineIcon" aria-hidden="true">' + SafetyBotIconMarkup() + '</span>',
         '<input class="SafetyBotQuestionInput" maxlength="1200" type="text" placeholder="Describe a situation for SafetyBot..." autocomplete="off" spellcheck="true" aria-label="Ask SafetyBot to check a situation against the community rules">',
         '<button class="SafetyBotSendButton" type="button">Check</button>',
-        '<button class="SafetyBotCloseButton" type="button" aria-label="Close SafetyBot">×</button>'
+        '<button class="SafetyBotCloseButton" type="button" aria-label="Close SafetyBot">×</button>',
+        '<span class="SafetyBotComposerStatus" aria-live="polite"></span>'
     ].join("");
     Slot.appendChild(Composer);
 
