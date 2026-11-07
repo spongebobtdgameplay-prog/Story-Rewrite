@@ -1517,7 +1517,7 @@ function AddSafetyBotTyping(Container) {
     Icon.className = "SafetyBotMessageIcon";
     Icon.innerHTML = SafetyBotIconMarkup();
     const TextNode = document.createElement("span");
-    TextNode.textContent = "SafetyBot is checking the rule context…";
+    TextNode.textContent = "SafetyBot is thinking…";
     Node.append(Icon, TextNode);
     Container.appendChild(Node);
     Container.scrollTop = Container.scrollHeight;
@@ -1557,7 +1557,7 @@ function CreateSafetyBotComposer(Input) {
     Composer.innerHTML = [
         '<span class="SafetyBotInlineIcon" aria-hidden="true">' + SafetyBotIconMarkup() + '</span>',
         '<textarea class="SafetyBotQuestionInput" maxlength="1200" rows="1" placeholder="Talk with SafetyBot..." autocomplete="off" spellcheck="true" aria-label="Send a message to SafetyBot"></textarea>',
-        '<button class="SafetyBotSendButton" type="button">Check</button>',
+        '<button class="SafetyBotSendButton" type="button">Send</button>',
         '<button class="SafetyBotCloseButton" type="button" aria-label="Close SafetyBot">×</button>',
         '<span class="SafetyBotComposerStatus" aria-live="polite"></span>'
     ].join("");
@@ -1632,7 +1632,7 @@ async function SubmitSafetyBotQuestion(Composer) {
     SafetyBotBusyComposers.add(Composer);
     Send.disabled = true;
     Field.disabled = true;
-    SetSafetyBotComposerStatus(Composer, "Checking the community rules…");
+    SetSafetyBotComposerStatus(Composer, "SafetyBot is thinking…");
     AddSafetyBotTyping(Container);
 
     try {

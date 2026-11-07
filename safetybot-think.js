@@ -37,7 +37,7 @@
         if (Kind !== "user") {
             const Label = document.createElement("span");
             Label.className = "ThinkSafetyChatPrivate";
-            Label.textContent = "Rule check";
+            Label.textContent = "Private chat";
             Header.appendChild(Label);
         }
 
@@ -76,7 +76,7 @@
         const Row = document.createElement("div");
         Row.className = "ThinkSafetyChatTyping";
         Row.id = "SafetyBotChatTyping";
-        Row.textContent = "SafetyBot is checking the rule context…";
+        Row.textContent = "SafetyBot is thinking…";
         Messages.appendChild(Row);
         ScrollToLatest();
     }
