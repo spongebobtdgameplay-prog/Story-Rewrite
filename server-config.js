@@ -1,5 +1,7 @@
 const StoryHost = String(window.location.hostname || "").toLowerCase();
-const StoryUsesSameOriginApi = StoryHost === "story-rewrite-iota.vercel.app"
+const StoryUsesSameOriginApi = StoryHost === "storyrewritegame.com"
+    || StoryHost === "www.storyrewritegame.com"
+    || StoryHost === "story-rewrite-iota.vercel.app"
     || StoryHost === "story-rewrite-spongebobtdgameplay-prog.vercel.app"
     || /^story-rewrite-[a-z0-9-]+-spongebobtdgameplay-prog\.vercel\.app$/.test(StoryHost);
 window.STORY_REWRITE_SAME_ORIGIN_API = StoryUsesSameOriginApi;
