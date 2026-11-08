@@ -1017,7 +1017,7 @@ const CachedStoryProfile = GetLastKnownProfileResult()?.profile || null;
 ApplyStoryIdentityTitle(CachedStoryProfile);
 
 InitializeStorySessionSync();
-GuardProtectedPage();
+const ProtectedPageCheck = GuardProtectedPage();
 
 window.addEventListener("StoryShellActivate", StartStorySocialHeartbeat);
 window.addEventListener("StoryShellDeactivate", () => {
@@ -1036,3 +1036,6 @@ document.addEventListener("visibilitychange", () => {
 
 // Think can be opened as a direct protected page without a shell activation event.
 if (document.visibilityState === "visible") StartStorySocialHeartbeat();
+void Promise.resolve(ProtectedPageCheck).then(() => {
+    if (document.visibilityState === "visible") StartStorySocialHeartbeat();
+}, () => {});
