@@ -325,7 +325,11 @@ function createThinkRuntime(Dependencies) {
                 SendJson(Response, 200, { ok: true, outcome: "conversation", answer: Answer.slice(0, 4000), findings: [] }, Origin);
             } catch (Error) {
                 console.error("SafetyBot conversation request failed:", String(Error?.message || Error).slice(0, 220));
-                SendJson(Response, 503, { error: "SafetyBot is temporarily unavailable. Please try again." }, Origin);
+                const UploadError = Attachments.length > 0 ? String(Error?.message || "") : "";
+                const PublicError = /image|upload|guest session/i.test(UploadError)
+                    ? UploadError.slice(0, 240)
+                    : "SafetyBot is temporarily unavailable. Please try again.";
+                SendJson(Response, 503, { error: PublicError }, Origin);
             }
             return true;
         }
