@@ -17,6 +17,7 @@ let CachedBuildLabel = "";
 let CachedBuildFetchedAt = 0;
 let CachedUploadPushId = "";
 let CachedUploadClientPctx = "";
+let CachedAuthAt = "";
 let BuildLabelPromise = null;
 let RequestSequence = 0;
 const CookieJar = new Map();
@@ -129,6 +130,7 @@ async function loadBuildLabel() {
     CachedBuildLabel = buildLabel;
     CachedUploadPushId = extractPageValue(html, "qKIAYe");
     CachedUploadClientPctx = extractPageValue(html, "Ylro7b");
+    CachedAuthAt = extractPageValue(html, "SNlM0e");
     CachedBuildFetchedAt = Date.now();
     return buildLabel;
 }
@@ -304,6 +306,10 @@ const GEMINI_UPLOAD_URL = "https://push.clients6.google.com/upload/";
 const MAX_SAFETYBOT_IMAGE_BYTES = 900 * 1024;
 
 async function uploadGeminiGuestAttachment(Attachment) {
+    const HasSignedInGoogleCookie = /(?:^|;\\s*)(?:SID|HSID|SSID|APISID|SAPISID|__Secure-1PSID|__Secure-3PSID)=/i.test(cookieHeader());
+    if (!CachedAuthAt || !HasSignedInGoogleCookie) {
+        throw new Error("Image attachments aren't available through the unauthenticated Gemini guest connection. Text chat still works; image upload requires a signed-in Gemini Web session.");
+    }
     if (!CachedUploadPushId || !CachedUploadClientPctx) {
         throw new Error("This Gemini guest session did not provide image-upload access. Text chat still works, but image attachments need an authenticated Gemini Web upload session.");
     }
