@@ -694,7 +694,7 @@ html[data-storybot-theme="paper"] {
 
 
 
-/* StoryBot composer: use the same dimensions as the regular chat input and Send button. */
+/* StoryBot composer: restore the shared chat-row frame and the matching input treatment. */
 .ChatForm:has(.StoryBotComposer) {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
@@ -705,20 +705,20 @@ html[data-storybot-theme="paper"] {
     grid-column: 1 / -1;
     width: 100%;
     max-width: none;
-    min-height: 46px;
+    min-height: 58px;
     margin: 7px 0 0;
 }
 
 .StoryBotInputSlot > .StoryBotComposer {
     box-sizing: border-box;
     height: 100%;
-    min-height: 46px;
-    padding: 0 !important;
+    min-height: 58px;
+    padding: 5px 7px !important;
     gap: 7px;
-    border: 0 !important;
-    border-radius: 0;
-    background: transparent !important;
-    box-shadow: none !important;
+    border: 1px solid rgba(210, 164, 99, .72) !important;
+    border-radius: 12px;
+    background: linear-gradient(180deg, #583922, #301e13) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 224, 170, .07), 0 2px 8px rgba(0, 0, 0, .2) !important;
 }
 
 .StoryBotInputSlot > .StoryBotComposer .StoryBotQuestionInput {
@@ -727,8 +727,17 @@ html[data-storybot-theme="paper"] {
     min-height: 46px;
     max-height: 110px;
     padding: 10px 12px;
-    font: 700 .9375rem/1.2 system-ui, sans-serif;
+    color: #fff1d7;
+    border: 1px solid #705039;
     border-radius: 10px;
+    outline: none;
+    background: #150d09;
+    font: 700 .9375rem/1.2 system-ui, sans-serif;
+}
+
+.StoryBotInputSlot > .StoryBotComposer .StoryBotQuestionInput:focus {
+    border-color: #d7a35a;
+    box-shadow: 0 0 0 3px rgba(215, 163, 90, .14);
 }
 
 .StoryBotInputSlot > .StoryBotComposer .StoryBotSendButton {
@@ -739,9 +748,13 @@ html[data-storybot-theme="paper"] {
     height: auto;
     min-height: 44px;
     padding: 10px 16px;
+    border: 1px solid #4a2916;
+    border-radius: 12px;
+    color: #fff5e3;
+    background: linear-gradient(180deg, #9b6637, #6e401f);
+    box-shadow: 0 6px 14px rgba(55, 28, 12, .28), inset 0 1px rgba(255, 245, 221, .18);
     font: 800 1.0625rem/1.1 system-ui, sans-serif;
     letter-spacing: .015em;
-    border-radius: 12px;
 }
 
 .StoryBotInputSlot > .StoryBotComposer .StoryBotCloseButton {
@@ -752,24 +765,19 @@ html[data-storybot-theme="paper"] {
     height: 28px;
     min-height: 28px;
     padding: 0;
-    font-size: 1.1rem;
     border-radius: 7px;
+    font-size: 1.1rem;
 }
 
 @media (max-width: 520px) {
-    .ChatForm:has(.StoryBotComposer) {
-        grid-template-columns: minmax(0, 1fr);
-    }
-
     .StoryBotInputSlot:has(.StoryBotComposer) {
-        width: 100%;
-        max-width: none;
-        min-height: 46px;
+        min-height: 58px;
         margin-top: 7px;
     }
 
     .StoryBotInputSlot > .StoryBotComposer {
-        min-height: 46px;
+        min-height: 58px;
+        padding: 5px !important;
         gap: 5px;
     }
 
@@ -784,13 +792,5 @@ html[data-storybot-theme="paper"] {
         min-height: 44px;
         padding: 9px 12px;
         font-size: .9375rem;
-    }
-
-    .StoryBotInputSlot > .StoryBotComposer .StoryBotCloseButton {
-        flex-basis: 28px;
-        width: 28px;
-        min-width: 28px;
-        height: 28px;
-        min-height: 28px;
     }
 }
