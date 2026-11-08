@@ -68,28 +68,10 @@ function RemoveQuietChatState(Container) {
 
 
 function GetStoryBotTaskStatus(Question = "") {
-    const Text = String(Question || StoryBotActiveQuestion || "").trim();
-    if (!Text) return "StoryBot is checking the relevant game context…";
-
-    if (/^(?:hi|hello|hey|hiya|yo|sup|good morning|good afternoon|good evening)[.!?]*$/i.test(Text)) {
-        return "StoryBot is preparing a quick reply…";
-    }
-    if (/\b(?:what did i say|what did we say|earlier|previous message|last message|remember|mentioned before|conversation history|chat history)\b/i.test(Text)) {
-        return "StoryBot is reviewing the recent chat context…";
-    }
-    if (/\b(?:vote|votes|voting|choice|choices|option|options|sentence|rewrite|pick|choose|selection|select)\b/i.test(Text)) {
-        return "StoryBot is comparing the available story choices and votes…";
-    }
-    if (/\b(?:stage|level|story|survive|survival|threat|objective|life|lives|heart|rule|rules|ending|outcome)\b/i.test(Text)) {
-        return "StoryBot is checking the current stage and survival rules…";
-    }
-    if (/\b(?:player|players|ready|lobby|room|game code|host|joining|invite|multiplayer)\b/i.test(Text)) {
-        return "StoryBot is checking the current lobby and player status…";
-    }
-    if (/^(?:why|how)\b|\b(?:explain|meaning|means|reason|because)\b/i.test(Text)) {
-        return "StoryBot is putting together a clear explanation…";
-    }
-    return "StoryBot is reviewing the question and relevant game context…";
+    const HasQuestion = String(Question || StoryBotActiveQuestion || "").trim().length > 0;
+    return HasQuestion
+        ? "StoryBot is thinking about your message…"
+        : "StoryBot is reviewing the conversation…";
 }
 
 function SetStoryBotTyping(Typing, Question = "") {
@@ -853,6 +835,7 @@ function CreateStoryBotComposer(Input) {
     }
 
     Input.dataset.storyBotComposerActive = "1";
+    Input.hidden = true;
 
     QuestionInput.addEventListener("input", () => {
         UpdateStoryBotDedicatedComposer(Composer);
@@ -873,6 +856,7 @@ function CreateStoryBotComposer(Input) {
             Event.preventDefault();
             Composer.remove();
             Input.dataset.storyBotComposerActive = "0";
+            Input.hidden = false;
             Input.closest(".StoryBotInputSlot")?.style.removeProperty("height");
             Input.focus({ preventScroll: true });
         }
@@ -964,6 +948,7 @@ function DismissStoryBotComposer(Composer, NormalChatInput) {
     Composer.setAttribute("aria-hidden", "true");
     if (NormalChatInput) {
         NormalChatInput.dataset.storyBotComposerActive = "0";
+        NormalChatInput.hidden = false;
         try { NormalChatInput.focus({ preventScroll: true }); } catch { NormalChatInput.focus({ preventScroll: true }); }
     }
     Composer.closest(".StoryBotInputSlot")?.style.removeProperty("height");
