@@ -819,7 +819,7 @@ function CreateStoryBotComposer(Input) {
         <textarea class="StoryBotQuestionInput" maxlength="1200" rows="1"
             placeholder="Ask StoryBot..." autocomplete="off" spellcheck="true"
             aria-label="Ask StoryBot a question"></textarea>
-        <button class="StoryBotSendButton" type="button">Ask</button>
+        <button class="StoryBotSendButton" type="button">Send</button>
         <button class="StoryBotCloseButton" type="button" aria-label="Close StoryBot question">×</button>
     `;
 
@@ -905,7 +905,7 @@ function UpdateStoryBotDedicatedComposer(Composer) {
     Input.style.height = "auto";
     Input.style.height = Math.min(110, Math.max(46, Input.scrollHeight)) + "px";
     const Slot = Input.closest(".StoryBotInputSlot");
-    if (Slot) Slot.style.height = Math.max(46, Math.min(124, Input.scrollHeight)) + "px";
+    if (Slot) Slot.style.height = Math.max(58, Math.min(132, Input.scrollHeight + 12)) + "px";
 }
 
 function FocusStoryBotDedicatedComposer(Input, Question = "") {
