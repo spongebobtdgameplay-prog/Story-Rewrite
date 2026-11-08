@@ -6,6 +6,7 @@ function createThinkRuntime(Dependencies) {
     const UsernameKey = Dependencies.UsernameKey;
     const ReadJson = Dependencies.ReadJson;
     const SendJson = Dependencies.SendJson;
+    const Rooms = Dependencies.Rooms instanceof Map ? Dependencies.Rooms : null;
     const OwnerKey = "darius56";
     let SchemaPromise = null;
     const SafetyBotRequestWindows = new Map();
@@ -48,6 +49,110 @@ function createThinkRuntime(Dependencies) {
     function canRead(Role) { return ["owner", "top_moderator", "moderator", "developer"].includes(String(Role || "")); }
     function canCreateCase(Role) { return ["owner", "top_moderator", "moderator"].includes(String(Role || "")); }
     function canReview(Role) { return ["owner", "top_moderator"].includes(String(Role || "")); }
+    function redactModerationText(Value, Limit = 240) {
+        return String(Value || "")
+            .replace(/\\b(?:password|passcode|api[_ -]?key|access[_ -]?token|refresh[_ -]?token|session[_ -]?(?:id|token|cookie))\\b\\s*[:=]\\s*\\S+/gi, "[redacted secret]")
+            .replace(/\\bBearer\\s+\\S+/gi, "Bearer [redacted]")
+            .replace(/\\bsk-[A-Za-z0-9_-]{16,}\\b/g, "[redacted API key]")
+            .replace(/-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----[\\s\\S]*?-----END (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/gi, "[redacted private key]")
+            .replace(/\\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}\\b/gi, "[redacted email]")
+            .slice(0, Limit);
+    }
+
+    async function readModerationHistory(Staff, TargetUsername) {
+        if (!canCreateCase(Staff?.role)) {
+            const Error = new Error("Moderation history is available only to moderators and higher.");
+            Error.status = 403;
+            throw Error;
+        }
+        const Target = String(TargetUsername || "").trim().slice(0, 32);
+        if (!/^[A-Za-z0-9_]{3,20}$/.test(Target)) throw new Error("Enter a valid player username.");
+        const TargetKey = UsernameKey(Target);
+        const [Cases, Requests, Restrictions, Audit] = await Promise.all([
+            Database.query(
+                "SELECT id, category, reason, status, filed_by, created_at, updated_at, reviewed_by, review_note FROM story_rewrite_think_cases WHERE target_username_key = $1 ORDER BY created_at DESC LIMIT 20",
+                [TargetKey]
+            ),
+            Database.query(
+                "SELECT id, case_id, action_type, reason, requested_by, status, reviewed_by, review_note, created_at, reviewed_at FROM story_rewrite_think_requests WHERE target_username_key = $1 ORDER BY created_at DESC LIMIT 20",
+                [TargetKey]
+            ),
+            Database.query(
+                "SELECT reason, restricted_by, expires_at, created_at FROM story_rewrite_think_restrictions WHERE username_key = $1 LIMIT 5",
+                [TargetKey]
+            ),
+            Database.query(
+                "SELECT action, actor_username, actor_role, created_at FROM story_rewrite_think_audit WHERE target_username = $1 AND action IN ('think_case_created','think_case_status_changed','think_action_requested','think_action_approved','think_action_rejected','think_action_blocked_by_storybot','think_action_blocked_by_safetybot') ORDER BY created_at DESC LIMIT 30",
+                [Target]
+            )
+        ]);
+        const History = {
+            username: Target,
+            cases: Cases.rows.map(Row => ({
+                id: String(Row.id),
+                category: redactModerationText(Row.category, 60),
+                reason: redactModerationText(Row.reason, 240),
+                status: String(Row.status || "reported"),
+                filedBy: redactModerationText(Row.filed_by, 32),
+                createdAt: Row.created_at,
+                updatedAt: Row.updated_at,
+                reviewedBy: redactModerationText(Row.reviewed_by, 32),
+                reviewNote: redactModerationText(Row.review_note, 240)
+            })),
+            actionRequests: Requests.rows.map(Row => ({
+                id: String(Row.id),
+                caseId: String(Row.case_id),
+                action: String(Row.action_type || ""),
+                reason: redactModerationText(Row.reason, 240),
+                requestedBy: redactModerationText(Row.requested_by, 32),
+                status: String(Row.status || "pending"),
+                reviewedBy: redactModerationText(Row.reviewed_by, 32),
+                reviewNote: redactModerationText(Row.review_note, 240),
+                createdAt: Row.created_at,
+                reviewedAt: Row.reviewed_at
+            })),
+            restrictions: Restrictions.rows.map(Row => ({
+                reason: redactModerationText(Row.reason, 240),
+                restrictedBy: redactModerationText(Row.restricted_by, 32),
+                active: !Row.expires_at || new Date(Row.expires_at).getTime() > Date.now(),
+                expiresAt: Row.expires_at,
+                createdAt: Row.created_at
+            })),
+            moderationActions: Audit.rows.map(Row => ({
+                action: String(Row.action || ""),
+                actor: redactModerationText(Row.actor_username, 32),
+                actorRole: String(Row.actor_role || ""),
+                createdAt: Row.created_at
+            }))
+        };
+        await writeAudit(Staff, "safetybot_moderation_history_viewed", Target, {
+            cases: History.cases.length,
+            actionRequests: History.actionRequests.length,
+            restrictions: History.restrictions.length,
+            moderationActions: History.moderationActions.length
+        });
+        return History;
+    }
+
+    function normalizeSafetyBotAttachments(Value) {
+        if (Value === undefined || Value === null) return [];
+        if (!Array.isArray(Value) || Value.length > 2) throw new Error("Attach no more than two images.");
+        return Value.map((Item, Index) => {
+            const Name = String(Item?.name || ("image-" + (Index + 1))).replace(/[\\\\/\\u0000-\\u001f]/g, "_").slice(0, 100);
+            const MimeType = String(Item?.mimeType || Item?.type || "").toLowerCase();
+            const Base64 = String(Item?.base64 || "");
+            if (!["image/jpeg", "image/png", "image/webp"].includes(MimeType)) {
+                throw new Error("SafetyBot accepts JPEG, PNG, and WebP images only.");
+            }
+            if (!/^[A-Za-z0-9+/]*={0,2}$/.test(Base64) || !Base64.length) {
+                throw new Error("One of the image attachments is invalid.");
+            }
+            const Bytes = Buffer.from(Base64, "base64");
+            if (!Bytes.length || Bytes.length > 900 * 1024) throw new Error("Each image must be 900 KB or smaller after compression.");
+            return { name: Name, mimeType: MimeType, base64: Bytes.toString("base64") };
+        });
+    }
+
 
     async function isRestricted(Username) {
         if (!Username || !Database) return false;
@@ -181,6 +286,17 @@ function createThinkRuntime(Dependencies) {
             const Messages = Array.isArray(Body && Body.messages)
                 ? Body.messages
                 : (Array.isArray(Body && Body.context) ? Body.context.map(Text => ({ role: "user", text: Text })) : []);
+            let ModerationHistory = null;
+            let Attachments = [];
+            try {
+                if (Body && Body.lookupUsername) {
+                    ModerationHistory = await readModerationHistory(SafetyBotStaff, Body.lookupUsername);
+                }
+                Attachments = normalizeSafetyBotAttachments(Body && Body.attachments);
+            } catch (Error) {
+                SendJson(Response, Error.status || 400, { error: Error.message || "The SafetyBot request could not be prepared." }, Origin);
+                return true;
+            }
             if (!Question) {
                 SendJson(Response, 400, { error: "Write a message for SafetyBot." }, Origin);
                 return true;
@@ -198,7 +314,13 @@ function createThinkRuntime(Dependencies) {
             }
             try {
                 const SafetyBotGemini = require("./storybot-gemini-guest.js");
-                const Answer = await SafetyBotGemini.askSafetyBotGemini({ username: Account.username, question: Question, messages: Messages });
+                const Answer = await SafetyBotGemini.askSafetyBotGemini({
+                    username: Account.username,
+                    question: Question,
+                    messages: Messages,
+                    moderationHistory: ModerationHistory,
+                    attachments: Attachments
+                });
                 if (!Answer) throw new Error("The model returned an empty reply.");
                 SendJson(Response, 200, { ok: true, outcome: "conversation", answer: Answer.slice(0, 4000), findings: [] }, Origin);
             } catch (Error) {
@@ -213,6 +335,30 @@ function createThinkRuntime(Dependencies) {
         const Staff = await getStaff(Account.username);
         if (!Staff || !canRead(Staff.role)) {
             SendJson(Response, 403, { error: "Silicon Valley access is restricted to authorized Story Rewrite developers." }, Origin);
+            return true;
+        }
+
+        if (RequestPath === "/api/think/heartbeat" && Request.method === "POST") {
+            let PreservedRooms = 0;
+            if (Rooms) {
+                const CurrentKey = UsernameKey(Account.username);
+                for (const Room of Rooms.values()) {
+                    const MemberNames = Room.memberNames instanceof Set ? [...Room.memberNames] : [];
+                    const IsMember = MemberNames.some(Name => UsernameKey(Name) === CurrentKey)
+                        || UsernameKey(Room.hostUsername || "") === CurrentKey
+                        || [...(Room.players?.values?.() || [])].some(Player => UsernameKey(Player?.username || "") === CurrentKey);
+                    if (!IsMember) continue;
+                    PreservedRooms += 1;
+                    if (Number(Room.players?.size || 0) === 0) {
+                        if (Room.cleanupTimer) clearTimeout(Room.cleanupTimer);
+                        Room.cleanupTimer = setTimeout(() => {
+                            if (Number(Room.players?.size || 0) === 0) Rooms.delete(Room.code);
+                        }, 120000);
+                        Room.cleanupTimer.unref?.();
+                    }
+                }
+            }
+            SendJson(Response, 200, { ok: true, preservedRooms: PreservedRooms }, Origin);
             return true;
         }
 
