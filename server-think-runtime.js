@@ -51,11 +51,11 @@ function createThinkRuntime(Dependencies) {
     function canReview(Role) { return ["owner", "top_moderator"].includes(String(Role || "")); }
     function redactModerationText(Value, Limit = 240) {
         return String(Value || "")
-            .replace(/\\b(?:password|passcode|api[_ -]?key|access[_ -]?token|refresh[_ -]?token|session[_ -]?(?:id|token|cookie))\\b\\s*[:=]\\s*\\S+/gi, "[redacted secret]")
-            .replace(/\\bBearer\\s+\\S+/gi, "Bearer [redacted]")
-            .replace(/\\bsk-[A-Za-z0-9_-]{16,}\\b/g, "[redacted API key]")
-            .replace(/-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----[\\s\\S]*?-----END (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/gi, "[redacted private key]")
-            .replace(/\\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}\\b/gi, "[redacted email]")
+            .replace(/\b(?:password|passcode|api[_ -]?key|access[_ -]?token|refresh[_ -]?token|session[_ -]?(?:id|token|cookie))\b\s*[:=]\s*\S+/gi, "[redacted secret]")
+            .replace(/\bBearer\s+\S+/gi, "Bearer [redacted]")
+            .replace(/\bsk-[A-Za-z0-9_-]{16,}\b/g, "[redacted API key]")
+            .replace(/-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----[\s\S]*?-----END (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/gi, "[redacted private key]")
+            .replace(/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi, "[redacted email]")
             .slice(0, Limit);
     }
 
@@ -82,7 +82,7 @@ function createThinkRuntime(Dependencies) {
                 [TargetKey]
             ),
             Database.query(
-                "SELECT action, actor_username, actor_role, created_at FROM story_rewrite_think_audit WHERE target_username = $1 AND action IN ('think_case_created','think_case_status_changed','think_action_requested','think_action_approved','think_action_rejected','think_action_blocked_by_storybot','think_action_blocked_by_safetybot') ORDER BY created_at DESC LIMIT 30",
+                "SELECT action, actor_username, actor_role, created_at FROM story_rewrite_think_audit WHERE LOWER(target_username) = LOWER($1) AND action IN ('think_case_created','think_case_status_changed','think_action_requested','think_action_approved','think_action_rejected','think_action_blocked_by_storybot','think_action_blocked_by_safetybot') ORDER BY created_at DESC LIMIT 30",
                 [Target]
             )
         ]);
@@ -138,7 +138,7 @@ function createThinkRuntime(Dependencies) {
         if (Value === undefined || Value === null) return [];
         if (!Array.isArray(Value) || Value.length > 2) throw new Error("Attach no more than two images.");
         return Value.map((Item, Index) => {
-            const Name = String(Item?.name || ("image-" + (Index + 1))).replace(/[\\\\/\\u0000-\\u001f]/g, "_").slice(0, 100);
+            const Name = String(Item?.name || ("image-" + (Index + 1))).replace(/[\/\u0000-\u001f]/g, "_").slice(0, 100);
             const MimeType = String(Item?.mimeType || Item?.type || "").toLowerCase();
             const Base64 = String(Item?.base64 || "");
             if (!["image/jpeg", "image/png", "image/webp"].includes(MimeType)) {
@@ -151,7 +151,7 @@ function createThinkRuntime(Dependencies) {
             if (!Bytes.length || Bytes.length > 900 * 1024) throw new Error("Each image must be 900 KB or smaller after compression.");
             return { name: Name, mimeType: MimeType, base64: Bytes.toString("base64") };
         });
-    }
+    }}
 
 
     async function isRestricted(Username) {
