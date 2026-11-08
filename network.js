@@ -1033,3 +1033,6 @@ document.addEventListener("visibilitychange", () => {
         StorySocialHeartbeatTimer = null;
     }
 });
+
+// Think can be opened as a direct protected page without a shell activation event.
+if (document.visibilityState === "visible") StartStorySocialHeartbeat();
