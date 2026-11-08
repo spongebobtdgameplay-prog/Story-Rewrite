@@ -692,3 +692,51 @@ html[data-storybot-theme="paper"] {
     }
 }
 
+
+
+/* StoryBot composer polish: compact width, no duplicate chat field, balanced controls. */
+.StoryBotInputSlot:has(.StoryBotComposer) {
+    width: 100%;
+    max-width: 520px;
+    margin-inline: auto;
+}
+
+.StoryBotInputSlot > .StoryBotComposer .StoryBotSendButton,
+.StoryBotInputSlot > .StoryBotComposer .StoryBotCloseButton {
+    box-sizing: border-box;
+    flex: 0 0 36px;
+    width: 36px;
+    min-width: 36px;
+    height: 36px;
+    min-height: 36px;
+    padding: 0;
+    display: inline-grid;
+    place-items: center;
+    appearance: none;
+    border-radius: 8px;
+}
+
+.StoryBotInputSlot > .StoryBotComposer .StoryBotSendButton {
+    font: 800 .72rem/1 system-ui, sans-serif;
+}
+
+.StoryBotInputSlot > .StoryBotComposer .StoryBotCloseButton {
+    font: 800 1.45rem/1 Arial, sans-serif;
+}
+
+@media (max-width: 520px) {
+    .StoryBotInputSlot:has(.StoryBotComposer) {
+        max-width: 100%;
+    }
+    .StoryBotInputSlot > .StoryBotComposer .StoryBotSendButton,
+    .StoryBotInputSlot > .StoryBotComposer .StoryBotCloseButton {
+        flex-basis: 34px;
+        width: 34px;
+        min-width: 34px;
+        height: 34px;
+        min-height: 34px;
+    }
+    .StoryBotInputSlot > .StoryBotComposer .StoryBotCloseButton {
+        font-size: 1.4rem;
+    }
+}
