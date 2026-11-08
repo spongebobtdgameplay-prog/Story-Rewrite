@@ -694,7 +694,7 @@ html[data-storybot-theme="paper"] {
 
 
 
-/* StoryBot composer: match the full regular chat row and its control height. */
+/* StoryBot composer: use the same dimensions as the regular chat input and Send button. */
 .ChatForm:has(.StoryBotComposer) {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
@@ -705,44 +705,55 @@ html[data-storybot-theme="paper"] {
     grid-column: 1 / -1;
     width: 100%;
     max-width: none;
-    min-height: 58px;
+    min-height: 46px;
     margin: 7px 0 0;
 }
 
 .StoryBotInputSlot > .StoryBotComposer {
-    min-height: 58px;
-    padding: 5px 7px !important;
+    box-sizing: border-box;
+    height: 100%;
+    min-height: 46px;
+    padding: 0 !important;
     gap: 7px;
+    border: 0 !important;
+    border-radius: 0;
+    background: transparent !important;
+    box-shadow: none !important;
 }
 
 .StoryBotInputSlot > .StoryBotComposer .StoryBotQuestionInput {
+    box-sizing: border-box;
     height: 46px;
     min-height: 46px;
     max-height: 110px;
     padding: 10px 12px;
-    font-size: .9375rem;
-    line-height: 1.2;
+    font: 700 .9375rem/1.2 system-ui, sans-serif;
+    border-radius: 10px;
 }
 
 .StoryBotInputSlot > .StoryBotComposer .StoryBotSendButton {
-    flex: 0 0 100px;
-    width: 100px;
-    min-width: 100px;
-    height: 46px;
-    min-height: 46px;
-    padding: 0 14px;
-    font: 800 .9375rem/1 system-ui, sans-serif;
-    border-radius: 9px;
+    box-sizing: border-box;
+    flex: 0 0 auto;
+    width: auto;
+    min-width: 0;
+    height: auto;
+    min-height: 44px;
+    padding: 10px 16px;
+    font: 800 1.0625rem/1.1 system-ui, sans-serif;
+    letter-spacing: .015em;
+    border-radius: 12px;
 }
 
 .StoryBotInputSlot > .StoryBotComposer .StoryBotCloseButton {
-    flex: 0 0 42px;
-    width: 42px;
-    min-width: 42px;
-    height: 46px;
-    min-height: 46px;
-    font-size: 1.4rem;
-    border-radius: 9px;
+    box-sizing: border-box;
+    flex: 0 0 28px;
+    width: 28px;
+    min-width: 28px;
+    height: 28px;
+    min-height: 28px;
+    padding: 0;
+    font-size: 1.1rem;
+    border-radius: 7px;
 }
 
 @media (max-width: 520px) {
@@ -753,38 +764,33 @@ html[data-storybot-theme="paper"] {
     .StoryBotInputSlot:has(.StoryBotComposer) {
         width: 100%;
         max-width: none;
-        min-height: 58px;
+        min-height: 46px;
         margin-top: 7px;
     }
 
     .StoryBotInputSlot > .StoryBotComposer {
-        min-height: 58px;
-        padding: 5px !important;
+        min-height: 46px;
         gap: 5px;
     }
 
     .StoryBotInputSlot > .StoryBotComposer .StoryBotQuestionInput {
         height: 46px;
         min-height: 46px;
-        padding: 9px 10px;
-        font-size: .9rem;
+        padding: 10px;
+        font-size: .9375rem;
     }
 
     .StoryBotInputSlot > .StoryBotComposer .StoryBotSendButton {
-        flex-basis: 78px;
-        width: 78px;
-        min-width: 78px;
-        height: 46px;
-        min-height: 46px;
-        padding-inline: 8px;
-        font-size: .875rem;
+        min-height: 44px;
+        padding: 9px 12px;
+        font-size: .9375rem;
     }
 
     .StoryBotInputSlot > .StoryBotComposer .StoryBotCloseButton {
-        flex-basis: 38px;
-        width: 38px;
-        min-width: 38px;
-        height: 46px;
-        min-height: 46px;
+        flex-basis: 28px;
+        width: 28px;
+        min-width: 28px;
+        height: 28px;
+        min-height: 28px;
     }
 }
