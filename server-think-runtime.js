@@ -86,6 +86,20 @@ function createThinkRuntime(Dependencies) {
                 [Target]
             )
         ]);
+        const RoomChatBans = [];
+        if (Rooms) {
+            for (const Room of Rooms.values()) {
+                const BannedNames = Room.chatBannedNames instanceof Set ? [...Room.chatBannedNames] : [];
+                if (BannedNames.some(Name => UsernameKey(Name) === TargetKey)) {
+                    RoomChatBans.push({
+                        roomCode: String(Room.code || "").slice(0, 12),
+                        status: "room chat disabled",
+                        current: true
+                    });
+                    if (RoomChatBans.length >= 10) break;
+                }
+            }
+        }
         const History = {
             username: Target,
             cases: Cases.rows.map(Row => ({
@@ -123,7 +137,8 @@ function createThinkRuntime(Dependencies) {
                 actor: redactModerationText(Row.actor_username, 32),
                 actorRole: String(Row.actor_role || ""),
                 createdAt: Row.created_at
-            }))
+            })),
+            currentRoomChatBans: RoomChatBans
         };
         await writeAudit(Staff, "safetybot_moderation_history_viewed", Target, {
             cases: History.cases.length,
@@ -151,7 +166,7 @@ function createThinkRuntime(Dependencies) {
             if (!Bytes.length || Bytes.length > 900 * 1024) throw new Error("Each image must be 900 KB or smaller after compression.");
             return { name: Name, mimeType: MimeType, base64: Bytes.toString("base64") };
         });
-    }}
+    }
 
 
     async function isRestricted(Username) {
