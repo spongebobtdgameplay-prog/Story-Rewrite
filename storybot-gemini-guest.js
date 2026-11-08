@@ -306,7 +306,7 @@ const GEMINI_UPLOAD_URL = "https://push.clients6.google.com/upload/";
 const MAX_SAFETYBOT_IMAGE_BYTES = 900 * 1024;
 
 async function uploadGeminiGuestAttachment(Attachment) {
-    const HasSignedInGoogleCookie = /(?:^|;\\s*)(?:SID|HSID|SSID|APISID|SAPISID|__Secure-1PSID|__Secure-3PSID)=/i.test(cookieHeader());
+    const HasSignedInGoogleCookie = /(?:^|;\s*)(?:SID|HSID|SSID|APISID|SAPISID|__Secure-1PSID|__Secure-3PSID)=/i.test(cookieHeader());
     if (!CachedAuthAt || !HasSignedInGoogleCookie) {
         throw new Error("Image attachments aren't available through the unauthenticated Gemini guest connection. Text chat still works; image upload requires a signed-in Gemini Web session.");
     }
