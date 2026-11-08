@@ -412,8 +412,20 @@
         }
     });
 
+    async function KeepThinkRoomAlive() {
+        if (document.visibilityState !== "visible" || typeof ApiRequest !== "function") return;
+        try {
+            await ApiRequest("/api/think/heartbeat", { method: "POST", timeoutMs: 8000 });
+        } catch {
+            // A missed lease pulse must not interrupt the developer workspace.
+        }
+    }
+
     Load();
+    KeepThinkRoomAlive();
     window.setInterval(() => {
-        if (document.visibilityState === "visible") Load();
+        if (document.visibilityState !== "visible") return;
+        Load();
+        KeepThinkRoomAlive();
     }, 20000);
 })();
