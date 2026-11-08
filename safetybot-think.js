@@ -265,7 +265,7 @@
         RenderPendingAttachments();
         AddMessage("bot", "Hey! What would you like to look into today?");
         Input.value = "";
-        SetStatus("Private conversation · Enter sends · Shift+Enter adds a new line.");
+        SetStatus("Private conversation · History lookups are read-only and audited · Enter sends · Shift+Enter adds a new line.");
         Input.focus({ preventScroll: true });
     }
 
