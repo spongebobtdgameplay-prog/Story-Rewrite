@@ -182,10 +182,6 @@ function buildPrompt({ username, question, context }) {
         }));
     }
 
-    const SerializeContext = () => {
-        try { return JSON.stringify(Context); } catch { return "{}"; }
-    };
-
     // Stage sentences are optional background. Shorten them before dropping conversation turns.
     while (SerializeContext().length > ContextBudget &&
            Context.stage && Array.isArray(Context.stage.sentences) &&
