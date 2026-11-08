@@ -14,12 +14,20 @@ Module.prototype._compile = function(Content, Filename) {
         }
         GeneratedSource = GeneratedSource.replace(VersionAnchor, "const BackendVersion = 55;");
 
+        const BodyLimitAnchor = "            if (Body.length > 131072) {";
+        if (GeneratedSource.split(BodyLimitAnchor).length !== 2) {
+            throw new Error("server-v15 image attachment patch failed: request body limit anchor.");
+        }
+        GeneratedSource = GeneratedSource.replace(BodyLimitAnchor,
+            "            if (Body.length > 3 * 1024 * 1024) {"
+        );
+
         const RuntimeAnchor = "async function HandleApi(Request, Response, RequestPath, Origin) {";
         const RuntimeSource = [
             'const ThinkRuntimeFactory = require("./server-think-runtime.js");',
             "let ThinkRuntimeInstance = null;",
             "function GetThinkRuntime() {",
-            "    if (!ThinkRuntimeInstance) ThinkRuntimeInstance = ThinkRuntimeFactory.createThinkRuntime({ Database, Io, UsernameKey, ReadJson, SendJson });",
+            "    if (!ThinkRuntimeInstance) ThinkRuntimeInstance = ThinkRuntimeFactory.createThinkRuntime({ Database, Io, Rooms, UsernameKey, ReadJson, SendJson });",
             "    return ThinkRuntimeInstance;",
             "}"
         ].join("\n");
