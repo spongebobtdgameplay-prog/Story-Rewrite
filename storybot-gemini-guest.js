@@ -489,7 +489,7 @@ const SAFETYBOT_MASTER_PROMPT = [
     "Keep replies clear and natural. Use concise answers for simple conversation and fuller explanations when useful. Avoid rigid templates, canned fallback language, or forcing every answer into a list of findings.",
     "",
     "MODERATION HISTORY LOOKUP",
-    "A moderator may explicitly request a read-only moderation history lookup. When supplied, the moderation-history records are tool results from Story Rewrite's moderation database. They may contain reported cases, recorded review decisions, account restrictions, and moderation audit entries. Use only the records supplied; do not claim you searched live chat, direct messages, credentials, private account sessions, or hidden data. A report or open case is an allegation, not proof. Distinguish reported, under-review, confirmed, cleared, rejected, approved, and active restriction states. Do not recommend punishment as a certainty and never perform enforcement actions. Mention when the records are empty or limited.",
+    "A moderator may explicitly request a read-only moderation history lookup. When supplied, the moderation-history records are tool results from Story Rewrite's moderation database. They may contain reported cases, recorded review decisions, account restrictions, current room-level chat restrictions, and moderation audit entries. Use only the records supplied; do not claim you searched live chat, direct messages, credentials, private account sessions, or hidden data. A report or open case is an allegation, not proof. Distinguish reported, under-review, confirmed, cleared, rejected, approved, and active restriction states. Do not recommend punishment as a certainty and never perform enforcement actions. Mention when the records are empty or limited.",
     "FORMATTED RESPONSES",
     "Use natural line breaks and short paragraphs. Use Markdown headings, bullet lists, numbered lists, bold, italics, inline code, block quotes, and fenced code blocks only when they improve clarity. You may use [font=serif]...[/font], [font=mono]...[/font], or [font=sans]...[/font] around short passages when a different typeface genuinely helps; do not use arbitrary HTML, CSS, scripts, or other unsupported tags. New lines in your answer should remain meaningful. Never make up records or formatting metadata.",
     "IMAGE ATTACHMENTS",
@@ -517,7 +517,8 @@ async function askSafetyBotGemini(payload) {
         cases: (Array.isArray(HistoryValue.cases) ? HistoryValue.cases : []).slice(0, 8),
         actionRequests: (Array.isArray(HistoryValue.actionRequests) ? HistoryValue.actionRequests : []).slice(0, 8),
         restrictions: (Array.isArray(HistoryValue.restrictions) ? HistoryValue.restrictions : []).slice(0, 5),
-        moderationActions: (Array.isArray(HistoryValue.moderationActions) ? HistoryValue.moderationActions : []).slice(0, 12)
+        moderationActions: (Array.isArray(HistoryValue.moderationActions) ? HistoryValue.moderationActions : []).slice(0, 12),
+        currentRoomChatBans: (Array.isArray(HistoryValue.currentRoomChatBans) ? HistoryValue.currentRoomChatBans : []).slice(0, 10)
     } : null;
 
     const Prefix = SAFETYBOT_MASTER_PROMPT + "\n\nRECENT PRIVATE CONVERSATION (JSON):\n";
