@@ -905,7 +905,7 @@ function UpdateStoryBotDedicatedComposer(Composer) {
     Input.style.height = "auto";
     Input.style.height = Math.min(110, Math.max(46, Input.scrollHeight)) + "px";
     const Slot = Input.closest(".StoryBotInputSlot");
-    if (Slot) Slot.style.height = Math.max(58, Math.min(132, Input.scrollHeight + 22)) + "px";
+    if (Slot) Slot.style.height = Math.max(46, Math.min(124, Input.scrollHeight)) + "px";
 }
 
 function FocusStoryBotDedicatedComposer(Input, Question = "") {
