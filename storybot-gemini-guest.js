@@ -23,17 +23,17 @@ const CookieJar = new Map();
 
 function extractBuildLabel(html) {
     return (
-        html.match(/"cfb2h"\\s*:\\s*"(boq_[^"]+)"/)?.[1] ||
-        html.match(/\\bboq_gemini-web-uiserver_[A-Za-z0-9._-]+/)?.[0] ||
-        html.match(/\\bboq_assistant-bard-web-server_[A-Za-z0-9._-]+/)?.[0] ||
-        html.match(/(?:\\?|&|&amp;)bl=(boq_[A-Za-z0-9._-]+)/)?.[1] ||
+        html.match(/"cfb2h"\s*:\s*"(boq_[^"]+)"/)?.[1] ||
+        html.match(/\bboq_gemini-web-uiserver_[A-Za-z0-9._-]+/)?.[0] ||
+        html.match(/\bboq_assistant-bard-web-server_[A-Za-z0-9._-]+/)?.[0] ||
+        html.match(/(?:\?|&|&amp;)bl=(boq_[A-Za-z0-9._-]+)/)?.[1] ||
         ""
     );
 }
 
 function extractPageValue(html, key) {
-    const DoubleQuoted = new RegExp('"' + String(key) + '"\\\\s*:\\\\s*"([^"]+)"');
-    const SingleQuoted = new RegExp("'" + String(key) + "'\\\\s*:\\\\s*'([^']+)'");
+    const DoubleQuoted = new RegExp('"' + String(key) + '"\\s*:\\s*"([^"]+)"');
+    const SingleQuoted = new RegExp("'" + String(key) + "'\\s*:\\s*'([^']+)'");
     return html.match(DoubleQuoted)?.[1] || html.match(SingleQuoted)?.[1] || "";
 }
 
@@ -514,10 +514,10 @@ async function askSafetyBotGemini(payload) {
         : null;
     const SafeModerationHistory = HistoryValue ? {
         username: String(HistoryValue.username || "").slice(0, 32),
-        cases: (Array.isArray(HistoryValue.cases) ? HistoryValue.cases : []).slice(0, 20),
-        actionRequests: (Array.isArray(HistoryValue.actionRequests) ? HistoryValue.actionRequests : []).slice(0, 20),
+        cases: (Array.isArray(HistoryValue.cases) ? HistoryValue.cases : []).slice(0, 8),
+        actionRequests: (Array.isArray(HistoryValue.actionRequests) ? HistoryValue.actionRequests : []).slice(0, 8),
         restrictions: (Array.isArray(HistoryValue.restrictions) ? HistoryValue.restrictions : []).slice(0, 5),
-        moderationActions: (Array.isArray(HistoryValue.moderationActions) ? HistoryValue.moderationActions : []).slice(0, 30)
+        moderationActions: (Array.isArray(HistoryValue.moderationActions) ? HistoryValue.moderationActions : []).slice(0, 12)
     } : null;
 
     const Prefix = SAFETYBOT_MASTER_PROMPT + "\n\nRECENT PRIVATE CONVERSATION (JSON):\n";
