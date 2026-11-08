@@ -60,8 +60,8 @@ function createThinkRuntime(Dependencies) {
     }
 
     async function readModerationHistory(Staff, TargetUsername) {
-        if (!canCreateCase(Staff?.role)) {
-            const Error = new Error("Moderation history is available only to moderators and higher.");
+        if (!canRead(Staff?.role)) {
+            const Error = new Error("Moderation history is available only to authorized Silicon Valley staff.");
             Error.status = 403;
             throw Error;
         }
