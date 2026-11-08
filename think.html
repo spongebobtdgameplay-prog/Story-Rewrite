@@ -95,6 +95,18 @@
                 <form class="ThinkSafetyChatForm" id="SafetyBotChatForm">
                     <label for="SafetyBotChatInput">Message SafetyBot</label>
                     <textarea id="SafetyBotChatInput" name="question" rows="3" maxlength="1200" required placeholder="Tell me what you would like to look into. Ask a question, describe what happened, or talk through a concern."></textarea>
+                    <div class="ThinkSafetyChatTools">
+                        <div class="ThinkSafetyChatAttachmentTools">
+                            <button class="ThinkButton small" id="SafetyBotChatAttach" type="button">Attach image</button>
+                            <input id="SafetyBotChatFileInput" type="file" accept="image/jpeg,image/png,image/webp" multiple hidden>
+                            <span>Up to 2 images · compressed before upload</span>
+                        </div>
+                        <div class="ThinkSafetyChatLookupTools">
+                            <input id="SafetyBotLookupUsername" type="text" maxlength="20" autocomplete="off" placeholder="Player username">
+                            <button class="ThinkButton small" id="SafetyBotChatLookup" type="button">Review moderation history</button>
+                        </div>
+                        <div id="SafetyBotChatAttachmentList" class="ThinkSafetyChatAttachmentList" aria-live="polite"></div>
+                    </div>
                     <div class="ThinkSafetyChatControls">
                         <p id="SafetyBotChatStatus" role="status" aria-live="polite">Private conversation · Only the messages you send here are used as context.</p>
                         <button class="ThinkButton primary" id="SafetyBotChatSend" type="submit">Send to SafetyBot</button>
