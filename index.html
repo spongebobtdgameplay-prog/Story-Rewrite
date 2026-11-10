@@ -43,6 +43,66 @@ body {
     overscroll-behavior: none;
 }
 
+#StoryShellLoading {
+    position: absolute;
+    inset: 0;
+    z-index: 9998;
+    display: grid;
+    place-items: center;
+    box-sizing: border-box;
+    padding: 24px;
+    color: #f5e3c4;
+    text-align: center;
+    background:
+        radial-gradient(circle at 50% 18%, rgba(229, 180, 110, .2), transparent 42%),
+        linear-gradient(155deg, #352316, #1c120c 76%);
+}
+
+#StoryShellLoading[hidden] {
+    display: none !important;
+}
+
+.StoryShellLoadingCard {
+    display: grid;
+    justify-items: center;
+    gap: 12px;
+    min-width: min(260px, 100%);
+    padding: 26px 32px;
+    border: 1px solid rgba(226, 180, 108, .35);
+    border-radius: 20px;
+    background: rgba(42, 27, 17, .72);
+    box-shadow: 0 18px 55px rgba(0, 0, 0, .32), inset 0 1px rgba(255, 239, 207, .07);
+    font-family: Georgia, "Times New Roman", serif;
+}
+
+.StoryShellLoadingMark {
+    width: 34px;
+    height: 34px;
+    border: 3px solid rgba(242, 211, 156, .24);
+    border-top-color: #f2d39c;
+    border-radius: 50%;
+    animation: StoryShellLoadingSpin .8s linear infinite;
+}
+
+.StoryShellLoadingCard strong {
+    color: #ffe5b7;
+    font-size: 22px;
+    letter-spacing: .02em;
+}
+
+.StoryShellLoadingCard span:last-child {
+    color: #d0b695;
+    font: 600 13px/1.5 system-ui, sans-serif;
+}
+
+@keyframes StoryShellLoadingSpin {
+    to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .StoryShellLoadingMark { animation-duration: 2.4s; }
+}
+
 .StoryShellFrame {
     position: absolute;
     inset: 0;
@@ -213,6 +273,13 @@ body {
 </head>
 <body>
 <div id="StoryShellRoot">
+    <div id="StoryShellLoading" role="status" aria-live="polite" aria-busy="true">
+        <div class="StoryShellLoadingCard">
+            <span class="StoryShellLoadingMark" aria-hidden="true"></span>
+            <strong>Story Rewrite</strong>
+            <span>Loading your story…</span>
+        </div>
+    </div>
     <button id="StoryShellPauseButton" type="button" hidden aria-label="Pause game" title="Pause game" aria-pressed="false">
         <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
             <rect x="7" y="5.5" width="3.5" height="13" rx="1"></rect>
@@ -253,7 +320,7 @@ body {
     }
 
     await LoadScript("cache-guard.js?v=20261030-cookie1");
-    await LoadScript("shell.js?v=20261106-legalnav1");
+    await LoadScript("shell.js?v=20261110-shellload1");
 })().catch(Error => {
     console.error("Story Rewrite startup failed", Error);
 });
