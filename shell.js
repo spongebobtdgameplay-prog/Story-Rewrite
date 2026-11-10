@@ -1,5 +1,5 @@
 (() => {
-    const FrontendVersion = "20261106.1";
+    const FrontendVersion = "20261110.1";
     const Root = document.getElementById("StoryShellRoot");
     const InitialFrame = document.getElementById("StoryShellFrame");
     if (!Root || !InitialFrame) return;
@@ -49,6 +49,13 @@
     let GameplayAudioPaused = false;
     let ShellPauseState = false;
     const GameplayPauseButton = document.getElementById("StoryShellPauseButton");
+    const ShellLoading = document.getElementById("StoryShellLoading");
+
+    function SetShellLoading(Visible) {
+        if (!ShellLoading) return;
+        ShellLoading.hidden = !Visible;
+        ShellLoading.setAttribute("aria-busy", Visible ? "true" : "false");
+    }
 
     function GetBaseUrl() {
         return new URL(".", window.location.href);
@@ -544,6 +551,7 @@
         Frame.removeAttribute("aria-hidden");
         ActiveFrame = Frame;
         if (PendingFrame === Frame) PendingFrame = null;
+        SetShellLoading(false);
 
         SyncGameplayPauseButton();
         GameplayPauseButton?.removeAttribute("aria-busy");
@@ -633,6 +641,7 @@
             } catch {}
             if (PendingFrame === Frame) {
                 PendingFrame = null;
+                SetShellLoading(false);
                 GameplayPauseButton?.removeAttribute("aria-busy");
             }
             return;
@@ -684,6 +693,7 @@
         }
 
         if (Frame === ActiveFrame && ActualRoute === CurrentRoute) {
+            SetShellLoading(false);
             UpdateTitle(Frame);
             DispatchFrameEvent(Frame, "StoryShellActivate", CurrentRoute);
         }
@@ -725,6 +735,7 @@
             Frame.dataset.storyLoadFailed = "1";
             if (PendingFrame === Frame) {
                 PendingFrame = null;
+                SetShellLoading(false);
                 GameplayPauseButton?.removeAttribute("aria-busy");
             }
         }, 25000);
@@ -818,6 +829,7 @@
             GameplayPauseButton?.removeAttribute("aria-busy");
         } else {
             PendingFrame = Frame;
+            SetShellLoading(true);
         }
 
         return true;
