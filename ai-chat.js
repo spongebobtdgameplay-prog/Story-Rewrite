@@ -1155,7 +1155,6 @@ function WrapStoryBotRenderers() {
             RestoreStoryBotComposer(Container, Composer);
             queueMicrotask(() => {
                 RefreshQuietChatState(Container);
-                RenderSafetyBotHistory(Container);
             });
             return Result;
         };
@@ -1172,7 +1171,6 @@ function WrapStoryBotRenderers() {
             RestoreStoryBotComposer(Container, Composer);
             queueMicrotask(() => {
                 RefreshQuietChatState(Container);
-                RenderSafetyBotHistory(Container);
             });
             return Result;
         };
