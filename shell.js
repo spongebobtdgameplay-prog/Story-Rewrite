@@ -829,7 +829,7 @@
             GameplayPauseButton?.removeAttribute("aria-busy");
         } else {
             PendingFrame = Frame;
-            SetShellLoading(true);
+            // Keep the current page visible while the destination loads; the clicked button shows navigation progress.
         }
 
         return true;
