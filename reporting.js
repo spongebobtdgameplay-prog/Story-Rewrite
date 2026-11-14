@@ -269,6 +269,9 @@ setTimeout(() => clearInterval(ChatModerationBindTimer), 30000);
 
 (function InstallStoryTermsWarning() {
     const StyleId = "StoryTermsWarningModalStyles";
+    let WarningTimer = null;
+    let CloseWarning = null;
+
     if (!document.getElementById(StyleId)) {
         const Style = document.createElement("style");
         Style.id = StyleId;
@@ -290,7 +293,10 @@ setTimeout(() => clearInterval(ChatModerationBindTimer), 30000);
     }
 
     window.ShowAbuseContentWarning = function(Payload = {}) {
-        if (Payload?.aiDetected !== true || Payload?.contentWarning !== true) return;
+        const Strikes = Math.max(0, Number(Payload?.strikes) || 0);
+        const ImmediateFlag = Payload?.aiDetected === true && Payload?.contentWarning === true;
+        const ConfirmedReview = Strikes > 0;
+        if (!ImmediateFlag && !ConfirmedReview) return;
 
         let Overlay = document.getElementById("StoryTermsWarningOverlay");
         if (!Overlay) {
@@ -304,12 +310,12 @@ setTimeout(() => clearInterval(ChatModerationBindTimer), 30000);
                 <div class="StoryTermsWarningCard">
                     <div class="StoryTermsWarningEyebrow">Story Rewrite multiplayer</div>
                     <h2 id="StoryTermsWarningTitle">Chat warning</h2>
-                    <div class="StoryTermsWarningLead">The multiplayer moderation AI detected abusive content in your chat message.</div>
+                    <div class="StoryTermsWarningLead">The multiplayer moderation filter flagged this message.</div>
                     <h3>Terms &amp; Conditions</h3>
-                    <p>By using Story Rewrite multiplayer chat, you agree to communicate without profanity, slurs, targeted harassment, threats, personal attacks, sexual harassment, or other abusive conduct toward other players.</p>
-                    <div class="StoryTermsWarningRule"><strong>Important:</strong> Profanity and abusive language are not allowed in ordinary multiplayer chat. Reviews consider the surrounding conversation, including whether a message quotes harmful words to report them or uses them to target someone; a keyword match alone is not conclusive.</div>
+                    <p>Multiplayer chat must not contain profanity, slurs, targeted harassment, threats, or other abusive conduct.</p>
+                    <div class="StoryTermsWarningRule"><strong>Context matters:</strong> A filter flag is not the same as a confirmed violation. Reported or suspected messages are reviewed with surrounding conversation before an abuse strike is applied.</div>
                     <h3>What happens next</h3>
-                    <p>Confirmed abuse can be removed from chat. Repeated confirmed abuse can result in a temporary chat timeout or additional game moderation.</p>
+                    <p>Confirmed violations add warnings. Three confirmed warnings trigger a 10-minute automatic chat timeout.</p>
                     <div class="StoryTermsWarningActions">
                         <button class="StoryTermsWarningTermsButton" id="StoryTermsWarningViewTerms" type="button">Read Terms of Service</button>
                         <button class="StoryTermsWarningAcknowledge" id="StoryTermsWarningAcknowledge" type="button">I Understand</button>
@@ -323,18 +329,33 @@ setTimeout(() => clearInterval(ChatModerationBindTimer), 30000);
                 else window.location.href = "terms.html";
             });
 
-            const Close = () => {
+            const Escape = Event => {
+                if (Event.key === "Escape") CloseWarning?.();
+            };
+            CloseWarning = () => {
+                if (WarningTimer) clearTimeout(WarningTimer);
+                WarningTimer = null;
                 Overlay?.remove();
                 document.removeEventListener("keydown", Escape);
+                CloseWarning = null;
             };
-            const Escape = Event => {
-                if (Event.key === "Escape") Close();
-            };
-            Overlay.querySelector("#StoryTermsWarningAcknowledge")?.addEventListener("click", Close);
+            Overlay.querySelector("#StoryTermsWarningAcknowledge")?.addEventListener("click", () => CloseWarning?.());
             document.addEventListener("keydown", Escape);
         }
 
         const Lead = Overlay.querySelector(".StoryTermsWarningLead");
-        if (Lead) Lead.textContent = String(Payload?.detected || "Abusive content detected.") + " The multiplayer moderation AI confirmed the violation.";
+        if (Lead) {
+            const Detected = String(Payload?.detected || "Abusive content detected.").trim();
+            if (Payload?.timedOut === true || Payload?.muted === true) {
+                Lead.textContent = Detected + " Three confirmed warnings were reached; chat is timed out for 10 minutes.";
+            } else if (ConfirmedReview) {
+                Lead.textContent = Detected + " Confirmed by contextual review. Warning " + Math.min(Strikes, 3) + "/3.";
+            } else {
+                Lead.textContent = Detected + " The message was blocked by the initial moderation filter; this flag alone is not an abuse strike.";
+            }
+        }
+
+        if (WarningTimer) clearTimeout(WarningTimer);
+        WarningTimer = setTimeout(() => CloseWarning?.(), 6500);
     };
 })();
