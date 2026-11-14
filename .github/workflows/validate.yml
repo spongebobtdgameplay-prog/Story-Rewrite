@@ -37,6 +37,8 @@ jobs:
       - run: node --check moderation-version.js
       - run: node --check host-controls.js
       - run: node --check ai-chat.js
+      - run: node --check reporting.js
+      - run: node --check host-moderation-v20.js
       - run: node --check storybot-gemini-guest.js
       - run: python -m py_compile storybot-cloud-browser/worker.py
       - run: bash -n storybot-cloud-browser/install.sh
