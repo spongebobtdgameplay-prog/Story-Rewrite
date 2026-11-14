@@ -313,7 +313,7 @@ setTimeout(() => clearInterval(ChatModerationBindTimer), 30000);
                     <div class="StoryTermsWarningLead">The multiplayer moderation filter flagged this message.</div>
                     <h3>Terms &amp; Conditions</h3>
                     <p>Multiplayer chat must not contain profanity, slurs, targeted harassment, threats, or other abusive conduct.</p>
-                    <div class="StoryTermsWarningRule"><strong>Context matters:</strong> A filter flag is not the same as a confirmed violation. Reported or suspected messages are reviewed with surrounding conversation before an abuse strike is applied.</div>
+                    <div class="StoryTermsWarningRule"><strong>Context matters:</strong> A filter flag is not the same as a confirmed violation. Reports are reviewed in context. Attempts to bypass chat filters by splitting abusive terms into fragments can also count as a violation.</div>
                     <h3>What happens next</h3>
                     <p>Confirmed violations add warnings. Three confirmed warnings trigger a 10-minute automatic chat timeout.</p>
                     <div class="StoryTermsWarningActions">
@@ -349,7 +349,7 @@ setTimeout(() => clearInterval(ChatModerationBindTimer), 30000);
             if (Payload?.timedOut === true || Payload?.muted === true) {
                 Lead.textContent = Detected + " Three confirmed warnings were reached; chat is timed out for 10 minutes.";
             } else if (ConfirmedReview) {
-                Lead.textContent = Detected + " Confirmed by contextual review. Warning " + Math.min(Strikes, 3) + "/3.";
+                Lead.textContent = Detected + " A confirmed moderation warning was recorded. Warning " + Math.min(Strikes, 3) + "/3.";
             } else {
                 Lead.textContent = Detected + " The message was blocked by the initial moderation filter; this flag alone is not an abuse strike.";
             }
