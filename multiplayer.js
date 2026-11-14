@@ -732,6 +732,16 @@ function RenderRoom() {
     }
 }
 
+function MaskChatForDisplayV19(Value) {
+    let Text = String(Value ?? "");
+    const Words = ["fuck", "fucking", "fucker", "shit", "bitch", "asshole", "dick", "cunt", "nigger", "nigga", "faggot", "retard"];
+    for (const Word of Words) {
+        const Pattern = new RegExp("(^|[^a-z0-9])(" + Word.split("").join("\\s*") + ")(?=$|[^a-z0-9])", "gi");
+        Text = Text.replace(Pattern, (FullMatch, Prefix, WordMatch) => Prefix + WordMatch.replace(/[a-z]/gi, "*"));
+    }
+    return Text;
+}
+
 function AppendChat(Message, Scroll = true) {
     const Container = ById("ChatMessages");
     if (!Container) return;
@@ -742,7 +752,8 @@ function AppendChat(Message, Scroll = true) {
     const Name = document.createElement("strong");
     Name.textContent = `${Message?.username || "Player"}: `;
     Element.appendChild(Name);
-    Element.appendChild(document.createTextNode(String(Message?.text || "")));
+    Element.style.whiteSpace = "pre-wrap";
+    Element.appendChild(document.createTextNode(MaskChatForDisplayV19(Message?.text || "")));
     Container.appendChild(Element);
 
     while (Container.childElementCount > CHAT_HISTORY_LIMIT) {
