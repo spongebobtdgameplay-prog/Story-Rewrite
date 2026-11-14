@@ -19,7 +19,7 @@ Module.prototype._compile = function(Content, Filename) {
             throw new Error("server-v20 chat rendering patch failed: helper insertion anchor.");
         }
 
-        const Helpers = `
+        const Helpers = String.raw`
 function DecodeChatEntitiesV20(Value) {
     let Text = String(Value ?? "");
     for (let Pass = 0; Pass < 2; Pass += 1) {
@@ -44,8 +44,8 @@ function DecodeChatEntitiesV20(Value) {
 
 NormalizeChatLayoutTextV19 = function(Value, MaximumLength = ChatMaxLength) {
     return DecodeChatEntitiesV20(Value)
-        .replace(/\\r\\n?/g, "\\n")
-        .replace(/[\\u0000-\\u0008\\u000B\\u000C-\\u001F\\u007F\\u200B-\\u200D\\uFEFF]/g, "")
+        .replace(/\r\n?/g, "\n")
+        .replace(/[\u0000-\u0008\u000B\u000C-\u001F\u007F\u200B-\u200D\uFEFF]/g, "")
         .trim()
         .slice(0, Math.max(0, Number(MaximumLength) || 0));
 };
@@ -53,7 +53,7 @@ NormalizeChatLayoutTextV19 = function(Value, MaximumLength = ChatMaxLength) {
 MaskChatProfanityV19 = function(Value, MaximumLength = ChatMaxLength) {
     let Text = NormalizeChatLayoutTextV19(Value, MaximumLength);
     for (const Word of ModerationFallbackWordsV19) {
-        const Separators = "[\\\\s\\\\p{P}\\\\p{S}\\\\u200B-\\\\u200D\\\\uFEFF]*";
+        const Separators = "[\\s\\p{P}\\p{S}\\u200B-\\u200D\\uFEFF]*";
         const Pattern = new RegExp(
             "(^|[^a-z0-9])(" + Word.split("").join(Separators) + ")(?=$|[^a-z0-9])",
             "giu"
@@ -85,16 +85,22 @@ function DetectSplitProfanitySequenceV20(Room, Username, CurrentText) {
         }
         Source = Source.replace(
             RateLimitAnchor,
-            RateLimitAnchor + "\\n\\n        const IsSplitProfanity = DetectSplitProfanitySequenceV20(Room, Socket.data.username, RawText);"
+            RateLimitAnchor + "\n\n        const IsSplitProfanity = DetectSplitProfanitySequenceV20(Room, Socket.data.username, RawText);"
         );
 
-        const DisplayAnchor = "            const Text = Moderation.fallback\\n                ? CensorChatTextLocalFallbackV19(RawText)\\n                : MaskChatProfanityV19(RawText);";
+        const DisplayAnchor = `            const Text = Moderation.fallback
+                ? CensorChatTextLocalFallbackV19(RawText)
+                : MaskChatProfanityV19(RawText);`;
         if (Source.split(DisplayAnchor).length !== 2) {
             throw new Error("server-v20 chat rendering patch failed: chat display-text anchor.");
         }
         Source = Source.replace(
             DisplayAnchor,
-            "            const Text = IsSplitProfanity\\n                ? \"****\"\\n                : (Moderation.fallback\\n                    ? CensorChatTextLocalFallbackV19(RawText)\\n                    : MaskChatProfanityV19(RawText));"
+            `            const Text = IsSplitProfanity
+                ? "****"
+                : (Moderation.fallback
+                    ? CensorChatTextLocalFallbackV19(RawText)
+                    : MaskChatProfanityV19(RawText));`
         );
 
         PatchApplied = true;
