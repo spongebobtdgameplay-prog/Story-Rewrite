@@ -595,8 +595,6 @@ function NormalizeStoryBotQuestionText(Value) {
     return String(Value || "")
         .replace(/\r\n?/g, "\n")
         .replace(/[\u0000-\u0008\u000B\u000C-\u001F\u007F]/g, " ")
-        .replace(/[\t\f\v ]+/g, " ")
-        .replace(/\n{3,}/g, "\n\n")
         .trim()
         .slice(0, STORY_BOT_MAX_QUESTION_LENGTH);
 }
