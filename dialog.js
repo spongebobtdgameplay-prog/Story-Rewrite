@@ -906,6 +906,16 @@ function SendGameChat(Event) {
     Input.value = "";
 }
 
+function MaskChatForDisplayV19(Value) {
+    let Text = String(Value ?? "");
+    const Words = ["fuck", "fucking", "fucker", "shit", "bitch", "asshole", "dick", "cunt", "nigger", "nigga", "faggot", "retard"];
+    for (const Word of Words) {
+        const Pattern = new RegExp("(^|[^a-z0-9])(" + Word.split("").join("\\s*") + ")(?=$|[^a-z0-9])", "gi");
+        Text = Text.replace(Pattern, (FullMatch, Prefix, WordMatch) => Prefix + WordMatch.replace(/[a-z]/gi, "*"));
+    }
+    return Text;
+}
+
 function AppendGameChat(Message, Scroll = true) {
     const Container = document.getElementById("GameChatMessages");
     if (!Container) return;
@@ -915,7 +925,8 @@ function AppendGameChat(Message, Scroll = true) {
     const Strong = document.createElement("strong");
     Strong.textContent = `${Message.username}: `;
     Element.appendChild(Strong);
-    Element.appendChild(document.createTextNode(Message.text));
+    Element.style.whiteSpace = "pre-wrap";
+    Element.appendChild(document.createTextNode(MaskChatForDisplayV19(Message.text || "")));
     Container.appendChild(Element);
 
     while (Container.childElementCount > 100) {
