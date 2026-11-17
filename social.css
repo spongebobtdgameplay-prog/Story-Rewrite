@@ -1592,20 +1592,31 @@ body.StorySocialPage { height:auto!important; min-height:100vh; overflow-x:hidde
 }
 
 
-/* Social uses the same viewport-pinned backdrop as every other page. */
+/* Keep the page backdrop fixed to the viewport; do not disable it during scroll. */
 html:has(body.StorySocialPage) {
-    background: var(--PageDeep) !important;
+    min-height: 100%;
+    background: #4d301f !important;
 }
 body.StorySocialPage {
-    position: static !important;
-    isolation: auto !important;
+    position: relative !important;
+    isolation: isolate !important;
+    min-height: 100vh;
     background: transparent !important;
 }
 body.StorySocialPage::before {
-    content: none !important;
-    display: none !important;
+    content: "";
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+        radial-gradient(circle at 15% 7%, rgba(255,240,207,.24), transparent 24%),
+        radial-gradient(circle at 84% 16%, rgba(60,30,14,.19), transparent 28%),
+        linear-gradient(155deg, #b38b61 0%, #8b6848 42%, #6e4c33 72%, #4d301f 100%);
+    background-repeat: no-repeat;
+    background-size: cover;
 }
-
 
 /* Social layout repair: keep result rows and inbox cards inside their frames. */
 .StorySocialSearchBox,
@@ -2223,4 +2234,14 @@ body.StorySocialPage::before {
         overflow-y: auto;
         overscroll-behavior-y: contain;
     }
+}
+
+
+/* A short search result must keep its natural row height, not stretch to fill the pane. */
+.StorySocialUserList {
+    align-content: start;
+    grid-auto-rows: max-content;
+}
+.StorySocialUserButton {
+    align-self: start;
 }
