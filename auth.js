@@ -195,12 +195,18 @@ async function SubmitAccount(Event) {
     Button.textContent = AccountMode === "register" ? "Creating..." : "Signing in...";
 
     try {
-        if (AccountMode === "register") {
+        const IsNewRegistration = AccountMode === "register";
+        if (IsNewRegistration) {
             await RegisterAccount(Username, Password, RegistrationChallengeRequired ? RegistrationTurnstileToken : "");
+            // A new account should not inherit the previous account's last open page.
+            try { localStorage.removeItem("StoryRewriteLastShellStateV1"); } catch {}
         } else {
             await LoginAccount(Username, Password);
         }
-        window.location.replace(BuildStoryUrl("index.html"));
+
+        const Destination = new URL(BuildStoryUrl("index.html"), window.location.href);
+        if (IsNewRegistration) Destination.hash = "main.html";
+        window.location.replace(Destination.href);
     } catch (Error) {
         if (AccountMode === "register" && Error?.status === 428 && Error?.data?.challengeRequired) {
             ShowRegistrationChallenge(true);
