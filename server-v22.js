@@ -61,18 +61,31 @@ async function VerifyRegistrationTurnstileToken(Token) {
 `;
         Source = Source.replace(HelperAnchor, Helpers + HelperAnchor);
 
-        const BodyAnchor = "            const Body = await ReadJson(Request);";
+        const PasswordValidationAnchor =
+            '            if (!ValidatePassword(Body.password)) return SendJson(Response, 400, { error: "Password must be 8-128 characters." }, Origin);';
         const RouteStart = '    if (RequestPath === "/api/register" && Request.method === "POST") {';
         const RouteIndex = Source.indexOf(RouteStart);
-        const BodyIndex = Source.indexOf(BodyAnchor, RouteIndex);
-        if (RouteIndex < 0 || BodyIndex < 0) {
-            throw new Error("server-v22 Turnstile patch failed: registration route not found.");
+        const ValidationIndex = Source.indexOf(PasswordValidationAnchor, RouteIndex);
+        if (RouteIndex < 0 || ValidationIndex < 0 || Source.indexOf(PasswordValidationAnchor, ValidationIndex + 1) >= 0) {
+            throw new Error("server-v22 Turnstile patch failed: password-validation insertion anchor.");
         }
-        const AfterBody = BodyIndex + BodyAnchor.length;
+        const AfterValidation = ValidationIndex + PasswordValidationAnchor.length;
         const Verification = `
             const RecentRegistrationCreations = (RegistrationCreationTimes.get(RegistrationIpKey) || [])
                 .filter(At => RegistrationNow - Number(At || 0) < RegistrationCreationWindowMs);
-            const RegistrationChallengeRequired = RecentRegistrationCreations.length >= 2;
+            if (RecentRegistrationCreations.length >= RegistrationCreationMax) {
+                const RetryAfterSeconds = Math.max(
+                    1,
+                    Math.ceil((RegistrationCreationWindowMs - (RegistrationNow - RecentRegistrationCreations[0])) / 1000)
+                );
+                return SendJson(Response, 429, {
+                    error: "This network has reached its account creation limit. Please try again later.",
+                    retryAfter: RetryAfterSeconds
+                }, Origin);
+            }
+
+            const RegistrationChallengeThreshold = Math.max(1, RegistrationCreationMax - 1);
+            const RegistrationChallengeRequired = RecentRegistrationCreations.length >= RegistrationChallengeThreshold;
             if (
                 RegistrationChallengeRequired
                 && !await VerifyRegistrationTurnstileToken(Body.turnstileToken)
@@ -82,7 +95,7 @@ async function VerifyRegistrationTurnstileToken(Token) {
                     challengeRequired: true
                 }, Origin);
             }`;
-        Source = Source.slice(0, AfterBody) + Verification + Source.slice(AfterBody);
+        Source = Source.slice(0, AfterValidation) + Verification + Source.slice(AfterValidation);
 
         PatchApplied = true;
         return OriginalCompile.call(this, Source, Filename);
