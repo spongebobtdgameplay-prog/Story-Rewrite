@@ -46,21 +46,6 @@ function ShowRegistrationChallenge(Reset = false) {
 window.StoryTurnstileReady = function() {
     RenderRegistrationTurnstile();
 };
-let RegistrationTurnstileWidgetId = null;
-
-window.StoryTurnstileReady = function() {
-    const Container = document.getElementById("TurnstileContainer");
-    const Widget = document.getElementById("TurnstileWidget");
-    if (!Container || !Widget || !window.turnstile || RegistrationTurnstileWidgetId !== null) return;
-    RegistrationTurnstileWidgetId = window.turnstile.render(Widget, {
-        sitekey: "0x4AAAAAAGGFz5TIyJ7WoKVe",
-        theme: "auto",
-        callback: () => {},
-        "expired-callback": () => {},
-        "error-callback": () => {}
-    });
-};
-
 window.addEventListener("DOMContentLoaded", async () => {
     const Session = await (window.StoryCookieSessionReady || Promise.resolve({ authenticated: false }));
     if (Session?.authenticated || GetAuthToken()) {
