@@ -1,5 +1,65 @@
 let AccountMode = "register";
-let AccountStatusTimer = 0;\nlet RegistrationTurnstileWidgetId = null;\n\nwindow.StoryTurnstileReady = function() {\n    const Container = document.getElementById("TurnstileContainer");\n    const Widget = document.getElementById("TurnstileWidget");\n    if (!Container || !Widget || !window.turnstile || RegistrationTurnstileWidgetId !== null) return;\n    RegistrationTurnstileWidgetId = window.turnstile.render(Widget, {\n        sitekey: "0x4AAAAAAGGFz5TIyJ7WoKVe",\n        theme: "auto",\n        callback: () => {},\n        "expired-callback": () => {},\n        "error-callback": () => {}\n    });\n};
+let AccountStatusTimer = 0;
+let RegistrationChallengeRequired = false;
+let RegistrationTurnstileWidgetId = null;
+let RegistrationTurnstileToken = "";
+
+function RenderRegistrationTurnstile() {
+    const Widget = document.getElementById("TurnstileWidget");
+    if (!RegistrationChallengeRequired || !Widget || !window.turnstile || RegistrationTurnstileWidgetId !== null) return;
+
+    try {
+        RegistrationTurnstileWidgetId = window.turnstile.render(Widget, {
+            sitekey: "0x4AAAAAAGGFz5TIyJ7WoKVe",
+            theme: "auto",
+            callback: Token => {
+                RegistrationTurnstileToken = String(Token || "");
+            },
+            "expired-callback": () => {
+                RegistrationTurnstileToken = "";
+                ShowStatus("Verification expired. Please complete it again.", false);
+            },
+            "error-callback": () => {
+                RegistrationTurnstileToken = "";
+                ShowStatus("Verification could not load. Please retry.", false);
+            }
+        });
+    } catch (Error) {
+        RegistrationTurnstileWidgetId = null;
+        ShowStatus("Verification could not load. Please retry.", false);
+    }
+}
+
+function ShowRegistrationChallenge(Reset = false) {
+    RegistrationChallengeRequired = true;
+    const Container = document.getElementById("TurnstileContainer");
+    if (Container) Container.classList.toggle("Hidden", AccountMode !== "register");
+
+    if (Reset && RegistrationTurnstileWidgetId !== null && window.turnstile) {
+        RegistrationTurnstileToken = "";
+        try { window.turnstile.reset(RegistrationTurnstileWidgetId); } catch {}
+    }
+
+    RenderRegistrationTurnstile();
+}
+
+window.StoryTurnstileReady = function() {
+    RenderRegistrationTurnstile();
+};
+let RegistrationTurnstileWidgetId = null;
+
+window.StoryTurnstileReady = function() {
+    const Container = document.getElementById("TurnstileContainer");
+    const Widget = document.getElementById("TurnstileWidget");
+    if (!Container || !Widget || !window.turnstile || RegistrationTurnstileWidgetId !== null) return;
+    RegistrationTurnstileWidgetId = window.turnstile.render(Widget, {
+        sitekey: "0x4AAAAAAGGFz5TIyJ7WoKVe",
+        theme: "auto",
+        callback: () => {},
+        "expired-callback": () => {},
+        "error-callback": () => {}
+    });
+};
 
 window.addEventListener("DOMContentLoaded", async () => {
     const Session = await (window.StoryCookieSessionReady || Promise.resolve({ authenticated: false }));
@@ -8,7 +68,8 @@ window.addEventListener("DOMContentLoaded", async () => {
         return;
     }
 
-    const ServerSetup = document.getElementById("ServerSetup");\n    const TurnstileContainer = document.getElementById("TurnstileContainer");\n    if (TurnstileContainer) TurnstileContainer.classList.remove("Hidden");
+    const ServerSetup = document.getElementById("ServerSetup");
+    document.getElementById("TurnstileContainer")?.classList.add("Hidden");
     if (!GetServerUrl()) ServerSetup.classList.remove("Hidden");
 
     document.getElementById("RegisterTab").addEventListener("click", () => SetMode("register"));
@@ -25,7 +86,8 @@ function SetMode(Mode) {
     const Register = Mode === "register";
     document.getElementById("RegisterTab").classList.toggle("Active", Register);
     document.getElementById("LoginTab").classList.toggle("Active", !Register);
-    document.getElementById("ConfirmLabel").classList.toggle("Hidden", !Register);\n    document.getElementById("TurnstileContainer")?.classList.toggle("Hidden", !Register);
+    document.getElementById("ConfirmLabel").classList.toggle("Hidden", !Register);
+    document.getElementById("TurnstileContainer")?.classList.toggle("Hidden", !Register || !RegistrationChallengeRequired);
     document.getElementById("AccountTitle").textContent = Register ? "Create your account" : "Welcome back";
     document.getElementById("AccountSubmit").textContent = Register ? "Create Account" : "Sign In";
     document.getElementById("PasswordInput").autocomplete = Register ? "new-password" : "current-password";
@@ -133,21 +195,39 @@ async function SubmitAccount(Event) {
         return;
     }
 
+    if (AccountMode === "register" && RegistrationChallengeRequired) {
+        const Token = window.turnstile && RegistrationTurnstileWidgetId !== null
+            ? String(window.turnstile.getResponse(RegistrationTurnstileWidgetId) || RegistrationTurnstileToken || "")
+            : "";
+        if (!Token) {
+            ShowStatus("Complete the verification check to continue.", false);
+            return;
+        }
+        RegistrationTurnstileToken = Token;
+    }
+
     Button.disabled = true;
     Button.textContent = AccountMode === "register" ? "Creating..." : "Signing in...";
 
     try {
-        if (AccountMode === "register") await RegisterAccount(Username, Password, TurnstileToken);
-        else await LoginAccount(Username, Password);
+        if (AccountMode === "register") {
+            await RegisterAccount(Username, Password, RegistrationChallengeRequired ? RegistrationTurnstileToken : "");
+        } else {
+            await LoginAccount(Username, Password);
+        }
         window.location.replace(BuildStoryUrl("index.html"));
     } catch (Error) {
-        ShowStatus(Error.message, false);
+        if (AccountMode === "register" && Error?.status === 428 && Error?.data?.challengeRequired) {
+            ShowRegistrationChallenge(true);
+            ShowStatus("We need one quick verification before continuing.", false);
+        } else {
+            ShowStatus(Error.message || "The request could not be completed. Please try again.", false);
+        }
     } finally {
         Button.disabled = false;
         Button.textContent = AccountMode === "register" ? "Create Account" : "Sign In";
     }
 }
-
 function ShowStatus(Text, Good) {
     const Status = document.getElementById("AccountStatus");
     if (AccountStatusTimer) clearTimeout(AccountStatusTimer);
