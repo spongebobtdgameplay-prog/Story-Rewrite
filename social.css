@@ -2251,3 +2251,19 @@ body.StorySocialPage::before {
     background-repeat: no-repeat;
     background-size: 100% 100%;
 }
+
+/* The Social backdrop belongs to the scrolling body, not the viewport canvas. */
+html:has(body.StorySocialPage) {
+    background: #4d301f !important;
+}
+
+body.StorySocialPage {
+    background-color: #4d301f !important;
+    background-image:
+        radial-gradient(circle at 15% 7%, rgba(255, 240, 207, .24), transparent 24%),
+        radial-gradient(circle at 84% 16%, rgba(60, 30, 14, .19), transparent 28%),
+        linear-gradient(155deg, #b38b61 0%, #8b6848 42%, #6e4c33 72%, #4d301f 100%) !important;
+    background-repeat: no-repeat !important;
+    background-size: 100% 100% !important;
+    background-attachment: scroll !important;
+}
