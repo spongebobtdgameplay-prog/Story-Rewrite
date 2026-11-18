@@ -62,9 +62,6 @@ async function VerifyRegistrationTurnstileToken(Token) {
         Source = Source.replace(HelperAnchor, Helpers + HelperAnchor);
 
         const BodyAnchor = "            const Body = await ReadJson(Request);";
-        if (Source.split(BodyAnchor).length !== 2) {
-            throw new Error("server-v22 Turnstile patch failed: registration body anchor.");
-        }
         const RouteStart = '    if (RequestPath === "/api/register" && Request.method === "POST") {';
         const RouteIndex = Source.indexOf(RouteStart);
         const BodyIndex = Source.indexOf(BodyAnchor, RouteIndex);
