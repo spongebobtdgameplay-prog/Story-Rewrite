@@ -1,5 +1,5 @@
 let AccountMode = "register";
-let AccountStatusTimer = 0;
+let AccountStatusTimer = 0;\nlet RegistrationTurnstileWidgetId = null;\n\nwindow.StoryTurnstileReady = function() {\n    const Container = document.getElementById("TurnstileContainer");\n    const Widget = document.getElementById("TurnstileWidget");\n    if (!Container || !Widget || !window.turnstile || RegistrationTurnstileWidgetId !== null) return;\n    RegistrationTurnstileWidgetId = window.turnstile.render(Widget, {\n        sitekey: "0x4AAAAAAGGFz5TIyJ7WoKVe",\n        theme: "auto",\n        callback: () => {},\n        "expired-callback": () => {},\n        "error-callback": () => {}\n    });\n};
 
 window.addEventListener("DOMContentLoaded", async () => {
     const Session = await (window.StoryCookieSessionReady || Promise.resolve({ authenticated: false }));
@@ -8,7 +8,7 @@ window.addEventListener("DOMContentLoaded", async () => {
         return;
     }
 
-    const ServerSetup = document.getElementById("ServerSetup");
+    const ServerSetup = document.getElementById("ServerSetup");\n    const TurnstileContainer = document.getElementById("TurnstileContainer");\n    if (TurnstileContainer) TurnstileContainer.classList.remove("Hidden");
     if (!GetServerUrl()) ServerSetup.classList.remove("Hidden");
 
     document.getElementById("RegisterTab").addEventListener("click", () => SetMode("register"));
@@ -25,7 +25,7 @@ function SetMode(Mode) {
     const Register = Mode === "register";
     document.getElementById("RegisterTab").classList.toggle("Active", Register);
     document.getElementById("LoginTab").classList.toggle("Active", !Register);
-    document.getElementById("ConfirmLabel").classList.toggle("Hidden", !Register);
+    document.getElementById("ConfirmLabel").classList.toggle("Hidden", !Register);\n    document.getElementById("TurnstileContainer")?.classList.toggle("Hidden", !Register);
     document.getElementById("AccountTitle").textContent = Register ? "Create your account" : "Welcome back";
     document.getElementById("AccountSubmit").textContent = Register ? "Create Account" : "Sign In";
     document.getElementById("PasswordInput").autocomplete = Register ? "new-password" : "current-password";
@@ -137,7 +137,7 @@ async function SubmitAccount(Event) {
     Button.textContent = AccountMode === "register" ? "Creating..." : "Signing in...";
 
     try {
-        if (AccountMode === "register") await RegisterAccount(Username, Password);
+        if (AccountMode === "register") await RegisterAccount(Username, Password, TurnstileToken);
         else await LoginAccount(Username, Password);
         window.location.replace(BuildStoryUrl("index.html"));
     } catch (Error) {
