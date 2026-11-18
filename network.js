@@ -849,11 +849,11 @@ async function CompleteCookieAccountSignIn(Result, Username) {
     return VerifiedResult;
 }
 
-async function RegisterAccount(Username, Password) {
+async function RegisterAccount(Username, Password, TurnstileToken) {
     ClearLastKnownStoryState();
     const Result = await ApiRequest("/api/register", {
         method: "POST",
-        body: JSON.stringify({ username: Username, password: Password })
+        body: JSON.stringify({ username: Username, password: Password, turnstileToken: TurnstileToken })
     });
     return CompleteCookieAccountSignIn(Result, Username);
 }
