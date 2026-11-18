@@ -70,8 +70,17 @@ async function VerifyRegistrationTurnstileToken(Token) {
         }
         const AfterBody = BodyIndex + BodyAnchor.length;
         const Verification = `
-            if (!await VerifyRegistrationTurnstileToken(Body.turnstileToken)) {
-                return SendJson(Response, 403, { error: "Please complete the human verification challenge and try again." }, Origin);
+            const RecentRegistrationCreations = (RegistrationCreationTimes.get(RegistrationIpKey) || [])
+                .filter(At => RegistrationNow - Number(At || 0) < RegistrationCreationWindowMs);
+            const RegistrationChallengeRequired = RecentRegistrationCreations.length >= 2;
+            if (
+                RegistrationChallengeRequired
+                && !await VerifyRegistrationTurnstileToken(Body.turnstileToken)
+            ) {
+                return SendJson(Response, 428, {
+                    error: "Please complete the quick verification to continue.",
+                    challengeRequired: true
+                }, Origin);
             }`;
         Source = Source.slice(0, AfterBody) + Verification + Source.slice(AfterBody);
 
