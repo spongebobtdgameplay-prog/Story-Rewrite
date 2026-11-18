@@ -2267,3 +2267,10 @@ body.StorySocialPage {
     background-size: 100% 100% !important;
     background-attachment: scroll !important;
 }
+
+/* The message-list backdrop must travel with the messages when that pane scrolls. */
+.StorySocialPage .StorySocialMessages {
+    background-attachment: local !important;
+    background-repeat: no-repeat !important;
+    background-size: 100% 100% !important;
+}
