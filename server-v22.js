@@ -12,7 +12,7 @@ Module.prototype._compile = function(Content, Filename) {
         if (Source.split(VersionAnchor).length !== 2) {
             throw new Error("server-v22 Turnstile patch failed: expected backend version 62 exactly once.");
         }
-        Source = Source.replace(VersionAnchor, "const BackendVersion = 63;");
+        Source = Source.replace(VersionAnchor, "const BackendVersion = 64;");
 
         const HelperAnchor = "function CleanExpiredJoinRequests(Room) {";
         if (Source.split(HelperAnchor).length !== 2) {
