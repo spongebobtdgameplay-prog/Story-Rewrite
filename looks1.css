@@ -58,7 +58,7 @@ body {
         linear-gradient(155deg, #b38b61 0%, var(--Page) 42%, #6e4c33 72%, var(--PageDeep) 100%);
     background-repeat: repeat, repeat, no-repeat, no-repeat, no-repeat;
     background-size: 120px 96px, 120px 96px, 100% 100%, 100% 100%, 100% 100%;
-    background-attachment: scroll, scroll, scroll, scroll, scroll;
+    background-attachment: local, local, local, local, local;
 }
 
 
