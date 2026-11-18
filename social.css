@@ -2233,3 +2233,21 @@ body.StorySocialPage::before {
 .StorySocialUserButton {
     align-self: start;
 }
+
+/* Keep the search frame visible while typing, and keep message gradients in normal scroll paint. */
+.StorySocialPage .StorySocialSidebar > .StorySocialSearchBox,
+.StorySocialPage .StorySocialSidebar > .StorySocialSearchBox:focus-within {
+    background-color: var(--SocialPaper) !important;
+    background-image: linear-gradient(180deg, rgba(255, 248, 231, .94), rgba(236, 215, 179, .86)) !important;
+    background-attachment: scroll;
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+}
+
+.StorySocialPage .StorySocialChat,
+.StorySocialPage .StorySocialChatView,
+.StorySocialPage .StorySocialMessages {
+    background-attachment: scroll;
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+}
