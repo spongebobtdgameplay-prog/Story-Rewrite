@@ -132,10 +132,26 @@ function SocialRenderUsers(Users, EmptyMessage = "No matching Story Rewrite user
     if (!List) return;
 
     if (!Users.length) {
-        const Message = EmptyMessage === "Search for players"
-            ? "Search for players"
+        const IsSearchReset = EmptyMessage === "Search for players";
+        const Heading = IsSearchReset
+            ? "Search the player index"
             : "No matching Story Rewrite users were found.";
-        List.innerHTML = '<div class="StorySocialEmpty StorySocialEmptyPlain"><strong>' + Message + '</strong></div>';
+        const Description = IsSearchReset
+            ? "Choose a player to open their profile and private conversation."
+            : "Try another username to find a player.";
+
+        List.innerHTML =
+            '<div class="StorySocialEmpty">' +
+                '<div class="StorySocialEmptyGlyph" aria-hidden="true">' +
+                    '<svg viewBox="0 0 24 24">' +
+                        '<circle cx="9" cy="9" r="3"></circle>' +
+                        '<path d="M3.5 19c.6-3 2.4-4.8 5.5-4.8s4.9 1.8 5.5 4.8"></path>' +
+                        '<path d="M15.3 5.6a3 3 0 0 1 0 5.7M16 14.6c2.1.4 3.6 1.8 4.2 4"></path>' +
+                    '</svg>' +
+                '</div>' +
+                '<strong>' + Heading + '</strong>' +
+                '<span>' + Description + '</span>' +
+            '</div>';
         return;
     }
 
