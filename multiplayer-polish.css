@@ -133,7 +133,10 @@ body.MultiplayerPage .StoryBotInputSlot > .StoryBotComposer .StoryBotCloseButton
     min-width: 46px;
     height: 46px;
     min-height: 44px;
-    padding: 10px 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
     border: 1px solid #a37d51;
     border-radius: 12px;
     color: #382115;
@@ -147,6 +150,17 @@ body.MultiplayerPage .StoryBotInputSlot > .StoryBotComposer .StoryBotCloseButton
 body.MultiplayerPage .StoryBotInputSlot > .StoryBotComposer .StoryBotCloseButton:hover {
     transform: translateY(-1px);
     background: var(--story-gradient-token-004);
+}
+
+body.MultiplayerPage .StoryBotInputSlot > .StoryBotComposer .StoryBotCloseButton svg {
+    display: block;
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
 }
 
 @media (max-width: 520px) {

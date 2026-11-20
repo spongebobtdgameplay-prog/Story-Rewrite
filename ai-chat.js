@@ -818,7 +818,7 @@ function CreateStoryBotComposer(Input) {
             placeholder="Ask StoryBot..." autocomplete="off" spellcheck="true"
             aria-label="Ask StoryBot a question"></textarea>
         <button class="StoryBotSendButton" type="button">Send</button>
-        <button class="StoryBotCloseButton" type="button" aria-label="Close StoryBot question">×</button>
+        <button class="StoryBotCloseButton" type="button" aria-label="Close StoryBot question"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m7 7 10 10M17 7 7 17"></path></svg></button>
     `;
 
     Slot.appendChild(Composer);
