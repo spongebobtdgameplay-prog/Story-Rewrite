@@ -150,11 +150,11 @@
 }
 
 .DangerTimerCard {
-    background: linear-gradient(180deg, #e7c89b, #ddb984);
+    background: var(--story-gradient-token-112);
 }
 
 .PowerPanel {
-    background: linear-gradient(180deg, #ecd4ab, #e1c08f);
+    background: var(--story-gradient-token-113);
 }
 
 .DangerTimerTop,
@@ -193,7 +193,7 @@
     width: 100%;
     height: 100%;
     border-radius: inherit;
-    background: linear-gradient(90deg, #c99a43, #b53b31);
+    background: var(--story-gradient-token-114);
     transition: width .5s linear, background .25s ease;
 }
 
@@ -271,7 +271,7 @@
 
 .TeamClueCard {
     border-color: rgba(54, 91, 109, .34);
-    background: linear-gradient(145deg, rgba(231, 247, 247, .92), rgba(163, 207, 205, .36));
+    background: var(--story-gradient-token-115);
 }
 
 .TeamClueCard p {
@@ -375,9 +375,7 @@
     padding: 30px 28px 26px;
     border: 1px solid rgba(230, 190, 124, .34);
     border-radius: 18px;
-    background:
-        radial-gradient(circle at 50% 0%, rgba(219, 170, 96, .13), transparent 48%),
-        linear-gradient(180deg, #3c2417, #21130d);
+    background: var(--story-gradient-token-116);
     box-shadow: 0 28px 90px rgba(0, 0, 0, .5), inset 0 1px rgba(255, 240, 207, .1);
     color: #f5e6cf;
     text-align: center;
@@ -428,7 +426,7 @@
     border: 1px solid rgba(226, 180, 108, .55);
     border-radius: 50%;
     color: #f1d5a5;
-    background: radial-gradient(circle at 32% 27%, #6b4228, #2d1a11 72%);
+    background: var(--story-gradient-token-117);
     box-shadow:
         0 8px 22px rgba(0,0,0,.28),
         inset 0 0 0 3px rgba(255, 238, 197, .045),
@@ -439,7 +437,7 @@
 .GameplayPauseButton:hover {
     transform: translateY(-1px) scale(1.04);
     border-color: #efc87f;
-    background: radial-gradient(circle at 32% 27%, #7b4b2e, #382015 74%);
+    background: var(--story-gradient-token-118);
     box-shadow:
         0 10px 26px rgba(0,0,0,.3),
         0 0 0 4px rgba(222, 170, 96, .09),
@@ -490,7 +488,7 @@
     border: 1px solid rgba(239, 195, 121, .48);
     border-radius: 50%;
     color: #f1cf91;
-    background: radial-gradient(circle at 35% 28%, rgba(120, 75, 43, .9), rgba(38, 22, 14, .96));
+    background: var(--story-gradient-token-119);
     box-shadow: 0 0 0 7px rgba(226, 180, 108, .07), 0 14px 28px rgba(0,0,0,.28), inset 0 1px rgba(255,255,255,.08);
 }
 
