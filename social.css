@@ -997,16 +997,21 @@ body.StorySocialPage {
 /* Keep one accurately-sized document scrollport inside the fixed shell iframe.
    The body grows with the Social content; only html owns page scrolling. */
 html:has(body.StorySocialPage) {
-    height: 100% !important;
-    min-height: 100% !important;
+    height: auto !important;
+    min-height: 100vh !important;
     overflow-x: hidden !important;
     overflow-y: auto !important;
     overscroll-behavior-y: none !important;
+    background-color: var(--story-gradient-base, #4d301f) !important;
+    background-repeat: no-repeat !important;
+    background-position: top center !important;
+    background-size: 100% 100% !important;
 }
 body.StorySocialPage {
     height: auto !important;
     min-height: 100vh;
     overflow: visible !important;
+    background: transparent !important;
     touch-action: pan-y;
 }
 .StorySocialPage .StorySocialTitleBlock .Kicker { color:#fff0d3; font-size:0.6875rem; font-weight:900; letter-spacing:.16em; text-shadow:0 1px 3px rgba(25,11,3,.72); }
