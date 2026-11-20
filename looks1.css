@@ -92,7 +92,7 @@ svg {
     color: #f9ebd2;
     border: 1px solid #130b07;
     border-radius: 17px;
-    background: linear-gradient(180deg, #4d2e1d, var(--Leather));
+    background: var(--story-gradient-token-001);
     box-shadow: 0 13px 33px rgba(29, 13, 5, .38), inset 0 1px rgba(255, 236, 200, .11);
 }
 
@@ -112,7 +112,7 @@ svg {
     color: #ffe7b9;
     border: 1px solid #8c6038;
     border-radius: 11px;
-    background: linear-gradient(145deg, #8c5d33, #59331d);
+    background: var(--story-gradient-token-002);
     box-shadow: inset 0 1px rgba(255, 244, 216, .17);
     font-size: 1.375rem;
     font-weight: 900;
@@ -183,37 +183,37 @@ svg {
 .SecondaryButton {
     color: #382115;
     border-color: #a37d51;
-    background: linear-gradient(180deg, #f4e3c2, #d8ba88);
+    background: var(--story-gradient-token-003);
     box-shadow: inset 0 1px rgba(255,255,255,.46);
 }
 
 .UiButton:hover,
 .SecondaryButton:hover {
     transform: translateY(-1px);
-    background: linear-gradient(180deg, #fff0d2, #e5c896);
+    background: var(--story-gradient-token-004);
 }
 
 .PrimaryButton {
     color: #fff5e3;
     border-color: #4a2916;
-    background: linear-gradient(180deg, #9b6637, #6e401f);
+    background: var(--story-gradient-token-005);
     box-shadow: 0 6px 14px rgba(55, 28, 12, .28), inset 0 1px rgba(255,245,221,.18);
 }
 
 .PrimaryButton:hover {
     transform: translateY(-2px);
-    background: linear-gradient(180deg, #ad7844, #7c4924);
+    background: var(--story-gradient-token-006);
 }
 
 .DangerButton {
     color: #fff1e9;
     border-color: #551f1a;
-    background: linear-gradient(180deg, #96483c, #682a23);
+    background: var(--story-gradient-token-007);
 }
 
 .DangerButton:hover {
     transform: translateY(-1px);
-    background: linear-gradient(180deg, #ab594a, #7a332a);
+    background: var(--story-gradient-token-008);
 }
 
 .Main {
@@ -224,7 +224,7 @@ svg {
 .Panel {
     border: 1px solid #6b482d;
     border-radius: 19px;
-    background: linear-gradient(180deg, var(--ArchiveLight), var(--Archive));
+    background: var(--story-gradient-token-009);
     box-shadow: var(--Shadow), inset 0 1px rgba(255, 249, 234, .4);
 }
 
@@ -265,7 +265,7 @@ svg {
     right: -170px;
     top: -210px;
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(255, 247, 225, .5), transparent 69%);
+    background: var(--story-gradient-token-010);
 }
 
 .HomeCopy,
@@ -327,7 +327,7 @@ svg {
     color: #f6e7cc;
     border: 1px solid #170d08;
     border-radius: 15px;
-    background: linear-gradient(145deg, #50301d, #2b190f);
+    background: var(--story-gradient-token-011);
     box-shadow: var(--ShadowSmall), inset 0 1px rgba(255,238,205,.1);
 }
 
@@ -372,7 +372,7 @@ svg {
     color: #f5e4c6;
     border: 1px solid #160c07;
     border-radius: 12px;
-    background: linear-gradient(180deg, #4a2a19, #29170e);
+    background: var(--story-gradient-token-012);
 }
 
 .ProgressTop {
@@ -397,7 +397,7 @@ svg {
     height: 100%;
     width: 0;
     border-radius: inherit;
-    background: linear-gradient(90deg, #b77935, #e2b465);
+    background: var(--story-gradient-token-013);
     transition: width .3s ease;
 }
 
