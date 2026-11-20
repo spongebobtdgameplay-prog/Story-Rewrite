@@ -409,7 +409,8 @@
     }
     function IsCssGradientCachePage() {
         const Body=document.body;
-        return Boolean(Body&&(Body.classList.contains("StorySettingsPage")||Body.classList.contains("MultiplayerPage")));
+        // Multiplayer keeps its native CSS gradients; do not snapshot/swap them.
+        return Boolean(Body&&Body.classList.contains("StorySettingsPage"));
     }
     let CssGradientScanForceQueued = false;
     function ApplyCssGradientCaches(Force = false) {
@@ -753,7 +754,10 @@
         image: "var(--story-theme-image-account)"
     });
     RegisterTheme("multiplayer", {
-        image: "var(--story-theme-image-account)"
+        image: "var(--story-theme-image-parchment)",
+        repeat: "repeat, repeat, no-repeat, no-repeat, no-repeat",
+        size: "120px 96px, 120px 96px, 100% 100%, 100% 100%, 100% 100%",
+        position: "0 0, 0 0, center center, center center, center center"
     });
     RegisterTheme("levels", {
         image: "var(--story-theme-image-levels)"
