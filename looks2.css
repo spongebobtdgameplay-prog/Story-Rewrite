@@ -10,7 +10,7 @@
     padding: 13px;
     border: 1px solid #3d2315;
     border-radius: 23px;
-    background: linear-gradient(180deg, #684026, #422516);
+    background: var(--story-gradient-token-014);
     box-shadow: var(--Shadow);
 }
 
@@ -34,15 +34,13 @@
     left: 50%;
     transform: translateX(-50%);
     pointer-events: none;
-    background: linear-gradient(90deg, transparent, rgba(72,41,22,.2), rgba(255,249,232,.2), rgba(72,41,22,.16), transparent);
+    background: var(--story-gradient-token-015);
 }
 
 .Page {
     min-width: 0;
     padding: clamp(23px, 3vw, 40px);
-    background:
-        radial-gradient(circle at 22% 14%, rgba(102,68,37,.05), transparent 24%),
-        linear-gradient(180deg, var(--PaperBright), var(--Paper));
+    background: var(--story-gradient-token-016);
 }
 
 .Page.Left {
@@ -199,7 +197,7 @@
     scrollbar-gutter: stable;
     border: 1px solid #5e3d26;
     border-radius: 18px;
-    background: linear-gradient(180deg, #c7a16f, #ad7f4e);
+    background: var(--story-gradient-token-017);
     box-shadow: var(--ShadowSmall);
 }
 
@@ -236,7 +234,7 @@
     color: #3b2618;
     border: 1px solid #92704b;
     border-radius: 10px;
-    background: linear-gradient(180deg, #f1dfbd, #dfc393);
+    background: var(--story-gradient-token-018);
 }
 
 .InfoLabel {
@@ -258,7 +256,7 @@
 .StatsBox {
     color: #f6e6cb;
     border-color: #1e110a;
-    background: linear-gradient(145deg, #4a2c1a, #29170e);
+    background: var(--story-gradient-token-019);
 }
 
 .StatsBox .InfoLabel {
@@ -348,7 +346,7 @@
     color: var(--Ink);
     border: 1px solid #5e3f29;
     border-radius: 18px;
-    background: linear-gradient(180deg, #f6e7ca, #ddc091);
+    background: var(--story-gradient-token-020);
     box-shadow: 0 28px 85px rgba(21,10,4,.48), inset 0 0 0 5px rgba(255,249,235,.28);
 }
 
@@ -416,7 +414,7 @@
     right: 9%;
     top: 57px;
     height: 2px;
-    background: repeating-linear-gradient(90deg, rgba(72,45,27,.28) 0 8px, transparent 8px 16px);
+    background: var(--story-gradient-token-021);
 }
 
 .TrailDot {
@@ -538,7 +536,7 @@
     padding: 18px;
     border: 1px solid #8e6843;
     border-radius: 13px;
-    background: linear-gradient(180deg, #f4e5c9, #e2c79c);
+    background: var(--story-gradient-token-022);
 }
 
 .TutorialStep h3,
