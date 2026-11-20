@@ -1,6 +1,7 @@
 const BrowserbaseModule = require("@browserbasehq/sdk");
 const Browserbase = BrowserbaseModule.default || BrowserbaseModule;
 const { chromium } = require("playwright-core");
+const crypto = require("crypto");
 
 function SafeErrorMessage(ErrorValue, ApiKey) {
     const RawMessage = String(ErrorValue?.message || ErrorValue || "Unknown error");
@@ -56,6 +57,158 @@ async function VisitAndSummarize(Page, Name, Url) {
     }
 }
 
+async function RunAccountFlow(Context, BaseUrl) {
+    const Username = "srqa" + Date.now().toString(36) + crypto.randomBytes(3).toString("hex");
+    const Password = crypto.randomBytes(24).toString("base64url").slice(0, 32);
+    const Page = await Context.newPage();
+    let AccountCreated = false;
+    let AccountDeleted = false;
+    const Summary = {
+        registration: "not_run",
+        cookie: "not_checked",
+        sessionRead: "not_checked",
+        logout: "not_run",
+        signedOutCheck: "not_run",
+        login: "not_run",
+        loginSessionRead: "not_run",
+        cleanup: "not_run"
+    };
+
+    async function ReadMe() {
+        return Page.evaluate(async () => {
+            const Response = await fetch("/api/me", {
+                method: "GET",
+                credentials: "include",
+                cache: "no-store"
+            });
+            let Data = {};
+            try { Data = await Response.json(); } catch {}
+            return {
+                status: Response.status,
+                username: String(Data?.profile?.username || ""),
+                ok: Response.ok
+            };
+        });
+    }
+
+    async function SubmitAccount(Mode) {
+        if (Mode === "login") {
+            await Page.locator("#LoginTab").click();
+        }
+        await Page.locator("#UsernameInput").fill(Username);
+        await Page.locator("#PasswordInput").fill(Password);
+        if (Mode === "register") await Page.locator("#ConfirmInput").fill(Password);
+        await Page.locator("#AccountSubmit").click();
+        try {
+            await Page.waitForURL(Url => Url.pathname.endsWith("/index.html"), { timeout: 45000 });
+            return { navigated: true, message: "" };
+        } catch {
+            const Message = await Page.locator("#AccountStatus").innerText().catch(() => "");
+            const ChallengeVisible = await Page.locator("#TurnstileContainer").isVisible().catch(() => false);
+            return { navigated: false, message: Message.slice(0, 240), challengeVisible: ChallengeVisible };
+        }
+    }
+
+    try {
+        await Page.goto(BaseUrl + "/auth.html", { waitUntil: "domcontentloaded", timeout: 45000 });
+        await Page.locator("#AccountForm").waitFor({ state: "visible", timeout: 20000 });
+
+        const Registration = await SubmitAccount("register");
+        if (!Registration.navigated) {
+            Summary.registration = Registration.challengeVisible
+                ? "blocked_by_turnstile"
+                : "failed: " + (Registration.message || "form did not complete");
+            Summary.manualActionRequired = Boolean(Registration.challengeVisible);
+            return Summary;
+        }
+        AccountCreated = true;
+        Summary.registration = "passed";
+
+        const Cookie = (await Context.cookies(BaseUrl)).find(Entry => Entry.name === "story_rewrite_session");
+        Summary.cookie = Cookie
+            ? {
+                present: true,
+                httpOnly: Cookie.httpOnly === true,
+                secure: Cookie.secure === true,
+                sameSite: Cookie.sameSite || "unspecified"
+            }
+            : { present: false };
+
+        const RegisteredSession = await ReadMe();
+        Summary.sessionRead = RegisteredSession.status === 200
+            && RegisteredSession.username.toLowerCase() === Username.toLowerCase()
+            ? "passed"
+            : "failed_http_" + RegisteredSession.status;
+
+        const Logout = await Page.evaluate(async () => {
+            const Response = await fetch("/api/session", {
+                method: "DELETE",
+                credentials: "include",
+                cache: "no-store"
+            });
+            return { status: Response.status };
+        });
+        Summary.logout = Logout.status === 200 ? "passed" : "failed_http_" + Logout.status;
+
+        const SignedOut = await ReadMe();
+        Summary.signedOutCheck = SignedOut.status === 401 ? "passed" : "failed_http_" + SignedOut.status;
+
+        await Page.goto(BaseUrl + "/auth.html", { waitUntil: "domcontentloaded", timeout: 45000 });
+        await Page.locator("#AccountForm").waitFor({ state: "visible", timeout: 20000 });
+        const Login = await SubmitAccount("login");
+        if (!Login.navigated) {
+            Summary.login = Login.challengeVisible
+                ? "blocked_by_turnstile"
+                : "failed: " + (Login.message || "form did not complete");
+            return Summary;
+        }
+        Summary.login = "passed";
+
+        const LoggedInSession = await ReadMe();
+        Summary.loginSessionRead = LoggedInSession.status === 200
+            && LoggedInSession.username.toLowerCase() === Username.toLowerCase()
+            ? "passed"
+            : "failed_http_" + LoggedInSession.status;
+
+        const DeleteAccount = await Page.evaluate(async () => {
+            const Response = await fetch("/api/account", {
+                method: "DELETE",
+                credentials: "include",
+                cache: "no-store"
+            });
+            return { status: Response.status };
+        });
+        Summary.cleanup = DeleteAccount.status === 200 ? "passed" : "failed_http_" + DeleteAccount.status;
+        AccountDeleted = DeleteAccount.status === 200;
+        if (AccountDeleted) {
+            const AfterDelete = await ReadMe();
+            Summary.deletedAccountSignedOut = AfterDelete.status === 401 ? "passed" : "failed_http_" + AfterDelete.status;
+        }
+        return Summary;
+    } catch (Error) {
+        Summary.error = SafeErrorMessage(Error, Password);
+        return Summary;
+    } finally {
+        if (AccountCreated && !AccountDeleted) {
+            try {
+                const Current = await ReadMe();
+                if (Current.status === 200 && Current.username.toLowerCase() === Username.toLowerCase()) {
+                    const Cleanup = await Page.evaluate(async () => {
+                        const Response = await fetch("/api/account", {
+                            method: "DELETE",
+                            credentials: "include",
+                            cache: "no-store"
+                        });
+                        return Response.status;
+                    });
+                    Summary.cleanup = Cleanup === 200 ? "passed_best_effort" : "failed_http_" + Cleanup;
+                }
+            } catch {}
+        }
+        await Page.close().catch(() => {});
+    }
+}
+
 async function runBrowserbaseSmokeTest() {
     if (String(process.env.BROWSERBASE_TEST_ON_START || "") !== "1") {
         return { skipped: true };
@@ -108,6 +261,14 @@ async function runBrowserbaseSmokeTest() {
             "https://www.storyrewritegame.com/social.html"
         );
 
+        let AccountFlow = null;
+        if (String(process.env.BROWSERBASE_TEST_ACCOUNT_FLOW || "") === "1") {
+            const BaseUrl = String(process.env.BROWSERBASE_TEST_BASE_URL || "https://story-rewrite-5snmky1ye-spongebobtdgameplay-prog.vercel.app").trim().replace(/\\/+$/, "");
+            console.log("BROWSERBASE_ACCOUNT_FLOW: starting disposable account registration/login verification.");
+            AccountFlow = await RunAccountFlow(Context, BaseUrl);
+            console.log("BROWSERBASE_ACCOUNT_FLOW_RESULT " + JSON.stringify(AccountFlow));
+        }
+
         await Browser.close();
         Browser = null;
 
@@ -117,6 +278,7 @@ async function runBrowserbaseSmokeTest() {
             connectivity: Example,
             storyRewriteAuth: Auth,
             storyRewriteSocial: Social,
+            accountFlow: AccountFlow,
             replayUrl: "https://browserbase.com/sessions/" + SessionId
         };
         console.log("BROWSERBASE_SMOKE_OK " + JSON.stringify(Result));
