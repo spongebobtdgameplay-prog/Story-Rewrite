@@ -4,6 +4,7 @@ let SocialSocket = null;
 let SocialSocketPromise = null;
 let SocialCurrentUser = null;
 let SocialSelectedUser = null;
+let SocialSelectionRequestId = 0;
 let SocialActiveUsername = "";
 let SocialSearchTimer = null;
 let SocialSearchRequestId = 0;
@@ -96,18 +97,6 @@ function SocialShowEmptyState() {
     if (View) View.hidden = true;
     if (Title) Title.textContent = "Choose a player";
     if (Text) Text.textContent = "Search the player index on the left. Their profile, progress, presence, and conversation will appear here.";
-}
-
-function SocialShowLoadingState() {
-    const Empty = SocialById("SocialChatEmpty");
-    const View = SocialById("SocialChatView");
-    const Title = SocialById("SocialChatEmptyTitle");
-    const Text = SocialById("SocialChatEmptyText");
-
-    if (Empty) Empty.hidden = false;
-    if (View) View.hidden = true;
-    if (Title) Title.textContent = "Loading...";
-    if (Text) Text.textContent = "Opening that player's profile and conversation.";
 }
 
 function SocialRenderStats(User) {
@@ -775,20 +764,23 @@ function SocialAddMessage(Message) {
     }
 }
 
-async function SocialLoadConversation() {
-    if (!SocialSelectedUser) return;
-    const ConversationUsername = String(SocialSelectedUser.username || "");
+async function SocialLoadConversation(SelectionId, Username) {
+    const ConversationUsername = String(Username || "");
     const Container = SocialById("SocialMessages");
-    if (!Container) return;
+    if (!Container || !ConversationUsername) return;
 
     SocialMessageIds.clear();
-    Container.innerHTML = '<div class="StorySocialConversationState">Loading messages...</div>';
+    Container.replaceChildren();
 
     try {
         const Result = await ApiRequest(
-            "/api/social/messages?username=" + encodeURIComponent(SocialSelectedUser.username) + "&limit=100"
+            "/api/social/messages?username=" + encodeURIComponent(ConversationUsername) + "&limit=100"
         );
-        Container.innerHTML = "";
+        if (SelectionId !== SocialSelectionRequestId ||
+            String(SocialActiveUsername || "").toLowerCase() !== ConversationUsername.toLowerCase() ||
+            SocialById("SocialChatView")?.hidden) return;
+
+        Container.replaceChildren();
         const Messages = Array.isArray(Result.messages) ? Result.messages : [];
         Messages.forEach(SocialAddMessage);
         if (!Messages.length) {
@@ -800,11 +792,13 @@ async function SocialLoadConversation() {
                 : 0;
             return Math.max(Latest, SentAt);
         }, 0);
-        if (String(SocialSelectedUser?.username || "").toLowerCase() === ConversationUsername.toLowerCase() &&
-            typeof StoryMarkSocialConversationRead === "function") {
+        if (typeof StoryMarkSocialConversationRead === "function") {
             StoryMarkSocialConversationRead(ConversationUsername, LatestMessageAt);
         }
     } catch (Error) {
+        if (SelectionId !== SocialSelectionRequestId ||
+            String(SocialActiveUsername || "").toLowerCase() !== ConversationUsername.toLowerCase() ||
+            SocialById("SocialChatView")?.hidden) return;
         console.error("Story Social conversation load failed", Error);
         Container.innerHTML = '<div class="StorySocialConversationState StorySocialConversationStateBad">Chat is temporarily unavailable. Try again in a moment.</div>';
     }
@@ -897,48 +891,109 @@ async function SocialReportMessage(MessageId) {
 }
 
 async function SelectSocialUser(Username) {
-    if (!Username) return;
+    const SelectedUsername = String(Username || "").trim();
+    if (!SelectedUsername) return;
 
-    SocialActiveUsername = String(Username).toLowerCase();
-    SocialUpdateActiveUserButtons();
+    const SelectedKey = SelectedUsername.toLowerCase();
+    const ChatView = SocialById("SocialChatView");
+    const ChatEmpty = SocialById("SocialChatEmpty");
+    const Messages = SocialById("SocialMessages");
+    const IsSameOpenUser = Boolean(
+        ChatView && !ChatView.hidden &&
+        String(SocialActiveUsername || "").toLowerCase() === SelectedKey
+    );
+
+    // Clicking the already-open person again closes the conversation pane.
+    // Incrementing the request id also makes any outstanding fetches harmless.
+    if (IsSameOpenUser) {
+        SocialSelectionRequestId += 1;
+        SocialActiveUsername = "";
+        SocialSelectedUser = null;
+        SocialMessageIds.clear();
+        Messages?.replaceChildren();
+        SocialById("SocialProfileCard")?.replaceChildren();
+        SocialSetStatus(SocialById("SocialChatStatus"), "");
+        SocialShowEmptyState();
+        SocialUpdateActiveUserButtons();
+        return;
+    }
+
+    const SelectionId = ++SocialSelectionRequestId;
+    SocialActiveUsername = SelectedKey;
     SocialSelectedUser = null;
-    SocialShowLoadingState();
+    SocialMessageIds.clear();
+    SocialUpdateActiveUserButtons();
 
-    // Start scrolling on the click, before profile and conversation requests.
+    // Reveal the actual conversation frame immediately. No loading card or
+    // loading row is shown while the profile and messages are fetched.
+    if (ChatEmpty) ChatEmpty.hidden = true;
+    if (ChatView) ChatView.hidden = false;
+    const Avatar = SocialById("SocialChatAvatar");
+    const Name = SocialById("SocialChatUsername");
+    const Presence = SocialById("SocialChatPresence");
+    const PresenceDot = SocialById("SocialChatPresenceDot");
+    const UserId = SocialById("SocialChatUserId");
+    if (Avatar) Avatar.textContent = SocialInitial(SelectedUsername);
+    if (Name) Name.textContent = SelectedUsername;
+    if (Presence) {
+        Presence.textContent = "";
+        Presence.removeAttribute("title");
+    }
+    if (PresenceDot) {
+        PresenceDot.className = "StorySocialPresenceDot";
+        PresenceDot.removeAttribute("title");
+    }
+    if (UserId) UserId.textContent = "";
+    SocialById("SocialProfileCard")?.replaceChildren();
+    Messages?.replaceChildren();
+    SocialSetStatus(SocialById("SocialChatStatus"), "");
+
+    // Keep the open pane visible as soon as the user clicks a result.
     SocialInterpolateFrameIntoView(document.querySelector(".StorySocialChat"));
 
     try {
-        const Result = await ApiRequest("/api/social/profile?username=" + encodeURIComponent(Username));
+        const Result = await ApiRequest(
+            "/api/social/profile?username=" + encodeURIComponent(SelectedUsername)
+        );
+        if (SelectionId !== SocialSelectionRequestId ||
+            String(SocialActiveUsername || "").toLowerCase() !== SelectedKey ||
+            SocialById("SocialChatView")?.hidden) return;
         if (!Result?.user?.username) throw new Error("Could not load that player.");
+
         SocialSelectedUser = Result.user;
     } catch (Error) {
+        if (SelectionId !== SocialSelectionRequestId) return;
         console.error("Story Social profile load failed", Error);
-        SocialSearchUsers(SocialById("SocialSearchInput")?.value.trim() || "");
+        SocialActiveUsername = "";
+        SocialSelectedUser = null;
+        SocialShowEmptyState();
+        SocialUpdateActiveUserButtons();
         const Status = SocialById("SocialSearchStatus");
         if (Status) Status.textContent = SocialSafeError(Error, "That player could not be opened.");
         return;
     }
 
-    SocialById("SocialChatEmpty").hidden = true;
-    SocialById("SocialChatView").hidden = false;
-    // Opening a conversation marks its notifications as seen immediately.
+    const User = SocialSelectedUser;
+    if (!User || SelectionId !== SocialSelectionRequestId) return;
+
     if (typeof StoryMarkSocialConversationRead === "function") {
-        StoryMarkSocialConversationRead(SocialSelectedUser.username);
+        StoryMarkSocialConversationRead(User.username);
     }
-    SocialById("SocialChatAvatar").textContent = SocialInitial(SocialSelectedUser.username);
-    SocialById("SocialChatUsername").textContent = SocialSelectedUser.username;
-    SocialById("SocialChatPresence").textContent = SocialPresenceLabel(SocialSelectedUser.presence);
-    SocialById("SocialChatPresence").title = SocialPresenceTooltip(SocialSelectedUser);
-    const PresenceDot = SocialById("SocialChatPresenceDot");
+    if (Avatar) Avatar.textContent = SocialInitial(User.username);
+    if (Name) Name.textContent = User.username;
+    if (Presence) {
+        Presence.textContent = SocialPresenceLabel(User.presence);
+        Presence.title = SocialPresenceTooltip(User);
+    }
     if (PresenceDot) {
-        PresenceDot.className = "StorySocialPresenceDot " + String(SocialSelectedUser.presence || "offline");
-        PresenceDot.title = SocialPresenceTooltip(SocialSelectedUser);
+        PresenceDot.className = "StorySocialPresenceDot " + String(User.presence || "offline");
+        PresenceDot.title = SocialPresenceTooltip(User);
     }
-    SocialById("SocialChatUserId").textContent = SocialSelectedUser.userId;
-    SocialRenderStats(SocialSelectedUser);
-    SocialSetStatus(SocialById("SocialChatStatus"), "");
-    await SocialLoadConversation();
+    if (UserId) UserId.textContent = User.userId;
+    SocialRenderStats(User);
+    SocialLoadConversation(SelectionId, User.username);
     SocialFocusAndRevealSmooth(SocialById("SocialMessageInput"));
+
     const SearchInput = SocialById("SocialSearchInput");
     if (SearchInput && SearchInput.value.trim()) SocialSearchUsers(SearchInput.value.trim());
 }
