@@ -2252,21 +2252,21 @@ body.StorySocialPage::before {
     background-size: 100% 100%;
 }
 
-/* The Social backdrop belongs to the scrolling body, not the viewport canvas. */
+/* Keep Social's backdrop on the root document canvas, not a fixed body layer. */
 html:has(body.StorySocialPage) {
-    background: #4d301f !important;
-    background-attachment: fixed !important;
-}
-
-body.StorySocialPage {
-    background-color: #4d301f !important;
-    background-image:
+    min-height: 100%;
+    background:
         radial-gradient(circle at 15% 7%, rgba(255, 240, 207, .24), transparent 24%),
         radial-gradient(circle at 84% 16%, rgba(60, 30, 14, .19), transparent 28%),
         linear-gradient(155deg, #b38b61 0%, #8b6848 42%, #6e4c33 72%, #4d301f 100%) !important;
     background-repeat: no-repeat !important;
     background-size: 100% 100% !important;
-    background-attachment: fixed !important;
+    background-attachment: scroll !important;
+}
+
+body.StorySocialPage {
+    background: transparent !important;
+    background-attachment: scroll !important;
 }
 
 /* The message-list backdrop must travel with the messages when that pane scrolls. */

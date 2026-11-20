@@ -1,5 +1,5 @@
 (() => {
-    const FrontendVersion = "20261119.2";
+    const FrontendVersion = "20261119.3";
     const Root = document.getElementById("StoryShellRoot");
     const InitialFrame = document.getElementById("StoryShellFrame");
     if (!Root || !InitialFrame) return;
@@ -588,10 +588,10 @@
         const ScrollStyles = ChildDocument.createElement("style");
         ScrollStyles.id = "StoryMobileScrollInputStyles";
         ScrollStyles.textContent = `
-/* Normalize the document-level gradient canvas on every shell-managed screen. */
+/* Keep shell-managed gradients on the document canvas to avoid fixed-layer repaint flicker. */
 html,
 body {
-    background-attachment: fixed !important;
+    background-attachment: scroll !important;
 }
 
 @media (max-width: 900px), (pointer: coarse) and (max-width: 1200px) {
