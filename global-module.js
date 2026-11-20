@@ -757,10 +757,7 @@
         image: "var(--story-theme-image-account)"
     });
     RegisterTheme("multiplayer", {
-        image: "var(--story-theme-image-parchment)",
-        repeat: "repeat, repeat, no-repeat, no-repeat, no-repeat",
-        size: "120px 96px, 120px 96px, 100% 100%, 100% 100%, 100% 100%",
-        position: "0 0, 0 0, center center, center center, center center"
+        image: "var(--story-theme-image-account)"
     });
     RegisterTheme("levels", {
         image: "var(--story-theme-image-levels)"
