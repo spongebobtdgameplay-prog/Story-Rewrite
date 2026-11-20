@@ -6,7 +6,7 @@
     padding: 0;
     border: 1px solid rgba(235, 190, 126, .28);
     border-radius: 14px;
-    background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.025));
+    background: var(--story-gradient-token-080);
     color: #f7e5c4;
     display: inline-flex;
     align-items: center;
@@ -20,7 +20,7 @@
 .IconNavButton:hover {
     transform: translateY(-1px);
     border-color: rgba(244, 198, 128, .58);
-    background: linear-gradient(180deg, rgba(244,198,128,.13), rgba(255,255,255,.035));
+    background: var(--story-gradient-token-081);
     box-shadow: 0 10px 26px rgba(0,0,0,.26);
 }
 
@@ -449,9 +449,7 @@ body.StoryWarningOpen {
     color: #f7e6c8;
     border: 1px solid rgba(225, 181, 116, .34);
     border-radius: 22px;
-    background:
-        radial-gradient(circle at 12% 5%, rgba(217, 166, 94, .12), transparent 32%),
-        linear-gradient(145deg, #3f2417, #20120c 72%);
+    background: var(--story-gradient-token-082);
     box-shadow: 0 32px 90px rgba(0, 0, 0, .58), inset 0 1px rgba(255, 238, 204, .07);
     transform: translateY(12px) scale(.97);
     transition: transform .16s ease;
@@ -463,9 +461,7 @@ body.StoryWarningOpen {
 
 .StoryWarningDialog.IsDanger {
     border-color: rgba(196, 81, 62, .5);
-    background:
-        radial-gradient(circle at 12% 5%, rgba(177, 59, 43, .16), transparent 34%),
-        linear-gradient(145deg, #432219, #21100c 72%);
+    background: var(--story-gradient-token-083);
 }
 
 .StoryWarningIcon {
@@ -573,13 +569,13 @@ body.StoryWarningOpen {
 .StoryWarningConfirm {
     color: #29170e;
     border: 1px solid #d5a45f;
-    background: linear-gradient(180deg, #e2bb7c, #b9793b);
+    background: var(--story-gradient-token-084);
 }
 
 .StoryWarningConfirm.Danger {
     color: #fff3ec;
     border-color: #b65342;
-    background: linear-gradient(180deg, #c96853, #92392e);
+    background: var(--story-gradient-token-085);
 }
 
 .StoryWarningCancel:hover,
@@ -666,12 +662,12 @@ body.StoryWarningOpen {
     border-radius: 999px;
     outline: none;
     cursor: pointer;
-    background: linear-gradient(90deg, #dfa24e 0 var(--VolumePercent), #6f513b var(--VolumePercent) 100%);
+    background: var(--story-gradient-volume-track);
     box-shadow: inset 0 2px 4px rgba(35, 16, 8, .34), 0 1px rgba(255, 236, 199, .18);
 }
 
 .AccountVolumeSlider:hover {
-    background: linear-gradient(90deg, #edb45f 0 var(--VolumePercent), #806048 var(--VolumePercent) 100%);
+    background: var(--story-gradient-volume-track-hover);
     filter: none;
 }
 
@@ -751,7 +747,7 @@ body.StoryWarningOpen {
     color: #2d170d;
     border: 1px solid #b37a3e;
     border-radius: 10px;
-    background: linear-gradient(180deg, #ffe8bd, #e7bd7c);
+    background: var(--story-gradient-token-086);
     box-shadow: inset 0 1px rgba(255, 255, 255, .58), 0 3px 8px rgba(24, 10, 4, .22);
     font: 900 1rem/1 Georgia, "Times New Roman", serif;
     font-variant-numeric: tabular-nums;
@@ -824,7 +820,7 @@ body.StoryWarningOpen {
     color: #3a1d10;
     border: 1px solid #c58b49;
     border-radius: 999px;
-    background: linear-gradient(180deg, #f7dca8, #dba25b);
+    background: var(--story-gradient-token-087);
     box-shadow: inset 0 1px rgba(255, 255, 255, .55);
     font: 900 0.625rem/1 system-ui, sans-serif;
     letter-spacing: .04em;
