@@ -71,7 +71,12 @@ async function runBrowserbaseSmokeTest() {
     let SessionId = "";
 
     try {
-        const BrowserbaseClient = new Browserbase({ apiKey: ApiKey });
+        const BrowserbaseClient = new Browserbase({
+            apiKey: ApiKey,
+            baseURL: "https://api.browserbase.com",
+            timeout: 20000,
+            maxRetries: 0
+        });
         console.log("BROWSERBASE_SMOKE: creating a remote Chromium session.");
 
         const Session = await BrowserbaseClient.sessions.create({ timeout: 120 });
@@ -118,11 +123,17 @@ async function runBrowserbaseSmokeTest() {
         return Result;
     } catch (Error) {
         const Message = SafeErrorMessage(Error, ApiKey);
-        console.error(
-            "BROWSERBASE_SMOKE_FAILED " +
-            JSON.stringify({ sessionId: SessionId || null, error: Message })
-        );
-        return { ok: false, sessionId: SessionId || null, error: Message };
+        const Details = {
+            sessionId: SessionId || null,
+            error: Message,
+            errorName: String(Error?.name || "Error").slice(0, 100),
+            errorCode: Error?.code ? String(Error.code).slice(0, 100) : null,
+            causeName: Error?.cause?.name ? String(Error.cause.name).slice(0, 100) : null,
+            causeCode: Error?.cause?.code ? String(Error.cause.code).slice(0, 100) : null,
+            causeMessage: Error?.cause ? SafeErrorMessage(Error.cause, ApiKey) : null
+        };
+        console.error("BROWSERBASE_SMOKE_FAILED " + JSON.stringify(Details));
+        return { ok: false, ...Details };
     } finally {
         if (Browser) {
             await Browser.close().catch(() => {});
