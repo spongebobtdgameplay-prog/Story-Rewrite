@@ -12,7 +12,7 @@
 
 .StoryBotMessage {
     border-color: rgba(221, 177, 100, .34) !important;
-    background: linear-gradient(135deg, rgba(83, 55, 33, .78), rgba(48, 31, 20, .92)) !important;
+    background: var(--story-gradient-token-101) !important;
     box-shadow: inset 3px 0 rgba(215, 168, 94, .75);
 }
 
@@ -203,7 +203,7 @@
     padding: 4px 5px !important;
     border: 1px solid rgba(171, 126, 77, .5) !important;
     border-radius: 9px;
-    background: linear-gradient(180deg, rgba(88, 57, 34, .98), rgba(61, 38, 23, .99)) !important;
+    background: var(--story-gradient-token-102) !important;
     box-shadow: inset 0 1px 0 rgba(255, 224, 170, .05), 0 3px 10px rgba(0, 0, 0, .16);
 }
 
@@ -238,7 +238,7 @@
     border-radius: 7px;
     outline: none;
     padding: 5px 8px;
-    background: linear-gradient(180deg, rgba(84, 54, 32, .98), rgba(62, 39, 24, .99));
+    background: var(--story-gradient-token-103);
     color: #f7e4c5;
     caret-color: #f0c989;
     font: 600 0.6875rem/1.35 system-ui, sans-serif;
@@ -261,14 +261,14 @@
     padding: 0 8px;
     border: 1px solid rgba(221, 177, 100, .38);
     border-radius: 7px;
-    background: linear-gradient(180deg, #8a6237, #684522);
+    background: var(--story-gradient-token-104);
     color: #ffe5b4;
     font: 800 0.5625rem/1 system-ui, sans-serif;
     cursor: pointer;
 }
 
 .StoryBotSendButton:hover {
-    background: linear-gradient(180deg, #986f41, #724d28);
+    background: var(--story-gradient-token-105);
 }
 
 .StoryBotCloseButton {
@@ -280,14 +280,14 @@
     border: 1px solid rgba(223, 180, 106, .42);
     border-radius: 7px;
     color: #f0d1a1;
-    background: linear-gradient(180deg, #6e4b2b, #52331f);
+    background: var(--story-gradient-token-106);
     font: 800 1.0625rem/1 Georgia, "Times New Roman", serif;
     cursor: pointer;
 }
 
 .StoryBotCloseButton:hover {
     border-color: rgba(233, 188, 112, .72);
-    background: linear-gradient(180deg, #875f35, #644222);
+    background: var(--story-gradient-token-107);
 }
 
 .StoryBotComposerStatus,
@@ -377,14 +377,14 @@
     border: 1px solid rgba(223, 180, 106, .42);
     border-radius: 7px;
     color: #f0d1a1;
-    background: linear-gradient(180deg, #6e4b2b, #52331f);
+    background: var(--story-gradient-token-106);
     font: 800 1.125rem/1 Georgia, "Times New Roman", serif;
     cursor: pointer;
 }
 
 .StoryBotInputSlot > .StoryBotComposer .StoryBotCloseButton:hover {
     border-color: rgba(233, 188, 112, .72);
-    background: linear-gradient(180deg, #875f35, #644222);
+    background: var(--story-gradient-token-107);
 }
 
 @media (max-width: 520px) {
@@ -416,7 +416,7 @@
 :root {
     --storybot-font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     --storybot-font-size: 0.875rem;
-    --storybot-message-background: linear-gradient(135deg, rgba(83, 55, 33, .78), rgba(48, 31, 20, .92));
+    --storybot-message-background: var(--story-gradient-token-101);
     --storybot-border: rgba(221, 177, 100, .34);
     --storybot-accent: rgba(215, 168, 94, .75);
     --storybot-name-color: #ffd68d;
@@ -427,7 +427,7 @@
 }
 
 html[data-storybot-theme="midnight"] {
-    --storybot-message-background: linear-gradient(135deg, rgba(33, 48, 72, .97), rgba(15, 23, 39, .98));
+    --storybot-message-background: var(--story-gradient-token-108);
     --storybot-border: rgba(125, 171, 235, .42);
     --storybot-accent: #7eb7ff;
     --storybot-name-color: #b9d8ff;
@@ -438,7 +438,7 @@ html[data-storybot-theme="midnight"] {
 }
 
 html[data-storybot-theme="violet"] {
-    --storybot-message-background: linear-gradient(135deg, rgba(64, 42, 86, .97), rgba(34, 22, 48, .98));
+    --storybot-message-background: var(--story-gradient-token-109);
     --storybot-border: rgba(202, 156, 239, .4);
     --storybot-accent: #c49af0;
     --storybot-name-color: #e1c6ff;
@@ -449,7 +449,7 @@ html[data-storybot-theme="violet"] {
 }
 
 html[data-storybot-theme="paper"] {
-    --storybot-message-background: linear-gradient(135deg, rgba(249, 239, 218, .99), rgba(229, 210, 177, .99));
+    --storybot-message-background: var(--story-gradient-token-110);
     --storybot-border: rgba(132, 91, 47, .38);
     --storybot-accent: #986b38;
     --storybot-name-color: #674019;
@@ -634,7 +634,7 @@ html[data-storybot-theme="paper"] {
     gap: 6px;
     overflow: hidden;
     border-radius: 10px;
-    background: linear-gradient(180deg, #583922, #301e13) !important;
+    background: var(--story-gradient-token-111) !important;
     border-color: rgba(210, 164, 99, .72) !important;
     box-shadow: inset 0 1px 0 rgba(255, 224, 170, .07), 0 2px 8px rgba(0, 0, 0, .2);
 }
@@ -717,7 +717,7 @@ html[data-storybot-theme="paper"] {
     gap: 7px;
     border: 1px solid rgba(210, 164, 99, .72) !important;
     border-radius: 12px;
-    background: linear-gradient(180deg, #583922, #301e13) !important;
+    background: var(--story-gradient-token-111) !important;
     box-shadow: inset 0 1px 0 rgba(255, 224, 170, .07), 0 2px 8px rgba(0, 0, 0, .2) !important;
 }
 
@@ -751,7 +751,7 @@ html[data-storybot-theme="paper"] {
     border: 1px solid #4a2916;
     border-radius: 12px;
     color: #fff5e3;
-    background: linear-gradient(180deg, #9b6637, #6e401f);
+    background: var(--story-gradient-token-005);
     box-shadow: 0 6px 14px rgba(55, 28, 12, .28), inset 0 1px rgba(255, 245, 221, .18);
     font: 800 1.0625rem/1.1 system-ui, sans-serif;
     letter-spacing: .015em;
