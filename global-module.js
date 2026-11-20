@@ -205,6 +205,7 @@
     }
 
     function GetAutomaticSurfaceName(Element) {
+        if (Element.classList.contains("StorySettingsPage")) return "settings-page-background";
         if (Element.classList.contains("StorySocialChat") || Element.classList.contains("StorySocialChatView")) {
             return "social-chat";
         }
@@ -234,7 +235,7 @@
 
     function ApplySurfaces() {
         const Targets = document.querySelectorAll(
-            "[data-story-gradient-surface], .StorySocialChat, .StorySocialChatView, " +
+            "[data-story-gradient-surface], .StorySettingsPage, .StorySocialChat, .StorySocialChatView, " +
             ".ChapterGameHeader, .StageMapArea, .GameScene, .SceneAtmosphere, .MultiplayerHero, " +
             ".RoomActionCard, .RoomPanel, .ChatPanel, .AccountCard"
         );
@@ -531,6 +532,20 @@
         layers: [{ type: "linear", angle: 180, stops: [
             { at: 0, color: "#3a2418" }, { at: 1, color: "#21130d" }
         ] }]
+    });
+    RegisterSurface("settings-page-background", {
+        backgroundColor: "#100906",
+        layers: [
+            { type: "linear", angle: 145, stops: [
+                { at: 0, color: "#432718" },
+                { at: 0.48, color: "#21130d" },
+                { at: 1, color: "#100906" }
+            ] },
+            { type: "radial", x: 0.18, y: 0.08, radiusScale: 0.34, stops: [
+                { at: 0, color: "rgba(213,165,95,.16)" },
+                { at: 1, color: "rgba(213,165,95,0)" }
+            ] }
+        ]
     });
     RegisterSurface("multiplayer-hero", {
         backgroundColor: "#24150e",
