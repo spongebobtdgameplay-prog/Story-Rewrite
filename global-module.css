@@ -40,6 +40,7 @@
     --story-global-gradient-position: center center, center center, center center;
 }
 
+:root:has(body.MultiplayerPage),
 :root:has(body.AccountPage) {
     --story-gradient-base: #4d301f;
     --story-global-gradient-image: var(--story-theme-image-account);
