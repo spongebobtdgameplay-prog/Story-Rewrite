@@ -994,8 +994,21 @@ body.StorySocialPage {
 
 
 /* Social polish v3: stronger labels, larger player finder, fitted user ID and count. */
-html:has(body.StorySocialPage) { height:auto!important; overflow-y:auto!important; overscroll-behavior-y:auto!important; }
-body.StorySocialPage { height:auto!important; min-height:100vh; overflow-x:hidden!important; overflow-y:auto!important; overscroll-behavior-y:auto!important; touch-action:pan-y; }
+/* Keep one accurately-sized document scrollport inside the fixed shell iframe.
+   The body grows with the Social content; only html owns page scrolling. */
+html:has(body.StorySocialPage) {
+    height: 100% !important;
+    min-height: 100% !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    overscroll-behavior-y: none !important;
+}
+body.StorySocialPage {
+    height: auto !important;
+    min-height: 100vh;
+    overflow: visible !important;
+    touch-action: pan-y;
+}
 .StorySocialPage .StorySocialTitleBlock .Kicker { color:#fff0d3; font-size:0.6875rem; font-weight:900; letter-spacing:.16em; text-shadow:0 1px 3px rgba(25,11,3,.72); }
 .StorySocialPage .StorySocialEyebrow { color:#633b1c; font-size:0.6875rem; line-height:1.25; letter-spacing:.14em; text-shadow:0 1px rgba(255,244,219,.42); }
 .StorySocialPage .StorySocialPaneHeader h2 { font-size:clamp(1.6875rem,2.2vw,1.9375rem); line-height:1.02; letter-spacing:-.025em; }
