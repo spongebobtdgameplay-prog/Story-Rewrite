@@ -222,12 +222,6 @@
             const Theme = GetClassSuffix(Scene, "SceneTheme-", "fromville");
             if (Theme === "fromville") return "scene-atmosphere-fromville";
         }
-        if (Element.classList.contains("MultiplayerHero")) return "multiplayer-hero";
-        if (
-            Element.classList.contains("RoomActionCard")
-            || Element.classList.contains("RoomPanel")
-            || Element.classList.contains("ChatPanel")
-        ) return "multiplayer-panel";
         if (Element.classList.contains("AccountCard")) return "account-card";
         return "";
     }
@@ -235,8 +229,7 @@
     function ApplySurfaces() {
         const Targets = document.querySelectorAll(
             "[data-story-gradient-surface], .StorySocialChat, .StorySocialChatView, " +
-            ".ChapterGameHeader, .StageMapArea, .GameScene, .SceneAtmosphere, .MultiplayerHero, " +
-            ".RoomActionCard, .RoomPanel, .ChatPanel, .AccountCard"
+            ".ChapterGameHeader, .StageMapArea, .GameScene, .SceneAtmosphere, .AccountCard"
         );
 
         Targets.forEach(Element => {
@@ -269,6 +262,134 @@
             }
         });
     }
+
+
+    // Snapshot each page's computed CSS gradients without redefining their colours.
+    const CssGradientCache = new Map();
+    const CssGradientStates = new WeakMap();
+    const CssGradientProperties = ["background-image","background-color","background-repeat","background-position","background-size","background-attachment","background-blend-mode"];
+    let CssGradientResizeObserver = null;
+    let CssGradientScanQueued = false;
+
+    function IsCssGradientImage(Value) {
+        return /(?:repeating-)?(?:linear|radial|conic)-gradient\s*\(/i.test(String(Value || ""));
+    }
+    function EscapeCssXml(Value) {
+        return String(Value || "").replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+    }
+    function GetCssGradientSignature(Style) {
+        return [Style.backgroundImage,Style.backgroundColor,Style.backgroundRepeat,Style.backgroundPosition,Style.backgroundSize,Style.backgroundOrigin,Style.backgroundClip,Style.backgroundBlendMode,Style.backgroundAttachment].join("\u001f");
+    }
+    function MeasureCssGradient(Element) {
+        const Rect=Element.getBoundingClientRect();
+        const IsRoot=Element===Root;
+        const Width=IsRoot?(Root.clientWidth||Rect.width||1280):(Element.clientWidth||Rect.width||1);
+        const Height=IsRoot?Math.max(Root.clientHeight||0,Root.scrollHeight||0,document.body?.scrollHeight||0,Rect.height||1):(Element.clientHeight||Rect.height||1);
+        return {width:Math.max(1,Math.min(2048,Math.round(Width))),height:Math.max(1,Math.min(IsRoot?4096:2048,Math.round(Height)))};
+    }
+    function RenderCssGradient(Style,Width,Height) {
+        const Properties=[
+            ["background-color",Style.backgroundColor],["background-image",Style.backgroundImage],
+            ["background-repeat",Style.backgroundRepeat],["background-position",Style.backgroundPosition],
+            ["background-size",Style.backgroundSize],["background-origin",Style.backgroundOrigin],
+            ["background-clip",Style.backgroundClip],["background-blend-mode",Style.backgroundBlendMode],
+            ["background-attachment",Style.backgroundAttachment]
+        ];
+        const InlineStyle=Properties.map(([Name,Value])=>Name+":"+EscapeCssXml(Value)+";").join("");
+        const Svg='<svg xmlns="http://www.w3.org/2000/svg" width="'+Width+'" height="'+Height+'" viewBox="0 0 '+Width+" "+Height+'"><foreignObject x="0" y="0" width="100%" height="100%"><div xmlns="http://www.w3.org/1999/xhtml" style="display:block;box-sizing:border-box;margin:0;padding:0;border:0;width:'+Width+"px;height:"+Height+"px;"+InlineStyle+'"></div></foreignObject></svg>';
+        return new Promise(resolve=>{
+            const Image=new window.Image();
+            Image.onload=()=>{
+                try{
+                    const Canvas=document.createElement("canvas");Canvas.width=Width;Canvas.height=Height;
+                    const Context=Canvas.getContext("2d",{alpha:true});if(!Context)return resolve("");
+                    Context.drawImage(Image,0,0,Width,Height);resolve(Canvas.toDataURL("image/png"));
+                }catch(Error){resolve("");}
+            };
+            Image.onerror=()=>resolve("");
+            Image.src="data:image/svg+xml;charset=utf-8,"+encodeURIComponent(Svg);
+        });
+    }
+    function GetCssGradientImage(Style,Width,Height,Signature) {
+        const Key=Signature+"\u001e"+Width+"x"+Height;
+        let Pending=CssGradientCache.get(Key);
+        if(!Pending){
+            Pending=RenderCssGradient(Style,Width,Height);CssGradientCache.set(Key,Pending);
+            Pending.then(Image=>{if(!Image&&CssGradientCache.get(Key)===Pending)CssGradientCache.delete(Key);});
+        }
+        return Pending;
+    }
+    function RestoreCssGradient(Element,State) {
+        if(!State||!State.applied)return;
+        for(const Property of CssGradientProperties){
+            const Original=State.originalInline[Property];
+            if(Original.value)Element.style.setProperty(Property,Original.value,Original.priority);
+            else Element.style.removeProperty(Property);
+        }
+        State.applied=false;
+    }
+    function ApplyCssGradientImage(Element,State,Image,Signature,Key,Request) {
+        if(!Image||State.request!==Request||!Element.isConnected)return;
+        if(GetCssGradientSignature(window.getComputedStyle(Element))!==Signature)return;
+        Element.style.setProperty("background-image",'url("'+Image+'")',"important");
+        Element.style.setProperty("background-color","transparent","important");
+        Element.style.setProperty("background-repeat","no-repeat","important");
+        Element.style.setProperty("background-position","0 0","important");
+        Element.style.setProperty("background-size","100% 100%","important");
+        Element.style.setProperty("background-attachment","scroll","important");
+        Element.style.setProperty("background-blend-mode","normal","important");
+        State.applied=true;State.signature=Signature;State.cacheKey=Key;State.image=Image;
+        if(CssGradientResizeObserver&&!State.observed){CssGradientResizeObserver.observe(Element);State.observed=true;}
+    }
+    function ApplyCssGradientToElement(Element) {
+        if(!Element||Element.nodeType!==1)return;
+        if(Element.id==="StoryBotAppearancePreview"||Element.classList.contains("StoryBotAppearancePreview"))return;
+        let State=CssGradientStates.get(Element);
+        if(!State){
+            const OriginalInline={};
+            for(const Property of CssGradientProperties)OriginalInline[Property]={value:Element.style.getPropertyValue(Property),priority:Element.style.getPropertyPriority(Property)};
+            State={originalInline:OriginalInline,applied:false,observed:false,request:0,signature:"",cacheKey:"",image:""};
+            CssGradientStates.set(Element,State);
+        }
+        RestoreCssGradient(Element,State);
+        State.request++;
+        const Request=State.request;
+        const Style=window.getComputedStyle(Element);
+        const BackgroundImage=String(Style.backgroundImage||"");
+        if(!IsCssGradientImage(BackgroundImage)||/url\s*\(/i.test(BackgroundImage)||String(Style.backgroundClip||"").toLowerCase().includes("text")){
+            State.signature="";State.cacheKey="";State.image="";return;
+        }
+        const Size=MeasureCssGradient(Element);
+        const Signature=GetCssGradientSignature(Style);
+        const Key=Signature+"\u001e"+Size.width+"x"+Size.height;
+        if(State.cacheKey===Key&&State.image){ApplyCssGradientImage(Element,State,State.image,Signature,Key,Request);return;}
+        GetCssGradientImage(Style,Size.width,Size.height,Signature).then(Image=>ApplyCssGradientImage(Element,State,Image,Signature,Key,Request));
+    }
+    function IsCssGradientCachePage() {
+        const Body=document.body;
+        return Boolean(Body&&(Body.classList.contains("StorySettingsPage")||Body.classList.contains("MultiplayerPage")));
+    }
+    function ApplyCssGradientCaches() {
+        if(!IsCssGradientCachePage())return;
+        [Root,document.body,...document.body.querySelectorAll("*")].forEach(ApplyCssGradientToElement);
+    }
+    function ScheduleCssGradientCacheScan() {
+        if(!IsCssGradientCachePage()||CssGradientScanQueued)return;
+        CssGradientScanQueued=true;
+        window.requestAnimationFrame(()=>{CssGradientScanQueued=false;ApplyCssGradientCaches();});
+    }
+    function GetClosestCssGradientSurface(Node) {
+        let Element=Node&&Node.nodeType===1?Node:Node?.parentElement;
+        while(Element&&Element!==document.body.parentElement){if(CssGradientStates.has(Element))return Element;Element=Element.parentElement;}
+        return null;
+    }
+    function RefreshCssGradientEventSurfaces(Event) {
+        const Target=GetClosestCssGradientSurface(Event.target);
+        const Related=GetClosestCssGradientSurface(Event.relatedTarget);
+        if(Target&&Target!==Related)ApplyCssGradientToElement(Target);
+        if(Related&&Related!==Target)ApplyCssGradientToElement(Related);
+    }
+
 
     RegisterSurface("social-chat", {
         top: "#352a23",
@@ -532,18 +653,6 @@
             { at: 0, color: "#3a2418" }, { at: 1, color: "#21130d" }
         ] }]
     });
-    RegisterSurface("multiplayer-hero", {
-        backgroundColor: "#24150e",
-        layers: [{ type: "linear", angle: 120, stops: [
-            { at: 0, color: "#4a2b1a" }, { at: 0.70, color: "#24150e" }, { at: 1, color: "#24150e" }
-        ] }]
-    });
-    RegisterSurface("multiplayer-panel", {
-        backgroundColor: "#21130d",
-        layers: [{ type: "linear", angle: 180, stops: [
-            { at: 0, color: "#392317" }, { at: 1, color: "#21130d" }
-        ] }]
-    });
 
     function RegisterTheme(Name, Definition) {
         const Key = String(Name || "").trim().toLowerCase();
@@ -653,6 +762,24 @@
 
     ApplyTheme();
     ApplySurfaces();
+    ApplyCssGradientCaches();
+
+    if (IsCssGradientCachePage() && typeof ResizeObserver === "function") {
+        CssGradientResizeObserver = new ResizeObserver(Entries => {
+            for (const Entry of Entries) ApplyCssGradientToElement(Entry.target);
+        });
+    }
+    if (IsCssGradientCachePage() && typeof MutationObserver === "function" && document.body) {
+        const CssGradientObserver = new MutationObserver(ScheduleCssGradientCacheScan);
+        CssGradientObserver.observe(document.body, {
+            childList: true, subtree: true, attributes: true,
+            attributeFilter: ["class", "aria-checked", "aria-expanded", "disabled"]
+        });
+        document.body.addEventListener("pointerover", RefreshCssGradientEventSurfaces, true);
+        document.body.addEventListener("pointerout", RefreshCssGradientEventSurfaces, true);
+        document.body.addEventListener("focusin", RefreshCssGradientEventSurfaces, true);
+        document.body.addEventListener("focusout", RefreshCssGradientEventSurfaces, true);
+    }
 
     if (typeof MutationObserver === "function" && document.body) {
         const SurfaceObserver = new MutationObserver(ApplySurfaces);
@@ -670,4 +797,5 @@
     }
 
     window.addEventListener("resize", ApplySurfaces, { passive: true });
+    window.addEventListener("resize", ScheduleCssGradientCacheScan, { passive: true });
 })();
