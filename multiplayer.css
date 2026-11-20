@@ -17,7 +17,7 @@
     padding: 32px;
     border: 1px solid #765138;
     border-radius: 22px;
-    background: linear-gradient(180deg, #3a2418, #21130d);
+    background: var(--story-gradient-token-073);
     box-shadow: 0 28px 80px rgba(0,0,0,.42), inset 0 1px rgba(255,240,211,.08);
 }
 
@@ -63,7 +63,7 @@
 
 .AccountTab.Active {
     color: #27160e;
-    background: linear-gradient(180deg, #f0d5a8, #c9995c);
+    background: var(--story-gradient-token-074);
 }
 
 .AccountForm,
@@ -123,7 +123,7 @@
     padding: 22px 24px;
     border: 1px solid #68462e;
     border-radius: 18px;
-    background: linear-gradient(120deg, #4a2b1a, #24150e 70%);
+    background: var(--story-gradient-token-075);
     box-shadow: 0 18px 50px rgba(0,0,0,.28);
 }
 
@@ -150,7 +150,7 @@
 .ChatPanel {
     border: 1px solid #69472e;
     border-radius: 16px;
-    background: linear-gradient(180deg, #392317, #21130d);
+    background: var(--story-gradient-token-076);
     box-shadow: 0 12px 32px rgba(0,0,0,.22);
 }
 
@@ -330,14 +330,14 @@
     color: #f2d3a0;
     border: 1px solid #795537;
     border-radius: 11px;
-    background: linear-gradient(180deg, #4a2c1b, #2c190f);
+    background: var(--story-gradient-token-077);
     transition: transform .15s ease, border-color .15s ease, background .15s ease;
 }
 
 .ChatToggleButton:hover {
     transform: translateY(-1px);
     border-color: #c08a4d;
-    background: linear-gradient(180deg, #5d3821, #342013);
+    background: var(--story-gradient-token-078);
 }
 
 .ChatToggleButton svg {
@@ -634,7 +634,7 @@
     border: 1px solid #9e6938;
     border-left: 4px solid #dfa24e;
     border-radius: 13px;
-    background: linear-gradient(135deg, #452719, #2a160f);
+    background: var(--story-gradient-token-079);
     box-shadow: 0 10px 24px rgba(18, 8, 4, .22), inset 0 1px rgba(255, 231, 188, .06);
     opacity: 1;
     transform: translateY(0);
