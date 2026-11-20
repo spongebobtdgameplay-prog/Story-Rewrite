@@ -14,7 +14,7 @@ html {
     background-repeat: var(--story-global-gradient-repeat) !important;
     background-position: var(--story-global-gradient-position) !important;
     background-size: var(--story-global-gradient-size) !important;
-    background-attachment: fixed !important;
+    background-attachment: scroll !important;
 }
 
 /* The global canvas is the html background. No fixed pseudo-element or body-level canvas. */
