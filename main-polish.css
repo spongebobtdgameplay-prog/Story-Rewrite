@@ -471,7 +471,7 @@ body {
     border: 1px solid rgba(255, 224, 174, .45);
     border-radius: 999px;
     color: #fff6e4;
-    background: linear-gradient(180deg, #d84a43, #a92624);
+    background: var(--story-gradient-token-155);
     box-shadow: 0 0 0 2px rgba(142, 36, 28, .18), 0 0 10px rgba(235, 63, 49, .4);
     font: 900 0.625rem/1 system-ui, sans-serif;
     font-variant-numeric: tabular-nums;
