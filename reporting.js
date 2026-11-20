@@ -277,7 +277,7 @@ setTimeout(() => clearInterval(ChatModerationBindTimer), 30000);
         Style.id = StyleId;
         Style.textContent = `
 .StoryTermsWarningOverlay{position:fixed;inset:0;z-index:2147483000;display:grid;place-items:center;padding:22px;background:rgba(10,8,12,.78);backdrop-filter:blur(8px)}
-.StoryTermsWarningCard{width:min(620px,calc(100vw - 34px));max-height:min(720px,calc(100vh - 44px));overflow:auto;box-sizing:border-box;padding:28px 30px 24px;border:1px solid rgba(221,169,108,.34);border-radius:22px;background:linear-gradient(180deg,#241d17,#17130f);box-shadow:0 28px 90px rgba(0,0,0,.58);color:#f8ecd7}
+.StoryTermsWarningCard{width:min(620px,calc(100vw - 34px));max-height:min(720px,calc(100vh - 44px));overflow:auto;box-sizing:border-box;padding:28px 30px 24px;border:1px solid rgba(221,169,108,.34);border-radius:22px;background: var(--story-gradient-token-164);box-shadow:0 28px 90px rgba(0,0,0,.58);color:#f8ecd7}
 .StoryTermsWarningEyebrow{font:900 11px/1 system-ui,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#d9a765;margin-bottom:9px}
 .StoryTermsWarningCard h2{margin:0;color:#fff2d9;font:900 28px/1.05 Georgia,"Times New Roman",serif}
 .StoryTermsWarningLead{margin:12px 0 18px;color:#dfceb5;font:600 14px/1.55 system-ui,sans-serif}
