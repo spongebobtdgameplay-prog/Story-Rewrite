@@ -96,15 +96,33 @@ async function LoadMainPlayerState() {
 }
 
 function BlockMainPageOverscroll(Event) {
-    if (Event.ctrlKey) return;
+    if (Event.defaultPrevented || Event.ctrlKey || !Number.isFinite(Event.deltaY) || Event.deltaY === 0) return;
+
+    const Direction = Event.deltaY < 0 ? -1 : 1;
+    const Path = typeof Event.composedPath === "function" ? Event.composedPath() : [Event.target];
+
+    // A scrollable panel gets first use of the mouse wheel. Only contain the
+    // gesture when that specific panel has reached its own edge.
+    for (const Candidate of Path) {
+        if (!(Candidate instanceof Element) || Candidate === document.body || Candidate === document.documentElement) continue;
+
+        const Style = getComputedStyle(Candidate);
+        if (!/(auto|scroll|overlay)/.test(Style.overflowY)) continue;
+        if (Candidate.scrollHeight <= Candidate.clientHeight + 1) continue;
+
+        const Maximum = Math.max(0, Candidate.scrollHeight - Candidate.clientHeight);
+        const Position = Candidate.scrollTop;
+        const CanScroll = Direction < 0 ? Position > 0.5 : Position < Maximum - 0.5;
+
+        if (!CanScroll) Event.preventDefault();
+        return;
+    }
 
     const Scroller = document.scrollingElement || document.documentElement;
-    const ScrollTop = Scroller.scrollTop;
     const MaxScrollTop = Math.max(0, Scroller.scrollHeight - Scroller.clientHeight);
+    const CanScroll = Direction < 0 ? Scroller.scrollTop > 0.5 : Scroller.scrollTop < MaxScrollTop - 0.5;
 
-    if ((Event.deltaY < 0 && ScrollTop <= 0) || (Event.deltaY > 0 && ScrollTop >= MaxScrollTop - 1)) {
-        Event.preventDefault();
-    }
+    if (!CanScroll) Event.preventDefault();
 }
 
 window.addEventListener("wheel", BlockMainPageOverscroll, { passive: false });
