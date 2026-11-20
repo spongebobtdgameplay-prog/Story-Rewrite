@@ -2,6 +2,128 @@
     "use strict";
     const Root = document.documentElement;
     const Registry = new Map();
+    const SurfaceRegistry = new Map();
+    const SurfaceCache = new Map();
+    const ObservedSurfaces = new WeakSet();
+    let SurfaceResizeObserver = null;
+
+    function RegisterSurface(Name, Definition) {
+        const Key = String(Name || "").trim().toLowerCase();
+        if (!/^[a-z][a-z0-9-]{0,31}$/.test(Key) || !Definition || typeof Definition !== "object") return false;
+        if (!Definition.top || !Definition.bottom) return false;
+        SurfaceRegistry.set(Key, Object.freeze({
+            top: String(Definition.top),
+            bottom: String(Definition.bottom),
+            highlight: String(Definition.highlight || "rgba(0,0,0,0)"),
+            highlightX: Math.max(0, Math.min(1, Number(Definition.highlightX ?? 0.5))),
+            highlightY: Math.max(0, Math.min(1, Number(Definition.highlightY ?? 0.5))),
+            highlightRadius: Math.max(0.01, Math.min(1, Number(Definition.highlightRadius ?? 0.24)))
+        }));
+        return true;
+    }
+
+    function RenderSurface(Definition, Width, Height) {
+        const Canvas = document.createElement("canvas");
+        Canvas.width = Width;
+        Canvas.height = Height;
+        const Context = Canvas.getContext("2d", { alpha: false });
+        if (!Context) return "";
+        const Base = Context.createLinearGradient(0, 0, 0, Height);
+        Base.addColorStop(0, Definition.top);
+        Base.addColorStop(1, Definition.bottom);
+        Context.fillStyle = Base;
+        Context.fillRect(0, 0, Width, Height);
+
+        if (Definition.highlight !== "rgba(0,0,0,0)") {
+            const X = Width * Definition.highlightX;
+            const Y = Height * Definition.highlightY;
+            const FarthestCorner = Math.max(
+                Math.hypot(X, Y),
+                Math.hypot(Width - X, Y),
+                Math.hypot(X, Height - Y),
+                Math.hypot(Width - X, Height - Y)
+            );
+            const Radius = FarthestCorner * Definition.highlightRadius;
+            const Glow = Context.createRadialGradient(X, Y, 0, X, Y, Math.max(1, Radius));
+            Glow.addColorStop(0, Definition.highlight);
+            Glow.addColorStop(1, "rgba(0,0,0,0)");
+            Context.fillStyle = Glow;
+            Context.fillRect(0, 0, Width, Height);
+        }
+        return Canvas.toDataURL("image/png");
+    }
+
+    function PaintSurface(Element) {
+        const Name = String(Element.dataset.storyGradientSurface || "").trim().toLowerCase();
+        const Definition = SurfaceRegistry.get(Name);
+        if (!Definition) return false;
+        const Rect = Element.getBoundingClientRect();
+        const Width = Math.max(320, Math.min(1920, Math.round(Element.clientWidth || Rect.width || 1280)));
+        const Height = Math.max(320, Math.min(1600, Math.round(Element.clientHeight || Rect.height || 900)));
+        const CacheKey = Name + ":" + Width + "x" + Height;
+        let Image = SurfaceCache.get(CacheKey);
+        if (!Image) {
+            Image = RenderSurface(Definition, Width, Height);
+            if (!Image) return false;
+            SurfaceCache.set(CacheKey, Image);
+        }
+        Element.style.setProperty("background-color", Definition.bottom, "important");
+        Element.style.setProperty("background-image", 'url("' + Image + '")', "important");
+        Element.style.setProperty("background-repeat", "no-repeat", "important");
+        Element.style.setProperty("background-position", "center center", "important");
+        Element.style.setProperty("background-size", "100% 100%", "important");
+        Element.style.setProperty("background-attachment", "scroll", "important");
+        Element.dataset.storyGradientSurfaceReady = "true";
+        Element.dataset.storyGradientSurfaceSize = CacheKey;
+        if (SurfaceResizeObserver && !ObservedSurfaces.has(Element)) {
+            SurfaceResizeObserver.observe(Element);
+            ObservedSurfaces.add(Element);
+        }
+        return true;
+    }
+
+    function ApplySurfaces() {
+        const Targets = document.querySelectorAll(
+            "[data-story-gradient-surface], .StorySocialChat, .StorySocialChatView"
+        );
+        Targets.forEach(Element => {
+            if (!Element.dataset.storyGradientSurface) {
+                Element.dataset.storyGradientSurface = "social-chat";
+            }
+            const Rect = Element.getBoundingClientRect();
+            const Width = Math.max(320, Math.min(1920, Math.round(Element.clientWidth || Rect.width || 1280)));
+            const Height = Math.max(320, Math.min(1600, Math.round(Element.clientHeight || Rect.height || 900)));
+            const Key = Element.dataset.storyGradientSurface + ":" + Width + "x" + Height;
+            if (Element.dataset.storyGradientSurfaceSize !== Key) PaintSurface(Element);
+            if (SurfaceResizeObserver && !ObservedSurfaces.has(Element)) {
+                SurfaceResizeObserver.observe(Element);
+                ObservedSurfaces.add(Element);
+            }
+        });
+    }
+
+    RegisterSurface("social-chat", {
+        top: "#352a23",
+        bottom: "#28201b",
+        highlight: "rgba(216,177,117,.13)",
+        highlightX: 0.88,
+        highlightY: 0.08,
+        highlightRadius: 0.24
+    });
+
+    if (typeof ResizeObserver === "function") {
+        SurfaceResizeObserver = new ResizeObserver(Entries => {
+            for (const Entry of Entries) {
+                const Element = Entry.target;
+                const Rect = Element.getBoundingClientRect();
+                const Width = Math.max(320, Math.min(1920, Math.round(Element.clientWidth || Rect.width || 1280)));
+                const Height = Math.max(320, Math.min(1600, Math.round(Element.clientHeight || Rect.height || 900)));
+                const Key = Element.dataset.storyGradientSurface + ":" + Width + "x" + Height;
+                if (Element.dataset.storyGradientSurfaceSize !== Key) PaintSurface(Element);
+            }
+        });
+    }
+
 
     function RegisterTheme(Name, Definition) {
         const Key = String(Name || "").trim().toLowerCase();
@@ -111,11 +233,25 @@
             apply: ApplyTheme,
             detectTheme: DetectTheme,
             getTheme: () => Root.dataset.storyGradient || "",
-            themes: () => Array.from(Registry.keys())
+            themes: () => Array.from(Registry.keys()),
+            registerSurface: RegisterSurface,
+            applySurfaces: ApplySurfaces,
+            surfaceThemes: () => Array.from(SurfaceRegistry.keys())
         })
     });
 
     ApplyTheme();
+    ApplySurfaces();
+    if (typeof MutationObserver === "function" && document.body) {
+        const SurfaceObserver = new MutationObserver(ApplySurfaces);
+        SurfaceObserver.observe(document.body, {
+            childList: true,
+            subtree: true,
+            attributes: true,
+            attributeFilter: ["data-story-gradient-surface"]
+        });
+    }
+    window.addEventListener("resize", ApplySurfaces, { passive: true });
     if (document.body && typeof MutationObserver === "function") {
         const Observer = new MutationObserver(ApplyTheme);
         Observer.observe(document.body, {
