@@ -79,7 +79,7 @@ async function runBrowserbaseSmokeTest() {
         });
         console.log("BROWSERBASE_SMOKE: creating a remote Chromium session.");
 
-        const Session = await BrowserbaseClient.sessions.create({ timeout: 120 });
+        const Session = await BrowserbaseClient.sessions.create({ api_timeout: 120 });
         if (!Session?.id || !Session?.connectUrl) {
             throw new Error("Browserbase did not return a session ID and CDP connection URL.");
         }
