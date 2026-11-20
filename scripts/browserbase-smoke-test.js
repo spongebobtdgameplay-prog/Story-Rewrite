@@ -66,7 +66,7 @@ async function RunAccountFlow(Context, BaseUrl) {
         if (!/\/api\/(register|login)(?:[?#]|$)/i.test(Response.url())) return;
         const Header = await Response.headerValue("set-cookie").catch(() => "");
         if (!Header) return;
-        for (const Entry of String(Header).split(/,(?=\\s*[^;,=]+=)/)) {
+        for (const Entry of String(Header).split(/,(?=\s*[^;,=]+=)/)) {
             const Parts = Entry.split(";");
             const CookieName = String(Parts.shift() || "").split("=")[0].trim();
             const Attributes = Parts.map(Part => Part.trim().toLowerCase());
