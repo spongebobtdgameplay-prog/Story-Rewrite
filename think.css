@@ -597,3 +597,25 @@ body.ThinkPage {
 }
 .ThinkSafetyChatTools button:disabled,
 .ThinkSafetyChatLookupTools input:disabled { opacity: .55; cursor: wait; }
+
+/* Keep cached Think gradients intact during hover/focus. The previous solid
+   hover fill forced a cached PNG to be discarded and rebuilt on pointer-out. */
+body.ThinkPage .ThinkButton,
+body.ThinkPage .ThinkNav a,
+body.ThinkPage .ThinkNav button {
+    transition-property: transform, border-color, box-shadow, color, opacity, filter !important;
+}
+
+body.ThinkPage .ThinkButton:hover,
+body.ThinkPage .ThinkNav a:hover,
+body.ThinkPage .ThinkNav button:hover {
+    background: var(--story-gradient-token-124) !important;
+}
+
+body.ThinkPage .ThinkButton.primary:hover {
+    background: var(--story-gradient-token-125) !important;
+}
+
+body.ThinkPage .ThinkButton.danger:hover {
+    background: rgba(111,47,38,.25) !important;
+}
