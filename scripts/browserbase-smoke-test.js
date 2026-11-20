@@ -466,9 +466,13 @@ async function runBrowserbaseSmokeTest() {
             "https://www.storyrewritegame.com/social.html"
         );
 
+        const BaseUrl = String(process.env.BROWSERBASE_TEST_BASE_URL || "https://story-rewrite-iota.vercel.app").trim().replace(/\/+$/, "");
+        console.log("BROWSERBASE_GRADIENT: starting desktop/mobile route sweep.");
+        const GradientRoutes = await VerifyShellGradientRoutes(Page, BaseUrl);
+        console.log("BROWSERBASE_GRADIENT_RESULT " + JSON.stringify(GradientRoutes));
+
         let AccountFlow = null;
         if (String(process.env.BROWSERBASE_TEST_ACCOUNT_FLOW || "") === "1") {
-            const BaseUrl = String(process.env.BROWSERBASE_TEST_BASE_URL || "https://story-rewrite-5snmky1ye-spongebobtdgameplay-prog.vercel.app").trim().replace(/\/+$/, "");
             console.log("BROWSERBASE_ACCOUNT_FLOW: starting disposable account registration/login verification.");
             AccountFlow = await RunAccountFlow(Context, BaseUrl);
             console.log("BROWSERBASE_ACCOUNT_FLOW_RESULT " + JSON.stringify(AccountFlow));
@@ -479,11 +483,15 @@ async function runBrowserbaseSmokeTest() {
 
         const AccountFlowPassed = !AccountFlow || AccountFlow.ok === true;
         const Result = {
-            ok: Example.status === 200 && Auth.gradientCanvas?.ok === true && AccountFlowPassed,
+            ok: Example.status === 200
+                && Auth.gradientCanvas?.ok === true
+                && GradientRoutes.ok === true
+                && AccountFlowPassed,
             sessionId: SessionId,
             connectivity: Example,
             storyRewriteAuth: Auth,
             storyRewriteSocial: Social,
+            gradientRoutes: GradientRoutes,
             accountFlow: AccountFlow,
             replayUrl: "https://browserbase.com/sessions/" + SessionId
         };
