@@ -14,6 +14,45 @@ let SocialActiveMessageMenu = null;
 let SocialMessageMenuCloseTimer = null;
 const SocialMessageIds = new Set();
 const SocialPendingReactionIds = new Set();
+const SocialProfileCache = new Map();
+const SocialConversationCache = new Map();
+
+function SocialConversationKey(Username) {
+    return String(Username || "").trim().toLowerCase();
+}
+
+function SocialCacheConversationMessage(Username, Message) {
+    const Key = SocialConversationKey(Username);
+    if (!Key || !Message?.id) return false;
+    const Cache = SocialConversationCache.get(Key);
+    if (!Cache) return false;
+    const Messages = Array.isArray(Cache.messages) ? Cache.messages : [];
+    const Id = String(Message.id);
+    const Index = Messages.findIndex(Item => String(Item?.id || "") === Id);
+    if (Index >= 0) Messages[Index] = { ...Messages[Index], ...Message };
+    else Messages.push({ ...Message });
+    if (Messages.length > 100) Messages.splice(0, Messages.length - 100);
+    Cache.messages = Messages;
+    return true;
+}
+
+function SocialCacheIncomingMessage(Message) {
+    const Me = SocialConversationKey(SocialCurrentUser?.username);
+    const Sender = SocialConversationKey(Message?.senderUsername);
+    const Recipient = SocialConversationKey(Message?.recipientUsername);
+    if (!Me || !Sender || !Recipient) return;
+    const OtherUser = Sender === Me ? Recipient : (Recipient === Me ? Sender : "");
+    if (OtherUser) SocialCacheConversationMessage(OtherUser, Message);
+}
+
+function SocialPatchCachedMessage(MessageId, Patch) {
+    const Id = String(MessageId || "");
+    if (!Id || !Patch) return;
+    for (const Cache of SocialConversationCache.values()) {
+        const Message = Cache.messages?.find(Item => String(Item?.id || "") === Id);
+        if (Message) Object.assign(Message, Patch);
+    }
+}
 
 function SocialById(Id) {
     return document.getElementById(Id);
@@ -516,6 +555,14 @@ function SocialUpdateMessageReactions(Message, IncludeViewerState = false) {
     if (!Message) return;
     const MessageId = String(Message.messageId || Message.id || "");
     if (!MessageId) return;
+    SocialPatchCachedMessage(MessageId, {
+        likeCount: Math.max(0, Number(Message.likeCount) || 0),
+        dislikeCount: Math.max(0, Number(Message.dislikeCount) || 0),
+        ...(IncludeViewerState ? {
+            likedByMe: Boolean(Message.likedByMe),
+            dislikedByMe: Boolean(Message.dislikedByMe)
+        } : {})
+    });
 
     const Element = Array.from(document.querySelectorAll(".StorySocialMessage"))
         .find(Item => Item.dataset.messageId === MessageId);
@@ -607,7 +654,7 @@ function SocialSetReactionButtonsPending(MessageId, Pending) {
         .forEach(Button => { Button.disabled = Boolean(Pending); });
 }
 
-function SocialAddMessage(Message) {
+function SocialAddMessage(Message, UpdateCache = true) {
     if (!Message || !Message.id) return;
     const Container = SocialById("SocialMessages");
     if (!Container) return;
@@ -762,27 +809,66 @@ function SocialAddMessage(Message) {
         Container.appendChild(Element);
         Container.scrollTop = Container.scrollHeight;
     }
+    if (UpdateCache && SocialSelectedUser?.username) {
+        SocialCacheConversationMessage(SocialSelectedUser.username, Message);
+    }
 }
 
 async function SocialLoadConversation(SelectionId, Username) {
     const ConversationUsername = String(Username || "");
+    const Key = SocialConversationKey(ConversationUsername);
     const Container = SocialById("SocialMessages");
-    if (!Container || !ConversationUsername) return;
+    if (!Container || !Key) return;
 
     SocialMessageIds.clear();
     Container.replaceChildren();
+
+    const Cached = SocialConversationCache.get(Key);
+    if (Cached?.loaded) {
+        const Messages = Array.isArray(Cached.messages) ? Cached.messages : [];
+        Messages.forEach(Message => SocialAddMessage(Message, false));
+        if (!Messages.length) {
+            Container.innerHTML = '<div class="StorySocialConversationState">No messages in this conversation yet.</div>';
+        }
+        const LatestMessageAt = Messages.reduce((Latest, Message) => {
+            const SentAt = typeof StorySocialNotificationTime === "function"
+                ? StorySocialNotificationTime(Message?.sentAt || Message?.createdAt || Message?.timestamp)
+                : 0;
+            return Math.max(Latest, SentAt);
+        }, 0);
+        if (typeof StoryMarkSocialConversationRead === "function") {
+            StoryMarkSocialConversationRead(ConversationUsername, LatestMessageAt);
+        }
+        return;
+    }
+
+    if (!Cached) SocialConversationCache.set(Key, { loaded: false, messages: [] });
 
     try {
         const Result = await ApiRequest(
             "/api/social/messages?username=" + encodeURIComponent(ConversationUsername) + "&limit=100"
         );
+        const ServerMessages = Array.isArray(Result.messages) ? Result.messages : [];
+        const PendingMessages = SocialConversationCache.get(Key)?.messages || [];
+        const Merged = new Map();
+        ServerMessages.forEach(Message => {
+            if (Message?.id) Merged.set(String(Message.id), { ...Message });
+        });
+        PendingMessages.forEach(Message => {
+            if (Message?.id) {
+                const Id = String(Message.id);
+                Merged.set(Id, { ...(Merged.get(Id) || {}), ...Message });
+            }
+        });
+        const Messages = Array.from(Merged.values()).slice(-100);
+        SocialConversationCache.set(Key, { loaded: true, messages: Messages });
+
         if (SelectionId !== SocialSelectionRequestId ||
-            String(SocialActiveUsername || "").toLowerCase() !== ConversationUsername.toLowerCase() ||
+            String(SocialActiveUsername || "").toLowerCase() !== Key ||
             SocialById("SocialChatView")?.hidden) return;
 
         Container.replaceChildren();
-        const Messages = Array.isArray(Result.messages) ? Result.messages : [];
-        Messages.forEach(SocialAddMessage);
+        Messages.forEach(Message => SocialAddMessage(Message, false));
         if (!Messages.length) {
             Container.innerHTML = '<div class="StorySocialConversationState">No messages in this conversation yet.</div>';
         }
@@ -797,13 +883,14 @@ async function SocialLoadConversation(SelectionId, Username) {
         }
     } catch (Error) {
         if (SelectionId !== SocialSelectionRequestId ||
-            String(SocialActiveUsername || "").toLowerCase() !== ConversationUsername.toLowerCase() ||
+            String(SocialActiveUsername || "").toLowerCase() !== Key ||
             SocialById("SocialChatView")?.hidden) return;
         console.error("Story Social conversation load failed", Error);
+        const Pending = SocialConversationCache.get(Key);
+        if (Pending && !Pending.loaded && !Pending.messages.length) SocialConversationCache.delete(Key);
         Container.innerHTML = '<div class="StorySocialConversationState StorySocialConversationStateBad">Chat is temporarily unavailable. Try again in a moment.</div>';
     }
 }
-
 async function SocialReactMessage(MessageId, Reaction) {
     const Id = String(MessageId || "");
     if (!Id || !["like", "dislike"].includes(Reaction) || SocialPendingReactionIds.has(Id)) return;
@@ -893,8 +980,7 @@ async function SocialReportMessage(MessageId) {
 async function SelectSocialUser(Username) {
     const SelectedUsername = String(Username || "").trim();
     if (!SelectedUsername) return;
-
-    const SelectedKey = SelectedUsername.toLowerCase();
+    const SelectedKey = SocialConversationKey(SelectedUsername);
     const ChatView = SocialById("SocialChatView");
     const ChatEmpty = SocialById("SocialChatEmpty");
     const Messages = SocialById("SocialMessages");
@@ -903,8 +989,6 @@ async function SelectSocialUser(Username) {
         String(SocialActiveUsername || "").toLowerCase() === SelectedKey
     );
 
-    // Clicking the already-open person again closes the conversation pane.
-    // Incrementing the request id also makes any outstanding fetches harmless.
     if (IsSameOpenUser) {
         SocialSelectionRequestId += 1;
         SocialActiveUsername = "";
@@ -924,8 +1008,7 @@ async function SelectSocialUser(Username) {
     SocialMessageIds.clear();
     SocialUpdateActiveUserButtons();
 
-    // Reveal the actual conversation frame immediately. No loading card or
-    // loading row is shown while the profile and messages are fetched.
+    // Show the conversation frame immediately; do not replace it with a loading view.
     if (ChatEmpty) ChatEmpty.hidden = true;
     if (ChatView) ChatView.hidden = false;
     const Avatar = SocialById("SocialChatAvatar");
@@ -947,35 +1030,35 @@ async function SelectSocialUser(Username) {
     SocialById("SocialProfileCard")?.replaceChildren();
     Messages?.replaceChildren();
     SocialSetStatus(SocialById("SocialChatStatus"), "");
-
-    // Keep the open pane visible as soon as the user clicks a result.
     SocialInterpolateFrameIntoView(document.querySelector(".StorySocialChat"));
 
-    try {
-        const Result = await ApiRequest(
-            "/api/social/profile?username=" + encodeURIComponent(SelectedUsername)
-        );
-        if (SelectionId !== SocialSelectionRequestId ||
-            String(SocialActiveUsername || "").toLowerCase() !== SelectedKey ||
-            SocialById("SocialChatView")?.hidden) return;
-        if (!Result?.user?.username) throw new Error("Could not load that player.");
-
-        SocialSelectedUser = Result.user;
-    } catch (Error) {
-        if (SelectionId !== SocialSelectionRequestId) return;
-        console.error("Story Social profile load failed", Error);
-        SocialActiveUsername = "";
-        SocialSelectedUser = null;
-        SocialShowEmptyState();
-        SocialUpdateActiveUserButtons();
-        const Status = SocialById("SocialSearchStatus");
-        if (Status) Status.textContent = SocialSafeError(Error, "That player could not be opened.");
-        return;
+    let User = SocialProfileCache.get(SelectedKey) || null;
+    if (!User) {
+        try {
+            const Result = await ApiRequest(
+                "/api/social/profile?username=" + encodeURIComponent(SelectedUsername)
+            );
+            if (!Result?.user?.username) throw new Error("Could not load that player.");
+            User = { ...Result.user };
+            SocialProfileCache.set(SelectedKey, User);
+        } catch (Error) {
+            if (SelectionId !== SocialSelectionRequestId) return;
+            console.error("Story Social profile load failed", Error);
+            SocialActiveUsername = "";
+            SocialSelectedUser = null;
+            SocialShowEmptyState();
+            SocialUpdateActiveUserButtons();
+            const Status = SocialById("SocialSearchStatus");
+            if (Status) Status.textContent = SocialSafeError(Error, "That player could not be opened.");
+            return;
+        }
     }
 
-    const User = SocialSelectedUser;
-    if (!User || SelectionId !== SocialSelectionRequestId) return;
+    if (SelectionId !== SocialSelectionRequestId ||
+        String(SocialActiveUsername || "").toLowerCase() !== SelectedKey ||
+        SocialById("SocialChatView")?.hidden) return;
 
+    SocialSelectedUser = User;
     if (typeof StoryMarkSocialConversationRead === "function") {
         StoryMarkSocialConversationRead(User.username);
     }
@@ -997,7 +1080,6 @@ async function SelectSocialUser(Username) {
     const SearchInput = SocialById("SocialSearchInput");
     if (SearchInput && SearchInput.value.trim()) SocialSearchUsers(SearchInput.value.trim());
 }
-
 async function SocialSendMessage(Event) {
     Event.preventDefault();
     if (!SocialSelectedUser) return;
@@ -1107,6 +1189,7 @@ async function SocialEnsureSocket() {
         const Sender = String(Message?.senderUsername || "").toLowerCase();
         const Recipient = String(Message?.recipientUsername || "").toLowerCase();
         const Me = String(SocialCurrentUser?.username || "").toLowerCase();
+        SocialCacheIncomingMessage(Message);
         if (Recipient === Me && Sender && Sender !== Me && typeof StoryRecordIncomingSocialMessage === "function") {
             StoryRecordIncomingSocialMessage(
                 Message?.senderUsername || Sender,
@@ -1125,6 +1208,13 @@ async function SocialEnsureSocket() {
     SocialSocket.on("social:presence", function(Payload) {
         const Username = String(Payload?.username || "").toLowerCase();
         if (!Username) return;
+        const CachedProfile = SocialProfileCache.get(Username);
+        if (CachedProfile) {
+            CachedProfile.presence = Payload.presence || "offline";
+            CachedProfile.presenceMode = Payload.presenceMode || Payload.presence || "offline";
+            CachedProfile.presenceExpiresAt = Number(Payload.presenceExpiresAt || 0);
+            CachedProfile.presenceDurationMinutes = Number(Payload.presenceDurationMinutes || 0);
+        }
         if (SocialSelectedUser && Username === String(SocialSelectedUser.username || "").toLowerCase()) {
             SocialSelectedUser.presence = Payload.presence || "offline";
             SocialSelectedUser.presenceMode = Payload.presenceMode || Payload.presence || "offline";
