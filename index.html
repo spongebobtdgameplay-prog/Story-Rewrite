@@ -109,7 +109,7 @@ body {
     border: 0;
     background: #8a6749;
     touch-action: pan-x pan-y pinch-zoom;
-    overscroll-behavior: none;
+    overscroll-behavior: auto;
 }
 
 #StoryShellPauseButton[hidden] {
@@ -321,7 +321,7 @@ body {
     }
 
     await LoadScript("cache-guard.js?v=20261030-cookie1");
-    await LoadScript("shell.js?v=20261120-scroll-boundary1");
+    await LoadScript("shell.js?v=20261120-scroll-boundary2");
 })().catch(Error => {
     console.error("Story Rewrite startup failed", Error);
 });
