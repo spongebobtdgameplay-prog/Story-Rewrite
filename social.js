@@ -551,6 +551,30 @@ function SocialAskReportReason() {
     });
 }
 
+function SocialGetMessageReactionButtons(MessageId) {
+    const Id = String(MessageId || "");
+    if (!Id) return [];
+
+    const Buttons = new Set();
+    const Element = Array.from(document.querySelectorAll(".StorySocialMessage"))
+        .find(Item => Item.dataset.messageId === Id) || null;
+
+    Element?.querySelectorAll(
+        ".StorySocialMessageAction.LikeAction, .StorySocialMessageAction.DislikeAction"
+    ).forEach(Button => Buttons.add(Button));
+
+    // Open message menus are portalled to document.body. Include those controls
+    // so an in-flight reaction can still update and unlock them after a reopen.
+    document.querySelectorAll(".StorySocialMessageMenu").forEach(Menu => {
+        if (String(Menu.dataset.messageId || "") !== Id) return;
+        Menu.querySelectorAll(
+            ".StorySocialMessageAction.LikeAction, .StorySocialMessageAction.DislikeAction"
+        ).forEach(Button => Buttons.add(Button));
+    });
+
+    return Array.from(Buttons);
+}
+
 function SocialUpdateMessageReactions(Message, IncludeViewerState = false) {
     if (!Message) return;
     const MessageId = String(Message.messageId || Message.id || "");
@@ -585,21 +609,27 @@ function SocialUpdateMessageReactions(Message, IncludeViewerState = false) {
     if (Reactions) Reactions.setAttribute("aria-label", LikeCount + " likes, " + DislikeCount + " dislikes");
 
     if (IncludeViewerState) {
-        Element.querySelector(".StorySocialMessageAction.LikeAction")
-            ?.classList.toggle("IsActive", Boolean(Message.likedByMe));
-        Element.querySelector(".StorySocialMessageAction.DislikeAction")
-            ?.classList.toggle("IsActive", Boolean(Message.dislikedByMe));
+        SocialGetMessageReactionButtons(MessageId).forEach(Button => {
+            if (Button.classList.contains("LikeAction")) {
+                Button.classList.toggle("IsActive", Boolean(Message.likedByMe));
+            } else if (Button.classList.contains("DislikeAction")) {
+                Button.classList.toggle("IsActive", Boolean(Message.dislikedByMe));
+            }
+        });
     }
 }
 
-function SocialReadReactionState(Element) {
+function SocialReadReactionState(Element, MessageId = Element?.dataset?.messageId) {
     const LikeCountText = Element?.querySelector(".StorySocialMessageReaction.LikeCount")?.textContent || "";
     const DislikeCountText = Element?.querySelector(".StorySocialMessageReaction.DislikeCount")?.textContent || "";
+    const Buttons = SocialGetMessageReactionButtons(MessageId);
+    const LikeButton = Buttons.find(Button => Button.classList.contains("LikeAction"));
+    const DislikeButton = Buttons.find(Button => Button.classList.contains("DislikeAction"));
     return {
         likeCount: Math.max(0, Number(LikeCountText.match(/\d+/)?.[0] || 0)),
         dislikeCount: Math.max(0, Number(DislikeCountText.match(/\d+/)?.[0] || 0)),
-        likedByMe: Boolean(Element?.querySelector(".StorySocialMessageAction.LikeAction")?.classList.contains("IsActive")),
-        dislikedByMe: Boolean(Element?.querySelector(".StorySocialMessageAction.DislikeAction")?.classList.contains("IsActive"))
+        likedByMe: Boolean(LikeButton?.classList.contains("IsActive")),
+        dislikedByMe: Boolean(DislikeButton?.classList.contains("IsActive"))
     };
 }
 
@@ -607,7 +637,7 @@ function SocialApplyOptimisticReaction(MessageId, Reaction) {
     const Element = Array.from(document.querySelectorAll(".StorySocialMessage"))
         .find(Item => Item.dataset.messageId === String(MessageId));
     if (!Element) return null;
-    const Previous = SocialReadReactionState(Element);
+    const Previous = SocialReadReactionState(Element, MessageId);
     const Next = { ...Previous };
 
     if (Reaction === "like") {
@@ -637,7 +667,7 @@ function SocialApplyOptimisticReaction(MessageId, Reaction) {
     }
 
     SocialUpdateMessageReactions({ messageId: String(MessageId), ...Next }, true);
-    Element.querySelectorAll(".StorySocialMessageAction.LikeAction, .StorySocialMessageAction.DislikeAction")
+    SocialGetMessageReactionButtons(MessageId)
         .forEach(Button => { Button.disabled = true; });
     return { Element, Previous };
 }
@@ -648,12 +678,9 @@ function SocialRestoreReactionState(MessageId, State) {
 }
 
 function SocialSetReactionButtonsPending(MessageId, Pending) {
-    const Element = Array.from(document.querySelectorAll(".StorySocialMessage"))
-        .find(Item => Item.dataset.messageId === String(MessageId));
-    Element?.querySelectorAll(".StorySocialMessageAction.LikeAction, .StorySocialMessageAction.DislikeAction")
+    SocialGetMessageReactionButtons(MessageId)
         .forEach(Button => { Button.disabled = Boolean(Pending); });
 }
-
 function SocialAddMessage(Message, UpdateCache = true) {
     if (!Message || !Message.id) return;
     const Container = SocialById("SocialMessages");
