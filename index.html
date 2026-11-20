@@ -24,11 +24,8 @@ body,
 html {
     overflow: hidden;
     overscroll-behavior: none;
-    background:
-        radial-gradient(circle at 15% 7%, rgba(255,240,207,.24), transparent 24%),
-        radial-gradient(circle at 84% 16%, rgba(60,30,14,.19), transparent 28%),
-        linear-gradient(155deg, #b38b61 0%, #8b6848 42%, #6e4c33 72%, #4d301f 100%);
-    background-attachment: scroll;
+    background-color: #4d301f;
+    background-image: none;
 }
 
 body {
@@ -271,8 +268,9 @@ body {
 </style>
 <script src="server-config.js?v=20261106-sameorigin1"></script>
 <script src="auth-bootstrap.js?v=20261031-githubfix1"></script>
-    <link rel="stylesheet" href="global-module.css?v=20261119-globalmodule1">
-    <script src="global-module.js?v=20261119-globalmodule1" defer></script>
+    <link rel="stylesheet" href="global-module.css?v=20261119-globalmodule2">
+    <script src="global-module.js?v=20261119-globalmodule2" defer></script>
+    <meta name="story-rewrite-global-module" content="2">
 </head>
 <body>
 <div id="StoryShellRoot">
@@ -323,7 +321,7 @@ body {
     }
 
     await LoadScript("cache-guard.js?v=20261030-cookie1");
-    await LoadScript("shell.js?v=20261119-globalmodule1");
+    await LoadScript("shell.js?v=20261119-globalmodule2");
 })().catch(Error => {
     console.error("Story Rewrite startup failed", Error);
 });

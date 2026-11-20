@@ -18,30 +18,37 @@ async function InspectDocumentGradient(Page) {
         const Root = document.documentElement;
         const Html = getComputedStyle(Root);
         const Body = getComputedStyle(document.body);
-        const Canvas = getComputedStyle(Root, "::before");
+        const PseudoCanvas = getComputedStyle(Root, "::before");
         const Module = window.GlobalModule;
         const Theme = String(Root.dataset.storyGradient || "");
-        const CanvasOk = Canvas.position === "fixed"
-            && Canvas.backgroundImage.includes("gradient")
-            && Canvas.pointerEvents === "none";
-        const NoCompetingGradient = !Html.backgroundImage.includes("gradient")
-            && !Body.backgroundImage.includes("gradient");
+        const RootCanvasOk = Html.backgroundAttachment === "scroll"
+            && (Theme === "account-settings"
+                ? Html.backgroundImage === "none" && Html.backgroundColor === "rgb(141, 104, 73)"
+                : Html.backgroundImage.includes("gradient"));
+        const NoCompetingGradient = !Body.backgroundImage.includes("gradient")
+            && PseudoCanvas.display === "none";
         return {
             moduleLoaded: Boolean(Module && Module.version === "1.0.0"),
             theme: Theme,
-            canvasPosition: Canvas.position,
-            canvasGradient: Canvas.backgroundImage.includes("gradient"),
+            htmlBackgroundImage: Html.backgroundImage,
+            htmlBackgroundColor: Html.backgroundColor,
+            htmlAttachment: Html.backgroundAttachment,
+            pseudoCanvasDisplay: PseudoCanvas.display,
+            bodyBackgroundImage: Body.backgroundImage,
+            rootCanvasOk: RootCanvasOk,
             noCompetingGradient: NoCompetingGradient,
             ok: Boolean(Module && Theme && Module.gradients.getTheme() === Theme
-                && CanvasOk && NoCompetingGradient)
+                && RootCanvasOk && NoCompetingGradient)
         };
     });
 }
 
 async function VerifyShellGradientRoutes(Page, BaseUrl) {
     const ShellRoutes = ["main.html", "levels.html", "multiplayer.html", "social.html", "settings.html",
-        "account.html", "tutorial.html", "terms.html", "about.html", "privacy.html"];
-    const ShellMobileRoutes = ["main.html", "social.html", "settings.html", "terms.html"];
+        "account.html", "tutorial.html", "terms.html", "about.html", "privacy.html",
+        "think.html", "hackers.html", "dialog.html", "rules.html"];
+    const ShellMobileRoutes = ["main.html", "levels.html", "multiplayer.html", "social.html",
+        "settings.html", "think.html", "about.html"];
     const Results = [];
     const WaitForRoute = Route => Page.waitForFunction(Expected => {
         return [...document.querySelectorAll("#StoryShellRoot iframe.StoryShellFrame")].some(Frame =>
@@ -62,22 +69,36 @@ async function VerifyShellGradientRoutes(Page, BaseUrl) {
             const Root = document.documentElement;
             const Html = getComputedStyle(Root);
             const Body = getComputedStyle(document.body);
-            const Canvas = getComputedStyle(Root, "::before");
+            const PseudoCanvas = getComputedStyle(Root, "::before");
             const Module = window.GlobalModule;
             const Theme = String(Root.dataset.storyGradient || "");
-            const CanvasOk = Canvas.position === "fixed"
-                && Canvas.backgroundImage.includes("gradient")
-                && Canvas.pointerEvents === "none";
-            const NoCompetingGradient = !Html.backgroundImage.includes("gradient")
-                && !Body.backgroundImage.includes("gradient");
+            const Route = location.pathname.split("/").pop();
+            const ExpectedTheme = Route === "social.html" ? "social"
+                : Route === "settings.html" || Route === "account.html" ? "account-settings"
+                : Route === "levels.html" ? "levels"
+                : Route === "multiplayer.html" ? "multiplayer"
+                : Route === "think.html" || Route === "hackers.html" ? "think"
+                : "parchment";
+            const RootCanvasOk = Html.backgroundAttachment === "scroll"
+                && (ExpectedTheme === "account-settings"
+                    ? Html.backgroundImage === "none" && Html.backgroundColor === "rgb(141, 104, 73)"
+                    : Html.backgroundImage.includes("gradient"));
+            const NoCompetingGradient = !Body.backgroundImage.includes("gradient")
+                && PseudoCanvas.display === "none";
             return {
                 moduleLoaded: Boolean(Module && Module.version === "1.0.0"),
                 theme: Theme,
-                canvasPosition: Canvas.position,
-                canvasGradient: Canvas.backgroundImage.includes("gradient"),
+                expectedTheme: ExpectedTheme,
+                htmlBackgroundImage: Html.backgroundImage,
+                htmlBackgroundColor: Html.backgroundColor,
+                htmlAttachment: Html.backgroundAttachment,
+                pseudoCanvasDisplay: PseudoCanvas.display,
+                bodyBackgroundImage: Body.backgroundImage,
+                rootCanvasOk: RootCanvasOk,
                 noCompetingGradient: NoCompetingGradient,
-                ok: Boolean(Module && Theme && Module.gradients.getTheme() === Theme
-                    && CanvasOk && NoCompetingGradient)
+                ok: Boolean(Module && Theme === ExpectedTheme
+                    && Module.gradients.getTheme() === Theme
+                    && RootCanvasOk && NoCompetingGradient)
             };
         });
 

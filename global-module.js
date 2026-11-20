@@ -12,7 +12,8 @@
             image: Image,
             repeat: String(Definition.repeat || "no-repeat"),
             size: String(Definition.size || "cover"),
-            position: String(Definition.position || "center center")
+            position: String(Definition.position || "center center"),
+            color: String(Definition.color || "#4d301f")
         }));
         return true;
     }
@@ -35,6 +36,14 @@
             linear-gradient(155deg, #b58e66 0%, #8e6748 50%, #573824 100%)
         `
     });
+    RegisterTheme("social", {
+        image: `
+            radial-gradient(circle at 15% 7%, rgba(255,240,207,.24), transparent 24%),
+            radial-gradient(circle at 84% 16%, rgba(60,30,14,.19), transparent 28%),
+            linear-gradient(155deg,#b38b61 0%,#8b6848 42%,#6e4c33 72%,#4d301f 100%)
+        `
+    });
+    RegisterTheme("account-settings", { image: "none", color: "#8d6849" });
     RegisterTheme("account", {
         image: `
             radial-gradient(circle at 18% 8%, rgba(213, 165, 95, .16), transparent 30%),
@@ -57,9 +66,9 @@
     RegisterTheme("think", {
         image: `
             radial-gradient(900px 520px at 12% -10%, rgba(177, 111, 57, .16), transparent 65%),
-            radial-gradient(760px 460px at 100% 10%, rgba(120, 71, 36, .13), transparent 64%),
-            #17110d
-        `
+            radial-gradient(760px 460px at 100% 10%, rgba(120, 71, 36, .13), transparent 64%)
+        `,
+        color: "#17110d"
     });
 
     function DetectTheme() {
@@ -67,9 +76,11 @@
         if (!Body) return "parchment";
         const Explicit = String(Body.dataset.storyGradientTheme || "").trim().toLowerCase();
         if (Explicit) return Explicit;
+        if (Body.classList.contains("StorySocialPage")) return "social";
         if (Body.classList.contains("ThinkPage")) return "think";
         if (Body.classList.contains("LevelSelectPage")) return "levels";
         if (Body.classList.contains("MultiplayerPage")) return "multiplayer";
+        if (Body.classList.contains("AccountSettingsPage")) return "account-settings";
         if (Body.classList.contains("AccountPage")) return "account";
         if (Body.classList.contains("paper-body")) return "paper";
         return "parchment";
@@ -80,6 +91,7 @@
         const Definition = Registry.get(Key);
         if (!Definition) return false;
         Root.dataset.storyGradient = Key;
+        Root.style.setProperty("--story-gradient-base", Definition.color);
         Root.style.setProperty("--story-global-gradient-image", Definition.image);
         Root.style.setProperty("--story-global-gradient-repeat", Definition.repeat);
         Root.style.setProperty("--story-global-gradient-size", Definition.size);

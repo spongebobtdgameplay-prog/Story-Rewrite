@@ -20,6 +20,9 @@ body.paper-body {
     background:
         linear-gradient(rgba(255,249,235,.76), rgba(239,222,192,.86)),
         repeating-linear-gradient(0deg, rgba(91,57,32,.035) 0 1px, transparent 1px 5px);
+    background:
+        linear-gradient(rgba(255,249,235,.76), rgba(239,222,192,.86)),
+        repeating-linear-gradient(0deg, rgba(91,57,32,.035) 0 1px, transparent 1px 5px);
     box-shadow: var(--Shadow);
 }
 
