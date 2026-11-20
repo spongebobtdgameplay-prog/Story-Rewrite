@@ -112,3 +112,15 @@ try {
 if (!PatchApplied) {
     throw new Error("server-v22 Turnstile patch did not attach to the active backend.");
 }
+
+if (String(process.env.BROWSERBASE_TEST_ON_START || "") === "1") {
+    const { runBrowserbaseSmokeTest } = require("./scripts/browserbase-smoke-test.js");
+    setImmediate(() => {
+        runBrowserbaseSmokeTest().catch(Error => {
+            console.error(
+                "BROWSERBASE_SMOKE_FAILED: " +
+                String(Error?.message || Error).slice(0, 500)
+            );
+        });
+    });
+}
