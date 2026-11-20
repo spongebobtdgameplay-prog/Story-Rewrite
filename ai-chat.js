@@ -903,7 +903,13 @@ function UpdateStoryBotDedicatedComposer(Composer) {
     Input.style.height = "auto";
     Input.style.height = Math.min(110, Math.max(46, Input.scrollHeight)) + "px";
     const Slot = Input.closest(".StoryBotInputSlot");
-    if (Slot) Slot.style.height = Math.max(58, Math.min(132, Input.scrollHeight + 12)) + "px";
+    if (Slot) {
+        const IsMultiplayerComposer = document.body?.classList.contains("MultiplayerPage");
+        const MinimumHeight = IsMultiplayerComposer ? 46 : 58;
+        const VerticalPadding = IsMultiplayerComposer ? 0 : 12;
+        const MaximumHeight = IsMultiplayerComposer ? 110 : 132;
+        Slot.style.height = Math.max(MinimumHeight, Math.min(MaximumHeight, Input.scrollHeight + VerticalPadding)) + "px";
+    }
 }
 
 function FocusStoryBotDedicatedComposer(Input, Question = "") {

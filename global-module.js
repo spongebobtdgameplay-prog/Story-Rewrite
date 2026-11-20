@@ -341,14 +341,20 @@
         State.applied=true;State.signature=Signature;State.cacheKey=Key;State.image=Image;
         if(CssGradientResizeObserver&&!State.observed){CssGradientResizeObserver.observe(Element);State.observed=true;}
     }
-    function ApplyCssGradientToElement(Element) {
+    function ApplyCssGradientToElement(Element, Force = false) {
         if(!Element||Element.nodeType!==1)return;
         let State=CssGradientStates.get(Element);
         if(!State){
             const OriginalInline={};
             for(const Property of CssGradientProperties)OriginalInline[Property]={value:Element.style.getPropertyValue(Property),priority:Element.style.getPropertyPriority(Property)};
-            State={originalInline:OriginalInline,applied:false,observed:false,request:0,signature:"",cacheKey:"",image:""};
+            State={originalInline:OriginalInline,applied:false,observed:false,request:0,signature:"",cacheKey:"",image:"",interactionState:""};
             CssGradientStates.set(Element,State);
+        }
+        // Keep an already-cached gradient in place during unrelated DOM updates.
+        // Only restore it when the surface is explicitly invalidated or changes size.
+        if(!Force&&State.applied){
+            const Size=MeasureCssGradient(Element);
+            if(State.cacheKey.endsWith("\u001e"+Size.width+"x"+Size.height))return;
         }
         RestoreCssGradient(Element,State);
         State.request++;
@@ -364,18 +370,43 @@
         if(State.cacheKey===Key&&State.image){ApplyCssGradientImage(Element,State,State.image,Signature,Key,Request);return;}
         GetCssGradientImage(Style,Size.width,Size.height,Signature).then(Image=>ApplyCssGradientImage(Element,State,Image,Signature,Key,Request));
     }
+    function ApplyCssGradientTree(Element) {
+        if(!Element||Element.nodeType!==1)return;
+        ApplyCssGradientToElement(Element);
+        Element.querySelectorAll("*").forEach(Child=>ApplyCssGradientToElement(Child));
+    }
+    function RefreshCssGradientMutationRecords(Records) {
+        for(const Record of Records){
+            if(Record.type==="childList"){
+                for(const Added of Record.addedNodes){
+                    if(Added.nodeType===1)ApplyCssGradientTree(Added);
+                }
+                if(Record.removedNodes.length)ApplyCssGradientToElement(Record.target,true);
+            }else if(Record.type==="attributes"){
+                ApplyCssGradientToElement(Record.target,true);
+            }
+        }
+    }
     function IsCssGradientCachePage() {
         const Body=document.body;
         return Boolean(Body&&(Body.classList.contains("StorySettingsPage")||Body.classList.contains("MultiplayerPage")));
     }
-    function ApplyCssGradientCaches() {
+    let CssGradientScanForceQueued = false;
+    function ApplyCssGradientCaches(Force = false) {
         if(!IsCssGradientCachePage())return;
-        [Root,document.body,...document.body.querySelectorAll("*")].forEach(ApplyCssGradientToElement);
+        [Root,document.body,...document.body.querySelectorAll("*")].forEach(Element=>ApplyCssGradientToElement(Element,Force));
     }
-    function ScheduleCssGradientCacheScan() {
-        if(!IsCssGradientCachePage()||CssGradientScanQueued)return;
+    function ScheduleCssGradientCacheScan(Force = false) {
+        if(!IsCssGradientCachePage())return;
+        if(Force)CssGradientScanForceQueued=true;
+        if(CssGradientScanQueued)return;
         CssGradientScanQueued=true;
-        window.requestAnimationFrame(()=>{CssGradientScanQueued=false;ApplyCssGradientCaches();});
+        window.requestAnimationFrame(()=>{
+            const ForceScan=CssGradientScanForceQueued;
+            CssGradientScanForceQueued=false;
+            CssGradientScanQueued=false;
+            ApplyCssGradientCaches(ForceScan);
+        });
     }
     function RefreshCssGradientEventSurfaces(Event) {
         const Seen = new Set();
@@ -384,7 +415,12 @@
             while (Element && Element !== document.body.parentElement) {
                 if (!Seen.has(Element)) {
                     Seen.add(Element);
-                    ApplyCssGradientToElement(Element);
+                    const State=CssGradientStates.get(Element);
+                    const InteractionState=(Element.matches(":hover")?"hover":"")+"|"+((Element.matches(":focus")||Element.matches(":focus-within"))?"focus":"");
+                    if(!State||State.interactionState!==InteractionState){
+                        if(State)State.interactionState=InteractionState;
+                        ApplyCssGradientToElement(Element,true);
+                    }
                 }
                 Element = Element.parentElement;
             }
@@ -770,13 +806,13 @@
         });
     }
     if (IsCssGradientCachePage() && typeof MutationObserver === "function" && document.body) {
-        const StoryBotThemeObserver = new MutationObserver(ScheduleCssGradientCacheScan);
+        const StoryBotThemeObserver = new MutationObserver(()=>ScheduleCssGradientCacheScan(true));
         StoryBotThemeObserver.observe(Root, {
             attributes: true,
             attributeFilter: ["data-storybot-theme"]
         });
 
-        const CssGradientObserver = new MutationObserver(ScheduleCssGradientCacheScan);
+        const CssGradientObserver = new MutationObserver(RefreshCssGradientMutationRecords);
         CssGradientObserver.observe(document.body, {
             childList: true, subtree: true, attributes: true,
             attributeFilter: ["class", "aria-checked", "aria-expanded", "disabled"]
