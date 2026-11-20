@@ -2255,6 +2255,7 @@ body.StorySocialPage::before {
 /* The Social backdrop belongs to the scrolling body, not the viewport canvas. */
 html:has(body.StorySocialPage) {
     background: #4d301f !important;
+    background-attachment: fixed !important;
 }
 
 body.StorySocialPage {
