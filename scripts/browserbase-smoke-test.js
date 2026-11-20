@@ -3,8 +3,9 @@ const Browserbase = BrowserbaseModule.default || BrowserbaseModule;
 const { chromium } = require("playwright-core");
 
 function SafeErrorMessage(ErrorValue, ApiKey) {
-    return String(ErrorValue?.message || ErrorValue || "Unknown error")
-        .replaceAll(ApiKey, "[redacted]")
+    const RawMessage = String(ErrorValue?.message || ErrorValue || "Unknown error");
+    const RedactedMessage = ApiKey ? RawMessage.replaceAll(ApiKey, "[redacted]") : RawMessage;
+    return RedactedMessage
         .replace(/(connectUrl|authorization|x-bb-api-key)\s*[:=]\s*\S+/gi, "$1=[redacted]")
         .slice(0, 500);
 }
