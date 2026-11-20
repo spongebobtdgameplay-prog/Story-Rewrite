@@ -14,6 +14,8 @@
         SurfaceRegistry.set(Key, Object.freeze({
             top: String(Definition.top),
             bottom: String(Definition.bottom),
+            overlayTop: String(Definition.overlayTop || ""),
+            overlayBottom: String(Definition.overlayBottom || ""),
             highlight: String(Definition.highlight || "rgba(0,0,0,0)"),
             highlightX: Math.max(0, Math.min(1, Number(Definition.highlightX ?? 0.5))),
             highlightY: Math.max(0, Math.min(1, Number(Definition.highlightY ?? 0.5))),
@@ -33,6 +35,14 @@
         Base.addColorStop(1, Definition.bottom);
         Context.fillStyle = Base;
         Context.fillRect(0, 0, Width, Height);
+
+        if (Definition.overlayTop && Definition.overlayBottom) {
+            const Overlay = Context.createLinearGradient(0, 0, 0, Height);
+            Overlay.addColorStop(0, Definition.overlayTop);
+            Overlay.addColorStop(1, Definition.overlayBottom);
+            Context.fillStyle = Overlay;
+            Context.fillRect(0, 0, Width, Height);
+        }
 
         if (Definition.highlight !== "rgba(0,0,0,0)") {
             const X = Width * Definition.highlightX;
@@ -109,6 +119,17 @@
         highlightX: 0.88,
         highlightY: 0.08,
         highlightRadius: 0.24
+    });
+
+    RegisterSurface("social-chat-empty", {
+        top: "#352a23",
+        bottom: "#28201b",
+        overlayTop: "rgba(53,42,35,.4)",
+        overlayBottom: "rgba(40,32,27,.76)",
+        highlight: "rgba(240,204,144,.08)",
+        highlightX: 0.5,
+        highlightY: 0.35,
+        highlightRadius: 0.31
     });
 
     if (typeof ResizeObserver === "function") {
