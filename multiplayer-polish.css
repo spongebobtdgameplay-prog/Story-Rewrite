@@ -83,19 +83,43 @@ body.MultiplayerPage .StoryBotInputSlot > .StoryBotComposer .StoryBotQuestionInp
 
 body.MultiplayerPage .StoryBotInputSlot > .StoryBotComposer .StoryBotSendButton {
     box-sizing: border-box;
+    display: inline-flex;
     flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
     width: auto;
     min-width: 0;
     height: auto;
-    min-height: 44px;
-    padding: 10px 16px;
+    min-height: var(--StoryFluidControl);
+    padding: clamp(9px, 1vw, 13px) clamp(12px, 1.35vw, 18px);
     border: 1px solid #4a2916;
-    border-radius: 12px;
+    border-radius: clamp(10px, 1vw, 12px);
     color: #fff5e3;
     background: var(--story-gradient-token-005);
     box-shadow: 0 6px 14px rgba(55, 28, 12, .28), inset 0 1px rgba(255, 245, 221, .18);
     font: 800 0.8125rem/1.1 system-ui, sans-serif;
+    font-size: clamp(0.875rem, 1.18vw, 1.0625rem);
     letter-spacing: .015em;
+    text-align: center;
+    cursor: pointer;
+    user-select: none;
+    transition: transform .16s ease, background .16s ease, box-shadow .16s ease, filter .16s ease;
+}
+
+body.MultiplayerPage .StoryBotInputSlot > .StoryBotComposer .StoryBotSendButton:hover {
+    transform: translateY(-2px);
+    background: var(--story-gradient-token-006);
+}
+
+body.MultiplayerPage .StoryBotInputSlot > .StoryBotComposer .StoryBotSendButton:active {
+    transform: translateY(1px) scale(.985);
+}
+
+body.MultiplayerPage .StoryBotInputSlot > .StoryBotComposer .StoryBotSendButton:disabled {
+    cursor: not-allowed;
+    opacity: .52;
+    transform: none;
+    filter: grayscale(.2);
 }
 
 body.MultiplayerPage .StoryBotInputSlot > .StoryBotComposer .StoryBotCloseButton {
@@ -138,8 +162,8 @@ body.MultiplayerPage .StoryBotInputSlot > .StoryBotComposer .StoryBotCloseButton
     }
 
     body.MultiplayerPage .StoryBotInputSlot > .StoryBotComposer .StoryBotSendButton {
-        min-height: 44px;
-        padding: 9px 12px;
-        font-size: 0.8125rem;
+        min-height: 42px;
+        padding: 9px clamp(10px, 3.2vw, 14px);
+        font-size: clamp(0.8125rem, 3.6vw, 0.9375rem);
     }
 }
