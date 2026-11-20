@@ -99,3 +99,157 @@ body {
     background-image: none !important;
     background-color: transparent !important;
 }
+/* Shared, preloaded gradient registry for the Chapter Map and story gameplay. */
+:root {
+    --story-gradient-token-001: linear-gradient(180deg, #4d2e1d, var(--Leather));
+    --story-gradient-token-002: linear-gradient(145deg, #8c5d33, #59331d);
+    --story-gradient-token-003: linear-gradient(180deg, #f4e3c2, #d8ba88);
+    --story-gradient-token-004: linear-gradient(180deg, #fff0d2, #e5c896);
+    --story-gradient-token-005: linear-gradient(180deg, #9b6637, #6e401f);
+    --story-gradient-token-006: linear-gradient(180deg, #ad7844, #7c4924);
+    --story-gradient-token-007: linear-gradient(180deg, #96483c, #682a23);
+    --story-gradient-token-008: linear-gradient(180deg, #ab594a, #7a332a);
+    --story-gradient-token-009: linear-gradient(180deg, var(--ArchiveLight), var(--Archive));
+    --story-gradient-token-010: radial-gradient(circle, rgba(255, 247, 225, .5), transparent 69%);
+    --story-gradient-token-011: linear-gradient(145deg, #50301d, #2b190f);
+    --story-gradient-token-012: linear-gradient(180deg, #4a2a19, #29170e);
+    --story-gradient-token-013: linear-gradient(90deg, #b77935, #e2b465);
+    --story-gradient-token-014: linear-gradient(180deg, #684026, #422516);
+    --story-gradient-token-015: linear-gradient(90deg, transparent, rgba(72,41,22,.2), rgba(255,249,232,.2), rgba(72,41,22,.16), transparent);
+    --story-gradient-token-016: radial-gradient(circle at 22% 14%, rgba(102,68,37,.05), transparent 24%),
+        linear-gradient(180deg, var(--PaperBright), var(--Paper));
+    --story-gradient-token-017: linear-gradient(180deg, #c7a16f, #ad7f4e);
+    --story-gradient-token-018: linear-gradient(180deg, #f1dfbd, #dfc393);
+    --story-gradient-token-019: linear-gradient(145deg, #4a2c1a, #29170e);
+    --story-gradient-token-020: linear-gradient(180deg, #f6e7ca, #ddc091);
+    --story-gradient-token-021: repeating-linear-gradient(90deg, rgba(72,45,27,.28) 0 8px, transparent 8px 16px);
+    --story-gradient-token-022: linear-gradient(180deg, #f4e5c9, #e2c79c);
+    --story-gradient-token-023: linear-gradient(rgba(255,249,235,.76), rgba(239,222,192,.86)),
+        repeating-linear-gradient(0deg, rgba(91,57,32,.035) 0 1px, transparent 1px 5px);
+    --story-gradient-token-024: linear-gradient(180deg, #fff0d0, #d8b785);
+    --story-gradient-token-025: linear-gradient(180deg, #d8b989, #b78a5e);
+    --story-gradient-token-026: linear-gradient(180deg, #f5e6c9, #d9bc8e);
+    --story-gradient-token-027: linear-gradient(180deg, #56311d, #2e190f);
+    --story-gradient-token-028: linear-gradient(110deg, #4b2918, #29170f 65%, #55331f);
+    --story-gradient-token-029: linear-gradient(180deg, var(--LevelPaperBright), var(--LevelPaper));
+    --story-gradient-token-030: linear-gradient(180deg, #6b4328, #402416);
+    --story-gradient-token-031: linear-gradient(180deg, #83512e, #573019);
+    --story-gradient-token-032: linear-gradient(180deg, #96623a, #64371d);
+    --story-gradient-token-033: linear-gradient(180deg, #f2dfbd, #d9bb8d);
+    --story-gradient-token-034: linear-gradient(180deg, #d5c1a4, #b9a187);
+    --story-gradient-token-035: linear-gradient(180deg, rgba(54, 31, 20, .97), rgba(29, 17, 11, .98));
+    --story-gradient-token-036: linear-gradient(180deg, #5a3722, #362014);
+    --story-gradient-token-037: linear-gradient(180deg, #714529, #432718);
+    --story-gradient-token-038: linear-gradient(180deg, #3c2418, #24150e);
+    --story-gradient-token-039: linear-gradient(180deg, #684126, #352015);
+    --story-gradient-token-040: linear-gradient(110deg, #3b2317, #1d110c 64%, #422619);
+    --story-gradient-token-041: linear-gradient(110deg, #35251d, #101513 62%, #27352f);
+    --story-gradient-token-042: linear-gradient(110deg, #3f1729, #16101f 60%, #55243f);
+    --story-gradient-token-043: linear-gradient(110deg, #25283a, #12131c 62%, #3f3441);
+    --story-gradient-token-044: linear-gradient(110deg, #24331f, #0f170f 62%, #40522c);
+    --story-gradient-token-045: linear-gradient(110deg, #203445, #10171e 62%, #334c60);
+    --story-gradient-token-046: radial-gradient(circle at 18% 20%, rgba(222, 174, 100, .08), transparent 22%),
+        linear-gradient(145deg, #2b1a12, #160d09 62%, #21140e);
+    --story-gradient-token-047: radial-gradient(circle at 78% 20%, rgba(207, 222, 197, .12), transparent 18%), linear-gradient(145deg, #223028, #111713 64%, #0a0e0c);
+    --story-gradient-token-048: radial-gradient(circle at 78% 18%, rgba(255, 93, 178, .15), transparent 20%), linear-gradient(145deg, #2b1020, #120c19 63%, #1d0d1a);
+    --story-gradient-token-049: radial-gradient(circle at 76% 20%, rgba(174, 183, 219, .13), transparent 18%), linear-gradient(145deg, #222535, #101219 65%, #1a1720);
+    --story-gradient-token-050: radial-gradient(circle at 76% 18%, rgba(171, 203, 126, .12), transparent 18%), linear-gradient(145deg, #202e1c, #0d150e 65%, #151e12);
+    --story-gradient-token-051: radial-gradient(circle at 78% 16%, rgba(94, 167, 221, .13), transparent 18%), linear-gradient(145deg, #1b2c38, #0d141a 65%, #15222c);
+    --story-gradient-token-052: repeating-linear-gradient(90deg, rgba(213, 166, 96, .55) 0 12px, transparent 12px 22px);
+    --story-gradient-token-053: repeating-linear-gradient(180deg, rgba(213, 166, 96, .55) 0 12px, transparent 12px 22px);
+    --story-gradient-token-054: radial-gradient(circle at 34% 27%, #67432a, #301c12 70%);
+    --story-gradient-token-055: radial-gradient(circle at 34% 27%, #f0c575, #a56b2a 73%);
+    --story-gradient-token-056: linear-gradient(180deg, #2f1c13, #1d110c);
+    --story-gradient-token-057: linear-gradient(180deg, #f0c574, #ba7730);
+    --story-gradient-token-058: linear-gradient(180deg, rgba(0,0,0,.08), rgba(0,0,0,.02) 42%, rgba(0,0,0,.72)),
+        radial-gradient(circle at center, transparent 35%, rgba(0,0,0,.38) 100%);
+    --story-gradient-token-059: radial-gradient(circle at 78% 17%, rgba(220,228,204,.6) 0 3%, rgba(220,228,204,.12) 3.5%, transparent 12%),
+        linear-gradient(180deg, #202d29 0%, #121a17 46%, #080b0a 100%);
+    --story-gradient-token-060: radial-gradient(circle at 76% 20%, rgba(255,68,166,.28), transparent 20%),
+        linear-gradient(135deg, #2c1028 0%, #130d1a 48%, #35142e 100%);
+    --story-gradient-token-061: radial-gradient(circle at 72% 17%, rgba(196,203,235,.22), transparent 17%),
+        linear-gradient(145deg, #252839 0%, #11131b 52%, #211b26 100%);
+    --story-gradient-token-062: radial-gradient(circle at 76% 20%, rgba(181,212,130,.18), transparent 16%),
+        linear-gradient(145deg, #21351e 0%, #0d160e 54%, #182315 100%);
+    --story-gradient-token-063: radial-gradient(circle at 72% 15%, rgba(83,170,230,.18), transparent 19%),
+        linear-gradient(145deg, #1c3444 0%, #0c151c 52%, #152a37 100%);
+    --story-gradient-token-064: repeating-linear-gradient(90deg, transparent 0 48%, rgba(211, 193, 150, .22) 48% 49%, transparent 49% 100%),
+        linear-gradient(180deg, #2b312e, #111513);
+    --story-gradient-token-065: linear-gradient(90deg, transparent 0 9%, rgba(0,0,0,.55) 9% 11%, transparent 11% 23%, rgba(0,0,0,.5) 23% 25%, transparent 25% 76%, rgba(0,0,0,.45) 76% 78%, transparent 78%),
+        linear-gradient(180deg, transparent 0 54%, rgba(126,145,133,.11) 54% 66%, transparent 66%);
+    --story-gradient-token-066: linear-gradient(90deg, transparent 15%, rgba(255,88,163,.16) 15% 16%, transparent 16% 84%, rgba(95,196,255,.14) 84% 85%, transparent 85%),
+        repeating-linear-gradient(180deg, transparent 0 41px, rgba(255,255,255,.035) 42px 43px);
+    --story-gradient-token-067: linear-gradient(90deg, transparent 0 16%, rgba(232,208,143,.13) 16% 26%, transparent 26% 42%, rgba(232,208,143,.08) 42% 52%, transparent 52% 69%, rgba(232,208,143,.12) 69% 80%, transparent 80%),
+        linear-gradient(180deg, transparent 0 38%, rgba(0,0,0,.28) 38% 42%, transparent 42%);
+    --story-gradient-token-068: repeating-linear-gradient(90deg, rgba(7,18,8,.72) 0 10px, transparent 10px 64px),
+        linear-gradient(180deg, transparent 0 72%, rgba(49,75,40,.25) 72% 100%);
+    --story-gradient-token-069: repeating-linear-gradient(90deg, rgba(72,134,172,.08) 0 1px, transparent 1px 72px),
+        repeating-linear-gradient(180deg, rgba(72,134,172,.07) 0 1px, transparent 1px 48px),
+        linear-gradient(90deg, transparent 0 14%, rgba(206,223,232,.1) 14% 20%, transparent 20% 56%, rgba(206,223,232,.08) 56% 63%, transparent 63%);
+    --story-gradient-token-070: radial-gradient(circle at center, transparent 16%, rgba(92,5,4,.42) 70%, rgba(40,0,0,.78) 100%),
+        linear-gradient(180deg, rgba(141,19,16,.2), rgba(0,0,0,.72));
+    --story-gradient-token-071: radial-gradient(ellipse, #e8e3c7 0 23%, transparent 28%), radial-gradient(ellipse, #e8e3c7 0 23%, transparent 28%);
+    --story-gradient-token-072: radial-gradient(ellipse at 14% 30%, rgba(0, 0, 0, .34) 0%, rgba(0, 0, 0, .15) 28%, transparent 58%),
+        radial-gradient(ellipse at 82% 44%, rgba(0, 0, 0, .28) 0%, rgba(0, 0, 0, .11) 30%, transparent 62%),
+        radial-gradient(ellipse at 50% 92%, rgba(93, 115, 101, .14) 0%, rgba(45, 61, 52, .06) 38%, transparent 70%),
+        linear-gradient(180deg, rgba(0, 0, 0, .03) 0%, rgba(0, 0, 0, .09) 48%, rgba(0, 0, 0, .34) 100%);
+    --story-gradient-token-073: linear-gradient(180deg, #3a2418, #21130d);
+    --story-gradient-token-074: linear-gradient(180deg, #f0d5a8, #c9995c);
+    --story-gradient-token-075: linear-gradient(120deg, #4a2b1a, #24150e 70%);
+    --story-gradient-token-076: linear-gradient(180deg, #392317, #21130d);
+    --story-gradient-token-077: linear-gradient(180deg, #4a2c1b, #2c190f);
+    --story-gradient-token-078: linear-gradient(180deg, #5d3821, #342013);
+    --story-gradient-token-079: linear-gradient(135deg, #452719, #2a160f);
+    --story-gradient-token-080: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.025));
+    --story-gradient-token-081: linear-gradient(180deg, rgba(244,198,128,.13), rgba(255,255,255,.035));
+    --story-gradient-token-082: radial-gradient(circle at 12% 5%, rgba(217, 166, 94, .12), transparent 32%),
+        linear-gradient(145deg, #3f2417, #20120c 72%);
+    --story-gradient-token-083: radial-gradient(circle at 12% 5%, rgba(177, 59, 43, .16), transparent 34%),
+        linear-gradient(145deg, #432219, #21100c 72%);
+    --story-gradient-token-084: linear-gradient(180deg, #e2bb7c, #b9793b);
+    --story-gradient-token-085: linear-gradient(180deg, #c96853, #92392e);
+    --story-gradient-token-086: linear-gradient(180deg, #ffe8bd, #e7bd7c);
+    --story-gradient-token-087: linear-gradient(180deg, #f7dca8, #dba25b);
+    --story-gradient-token-088: linear-gradient(180deg, rgba(92, 54, 31, .82), rgba(48, 27, 17, .9));
+    --story-gradient-token-089: linear-gradient(180deg, rgba(109, 66, 37, .92), rgba(54, 30, 18, .96));
+    --story-gradient-token-090: linear-gradient(180deg, #efc982, #c8873f);
+    --story-gradient-token-091: linear-gradient(180deg, #dfb96f, #b97835);
+    --story-gradient-token-092: linear-gradient(180deg, #e7bc72, #b87535);
+    --story-gradient-token-093: linear-gradient(180deg, rgba(54, 31, 20, .96), rgba(26, 15, 10, .98));
+    --story-gradient-token-094: linear-gradient(180deg, #52331f, #301c12);
+    --story-gradient-token-095: linear-gradient(180deg, rgba(132, 54, 42, .92), rgba(78, 31, 24, .96));
+    --story-gradient-token-096: linear-gradient(180deg, #3a2116, #20120d);
+    --story-gradient-token-097: linear-gradient(180deg, #f6dfb4, #e7bd7c);
+    --story-gradient-token-098: linear-gradient(180deg, #664026, #3b2416);
+    --story-gradient-token-099: linear-gradient(180deg, rgba(158, 65, 51, .96), rgba(92, 36, 28, .98));
+    --story-gradient-token-100: linear-gradient(180deg, #51301d, #321d13);
+    --story-gradient-token-101: linear-gradient(135deg, rgba(83, 55, 33, .78), rgba(48, 31, 20, .92));
+    --story-gradient-token-102: linear-gradient(180deg, rgba(88, 57, 34, .98), rgba(61, 38, 23, .99));
+    --story-gradient-token-103: linear-gradient(180deg, rgba(84, 54, 32, .98), rgba(62, 39, 24, .99));
+    --story-gradient-token-104: linear-gradient(180deg, #8a6237, #684522);
+    --story-gradient-token-105: linear-gradient(180deg, #986f41, #724d28);
+    --story-gradient-token-106: linear-gradient(180deg, #6e4b2b, #52331f);
+    --story-gradient-token-107: linear-gradient(180deg, #875f35, #644222);
+    --story-gradient-token-108: linear-gradient(135deg, rgba(33, 48, 72, .97), rgba(15, 23, 39, .98));
+    --story-gradient-token-109: linear-gradient(135deg, rgba(64, 42, 86, .97), rgba(34, 22, 48, .98));
+    --story-gradient-token-110: linear-gradient(135deg, rgba(249, 239, 218, .99), rgba(229, 210, 177, .99));
+    --story-gradient-token-111: linear-gradient(180deg, #583922, #301e13);
+    --story-gradient-token-112: linear-gradient(180deg, #e7c89b, #ddb984);
+    --story-gradient-token-113: linear-gradient(180deg, #ecd4ab, #e1c08f);
+    --story-gradient-token-114: linear-gradient(90deg, #c99a43, #b53b31);
+    --story-gradient-token-115: linear-gradient(145deg, rgba(231, 247, 247, .92), rgba(163, 207, 205, .36));
+    --story-gradient-token-116: radial-gradient(circle at 50% 0%, rgba(219, 170, 96, .13), transparent 48%),
+        linear-gradient(180deg, #3c2417, #21130d);
+    --story-gradient-token-117: radial-gradient(circle at 32% 27%, #6b4228, #2d1a11 72%);
+    --story-gradient-token-118: radial-gradient(circle at 32% 27%, #7b4b2e, #382015 74%);
+    --story-gradient-token-119: radial-gradient(circle at 35% 28%, rgba(120, 75, 43, .9), rgba(38, 22, 14, .96));
+}
+
+/* These two slider gradients depend on the live thumb position, so keep their
+   variables on the slider element where --VolumePercent is defined. */
+.AccountSettingRow input.AccountVolumeSlider[type='range'] {
+    --story-gradient-volume-track: linear-gradient(90deg, #dfa24e 0 var(--VolumePercent), #6f513b var(--VolumePercent) 100%);
+}
+.AccountVolumeSlider:hover {
+    --story-gradient-volume-track-hover: linear-gradient(90deg, #edb45f 0 var(--VolumePercent), #806048 var(--VolumePercent) 100%);
+}
