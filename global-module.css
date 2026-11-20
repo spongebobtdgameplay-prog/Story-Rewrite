@@ -253,3 +253,74 @@ body {
 .AccountVolumeSlider:hover {
     --story-gradient-volume-track-hover: linear-gradient(90deg, #edb45f 0 var(--VolumePercent), #806048 var(--VolumePercent) 100%);
 }
+/* Shared gradients used by the rest of the Story Rewrite pages and overlays. */
+:root {
+    --story-gradient-token-120: linear-gradient(180deg, #ffe39a, #d9a04c);
+    --story-gradient-token-121: linear-gradient(135deg, #382719 0%, #241811 64%, #19120f 100%);
+    --story-gradient-token-122: linear-gradient(125deg, #18343d 0%, #1b2933 58%, #30212d 100%);
+    --story-gradient-token-123: linear-gradient(145deg, #4b2f1d, #24170f);
+    --story-gradient-token-124: linear-gradient(180deg, #392819, #26190f);
+    --story-gradient-token-125: linear-gradient(180deg, #f0ca8d, #d9a96d);
+    --story-gradient-token-126: linear-gradient(135deg, rgba(67,43,26,.92), rgba(35,23,15,.96));
+    --story-gradient-token-127: linear-gradient(160deg, rgba(48,33,22,.96), rgba(34,23,16,.96));
+    --story-gradient-token-128: linear-gradient(155deg,rgba(28,55,46,.72),rgba(34,23,16,.96));
+    --story-gradient-token-129: linear-gradient(160deg,#302116,#1d140e);
+    --story-gradient-token-130: linear-gradient(145deg, #5c3923, #302018);
+    --story-gradient-token-131: linear-gradient(180deg, #4b2f20, #2a1d16);
+    --story-gradient-token-132: radial-gradient(circle at 18% 7%, rgba(255,249,229,.6), transparent 32%),
+        repeating-linear-gradient(0deg, rgba(93,61,35,.035) 0 1px, transparent 1px 5px),
+        linear-gradient(180deg, #e1c395, #c89f6b);
+    --story-gradient-token-133: linear-gradient(
+        90deg,
+        rgba(54, 41, 33, 0),
+        rgba(54, 41, 33, .18) 58%,
+        rgba(53, 42, 35, .46)
+    );
+    --story-gradient-token-134: linear-gradient(180deg, rgba(255, 248, 231, .94), rgba(236, 215, 179, .86));
+    --story-gradient-token-135: linear-gradient(90deg, rgba(108,70,37,.28), transparent);
+    --story-gradient-token-136: linear-gradient(180deg, #f8e8c7, #e6c99a);
+    --story-gradient-token-137: radial-gradient(circle at 34% 28%, #fff1d0, transparent 34%),
+        linear-gradient(145deg, #8b5b31, #4f2f1c);
+    --story-gradient-token-138: radial-gradient(circle at 88% 8%, rgba(216, 177, 117, .13), transparent 24%),
+        linear-gradient(180deg, #352a23, #28201b);
+    --story-gradient-token-139: linear-gradient(145deg, rgba(116, 76, 40, .52), rgba(49, 34, 26, .78));
+    --story-gradient-token-140: linear-gradient(90deg, transparent, rgba(213, 174, 113, .3));
+    --story-gradient-token-141: linear-gradient(90deg, rgba(213, 174, 113, .3), transparent);
+    --story-gradient-token-142: radial-gradient(circle at 88% 8%, rgba(216,177,117,.13), transparent 24%),
+        linear-gradient(180deg, #352a23, #28201b);
+    --story-gradient-token-143: linear-gradient(180deg, rgba(65, 48, 39, .88), rgba(44, 34, 28, .88));
+    --story-gradient-token-144: linear-gradient(180deg, rgba(86, 63, 48, .5), rgba(47, 35, 28, .6));
+    --story-gradient-token-145: linear-gradient(90deg, rgba(222, 181, 117, .18), transparent);
+    --story-gradient-token-146: radial-gradient(circle at 12% 0%, rgba(218, 182, 122, .06), transparent 25%),
+        linear-gradient(180deg, #2f241e 0%, #2b221d 100%);
+    --story-gradient-token-147: linear-gradient(180deg, #7e532f, #67411f);
+    --story-gradient-token-148: radial-gradient(
+                circle at 88% 8%,
+                rgba(216,177,117,.13),
+                transparent 24%
+            ),
+            linear-gradient(
+                180deg,
+                #352a23,
+                #28201b
+            );
+    --story-gradient-token-149: linear-gradient(155deg,#895b33,#5d371c);
+    --story-gradient-token-150: linear-gradient(145deg,rgba(25,17,13,.76),rgba(43,29,20,.9));
+    --story-gradient-token-151: linear-gradient(145deg,#8b5b31,#4f2f1c);
+    --story-gradient-token-152: linear-gradient(160deg, #32231a, #211711);
+    --story-gradient-token-153: linear-gradient(180deg, #f3d29b, #c99a5f);
+    --story-gradient-token-154: linear-gradient(180deg, #55351f, #342116);
+    --story-gradient-token-155: linear-gradient(180deg, #d84a43, #a92624);
+    --story-gradient-token-156: radial-gradient(circle at 50% 18%, rgba(229, 180, 110, .2), transparent 42%),
+        linear-gradient(155deg, #352316, #1c120c 76%);
+    --story-gradient-token-157: radial-gradient(circle at 32% 28%, #6f472b, #2a190f 74%);
+    --story-gradient-token-158: radial-gradient(circle at 50% 12%, rgba(213, 161, 90, .18), transparent 42%),
+        linear-gradient(145deg, #20140e, #100b08 78%);
+    --story-gradient-token-159: linear-gradient(145deg, rgba(65, 42, 27, .96), rgba(31, 20, 14, .98));
+    --story-gradient-token-160: linear-gradient(180deg, #3d2518, #20120c);
+    --story-gradient-token-161: linear-gradient(180deg, #4b2a19, #2c180f);
+    --story-gradient-token-162: linear-gradient(180deg, #5b351f, #342015);
+    --story-gradient-token-163: linear-gradient(180deg, #654027, #3b2518);
+    --story-gradient-token-164: linear-gradient(180deg,#241d17,#17130f);
+    --story-gradient-token-165: linear-gradient(180deg,#271d16,#17110d);
+}
