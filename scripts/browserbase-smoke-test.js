@@ -453,7 +453,7 @@ async function runBrowserbaseSmokeTest() {
 
         const AccountFlowPassed = !AccountFlow || AccountFlow.ok === true;
         const Result = {
-            ok: Example.status === 200 && AccountFlowPassed,
+            ok: Example.status === 200 && Auth.gradientCanvas?.ok === true && AccountFlowPassed,
             sessionId: SessionId,
             connectivity: Example,
             storyRewriteAuth: Auth,
