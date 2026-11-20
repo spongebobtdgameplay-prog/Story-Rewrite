@@ -18,6 +18,7 @@ body.ThinkPage {
         radial-gradient(900px 520px at 12% -10%, rgba(177, 111, 57, .16), transparent 65%),
         radial-gradient(760px 460px at 100% 10%, rgba(120, 71, 36, .13), transparent 64%),
         var(--think-bg);
+    background-attachment: fixed;
     font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 .ThinkShell { width: min(1480px, calc(100% - 36px)); margin: 0 auto; padding: 25px 0 54px; }
