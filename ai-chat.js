@@ -900,15 +900,16 @@ function UpdateStoryBotDedicatedComposer(Composer) {
     const Count = Composer?.querySelector(".StoryBotComposerCount");
     if (!Input) return;
     if (Count) Count.textContent = String(Input.value.length) + "/1200";
+    const IsMultiplayerComposer = document.body?.classList.contains("MultiplayerPage");
+    const MinimumInputHeight = IsMultiplayerComposer ? 28 : 46;
     Input.style.height = "auto";
-    Input.style.height = Math.min(110, Math.max(46, Input.scrollHeight)) + "px";
+    Input.style.height = Math.min(110, Math.max(MinimumInputHeight, Input.scrollHeight)) + "px";
     const Slot = Input.closest(".StoryBotInputSlot");
     if (Slot) {
-        const IsMultiplayerComposer = document.body?.classList.contains("MultiplayerPage");
-        const MinimumHeight = IsMultiplayerComposer ? 46 : 58;
-        const VerticalPadding = IsMultiplayerComposer ? 0 : 12;
-        const MaximumHeight = IsMultiplayerComposer ? 110 : 132;
-        Slot.style.height = Math.max(MinimumHeight, Math.min(MaximumHeight, Input.scrollHeight + VerticalPadding)) + "px";
+        const MinimumSlotHeight = IsMultiplayerComposer ? 38 : 58;
+        const VerticalPadding = IsMultiplayerComposer ? 10 : 12;
+        const MaximumSlotHeight = IsMultiplayerComposer ? 122 : 132;
+        Slot.style.height = Math.max(MinimumSlotHeight, Math.min(MaximumSlotHeight, Input.scrollHeight + VerticalPadding)) + "px";
     }
 }
 

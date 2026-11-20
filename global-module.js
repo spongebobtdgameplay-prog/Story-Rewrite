@@ -394,7 +394,12 @@
     let CssGradientScanForceQueued = false;
     function ApplyCssGradientCaches(Force = false) {
         if(!IsCssGradientCachePage())return;
-        [Root,document.body,...document.body.querySelectorAll("*")].forEach(Element=>ApplyCssGradientToElement(Element,Force));
+        const PageBody=document.body;
+        // Multiplayer keeps the real CSS background on <html>; snapshot only its actual UI surfaces.
+        const Elements=PageBody.classList.contains("MultiplayerPage")
+            ? [PageBody,...PageBody.querySelectorAll("*")]
+            : [Root,PageBody,...PageBody.querySelectorAll("*")];
+        Elements.forEach(Element=>ApplyCssGradientToElement(Element,Force));
     }
     function ScheduleCssGradientCacheScan(Force = false) {
         if(!IsCssGradientCachePage())return;
