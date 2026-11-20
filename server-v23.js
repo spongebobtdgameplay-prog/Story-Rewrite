@@ -47,23 +47,23 @@ Module.prototype._compile = function(Content, Filename) {
         Source = Source.replace(HelperAnchor, Helpers + HelperAnchor);
 
         const RegisterResponsePattern =
-            /return SendJson\\(Response,\\s*201,\\s*\\{\\s*token:\\s*CreateToken\\(Username\\),\\s*profile:\\s*PublicProfile\\(Account\\),\\s*save:\\s*Account\\.save\\s*\\},\\s*Origin\\);/g;
+            /return SendJson\(Response,\s*201,\s*\{\s*token:\s*CreateToken\(Username\),\s*profile:\s*PublicProfile\(Account\),\s*save:\s*Account\.save\s*\},\s*Origin\);/g;
         const RegisterResponseMatches = Source.match(RegisterResponsePattern) || [];
         if (RegisterResponseMatches.length !== 1) {
             throw new Error("server-v23 cookie-session patch failed: expected one registration response, found " + RegisterResponseMatches.length + ".");
         }
         Source = Source.replace(RegisterResponsePattern,
-            "SetStorySessionCookie(Response, CreateToken(Username));\\n            return SendJson(Response, 201, { profile: PublicProfile(Account), save: Account.save }, Origin);"
+            "SetStorySessionCookie(Response, CreateToken(Username));\n            return SendJson(Response, 201, { profile: PublicProfile(Account), save: Account.save }, Origin);"
         );
 
         const LoginResponsePattern =
-            /return SendJson\\(Response,\\s*200,\\s*\\{\\s*token:\\s*CreateToken\\(Account\\.username\\),\\s*profile:\\s*PublicProfile\\(Account\\),\\s*save:\\s*Account\\.save\\s*\\},\\s*Origin\\);/g;
+            /return SendJson\(Response,\s*200,\s*\{\s*token:\s*CreateToken\(Account\.username\),\s*profile:\s*PublicProfile\(Account\),\s*save:\s*Account\.save\s*\},\s*Origin\);/g;
         const LoginResponseMatches = Source.match(LoginResponsePattern) || [];
         if (LoginResponseMatches.length !== 1) {
             throw new Error("server-v23 cookie-session patch failed: expected one login response, found " + LoginResponseMatches.length + ".");
         }
         Source = Source.replace(LoginResponsePattern,
-            "SetStorySessionCookie(Response, CreateToken(Account.username));\\n            return SendJson(Response, 200, { profile: PublicProfile(Account), save: Account.save }, Origin);"
+            "SetStorySessionCookie(Response, CreateToken(Account.username));\n            return SendJson(Response, 200, { profile: PublicProfile(Account), save: Account.save }, Origin);"
         );
 
         const AuthAnchor = "        Account = await GetAccountByToken(GetBearerToken(Request));";
