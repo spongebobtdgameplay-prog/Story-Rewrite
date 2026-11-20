@@ -926,17 +926,13 @@ async function SocialReactMessage(MessageId, Reaction) {
     const Optimistic = SocialApplyOptimisticReaction(Id, Reaction);
     if (!Optimistic) return;
     SocialPendingReactionIds.add(Id);
-    SocialSetStatus(SocialById("SocialChatStatus"), "Saving reaction…");
-
-    let Saved = false;
     const PersistRequest = ApiRequest("/api/social/messages/react", {
         method: "POST",
         body: JSON.stringify({ messageId: Id, reaction: Reaction })
     }).then(Result => {
         if (Result?.message) {
             SocialUpdateMessageReactions(Result.message, true);
-            Saved = true;
-            SocialSetStatus(SocialById("SocialChatStatus"), Reaction === "like" ? "Like saved." : "Dislike saved.", "Good");
+            SocialSetStatus(SocialById("SocialChatStatus"), "");
         } else {
             throw new Error("The server did not confirm the reaction.");
         }
@@ -948,17 +944,7 @@ async function SocialReactMessage(MessageId, Reaction) {
         SocialSetReactionButtonsPending(Id, false);
     });
 
-    // Do not stall the click handler if the server is slow; show a status after
-    // one second while the request continues in the background.
-    await Promise.race([
-        PersistRequest,
-        new Promise(resolve => window.setTimeout(() => {
-            if (SocialPendingReactionIds.has(Id) && !Saved) {
-                SocialSetStatus(SocialById("SocialChatStatus"), "Reaction is still saving…");
-            }
-            resolve();
-        }, 1000))
-    ]);
+    await PersistRequest;
 }
 
 async function SocialDeleteMessage(MessageId) {
