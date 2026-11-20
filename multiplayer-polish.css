@@ -98,7 +98,7 @@ body.MultiplayerPage .StoryBotInputSlot > .StoryBotComposer .StoryBotSendButton 
     background: var(--story-gradient-token-005);
     box-shadow: 0 6px 14px rgba(55, 28, 12, .28), inset 0 1px rgba(255, 245, 221, .18);
     font: 800 0.8125rem/1.1 system-ui, sans-serif;
-    font-size: clamp(0.875rem, 1.18vw, 1.0625rem);
+    font-size: 1.0625rem;
     letter-spacing: .015em;
     text-align: center;
     cursor: pointer;
@@ -164,6 +164,6 @@ body.MultiplayerPage .StoryBotInputSlot > .StoryBotComposer .StoryBotCloseButton
     body.MultiplayerPage .StoryBotInputSlot > .StoryBotComposer .StoryBotSendButton {
         min-height: 42px;
         padding: 9px clamp(10px, 3.2vw, 14px);
-        font-size: clamp(0.8125rem, 3.6vw, 0.9375rem);
+        font-size: 1.0625rem;
     }
 }
