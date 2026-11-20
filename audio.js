@@ -284,7 +284,7 @@ const StoryAudio = (() => {
         }
     }
 
-    function PlaySound(Name = "click") {
+    function PlaySound(Name = "click", Options = {}) {
         if (SoundsPaused || !SoundSettingsReady || SoundVolume <= 0) return Promise.resolve(false);
 
         if (String(Name) === "timerBell") {
@@ -292,6 +292,9 @@ const StoryAudio = (() => {
         }
 
         if (String(Name) === "message") {
+            const Sender = String(Options?.username ?? "").trim().toLowerCase();
+            const CurrentAccount = String(Options?.accountUsername ?? "").trim().toLowerCase();
+            if (Sender && CurrentAccount && Sender === CurrentAccount) return Promise.resolve(false);
             return PlayNotificationSound();
         }
 

@@ -34,27 +34,30 @@ body.MultiplayerPage {
 }
 
 
-/* Keep the original StoryBot surface; compact only the Multiplayer prompt controls. */
+/* StoryBot uses the same full-size input row as ordinary Multiplayer chat.
+   Keep the wrapper transparent; its own background is not a chat surface. */
 body.MultiplayerPage .StoryBotInputSlot:has(.StoryBotComposer) {
-    min-height: 38px;
+    min-height: 58px;
     height: auto;
-    margin: 8px 0 0;
+    margin: 0;
 }
 
 body.MultiplayerPage .StoryBotInputSlot > .StoryBotComposer {
     box-sizing: border-box;
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 7px;
     width: 100%;
     height: 100%;
-    min-height: 38px;
-    padding: 4px 5px !important;
+    min-height: 58px;
+    padding: 0 !important;
     overflow: visible;
-    border: 1px solid rgba(171, 126, 77, .5) !important;
-    border-radius: 9px;
-    background: var(--story-gradient-token-102) !important;
-    box-shadow: inset 0 1px 0 rgba(255, 224, 170, .05), 0 3px 10px rgba(0, 0, 0, .16) !important;
+    border: 0 !important;
+    border-radius: 0;
+    background: transparent !important;
+    background-image: none !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
 }
 
 body.MultiplayerPage .StoryBotInlineIcon {
@@ -65,87 +68,103 @@ body.MultiplayerPage .StoryBotInputSlot > .StoryBotComposer .StoryBotQuestionInp
     flex: 1 1 auto;
     min-width: 0;
     width: 100%;
-    box-sizing: border-box;
-    height: 28px;
-    min-height: 28px;
+    height: 46px;
+    min-height: 46px;
     max-height: 110px;
-    padding: 5px 8px;
-    border: 1px solid rgba(198, 148, 88, .34);
-    border-radius: 7px;
+    box-sizing: border-box;
+    padding: 10px 12px;
+    border: 1px solid #705039;
+    border-radius: 10px;
     outline: none;
-    background: var(--story-gradient-token-103);
-    color: #f7e4c5;
+    background: #150d09 !important;
+    background-image: none !important;
+    color: #fff1d7;
     caret-color: #f0c989;
-    font: 600 0.75rem/1.35 system-ui, sans-serif;
+    font: 700 0.9375rem/1.2 system-ui, sans-serif;
 }
 
 body.MultiplayerPage .StoryBotInputSlot > .StoryBotComposer .StoryBotQuestionInput:focus {
-    border-color: rgba(225, 178, 105, .58);
-    box-shadow: 0 0 0 2px rgba(197, 143, 75, .1);
+    border-color: #d7a35a;
+    box-shadow: 0 0 0 3px rgba(215, 163, 90, .14);
 }
 
 body.MultiplayerPage .StoryBotInputSlot > .StoryBotComposer .StoryBotSendButton {
     box-sizing: border-box;
+    display: inline-flex;
     flex: 0 0 auto;
-    min-width: 40px;
-    width: auto;
-    height: 28px;
-    min-height: 28px;
-    padding: 0 8px;
-    border: 1px solid rgba(221, 177, 100, .38);
-    border-radius: 7px;
-    color: #ffe5b4;
-    background: var(--story-gradient-token-104);
-    font: 800 0.625rem/1 system-ui, sans-serif;
+    align-items: center;
+    justify-content: center;
+    min-width: 70px;
+    height: 46px;
+    min-height: 44px;
+    padding: 10px 16px;
+    border: 1px solid #4a2916;
+    border-radius: 12px;
+    color: #fff5e3;
+    background: var(--story-gradient-token-005);
+    box-shadow: 0 6px 14px rgba(55, 28, 12, .28), inset 0 1px rgba(255, 245, 221, .18);
+    font: 800 0.8125rem/1.1 system-ui, sans-serif;
+    letter-spacing: .015em;
+    text-align: center;
+    cursor: pointer;
+    user-select: none;
+    transition: transform .16s ease, background .16s ease, box-shadow .16s ease, filter .16s ease;
 }
 
 body.MultiplayerPage .StoryBotInputSlot > .StoryBotComposer .StoryBotSendButton:hover {
-    background: var(--story-gradient-token-105);
+    transform: translateY(-2px);
+    background: var(--story-gradient-token-006);
+}
+
+body.MultiplayerPage .StoryBotInputSlot > .StoryBotComposer .StoryBotSendButton:active {
+    transform: translateY(1px) scale(.985);
+}
+
+body.MultiplayerPage .StoryBotInputSlot > .StoryBotComposer .StoryBotSendButton:disabled {
+    cursor: not-allowed;
+    opacity: .52;
+    transform: none;
+    filter: grayscale(.2);
 }
 
 body.MultiplayerPage .StoryBotInputSlot > .StoryBotComposer .StoryBotCloseButton {
     box-sizing: border-box;
-    flex: 0 0 28px;
-    width: 28px;
-    min-width: 28px;
-    height: 28px;
-    min-height: 28px;
-    padding: 0;
-    border: 1px solid rgba(223, 180, 106, .42);
-    border-radius: 7px;
-    color: #f0d1a1;
-    background: var(--story-gradient-token-106);
-    font: 800 1rem/1 Georgia, "Times New Roman", serif;
+    flex: 0 0 46px;
+    width: 46px;
+    min-width: 46px;
+    height: 46px;
+    min-height: 44px;
+    padding: 10px 16px;
+    border: 1px solid #a37d51;
+    border-radius: 12px;
+    color: #382115;
+    background: var(--story-gradient-token-003);
+    box-shadow: inset 0 1px rgba(255, 255, 255, .46);
+    font: 800 0.8125rem/1.1 system-ui, sans-serif;
+    cursor: pointer;
+    transition: transform .16s ease, background .16s ease;
 }
 
 body.MultiplayerPage .StoryBotInputSlot > .StoryBotComposer .StoryBotCloseButton:hover {
-    border-color: rgba(233, 188, 112, .72);
-    background: var(--story-gradient-token-107);
+    transform: translateY(-1px);
+    background: var(--story-gradient-token-004);
 }
 
 @media (max-width: 520px) {
-    body.MultiplayerPage .StoryBotInputSlot:has(.StoryBotComposer),
     body.MultiplayerPage .StoryBotInputSlot > .StoryBotComposer {
-        min-height: 38px;
-    }
-
-    body.MultiplayerPage .StoryBotInputSlot > .StoryBotComposer {
-        padding: 4px !important;
-        gap: 4px;
+        gap: 5px;
     }
 
     body.MultiplayerPage .StoryBotInputSlot > .StoryBotComposer .StoryBotQuestionInput {
-        height: 28px;
-        min-height: 28px;
-        padding: 5px 8px;
-        font-size: 0.75rem;
+        height: 46px;
+        min-height: 46px;
+        padding: 10px 12px;
+        font-size: 0.9375rem;
     }
 
-    body.MultiplayerPage .StoryBotInputSlot > .StoryBotComposer .StoryBotSendButton {
-        min-width: 40px;
-        height: 28px;
-        min-height: 28px;
-        padding: 0 8px;
-        font-size: 0.625rem;
+    body.MultiplayerPage .StoryBotInputSlot > .StoryBotComposer .StoryBotSendButton,
+    body.MultiplayerPage .StoryBotInputSlot > .StoryBotComposer .StoryBotCloseButton {
+        height: 46px;
+        min-height: 44px;
     }
 }

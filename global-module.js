@@ -328,9 +328,7 @@
         }
         State.applied=false;
     }
-    function ApplyCssGradientImage(Element,State,Image,Signature,Key,Request) {
-        if(!Image||State.request!==Request||!Element.isConnected)return;
-        if(GetCssGradientSignature(window.getComputedStyle(Element))!==Signature)return;
+    function SetCssGradientImage(Element,State,Image,Signature,Key) {
         Element.style.setProperty("background-image",'url("'+Image+'")',"important");
         Element.style.setProperty("background-color","transparent","important");
         Element.style.setProperty("background-repeat","no-repeat","important");
@@ -341,33 +339,55 @@
         State.applied=true;State.signature=Signature;State.cacheKey=Key;State.image=Image;
         if(CssGradientResizeObserver&&!State.observed){CssGradientResizeObserver.observe(Element);State.observed=true;}
     }
+    function ApplyCssGradientImage(Element,State,Image,Signature,Key,Request) {
+        if(!Image||State.request!==Request||!Element.isConnected)return;
+        const CurrentSignature=GetCssGradientSignature(window.getComputedStyle(Element));
+        // During a refresh the previous PNG remains visible. The pending signature
+        // authorizes the new PNG to replace it once rendering has finished.
+        if(CurrentSignature!==Signature&&State.pendingSignature!==Signature)return;
+        SetCssGradientImage(Element,State,Image,Signature,Key);
+        if(State.pendingSignature===Signature)State.pendingSignature="";
+    }
     function ApplyCssGradientToElement(Element, Force = false) {
         if(!Element||Element.nodeType!==1)return;
         let State=CssGradientStates.get(Element);
         if(!State){
             const OriginalInline={};
             for(const Property of CssGradientProperties)OriginalInline[Property]={value:Element.style.getPropertyValue(Property),priority:Element.style.getPropertyPriority(Property)};
-            State={originalInline:OriginalInline,applied:false,observed:false,request:0,signature:"",cacheKey:"",image:"",interactionState:""};
+            State={originalInline:OriginalInline,applied:false,observed:false,request:0,signature:"",cacheKey:"",image:"",pendingSignature:"",interactionState:""};
             CssGradientStates.set(Element,State);
         }
         // Keep an already-cached gradient in place during unrelated DOM updates.
-        // Only restore it when the surface is explicitly invalidated or changes size.
+        // Only refresh it when forced or when its measured dimensions change.
         if(!Force&&State.applied){
             const Size=MeasureCssGradient(Element);
             if(State.cacheKey.endsWith("\u001e"+Size.width+"x"+Size.height))return;
         }
+        const PreviousCache=State.applied&&State.image
+            ? {image:State.image,signature:State.signature,cacheKey:State.cacheKey}
+            : null;
         RestoreCssGradient(Element,State);
         State.request++;
         const Request=State.request;
         const Style=window.getComputedStyle(Element);
         const BackgroundImage=String(Style.backgroundImage||"");
         if(!IsCssGradientImage(BackgroundImage)||/url\s*\(/i.test(BackgroundImage)||String(Style.backgroundClip||"").toLowerCase().includes("text")){
-            State.signature="";State.cacheKey="";State.image="";return;
+            State.signature="";State.cacheKey="";State.image="";State.pendingSignature="";return;
         }
         const Size=MeasureCssGradient(Element);
         const Signature=GetCssGradientSignature(Style);
         const Key=Signature+"\u001e"+Size.width+"x"+Size.height;
-        if(State.cacheKey===Key&&State.image){ApplyCssGradientImage(Element,State,State.image,Signature,Key,Request);return;}
+        if(PreviousCache&&PreviousCache.signature===Signature&&PreviousCache.cacheKey===Key){
+            ApplyCssGradientImage(Element,State,PreviousCache.image,Signature,Key,Request);
+            return;
+        }
+        State.pendingSignature=Signature;
+        // Keep the previous image on screen until the replacement is ready. This
+        // prevents a visible gradient -> blank/live CSS -> PNG flash on UI changes.
+        if(PreviousCache){
+            SetCssGradientImage(Element,State,PreviousCache.image,PreviousCache.signature,PreviousCache.cacheKey);
+            State.pendingSignature=Signature;
+        }
         GetCssGradientImage(Style,Size.width,Size.height,Signature).then(Image=>ApplyCssGradientImage(Element,State,Image,Signature,Key,Request));
     }
     function ApplyCssGradientTree(Element) {
