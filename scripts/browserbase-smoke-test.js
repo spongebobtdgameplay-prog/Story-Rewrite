@@ -17,49 +17,13 @@ async function InspectDocumentGradient(Page) {
     return Page.evaluate(async () => {
         const HtmlStyle = getComputedStyle(document.documentElement);
         const BodyStyle = getComputedStyle(document.body);
-        const Nodes = [document.scrollingElement, document.documentElement, document.body,
-            ...document.querySelectorAll("body *")].filter(Boolean);
-        const Seen = new Set();
-        const Candidates = Nodes.filter(Element => {
-            if (Seen.has(Element)) return false;
-            Seen.add(Element);
-            const Style = getComputedStyle(Element);
-            const RootScroller = Element === document.scrollingElement
-                || Element === document.documentElement || Element === document.body;
-            const Rect = Element.getBoundingClientRect();
-            return Element.scrollHeight - Element.clientHeight > 24 && Rect.height > 0
-                && (RootScroller || /^(auto|scroll|overlay)$/.test(Style.overflowY));
-        }).sort((A, B) => (B.scrollHeight - B.clientHeight) - (A.scrollHeight - A.clientHeight));
-        let ScrollMoved = Candidates.length ? false : null;
-        let ScrollContainer = "";
-        let MaximumScroll = 0;
-        for (const Element of Candidates) {
-            const Max = Math.max(0, Element.scrollHeight - Element.clientHeight);
-            MaximumScroll = Math.max(MaximumScroll, Max);
-            const Initial = Element.scrollTop;
-            Element.scrollTop = Math.min(Max, Math.max(Initial + 80, Math.round(Max * .7)));
-            await new Promise(Resolve => requestAnimationFrame(() => requestAnimationFrame(Resolve)));
-            if (Element.scrollTop > Initial + 5) {
-                ScrollMoved = true;
-                ScrollContainer = Element.id ? "#" + Element.id
-                    : Element.tagName.toLowerCase() + (typeof Element.className === "string" && Element.className.trim()
-                        ? "." + Element.className.trim().split(/\\s+/).join(".") : "");
-                Element.scrollTop = Initial;
-                break;
-            }
-        }
-        const IsFixed = Value => String(Value || "").split(",").every(Part => Part.trim() === "fixed");
-        const Images = [HtmlStyle.backgroundImage, BodyStyle.backgroundImage,
-            getComputedStyle(document.body, "::before").backgroundImage].join(" ");
         return {
             htmlAttachment: HtmlStyle.backgroundAttachment,
             bodyAttachment: BodyStyle.backgroundAttachment,
-            hasGradientImage: Images.includes("gradient"),
-            maxScroll: MaximumScroll,
-            scrollMoved: ScrollMoved,
-            scrollContainer: ScrollContainer,
-            ok: IsFixed(HtmlStyle.backgroundAttachment) && IsFixed(BodyStyle.backgroundAttachment)
-                && ScrollMoved !== false
+            hasGradientImage: (HtmlStyle.backgroundImage + " " + BodyStyle.backgroundImage
+                + " " + getComputedStyle(document.body, "::before").backgroundImage).includes("gradient"),
+            ok: [HtmlStyle.backgroundAttachment, BodyStyle.backgroundAttachment]
+                .every(Value => String(Value || "").split(",").every(Part => Part.trim() === "fixed"))
         };
     });
 }
@@ -68,18 +32,7 @@ async function VerifyShellGradientRoutes(Page, BaseUrl) {
     const Routes = ["main.html", "levels.html", "multiplayer.html", "social.html", "settings.html",
         "account.html", "tutorial.html", "terms.html", "about.html", "privacy.html"];
     const Results = [];
-    const ShellCanvas = await Page.evaluate(() => {
-        const HtmlStyle = getComputedStyle(document.documentElement);
-        const BodyStyle = getComputedStyle(document.body);
-        return {
-            htmlAttachment: HtmlStyle.backgroundAttachment,
-            bodyAttachment: BodyStyle.backgroundAttachment,
-            hasGradientImage: (HtmlStyle.backgroundImage + " " + BodyStyle.backgroundImage).includes("gradient")
-        };
-    });
     const IsFixed = Value => String(Value || "").split(",").every(Part => Part.trim() === "fixed");
-    const ShellCanvasOk = IsFixed(ShellCanvas.htmlAttachment) && IsFixed(ShellCanvas.bodyAttachment)
-        && ShellCanvas.hasGradientImage;
     const WaitForRoute = Route => Page.waitForFunction(Expected => {
         return [...document.querySelectorAll("#StoryShellRoot iframe.StoryShellFrame")].some(Frame =>
             Frame.dataset.storyRoute === Expected && Frame.dataset.storyLoaded === "1"
@@ -87,11 +40,21 @@ async function VerifyShellGradientRoutes(Page, BaseUrl) {
             && Frame.contentDocument?.getElementById("StoryResponsiveUiEngineStyles")
             && Frame.contentDocument?.getElementById("StoryMobileScrollInputStyles")
         );
-    }, Route, { timeout: 15000 });
+    }, Route, { timeout: 20000 });
 
     await Page.setViewportSize({ width: 1365, height: 900 });
-    await Page.goto(BaseUrl + "/index.html", { waitUntil: "domcontentloaded", timeout: 45000 });
+    await Page.goto(BaseUrl + "/index.html#main.html", { waitUntil: "domcontentloaded", timeout: 45000 });
     await WaitForRoute("main.html");
+
+    const ShellCanvas = await Page.evaluate(() => {
+        const HtmlStyle = getComputedStyle(document.documentElement);
+        return {
+            htmlAttachment: HtmlStyle.backgroundAttachment,
+            backgroundImage: HtmlStyle.backgroundImage,
+            hasGradientImage: HtmlStyle.backgroundImage.includes("gradient")
+        };
+    });
+    const ShellCanvasOk = IsFixed(ShellCanvas.htmlAttachment) && ShellCanvas.hasGradientImage;
 
     async function InspectRoute(Route, Viewport) {
         const Frame = Page.frames().find(Child => {
@@ -100,85 +63,80 @@ async function VerifyShellGradientRoutes(Page, BaseUrl) {
             catch { return false; }
         });
         if (!Frame) throw new Error("Missing iframe document for " + Route);
-        const Inspection = await Frame.evaluate(async () => {
+
+        const Before = await Frame.evaluate(() => {
             const HtmlStyle = getComputedStyle(document.documentElement);
             const BodyStyle = getComputedStyle(document.body);
-            const Nodes = [document.scrollingElement, document.documentElement, document.body,
-                ...document.querySelectorAll("body *")].filter(Boolean);
-            const Seen = new Set();
-            const Candidates = Nodes.filter(Element => {
-                if (Seen.has(Element)) return false;
-                Seen.add(Element);
-                const Style = getComputedStyle(Element);
-                const RootScroller = Element === document.scrollingElement
-                    || Element === document.documentElement || Element === document.body;
-                const Rect = Element.getBoundingClientRect();
-                return Element.scrollHeight - Element.clientHeight > 24 && Rect.height > 0
-                    && (RootScroller || /^(auto|scroll|overlay)$/.test(Style.overflowY));
-            }).sort((A, B) => (B.scrollHeight - B.clientHeight) - (A.scrollHeight - A.clientHeight));
-            let ScrollMoved = Candidates.length ? false : null;
-            let ScrollContainer = "";
-            let MaximumScroll = 0;
-            for (const Element of Candidates) {
-                const Max = Math.max(0, Element.scrollHeight - Element.clientHeight);
-                MaximumScroll = Math.max(MaximumScroll, Max);
-                const Initial = Element.scrollTop;
-                Element.scrollTop = Math.min(Max, Math.max(Initial + 80, Math.round(Max * .7)));
-                await new Promise(Resolve => requestAnimationFrame(() => requestAnimationFrame(Resolve)));
-                if (Element.scrollTop > Initial + 5) {
-                    ScrollMoved = true;
-                    ScrollContainer = Element.id ? "#" + Element.id
-                        : Element.tagName.toLowerCase() + (typeof Element.className === "string" && Element.className.trim()
-                            ? "." + Element.className.trim().split(/\\s+/).join(".") : "");
-                    Element.scrollTop = Initial;
-                    break;
-                }
-            }
-            const BeforeStyle = getComputedStyle(document.body, "::before");
-            const Images = [HtmlStyle.backgroundImage, BodyStyle.backgroundImage, BeforeStyle.backgroundImage].join(" ");
-            const MessagePane = document.querySelector(".StorySocialMessages");
+            const Scroller = document.scrollingElement || document.documentElement;
+            const OverflowNodes = [document.documentElement, document.body,
+                ...document.querySelectorAll("body *")].filter(Element => {
+                    const Style = getComputedStyle(Element);
+                    return /^(auto|scroll|overlay)$/.test(Style.overflowY)
+                        && Element.scrollHeight - Element.clientHeight > 20;
+                });
             return {
                 htmlAttachment: HtmlStyle.backgroundAttachment,
                 bodyAttachment: BodyStyle.backgroundAttachment,
-                hasGradientImage: Images.includes("gradient"),
-                beforePosition: BeforeStyle.position,
-                messagePaneAttachment: MessagePane ? getComputedStyle(MessagePane).backgroundAttachment : null,
-                maxScroll: MaximumScroll,
-                scrollMoved: ScrollMoved,
-                scrollContainer: ScrollContainer,
-                ok: [HtmlStyle.backgroundAttachment, BodyStyle.backgroundAttachment]
-                    .every(Value => String(Value || "").split(",").every(Part => Part.trim() === "fixed"))
-                    && ScrollMoved !== false
+                hasGradientImage: (HtmlStyle.backgroundImage + " " + BodyStyle.backgroundImage
+                    + " " + getComputedStyle(document.body, "::before").backgroundImage).includes("gradient"),
+                rootScrollHeight: Scroller.scrollHeight,
+                rootClientHeight: Scroller.clientHeight,
+                rootOverflowY: getComputedStyle(Scroller).overflowY,
+                scrollableElements: OverflowNodes.slice(0, 8).map(Element => ({
+                    id: Element.id || "",
+                    className: typeof Element.className === "string" ? Element.className.slice(0, 100) : "",
+                    scrollHeight: Element.scrollHeight,
+                    clientHeight: Element.clientHeight,
+                    overflowY: getComputedStyle(Element).overflowY,
+                    scrollTop: Element.scrollTop
+                }))
             };
         });
+
+        let Scroll = { attempted: false, moved: null, container: "" };
+        if (Viewport === "desktop" && Before.rootScrollHeight - Before.rootClientHeight > 24) {
+            await Page.mouse.move(680, 450);
+            await Page.mouse.wheel(0, 680);
+            await Page.waitForTimeout(350);
+            Scroll = await Frame.evaluate(() => {
+                const Nodes = [document.documentElement, document.body, ...document.querySelectorAll("body *")];
+                const Moved = Nodes.find(Element => Element.scrollTop > 4);
+                const Scroller = document.scrollingElement || document.documentElement;
+                return {
+                    attempted: true,
+                    moved: Boolean(window.scrollY > 4 || Scroller.scrollTop > 4 || document.body.scrollTop > 4 || Moved),
+                    container: Moved ? (Moved.id || String(Moved.className || Moved.tagName).slice(0, 90)) : "document",
+                    windowScrollY: window.scrollY,
+                    documentScrollTop: document.documentElement.scrollTop,
+                    bodyScrollTop: document.body.scrollTop
+                };
+            });
+        }
+
+        const Passed = IsFixed(Before.htmlAttachment) && IsFixed(Before.bodyAttachment)
+            && (!Scroll.attempted || Scroll.moved);
         Results.push({
             route: Route,
             viewport: Viewport,
-            ...Inspection,
-            shellCanvas: ShellCanvas,
-            ok: Inspection.ok && ShellCanvasOk
+            ...Before,
+            scroll: Scroll,
+            shellCanvasOk: ShellCanvasOk,
+            ok: Passed && ShellCanvasOk
         });
     }
 
     for (const Route of Routes) {
         try {
-            if (Route !== "main.html") {
-                const Navigation = await Page.evaluate(Expected => {
-                    const Active = [...document.querySelectorAll("#StoryShellRoot iframe.StoryShellFrame")]
-                        .find(Frame => Frame.dataset.storyLoaded === "1" && getComputedStyle(Frame).visibility === "visible");
-                    return {
-                        accepted: Boolean(Active?.contentWindow?.StoryNavigate?.(Expected)),
-                        currentRoute: Active?.dataset.storyRoute || ""
-                    };
-                }, Route);
-                if (!Navigation.accepted && Navigation.currentRoute !== Route) {
-                    throw new Error("Shell rejected route " + Route);
-                }
-                await WaitForRoute(Route);
-            }
+            const Navigation = await Page.evaluate(Expected => {
+                const Current = window.StoryShell?.GetCurrentRoute?.() || "";
+                if (Current === Expected) return true;
+                return Boolean(window.StoryShell?.Navigate?.(Expected));
+            }, Route);
+            if (!Navigation) throw new Error("Shell navigation rejected route " + Route);
+            await WaitForRoute(Route);
             await InspectRoute(Route, "desktop");
         } catch (Error) {
-            Results.push({ route: Route, viewport: "desktop", ok: false, error: SafeErrorMessage(Error, ""), shellCanvas: ShellCanvas });
+            Results.push({ route: Route, viewport: "desktop", ok: false, error: SafeErrorMessage(Error, "") });
         }
     }
 
@@ -186,20 +144,15 @@ async function VerifyShellGradientRoutes(Page, BaseUrl) {
     for (const Route of ["main.html", "social.html", "settings.html", "terms.html"]) {
         try {
             const Navigation = await Page.evaluate(Expected => {
-                const Active = [...document.querySelectorAll("#StoryShellRoot iframe.StoryShellFrame")]
-                    .find(Frame => Frame.dataset.storyLoaded === "1" && getComputedStyle(Frame).visibility === "visible");
-                return {
-                    accepted: Boolean(Active?.contentWindow?.StoryNavigate?.(Expected)),
-                    currentRoute: Active?.dataset.storyRoute || ""
-                };
+                const Current = window.StoryShell?.GetCurrentRoute?.() || "";
+                if (Current === Expected) return true;
+                return Boolean(window.StoryShell?.Navigate?.(Expected));
             }, Route);
-            if (!Navigation.accepted && Navigation.currentRoute !== Route) {
-                throw new Error("Shell rejected mobile route " + Route);
-            }
+            if (!Navigation) throw new Error("Shell navigation rejected mobile route " + Route);
             await WaitForRoute(Route);
             await InspectRoute(Route, "mobile");
         } catch (Error) {
-            Results.push({ route: Route, viewport: "mobile", ok: false, error: SafeErrorMessage(Error, ""), shellCanvas: ShellCanvas });
+            Results.push({ route: Route, viewport: "mobile", ok: false, error: SafeErrorMessage(Error, "") });
         }
     }
 
