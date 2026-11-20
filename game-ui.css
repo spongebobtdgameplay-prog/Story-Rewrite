@@ -41,7 +41,7 @@ body.LevelSelectPage {
     padding: 18px 20px;
     border: 1px solid #51301e;
     border-radius: 18px;
-    background: linear-gradient(180deg, rgba(54, 31, 20, .97), rgba(29, 17, 11, .98));
+    background: var(--story-gradient-token-035);
     box-shadow: 0 18px 48px rgba(0, 0, 0, .28), inset 0 1px rgba(255, 235, 196, .08);
 }
 
@@ -56,7 +56,7 @@ body.LevelSelectPage {
     text-decoration: none;
     border: 1px solid #684328;
     border-radius: 10px;
-    background: linear-gradient(180deg, #5a3722, #362014);
+    background: var(--story-gradient-token-036);
     font-weight: 800;
     transition: transform .15s ease, border-color .15s ease, background .15s ease;
 }
@@ -65,7 +65,7 @@ body.LevelSelectPage {
 .GameHeaderButton:hover {
     transform: translateY(-1px);
     border-color: #c18c4d;
-    background: linear-gradient(180deg, #714529, #432718);
+    background: var(--story-gradient-token-037);
 }
 
 .GameHeaderCopy {
@@ -160,7 +160,7 @@ body.LevelSelectPage {
     color: #d8c3a6;
     border: 1px solid #4e3020;
     border-radius: 11px;
-    background: linear-gradient(180deg, #3c2418, #24150e);
+    background: var(--story-gradient-token-038);
     transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease;
 }
 
@@ -172,7 +172,7 @@ body.LevelSelectPage {
 .WorldTab.Active {
     color: #fff0d4;
     border-color: #d09a54;
-    background: linear-gradient(180deg, #684126, #352015);
+    background: var(--story-gradient-token-039);
     box-shadow: inset 0 -3px #d7a45f, 0 8px 18px rgba(0, 0, 0, .22);
 }
 
@@ -222,7 +222,7 @@ body.LevelSelectPage {
     grid-template-columns: minmax(0, 1fr) auto;
     gap: 18px;
     align-items: end;
-    background: linear-gradient(110deg, #3b2317, #1d110c 64%, #422619);
+    background: var(--story-gradient-token-040);
 }
 
 .ChapterGameHeader::after {
@@ -235,11 +235,11 @@ body.LevelSelectPage {
     pointer-events: none;
 }
 
-.ChapterGameHeader.Theme-fromville { background: linear-gradient(110deg, #35251d, #101513 62%, #27352f); }
-.ChapterGameHeader.Theme-anime { background: linear-gradient(110deg, #3f1729, #16101f 60%, #55243f); }
-.ChapterGameHeader.Theme-manor { background: linear-gradient(110deg, #25283a, #12131c 62%, #3f3441); }
-.ChapterGameHeader.Theme-forest { background: linear-gradient(110deg, #24331f, #0f170f 62%, #40522c); }
-.ChapterGameHeader.Theme-city { background: linear-gradient(110deg, #203445, #10171e 62%, #334c60); }
+.ChapterGameHeader.Theme-fromville { background: var(--story-gradient-token-041); }
+.ChapterGameHeader.Theme-anime { background: var(--story-gradient-token-042); }
+.ChapterGameHeader.Theme-manor { background: var(--story-gradient-token-043); }
+.ChapterGameHeader.Theme-forest { background: var(--story-gradient-token-044); }
+.ChapterGameHeader.Theme-city { background: var(--story-gradient-token-045); }
 
 .ChapterGameKicker {
     color: #d2a25f;
@@ -285,16 +285,14 @@ body.LevelSelectPage {
     padding: 26px;
     position: relative;
     overflow: hidden;
-    background:
-        radial-gradient(circle at 18% 20%, rgba(222, 174, 100, .08), transparent 22%),
-        linear-gradient(145deg, #2b1a12, #160d09 62%, #21140e);
+    background: var(--story-gradient-token-046);
 }
 
-.StageMapArea.Theme-fromville { background: radial-gradient(circle at 78% 20%, rgba(207, 222, 197, .12), transparent 18%), linear-gradient(145deg, #223028, #111713 64%, #0a0e0c); }
-.StageMapArea.Theme-anime { background: radial-gradient(circle at 78% 18%, rgba(255, 93, 178, .15), transparent 20%), linear-gradient(145deg, #2b1020, #120c19 63%, #1d0d1a); }
-.StageMapArea.Theme-manor { background: radial-gradient(circle at 76% 20%, rgba(174, 183, 219, .13), transparent 18%), linear-gradient(145deg, #222535, #101219 65%, #1a1720); }
-.StageMapArea.Theme-forest { background: radial-gradient(circle at 76% 18%, rgba(171, 203, 126, .12), transparent 18%), linear-gradient(145deg, #202e1c, #0d150e 65%, #151e12); }
-.StageMapArea.Theme-city { background: radial-gradient(circle at 78% 16%, rgba(94, 167, 221, .13), transparent 18%), linear-gradient(145deg, #1b2c38, #0d141a 65%, #15222c); }
+.StageMapArea.Theme-fromville { background: var(--story-gradient-token-047); }
+.StageMapArea.Theme-anime { background: var(--story-gradient-token-048); }
+.StageMapArea.Theme-manor { background: var(--story-gradient-token-049); }
+.StageMapArea.Theme-forest { background: var(--story-gradient-token-050); }
+.StageMapArea.Theme-city { background: var(--story-gradient-token-051); }
 
 .StageMapTitle {
     position: relative;
@@ -325,7 +323,7 @@ body.LevelSelectPage {
     height: 3px;
     z-index: 0;
     border-radius: 999px;
-    background: repeating-linear-gradient(90deg, rgba(213, 166, 96, .55) 0 12px, transparent 12px 22px);
+    background: var(--story-gradient-token-052);
 }
 
 .StageRoute::before { top: 24%; }
@@ -338,7 +336,7 @@ body.LevelSelectPage {
     top: 24%;
     bottom: 24%;
     z-index: 0;
-    background: repeating-linear-gradient(180deg, rgba(213, 166, 96, .55) 0 12px, transparent 12px 22px);
+    background: var(--story-gradient-token-053);
 }
 
 .StageNodeWrap {
@@ -366,7 +364,7 @@ body.LevelSelectPage {
     color: #f4dec0;
     border: 3px solid #725036;
     border-radius: 50%;
-    background: radial-gradient(circle at 34% 27%, #67432a, #301c12 70%);
+    background: var(--story-gradient-token-054);
     box-shadow: 0 9px 20px rgba(0, 0, 0, .28), inset 0 0 0 4px rgba(255, 230, 186, .05);
     font: 900 1.5rem/1 system-ui, sans-serif;
     transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease;
@@ -380,7 +378,7 @@ body.LevelSelectPage {
 .StageNode.Completed {
     color: #28180f;
     border-color: #e0b165;
-    background: radial-gradient(circle at 34% 27%, #f0c575, #a56b2a 73%);
+    background: var(--story-gradient-token-055);
 }
 
 .StageNode.Current {
@@ -465,7 +463,7 @@ body.LevelSelectPage {
     display: flex;
     flex-direction: column;
     border-left: 1px solid #50301e;
-    background: linear-gradient(180deg, #2f1c13, #1d110c);
+    background: var(--story-gradient-token-056);
 }
 
 .BriefingTop {
@@ -550,7 +548,7 @@ body.LevelSelectPage {
     color: #21130b;
     border: 1px solid #efc577;
     border-radius: 11px;
-    background: linear-gradient(180deg, #f0c574, #ba7730);
+    background: var(--story-gradient-token-057);
     box-shadow: 0 10px 24px rgba(0, 0, 0, .25), inset 0 1px rgba(255, 247, 216, .42);
     font-weight: 900;
     transition: transform .15s ease, filter .15s ease;
@@ -606,39 +604,27 @@ body.LevelSelectPage {
     inset: 0;
     z-index: -1;
     pointer-events: none;
-    background:
-        linear-gradient(180deg, rgba(0,0,0,.08), rgba(0,0,0,.02) 42%, rgba(0,0,0,.72)),
-        radial-gradient(circle at center, transparent 35%, rgba(0,0,0,.38) 100%);
+    background: var(--story-gradient-token-058);
 }
 
 .SceneTheme-fromville {
-    --SceneBackground:
-        radial-gradient(circle at 78% 17%, rgba(220,228,204,.6) 0 3%, rgba(220,228,204,.12) 3.5%, transparent 12%),
-        linear-gradient(180deg, #202d29 0%, #121a17 46%, #080b0a 100%);
+    --SceneBackground: var(--story-gradient-token-059);
 }
 
 .SceneTheme-anime {
-    --SceneBackground:
-        radial-gradient(circle at 76% 20%, rgba(255,68,166,.28), transparent 20%),
-        linear-gradient(135deg, #2c1028 0%, #130d1a 48%, #35142e 100%);
+    --SceneBackground: var(--story-gradient-token-060);
 }
 
 .SceneTheme-manor {
-    --SceneBackground:
-        radial-gradient(circle at 72% 17%, rgba(196,203,235,.22), transparent 17%),
-        linear-gradient(145deg, #252839 0%, #11131b 52%, #211b26 100%);
+    --SceneBackground: var(--story-gradient-token-061);
 }
 
 .SceneTheme-forest {
-    --SceneBackground:
-        radial-gradient(circle at 76% 20%, rgba(181,212,130,.18), transparent 16%),
-        linear-gradient(145deg, #21351e 0%, #0d160e 54%, #182315 100%);
+    --SceneBackground: var(--story-gradient-token-062);
 }
 
 .SceneTheme-city {
-    --SceneBackground:
-        radial-gradient(circle at 72% 15%, rgba(83,170,230,.18), transparent 19%),
-        linear-gradient(145deg, #1c3444 0%, #0c151c 52%, #152a37 100%);
+    --SceneBackground: var(--story-gradient-token-063);
 }
 
 .SceneAtmosphere,
@@ -657,23 +643,17 @@ body.LevelSelectPage {
     left: -25%;
     bottom: -32%;
     transform: perspective(380px) rotateX(64deg);
-    background:
-        repeating-linear-gradient(90deg, transparent 0 48%, rgba(211, 193, 150, .22) 48% 49%, transparent 49% 100%),
-        linear-gradient(180deg, #2b312e, #111513);
+    background: var(--story-gradient-token-064);
     box-shadow: 0 -1px rgba(212, 194, 157, .1);
 }
 
 .SceneTheme-fromville .SceneAtmosphere {
     opacity: .55;
-    background:
-        linear-gradient(90deg, transparent 0 9%, rgba(0,0,0,.55) 9% 11%, transparent 11% 23%, rgba(0,0,0,.5) 23% 25%, transparent 25% 76%, rgba(0,0,0,.45) 76% 78%, transparent 78%),
-        linear-gradient(180deg, transparent 0 54%, rgba(126,145,133,.11) 54% 66%, transparent 66%);
+    background: var(--story-gradient-token-065);
 }
 
 .SceneTheme-anime .SceneGeometry {
-    background:
-        linear-gradient(90deg, transparent 15%, rgba(255,88,163,.16) 15% 16%, transparent 16% 84%, rgba(95,196,255,.14) 84% 85%, transparent 85%),
-        repeating-linear-gradient(180deg, transparent 0 41px, rgba(255,255,255,.035) 42px 43px);
+    background: var(--story-gradient-token-066);
 }
 
 .SceneTheme-anime .SceneGeometry::after {
@@ -689,24 +669,17 @@ body.LevelSelectPage {
 }
 
 .SceneTheme-manor .SceneGeometry {
-    background:
-        linear-gradient(90deg, transparent 0 16%, rgba(232,208,143,.13) 16% 26%, transparent 26% 42%, rgba(232,208,143,.08) 42% 52%, transparent 52% 69%, rgba(232,208,143,.12) 69% 80%, transparent 80%),
-        linear-gradient(180deg, transparent 0 38%, rgba(0,0,0,.28) 38% 42%, transparent 42%);
+    background: var(--story-gradient-token-067);
 }
 
 .SceneTheme-forest .SceneGeometry {
     opacity: .72;
-    background:
-        repeating-linear-gradient(90deg, rgba(7,18,8,.72) 0 10px, transparent 10px 64px),
-        linear-gradient(180deg, transparent 0 72%, rgba(49,75,40,.25) 72% 100%);
+    background: var(--story-gradient-token-068);
 }
 
 .SceneTheme-city .SceneGeometry {
     opacity: .8;
-    background:
-        repeating-linear-gradient(90deg, rgba(72,134,172,.08) 0 1px, transparent 1px 72px),
-        repeating-linear-gradient(180deg, rgba(72,134,172,.07) 0 1px, transparent 1px 48px),
-        linear-gradient(90deg, transparent 0 14%, rgba(206,223,232,.1) 14% 20%, transparent 20% 56%, rgba(206,223,232,.08) 56% 63%, transparent 63%);
+    background: var(--story-gradient-token-069);
 }
 
 .SceneMode-failure {
@@ -714,9 +687,7 @@ body.LevelSelectPage {
 }
 
 .SceneMode-failure::after {
-    background:
-        radial-gradient(circle at center, transparent 16%, rgba(92,5,4,.42) 70%, rgba(40,0,0,.78) 100%),
-        linear-gradient(180deg, rgba(141,19,16,.2), rgba(0,0,0,.72));
+    background: var(--story-gradient-token-070);
 }
 
 @keyframes FailureSceneHit {
@@ -735,7 +706,7 @@ body.LevelSelectPage {
     position: absolute;
     display: block;
     border-radius: 50%;
-    background: radial-gradient(ellipse, #e8e3c7 0 23%, transparent 28%), radial-gradient(ellipse, #e8e3c7 0 23%, transparent 28%);
+    background: var(--story-gradient-token-071);
     background-size: 45% 100%, 45% 100%;
     background-position: left center, right center;
     background-repeat: no-repeat;
