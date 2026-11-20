@@ -182,3 +182,65 @@ body.MultiplayerPage .StoryBotInputSlot > .StoryBotComposer .StoryBotCloseButton
         min-height: 44px;
     }
 }
+
+/* Keep Multiplayer gradient fills fixed across hover states. Animate the
+   button lift/border/shadow, not the gradient image itself. */
+body.MultiplayerPage .GameBackButton.IconBackButton,
+body.MultiplayerPage .IconNavButton {
+    transition-property: transform, border-color, box-shadow !important;
+}
+
+body.MultiplayerPage .UiButton,
+body.MultiplayerPage .PrimaryButton,
+body.MultiplayerPage .SecondaryButton,
+body.MultiplayerPage .DangerButton {
+    transition-property: transform, box-shadow, filter !important;
+}
+
+body.MultiplayerPage .ChatToggleButton {
+    transition-property: transform, border-color !important;
+}
+
+body.MultiplayerPage .HostRoomControlsButton {
+    transition-property: transform, border-color, box-shadow !important;
+}
+
+body.MultiplayerPage .StoryBotSendButton {
+    transition-property: transform, box-shadow, filter !important;
+}
+
+body.MultiplayerPage .StoryBotCloseButton {
+    transition-property: transform !important;
+}
+
+body.MultiplayerPage .GameBackButton.IconBackButton:hover,
+body.MultiplayerPage .IconNavButton:hover {
+    background: var(--story-gradient-token-080) !important;
+}
+
+body.MultiplayerPage .UiButton:hover,
+body.MultiplayerPage .SecondaryButton:hover {
+    background: var(--story-gradient-token-003) !important;
+}
+
+body.MultiplayerPage .PrimaryButton:hover,
+body.MultiplayerPage .StoryBotSendButton:hover {
+    background: var(--story-gradient-token-005) !important;
+}
+
+body.MultiplayerPage .DangerButton:hover {
+    background: var(--story-gradient-token-007) !important;
+}
+
+body.MultiplayerPage .ChatToggleButton:hover {
+    background: var(--story-gradient-token-077) !important;
+}
+
+body.MultiplayerPage .HostRoomControlsButton:hover,
+body.MultiplayerPage .HostRoomControlsButton[aria-expanded="true"] {
+    background: var(--story-gradient-token-161) !important;
+}
+
+body.MultiplayerPage .StoryBotCloseButton:hover {
+    background: var(--story-gradient-token-003) !important;
+}
