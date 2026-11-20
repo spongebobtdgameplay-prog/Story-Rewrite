@@ -343,7 +343,6 @@
     }
     function ApplyCssGradientToElement(Element) {
         if(!Element||Element.nodeType!==1)return;
-        if(Element.closest&&Element.closest("#StoryBotAppearancePreview,.StoryBotAppearancePreview"))return;
         let State=CssGradientStates.get(Element);
         if(!State){
             const OriginalInline={};
@@ -764,7 +763,6 @@
 
     ApplyTheme();
     ApplySurfaces();
-    ApplyCssGradientCaches();
 
     if (IsCssGradientCachePage() && typeof ResizeObserver === "function") {
         CssGradientResizeObserver = new ResizeObserver(Entries => {
@@ -772,6 +770,12 @@
         });
     }
     if (IsCssGradientCachePage() && typeof MutationObserver === "function" && document.body) {
+        const StoryBotThemeObserver = new MutationObserver(ScheduleCssGradientCacheScan);
+        StoryBotThemeObserver.observe(Root, {
+            attributes: true,
+            attributeFilter: ["data-storybot-theme"]
+        });
+
         const CssGradientObserver = new MutationObserver(ScheduleCssGradientCacheScan);
         CssGradientObserver.observe(document.body, {
             childList: true, subtree: true, attributes: true,
@@ -782,6 +786,9 @@
         document.body.addEventListener("focusin", RefreshCssGradientEventSurfaces, true);
         document.body.addEventListener("focusout", RefreshCssGradientEventSurfaces, true);
     }
+
+    // Scan only after the observers exist, so first-render surfaces are resize-tracked.
+    ApplyCssGradientCaches();
 
     if (typeof MutationObserver === "function" && document.body) {
         const SurfaceObserver = new MutationObserver(ApplySurfaces);
