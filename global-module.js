@@ -343,7 +343,7 @@
     }
     function ApplyCssGradientToElement(Element) {
         if(!Element||Element.nodeType!==1)return;
-        if(Element.id==="StoryBotAppearancePreview"||Element.classList.contains("StoryBotAppearancePreview"))return;
+        if(Element.closest&&Element.closest("#StoryBotAppearancePreview,.StoryBotAppearancePreview"))return;
         let State=CssGradientStates.get(Element);
         if(!State){
             const OriginalInline={};
@@ -378,16 +378,18 @@
         CssGradientScanQueued=true;
         window.requestAnimationFrame(()=>{CssGradientScanQueued=false;ApplyCssGradientCaches();});
     }
-    function GetClosestCssGradientSurface(Node) {
-        let Element=Node&&Node.nodeType===1?Node:Node?.parentElement;
-        while(Element&&Element!==document.body.parentElement){if(CssGradientStates.has(Element))return Element;Element=Element.parentElement;}
-        return null;
-    }
     function RefreshCssGradientEventSurfaces(Event) {
-        const Target=GetClosestCssGradientSurface(Event.target);
-        const Related=GetClosestCssGradientSurface(Event.relatedTarget);
-        if(Target&&Target!==Related)ApplyCssGradientToElement(Target);
-        if(Related&&Related!==Target)ApplyCssGradientToElement(Related);
+        const Seen = new Set();
+        for (const Start of [Event.target, Event.relatedTarget]) {
+            let Element = Start && Start.nodeType === 1 ? Start : Start?.parentElement;
+            while (Element && Element !== document.body.parentElement) {
+                if (!Seen.has(Element)) {
+                    Seen.add(Element);
+                    ApplyCssGradientToElement(Element);
+                }
+                Element = Element.parentElement;
+            }
+        }
     }
 
 
