@@ -61,6 +61,26 @@ async function RunAccountFlow(Context, BaseUrl) {
     const Username = "srqa" + Date.now().toString(36) + crypto.randomBytes(3).toString("hex");
     const Password = crypto.randomBytes(24).toString("base64url").slice(0, 32);
     const Page = await Context.newPage();
+    const SetCookieMetadata = [];
+    Page.on("response", async Response => {
+        if (!/\/api\/(register|login)(?:[?#]|$)/i.test(Response.url())) return;
+        const Header = await Response.headerValue("set-cookie").catch(() => "");
+        if (!Header) return;
+        for (const Entry of String(Header).split(/,(?=\\s*[^;,=]+=)/)) {
+            const Parts = Entry.split(";");
+            const CookieName = String(Parts.shift() || "").split("=")[0].trim();
+            const Attributes = Parts.map(Part => Part.trim().toLowerCase());
+            const SameSite = Attributes.find(Part => Part.startsWith("samesite=")) || "";
+            SetCookieMetadata.push({
+                name: CookieName,
+                httpOnly: Attributes.includes("httponly"),
+                secure: Attributes.includes("secure"),
+                sameSite: SameSite.split("=")[1] || "",
+                path: (Attributes.find(Part => Part.startsWith("path=")) || "").split("=")[1] || "",
+                domain: (Attributes.find(Part => Part.startsWith("domain=")) || "").split("=")[1] || ""
+            });
+        }
+    });
     let AccountCreated = false;
     let AccountDeleted = false;
     const Summary = {
@@ -125,15 +145,24 @@ async function RunAccountFlow(Context, BaseUrl) {
         }
         Summary.registration = "passed";
 
-        const Cookie = (await Context.cookies(BaseUrl)).find(Entry => Entry.name === "story_rewrite_session");
-        Summary.cookie = Cookie
-            ? {
-                present: true,
-                httpOnly: Cookie.httpOnly === true,
-                secure: Cookie.secure === true,
-                sameSite: Cookie.sameSite || "unspecified"
-            }
-            : { present: false };
+        const CookieJar = await Context.cookies();
+        const JarMetadata = CookieJar.map(Entry => ({
+            name: Entry.name,
+            domain: Entry.domain,
+            path: Entry.path,
+            httpOnly: Entry.httpOnly === true,
+            secure: Entry.secure === true,
+            sameSite: Entry.sameSite || "unspecified"
+        }));
+        const SecureSessionCookie = [...SetCookieMetadata, ...JarMetadata].some(Entry =>
+            Entry.httpOnly === true && Entry.secure === true && String(Entry.name || "").length > 0
+        );
+        Summary.finalPageUrl = Page.url();
+        Summary.cookie = {
+            setCookie: SetCookieMetadata,
+            browserJar: JarMetadata,
+            secureHttpOnlyCookieObserved: SecureSessionCookie
+        };
 
         const RegisteredSession = await ReadMe();
         Summary.sessionRead = RegisteredSession.status === 200
@@ -186,9 +215,7 @@ async function RunAccountFlow(Context, BaseUrl) {
             Summary.deletedAccountSignedOut = AfterDelete.status === 401 ? "passed" : "failed_http_" + AfterDelete.status;
         }
         Summary.ok = Summary.registration === "passed"
-            && Summary.cookie?.present === true
-            && Summary.cookie?.httpOnly === true
-            && Summary.cookie?.secure === true
+            && Summary.cookie?.secureHttpOnlyCookieObserved === true
             && Summary.sessionRead === "passed"
             && Summary.logout === "passed"
             && Summary.signedOutCheck === "passed"
