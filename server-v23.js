@@ -46,24 +46,43 @@ Module.prototype._compile = function(Content, Filename) {
         ].join("\n");
         Source = Source.replace(HelperAnchor, Helpers + HelperAnchor);
 
-        const RegisterResponsePattern =
-            /return SendJson\(Response,\s*201,\s*\{\s*token:\s*CreateToken\(Username\),\s*profile:\s*PublicProfile\(Account\),\s*save:\s*Account\.save\s*\},\s*Origin\);/g;
-        const RegisterResponseMatches = Source.match(RegisterResponsePattern) || [];
-        if (RegisterResponseMatches.length !== 1) {
-            throw new Error("server-v23 cookie-session patch failed: expected one registration response, found " + RegisterResponseMatches.length + ".");
+        function ReplaceSuccessfulAuthResponse(Source, RouteStart, RouteEnd, Status, TokenExpression, Label) {
+            const RouteStartIndex = Source.indexOf(RouteStart);
+            const RouteEndIndex = Source.indexOf(RouteEnd, RouteStartIndex + RouteStart.length);
+            if (RouteStartIndex < 0 || RouteEndIndex < 0) {
+                throw new Error("server-v23 cookie-session patch failed: " + Label + " route boundaries.");
+            }
+            const Route = Source.slice(RouteStartIndex, RouteEndIndex);
+            const ResponseStart = Route.indexOf("return SendJson(Response, " + Status + ",");
+            const ResponseEndMarker = "}, Origin);";
+            const ResponseEnd = ResponseStart < 0 ? -1 : Route.indexOf(ResponseEndMarker, ResponseStart);
+            if (ResponseStart < 0 || ResponseEnd < 0) {
+                throw new Error("server-v23 cookie-session patch failed: " + Label + " success response.");
+            }
+            const ResponseEndIndex = ResponseEnd + ResponseEndMarker.length;
+            const NewResponse =
+                "SetStorySessionCookie(Response, " + TokenExpression + ");\n" +
+                "            return SendJson(Response, " + Status + ", { profile: PublicProfile(Account), save: Account.save }, Origin);";
+            const UpdatedRoute = Route.slice(0, ResponseStart) + NewResponse + Route.slice(ResponseEndIndex);
+            return Source.slice(0, RouteStartIndex) + UpdatedRoute + Source.slice(RouteEndIndex);
         }
-        Source = Source.replace(RegisterResponsePattern,
-            "SetStorySessionCookie(Response, CreateToken(Username));\n            return SendJson(Response, 201, { profile: PublicProfile(Account), save: Account.save }, Origin);"
+
+        Source = ReplaceSuccessfulAuthResponse(
+            Source,
+            '    if (RequestPath === "/api/register" && Request.method === "POST") {',
+            '    if (RequestPath === "/api/login" && Request.method === "POST") {',
+            201,
+            "CreateToken(Username)",
+            "registration"
         );
 
-        const LoginResponsePattern =
-            /return SendJson\(Response,\s*200,\s*\{\s*token:\s*CreateToken\(Account\.username\),\s*profile:\s*PublicProfile\(Account\),\s*save:\s*Account\.save\s*\},\s*Origin\);/g;
-        const LoginResponseMatches = Source.match(LoginResponsePattern) || [];
-        if (LoginResponseMatches.length !== 1) {
-            throw new Error("server-v23 cookie-session patch failed: expected one login response, found " + LoginResponseMatches.length + ".");
-        }
-        Source = Source.replace(LoginResponsePattern,
-            "SetStorySessionCookie(Response, CreateToken(Account.username));\n            return SendJson(Response, 200, { profile: PublicProfile(Account), save: Account.save }, Origin);"
+        Source = ReplaceSuccessfulAuthResponse(
+            Source,
+            '    if (RequestPath === "/api/login" && Request.method === "POST") {',
+            "    let Account;",
+            200,
+            "CreateToken(Account.username)",
+            "login"
         );
 
         const AuthAnchor = "        Account = await GetAccountByToken(GetBearerToken(Request));";
