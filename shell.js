@@ -1,5 +1,5 @@
 (() => {
-    const FrontendVersion = "20261110.1";
+    const FrontendVersion = "20261119.2";
     const Root = document.getElementById("StoryShellRoot");
     const InitialFrame = document.getElementById("StoryShellFrame");
     if (!Root || !InitialFrame) return;
@@ -588,6 +588,12 @@
         const ScrollStyles = ChildDocument.createElement("style");
         ScrollStyles.id = "StoryMobileScrollInputStyles";
         ScrollStyles.textContent = `
+/* Normalize the document-level gradient canvas on every shell-managed screen. */
+html,
+body {
+    background-attachment: fixed !important;
+}
+
 @media (max-width: 900px), (pointer: coarse) and (max-width: 1200px) {
     html,
     body {

@@ -11,6 +11,128 @@ function SafeErrorMessage(ErrorValue, ApiKey) {
         .slice(0, 500);
 }
 
+
+async function InspectDocumentGradient(Page) {
+    return Page.evaluate(async () => {
+        const HtmlStyle = getComputedStyle(document.documentElement);
+        const BodyStyle = getComputedStyle(document.body);
+        const Scroller = document.scrollingElement || document.documentElement;
+        const Start = Number(window.scrollY || Scroller.scrollTop || 0);
+        const Max = Math.max(0, Scroller.scrollHeight - window.innerHeight);
+        const Target = Math.min(Max, Math.max(Start, Math.round(Max * .7), 80));
+        if (Target > Start) {
+            window.scrollTo(0, Target);
+            await new Promise(Resolve => requestAnimationFrame(() => requestAnimationFrame(Resolve)));
+        }
+        const End = Number(window.scrollY || Scroller.scrollTop || 0);
+        const IsFixed = Value => String(Value || "").split(",").every(Part => Part.trim() === "fixed");
+        const Images = [HtmlStyle.backgroundImage, BodyStyle.backgroundImage,
+            getComputedStyle(document.body, "::before").backgroundImage].join(" ");
+        window.scrollTo(0, Start);
+        return {
+            htmlAttachment: HtmlStyle.backgroundAttachment,
+            bodyAttachment: BodyStyle.backgroundAttachment,
+            hasGradientImage: Images.includes("gradient"),
+            maxScroll: Max,
+            scrollMoved: Max <= 24 ? null : End > Start + 5,
+            ok: IsFixed(HtmlStyle.backgroundAttachment) && IsFixed(BodyStyle.backgroundAttachment)
+                && (Max <= 24 || End > Start + 5)
+        };
+    });
+}
+
+async function VerifyShellGradientRoutes(Page, BaseUrl) {
+    const Routes = ["main.html", "levels.html", "multiplayer.html", "social.html", "settings.html",
+        "account.html", "tutorial.html", "rules.html", "terms.html", "about.html", "privacy.html"];
+    const Results = [];
+    const WaitForRoute = Route => Page.waitForFunction(Expected => {
+        return [...document.querySelectorAll("#StoryShellRoot iframe.StoryShellFrame")].some(Frame =>
+            Frame.dataset.storyRoute === Expected && Frame.dataset.storyLoaded === "1"
+            && getComputedStyle(Frame).visibility === "visible"
+            && Frame.contentDocument?.getElementById("StoryResponsiveUiEngineStyles")
+            && Frame.contentDocument?.getElementById("StoryMobileScrollInputStyles")
+        );
+    }, Route, { timeout: 45000 });
+
+    await Page.setViewportSize({ width: 1365, height: 900 });
+    await Page.goto(BaseUrl + "/index.html", { waitUntil: "domcontentloaded", timeout: 45000 });
+    await WaitForRoute("main.html");
+
+    async function InspectRoute(Route, Viewport) {
+        const Frame = Page.frames().find(Child => {
+            if (Child.parentFrame() !== Page.mainFrame()) return false;
+            try { return new URL(Child.url()).pathname.split("/").pop() === Route; }
+            catch { return false; }
+        });
+        if (!Frame) throw new Error("Missing iframe document for " + Route);
+        const Result = await Frame.evaluate(async () => {
+            const HtmlStyle = getComputedStyle(document.documentElement);
+            const BodyStyle = getComputedStyle(document.body);
+            const Scroller = document.scrollingElement || document.documentElement;
+            const Start = Number(window.scrollY || Scroller.scrollTop || 0);
+            const Max = Math.max(0, Scroller.scrollHeight - window.innerHeight);
+            const Target = Math.min(Max, Math.max(Start, Math.round(Max * .7), 80));
+            if (Target > Start) {
+                window.scrollTo(0, Target);
+                await new Promise(Resolve => requestAnimationFrame(() => requestAnimationFrame(Resolve)));
+            }
+            const End = Number(window.scrollY || Scroller.scrollTop || 0);
+            const IsFixed = Value => String(Value || "").split(",").every(Part => Part.trim() === "fixed");
+            const BeforeStyle = getComputedStyle(document.body, "::before");
+            const Images = [HtmlStyle.backgroundImage, BodyStyle.backgroundImage, BeforeStyle.backgroundImage].join(" ");
+            const MessagePane = document.querySelector(".StorySocialMessages");
+            const MessageAttachment = MessagePane ? getComputedStyle(MessagePane).backgroundAttachment : null;
+            window.scrollTo(0, Start);
+            return {
+                htmlAttachment: HtmlStyle.backgroundAttachment,
+                bodyAttachment: BodyStyle.backgroundAttachment,
+                hasGradientImage: Images.includes("gradient"),
+                beforePosition: BeforeStyle.position,
+                messagePaneAttachment: MessageAttachment,
+                maxScroll: Max,
+                scrollMoved: Max <= 24 ? null : End > Start + 5,
+                ok: IsFixed(HtmlStyle.backgroundAttachment) && IsFixed(BodyStyle.backgroundAttachment)
+                    && (Max <= 24 || End > Start + 5)
+            };
+        });
+        Results.push({ route: Route, viewport: Viewport, ...Result });
+    }
+
+    for (const Route of Routes) {
+        try {
+            if (Route !== "main.html") {
+                const Accepted = await Page.evaluate(Expected => {
+                    const Active = [...document.querySelectorAll("#StoryShellRoot iframe.StoryShellFrame")]
+                        .find(Frame => Frame.dataset.storyLoaded === "1" && getComputedStyle(Frame).visibility === "visible");
+                    return Boolean(Active?.contentWindow?.StoryNavigate?.(Expected));
+                }, Route);
+                if (!Accepted) throw new Error("Shell rejected route " + Route);
+                await WaitForRoute(Route);
+            }
+            await InspectRoute(Route, "desktop");
+        } catch (Error) {
+            Results.push({ route: Route, viewport: "desktop", ok: false, error: SafeErrorMessage(Error, "") });
+        }
+    }
+
+    await Page.setViewportSize({ width: 390, height: 844 });
+    for (const Route of ["main.html", "social.html", "settings.html", "terms.html"]) {
+        try {
+            const Accepted = await Page.evaluate(Expected => {
+                const Active = [...document.querySelectorAll("#StoryShellRoot iframe.StoryShellFrame")]
+                    .find(Frame => Frame.dataset.storyLoaded === "1" && getComputedStyle(Frame).visibility === "visible");
+                return Boolean(Active?.contentWindow?.StoryNavigate?.(Expected));
+            }, Route);
+            if (Accepted) await WaitForRoute(Route);
+            await InspectRoute(Route, "mobile");
+        } catch (Error) {
+            Results.push({ route: Route, viewport: "mobile", ok: false, error: SafeErrorMessage(Error, "") });
+        }
+    }
+
+    return { ok: Results.length === Routes.length + 4 && Results.every(Result => Result.ok), results: Results };
+}
+
 async function VisitAndSummarize(Page, Name, Url) {
     try {
         const Response = await Page.goto(Url, {
@@ -39,6 +161,8 @@ async function VisitAndSummarize(Page, Name, Url) {
                 /challenges\.cloudflare\.com\/turnstile/i.test(Frame.url())
             ).length;
         }
+
+        if (Name === "auth") Summary.gradientCanvas = await InspectDocumentGradient(Page);
 
         if (Name === "social") {
             Summary.searchInputPresent = await Page.locator("#SocialSearchInput").count().then(Count => Count > 0).catch(() => false);
@@ -200,6 +324,9 @@ async function RunAccountFlow(Context, BaseUrl) {
             ? "passed"
             : "failed_http_" + LoggedInSession.status;
 
+        Summary.gradientRoutes = await VerifyShellGradientRoutes(Page, BaseUrl);
+        Summary.gradientRoutesPassed = Summary.gradientRoutes.ok === true;
+
         const DeleteAccount = await Page.evaluate(async () => {
             const Response = await fetch("/api/account", {
                 method: "DELETE",
@@ -221,6 +348,7 @@ async function RunAccountFlow(Context, BaseUrl) {
             && Summary.signedOutCheck === "passed"
             && Summary.login === "passed"
             && Summary.loginSessionRead === "passed"
+            && Summary.gradientRoutesPassed === true
             && Summary.cleanup === "passed"
             && Summary.deletedAccountSignedOut === "passed";
         return Summary;
@@ -325,7 +453,7 @@ async function runBrowserbaseSmokeTest() {
 
         const AccountFlowPassed = !AccountFlow || AccountFlow.ok === true;
         const Result = {
-            ok: Example.status === 200 && AccountFlowPassed,
+            ok: Example.status === 200 && Auth.gradientCanvas?.ok === true && AccountFlowPassed,
             sessionId: SessionId,
             connectivity: Example,
             storyRewriteAuth: Auth,

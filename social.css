@@ -2265,7 +2265,7 @@ body.StorySocialPage {
         linear-gradient(155deg, #b38b61 0%, #8b6848 42%, #6e4c33 72%, #4d301f 100%) !important;
     background-repeat: no-repeat !important;
     background-size: 100% 100% !important;
-    background-attachment: local !important;
+    background-attachment: fixed !important;
 }
 
 /* The message-list backdrop must travel with the messages when that pane scrolls. */
