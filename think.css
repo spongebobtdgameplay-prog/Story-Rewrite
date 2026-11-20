@@ -25,7 +25,7 @@ body.ThinkPage {
 .ThinkMark {
     width: 48px; height: 48px; flex: 0 0 48px; display: grid; place-items: center;
     border: 1px solid rgba(229,185,120,.48); border-radius: 15px; color: var(--think-gold);
-    background: linear-gradient(145deg, #4b2f1d, #24170f);
+    background: var(--story-gradient-token-123);
     box-shadow: 0 10px 30px rgba(0,0,0,.25), inset 0 1px rgba(255,255,255,.08);
     font: 900 1.1875rem/1 Georgia, serif;
 }
@@ -38,18 +38,18 @@ body.ThinkPage {
 .ThinkButton, .ThinkNav a, .ThinkNav button {
     min-height: 38px; padding: 9px 13px; display: inline-flex; align-items: center; justify-content: center;
     border: 1px solid var(--think-line); border-radius: 11px; color: var(--think-text);
-    background: linear-gradient(180deg, #392819, #26190f); text-decoration: none;
+    background: var(--story-gradient-token-124); text-decoration: none;
     font: 750 0.75rem/1.1 system-ui, sans-serif; cursor: pointer; transition: .15s ease;
 }
 .ThinkButton:hover, .ThinkNav a:hover, .ThinkNav button:hover { border-color: rgba(229,185,120,.62); background: #422d1d; transform: translateY(-1px); }
-.ThinkButton.primary { color: #21150d; border-color: #d5a35f; background: linear-gradient(180deg, #f0ca8d, #d9a96d); }
+.ThinkButton.primary { color: #21150d; border-color: #d5a35f; background: var(--story-gradient-token-125); }
 .ThinkButton.danger { color: #f2c0b4; border-color: rgba(217,138,120,.4); background: rgba(111,47,38,.25); }
 .ThinkButton.small { min-height: 31px; padding: 7px 10px; font-size: 0.6875rem; }
 .ThinkMain { display: grid; gap: 16px; padding-top: 20px; }
 .ThinkHero {
     display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; flex-wrap: wrap;
     padding: 20px 22px; border: 1px solid var(--think-line); border-radius: 19px;
-    background: linear-gradient(135deg, rgba(67,43,26,.92), rgba(35,23,15,.96));
+    background: var(--story-gradient-token-126);
     box-shadow: 0 18px 50px rgba(0,0,0,.2), inset 0 1px rgba(255,255,255,.05);
 }
 .ThinkHero h2 { margin: 5px 0 6px; font: 800 clamp(1.3125rem, 2.5vw, 1.75rem)/1.12 Georgia, serif; }
@@ -59,7 +59,7 @@ body.ThinkPage {
 .ThinkMetrics { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; }
 .ThinkMetric, .ThinkCard {
     min-width: 0; border: 1px solid var(--think-line); border-radius: 16px;
-    background: linear-gradient(160deg, rgba(48,33,22,.96), rgba(34,23,16,.96));
+    background: var(--story-gradient-token-127);
     box-shadow: 0 12px 34px rgba(0,0,0,.16), inset 0 1px rgba(255,255,255,.035);
 }
 .ThinkMetric { padding: 15px 17px; }
@@ -125,7 +125,7 @@ body.ThinkPage {
 }
 
 
-.ThinkSafetyBot { border-color:rgba(105,188,168,.28); background:linear-gradient(155deg,rgba(28,55,46,.72),rgba(34,23,16,.96)); }
+.ThinkSafetyBot { border-color:rgba(105,188,168,.28); background: var(--story-gradient-token-128); }
 .ThinkSafetyBot .ThinkRole { color:#a8dfcb; border-color:rgba(105,188,168,.38); background:rgba(65,140,117,.12); }
 .ThinkSafetyBot .ThinkNotice { border-color:rgba(105,188,168,.25); background:rgba(45,105,87,.12); }
 .ThinkSafetyRow { border-color:rgba(105,188,168,.2); }
@@ -134,7 +134,7 @@ body.ThinkPage {
 .ThinkRow.IsFocusedCase { border-color:rgba(229,185,120,.75); box-shadow:0 0 0 3px rgba(229,185,120,.12),0 12px 30px rgba(0,0,0,.2); }
 .ThinkModal { position:fixed; inset:0; z-index:20000; display:grid; place-items:center; padding:max(12px,env(safe-area-inset-top)) 12px max(12px,env(safe-area-inset-bottom)); }
 .ThinkModalBackdrop { position:absolute; inset:0; width:100%; height:100%; border:0; border-radius:0; background:rgba(7,5,4,.78); -webkit-backdrop-filter:blur(7px); backdrop-filter:blur(7px); cursor:default; }
-.ThinkModalCard { position:relative; z-index:1; width:min(620px,100%); max-height:min(760px,calc(100dvh - 24px)); overflow:auto; padding:20px; border:1px solid rgba(229,185,120,.32); border-radius:18px; background:linear-gradient(160deg,#302116,#1d140e); box-shadow:0 24px 90px rgba(0,0,0,.48); }
+.ThinkModalCard { position:relative; z-index:1; width:min(620px,100%); max-height:min(760px,calc(100dvh - 24px)); overflow:auto; padding:20px; border:1px solid rgba(229,185,120,.32); border-radius:18px; background: var(--story-gradient-token-129); box-shadow:0 24px 90px rgba(0,0,0,.48); }
 .ThinkModalCard h2 { margin:0; color:#f7e8d0; font:800 1.2rem/1.2 Georgia,serif; }
 .ThinkModalCard .ThinkCardHead p { margin:5px 0 0; color:var(--think-muted); font-size:.75rem; line-height:1.45; }
 .ThinkModalCard textarea { width:100%; min-height:150px; resize:vertical; padding:12px; border:1px solid rgba(216,168,104,.3); border-radius:10px; color:var(--think-text); background:#160f0b; font:.82rem/1.55 system-ui,sans-serif; }
