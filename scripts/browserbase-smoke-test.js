@@ -143,12 +143,12 @@ async function VerifyShellGradientRoutes(Page, BaseUrl) {
     await Page.setViewportSize({ width: 390, height: 844 });
     for (const Route of ["main.html", "social.html", "settings.html", "terms.html"]) {
         try {
-            const Navigation = await Page.evaluate(Expected => {
-                const Current = window.StoryShell?.GetCurrentRoute?.() || "";
-                if (Current === Expected) return true;
-                return Boolean(window.StoryShell?.Navigate?.(Expected));
-            }, Route);
-            if (!Navigation) throw new Error("Shell navigation rejected mobile route " + Route);
+            // Start each mobile route from the shell URL so the initial frame is
+            // created at the mobile viewport instead of racing a persistent frame.
+            await Page.goto(BaseUrl + "/index.html#" + Route, {
+                waitUntil: "domcontentloaded",
+                timeout: 30000
+            });
             await WaitForRoute(Route);
             await InspectRoute(Route, "mobile");
         } catch (Error) {
