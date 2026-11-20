@@ -114,14 +114,15 @@ async function RunAccountFlow(Context, BaseUrl) {
         await Page.locator("#AccountForm").waitFor({ state: "visible", timeout: 20000 });
 
         const Registration = await SubmitAccount("register");
+        AccountCreated = true; // Cleanup also attempts a login in case registration succeeded but its first session check failed.
         if (!Registration.navigated) {
             Summary.registration = Registration.challengeVisible
                 ? "blocked_by_turnstile"
                 : "failed: " + (Registration.message || "form did not complete");
             Summary.manualActionRequired = Boolean(Registration.challengeVisible);
+            Summary.ok = false;
             return Summary;
         }
-        AccountCreated = true;
         Summary.registration = "passed";
 
         const Cookie = (await Context.cookies(BaseUrl)).find(Entry => Entry.name === "story_rewrite_session");
@@ -184,14 +185,37 @@ async function RunAccountFlow(Context, BaseUrl) {
             const AfterDelete = await ReadMe();
             Summary.deletedAccountSignedOut = AfterDelete.status === 401 ? "passed" : "failed_http_" + AfterDelete.status;
         }
+        Summary.ok = Summary.registration === "passed"
+            && Summary.cookie?.present === true
+            && Summary.cookie?.httpOnly === true
+            && Summary.cookie?.secure === true
+            && Summary.sessionRead === "passed"
+            && Summary.logout === "passed"
+            && Summary.signedOutCheck === "passed"
+            && Summary.login === "passed"
+            && Summary.loginSessionRead === "passed"
+            && Summary.cleanup === "passed"
+            && Summary.deletedAccountSignedOut === "passed";
         return Summary;
     } catch (Error) {
         Summary.error = SafeErrorMessage(Error, Password);
+        Summary.ok = false;
         return Summary;
     } finally {
         if (AccountCreated && !AccountDeleted) {
             try {
-                const Current = await ReadMe();
+                let Current = await ReadMe();
+                if (Current.status !== 200 || Current.username.toLowerCase() !== Username.toLowerCase()) {
+                    await Page.evaluate(async Credentials => {
+                        await fetch("/api/login", {
+                            method: "POST",
+                            credentials: "include",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify(Credentials)
+                        }).catch(() => null);
+                    }, { username: Username, password: Password });
+                    Current = await ReadMe();
+                }
                 if (Current.status === 200 && Current.username.toLowerCase() === Username.toLowerCase()) {
                     const Cleanup = await Page.evaluate(async () => {
                         const Response = await fetch("/api/account", {
@@ -263,7 +287,7 @@ async function runBrowserbaseSmokeTest() {
 
         let AccountFlow = null;
         if (String(process.env.BROWSERBASE_TEST_ACCOUNT_FLOW || "") === "1") {
-            const BaseUrl = String(process.env.BROWSERBASE_TEST_BASE_URL || "https://story-rewrite-5snmky1ye-spongebobtdgameplay-prog.vercel.app").trim().replace(/\\/+$/, "");
+            const BaseUrl = String(process.env.BROWSERBASE_TEST_BASE_URL || "https://story-rewrite-5snmky1ye-spongebobtdgameplay-prog.vercel.app").trim().replace(/\/+$/, "");
             console.log("BROWSERBASE_ACCOUNT_FLOW: starting disposable account registration/login verification.");
             AccountFlow = await RunAccountFlow(Context, BaseUrl);
             console.log("BROWSERBASE_ACCOUNT_FLOW_RESULT " + JSON.stringify(AccountFlow));
@@ -272,8 +296,9 @@ async function runBrowserbaseSmokeTest() {
         await Browser.close();
         Browser = null;
 
+        const AccountFlowPassed = !AccountFlow || AccountFlow.ok === true;
         const Result = {
-            ok: true,
+            ok: Example.status === 200 && AccountFlowPassed,
             sessionId: SessionId,
             connectivity: Example,
             storyRewriteAuth: Auth,
