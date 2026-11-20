@@ -40,7 +40,7 @@ async function VerifyShellGradientRoutes(Page, BaseUrl) {
             && Frame.contentDocument?.getElementById("StoryResponsiveUiEngineStyles")
             && Frame.contentDocument?.getElementById("StoryMobileScrollInputStyles")
         );
-    }, Route, { timeout: 20000 });
+    }, Route, { timeout: 10000 });
 
     await Page.setViewportSize({ width: 1365, height: 900 });
     await Page.goto(BaseUrl + "/index.html#main.html", { waitUntil: "domcontentloaded", timeout: 45000 });
@@ -467,15 +467,17 @@ async function runBrowserbaseSmokeTest() {
         );
 
         const BaseUrl = String(process.env.BROWSERBASE_TEST_BASE_URL || "https://story-rewrite-iota.vercel.app").trim().replace(/\/+$/, "");
-        console.log("BROWSERBASE_GRADIENT: starting desktop/mobile route sweep.");
-        const GradientRoutes = await VerifyShellGradientRoutes(Page, BaseUrl);
-        console.log("BROWSERBASE_GRADIENT_RESULT " + JSON.stringify(GradientRoutes));
-
         let AccountFlow = null;
+        let GradientRoutes = null;
         if (String(process.env.BROWSERBASE_TEST_ACCOUNT_FLOW || "") === "1") {
             console.log("BROWSERBASE_ACCOUNT_FLOW: starting disposable account registration/login verification.");
             AccountFlow = await RunAccountFlow(Context, BaseUrl);
+            GradientRoutes = AccountFlow.gradientRoutes || null;
             console.log("BROWSERBASE_ACCOUNT_FLOW_RESULT " + JSON.stringify(AccountFlow));
+        } else {
+            console.log("BROWSERBASE_GRADIENT: running public-screen route sweep without account creation.");
+            GradientRoutes = await VerifyShellGradientRoutes(Page, BaseUrl);
+            console.log("BROWSERBASE_GRADIENT_RESULT " + JSON.stringify(GradientRoutes));
         }
 
         await Browser.close();
@@ -485,7 +487,7 @@ async function runBrowserbaseSmokeTest() {
         const Result = {
             ok: Example.status === 200
                 && Auth.gradientCanvas?.ok === true
-                && GradientRoutes.ok === true
+                && GradientRoutes?.ok === true
                 && AccountFlowPassed,
             sessionId: SessionId,
             connectivity: Example,
