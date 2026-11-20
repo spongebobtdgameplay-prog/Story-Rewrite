@@ -39,17 +39,6 @@ html {
     isolation: isolate;
     min-height: 100%;
     scroll-behavior: smooth;
-    /* Paint the shared gradient on the document canvas; fixed body layers can flicker. */
-    background-color: var(--PageDeep);
-    background-image:
-        radial-gradient(circle at 24px 20px, rgba(57, 31, 15, .22) 0 1px, transparent 1.6px),
-        radial-gradient(circle at 89px 62px, rgba(255, 245, 219, .16) 0 1px, transparent 1.6px),
-        radial-gradient(circle at 15% 7%, rgba(255, 240, 207, .24), transparent 24%),
-        radial-gradient(circle at 84% 16%, rgba(60, 30, 14, .19), transparent 28%),
-        linear-gradient(155deg, #b38b61 0%, var(--Page) 42%, #6e4c33 72%, var(--PageDeep) 100%);
-    background-repeat: repeat, repeat, no-repeat, no-repeat, no-repeat;
-    background-size: 120px 96px, 120px 96px, 100% 100%, 100% 100%, 100% 100%;
-    background-attachment: scroll;
 }
 
 body {
@@ -58,9 +47,6 @@ body {
     overflow-x: hidden;
     color: var(--Ink);
     font-family: Georgia, "Times New Roman", serif;
-    background-color: transparent;
-    background-image: none;
-    background-attachment: scroll;
 }
 
 
@@ -415,10 +401,3 @@ svg {
     transition: width .3s ease;
 }
 
-
-
-/* Keep gradient painting on the document canvas; fixed layers can flicker during scroll/frame updates. */
-html,
-body {
-    background-attachment: scroll !important;
-}

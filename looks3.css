@@ -1,9 +1,6 @@
 /* Story Rewrite visual layer 3. */
 body.paper-body {
     padding: 26px;
-    background:
-        radial-gradient(circle at 50% -20%, rgba(255,249,230,.65), transparent 38%),
-        linear-gradient(155deg, #b58e66 0%, #8e6748 50%, #573824 100%);
 }
 
 .paper-shell {

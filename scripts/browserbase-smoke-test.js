@@ -14,25 +14,39 @@ function SafeErrorMessage(ErrorValue, ApiKey) {
 
 
 async function InspectDocumentGradient(Page) {
-    return Page.evaluate(async () => {
-        const HtmlStyle = getComputedStyle(document.documentElement);
-        const BodyStyle = getComputedStyle(document.body);
+    return Page.evaluate(() => {
+        const Root = document.documentElement;
+        const Html = getComputedStyle(Root);
+        const Body = getComputedStyle(document.body);
+        const Canvas = getComputedStyle(Root, "::before");
+        const Module = window.GlobalModule;
+        const Theme = String(Root.dataset.storyGradient || "");
+        const CanvasOk = Canvas.position === "fixed"
+            && Canvas.backgroundImage.includes("gradient")
+            && Canvas.pointerEvents === "none";
+        const NoCompetingGradient = !Html.backgroundImage.includes("gradient")
+            && !Body.backgroundImage.includes("gradient");
         return {
-            htmlAttachment: HtmlStyle.backgroundAttachment,
-            bodyAttachment: BodyStyle.backgroundAttachment,
-            hasGradientImage: (HtmlStyle.backgroundImage + " " + BodyStyle.backgroundImage
-                + " " + getComputedStyle(document.body, "::before").backgroundImage).includes("gradient"),
-            ok: [HtmlStyle.backgroundAttachment, BodyStyle.backgroundAttachment]
-                .every(Value => String(Value || "").split(",").every(Part => Part.trim() === "fixed"))
+            moduleLoaded: Boolean(Module && Module.version === "1.0.0"),
+            theme: Theme,
+            canvasPosition: Canvas.position,
+            canvasGradient: Canvas.backgroundImage.includes("gradient"),
+            noCompetingGradient: NoCompetingGradient,
+            ok: Boolean(Module && Theme && Module.gradients.getTheme() === Theme
+                && CanvasOk && NoCompetingGradient)
         };
     });
 }
 
 async function VerifyShellGradientRoutes(Page, BaseUrl) {
-    const Routes = ["main.html", "levels.html", "multiplayer.html", "social.html", "settings.html",
+    const ShellRoutes = ["main.html", "levels.html", "multiplayer.html", "social.html", "settings.html",
         "account.html", "tutorial.html", "terms.html", "about.html", "privacy.html"];
+    const ShellMobileRoutes = ["main.html", "social.html", "settings.html", "terms.html"];
+    const DirectRoutes = ["main.html", "levels.html", "multiplayer.html", "social.html", "settings.html",
+        "account.html", "tutorial.html", "terms.html", "about.html", "privacy.html", "think.html", "dialog.html"];
+    const DirectMobileRoutes = ["social.html", "settings.html", "multiplayer.html", "think.html"];
     const Results = [];
-    const IsFixed = Value => String(Value || "").split(",").every(Part => Part.trim() === "fixed");
+    const DirectResults = [];
     const WaitForRoute = Route => Page.waitForFunction(Expected => {
         return [...document.querySelectorAll("#StoryShellRoot iframe.StoryShellFrame")].some(Frame =>
             Frame.dataset.storyRoute === Expected && Frame.dataset.storyLoaded === "1"
@@ -40,123 +54,120 @@ async function VerifyShellGradientRoutes(Page, BaseUrl) {
             && Frame.contentDocument?.getElementById("StoryResponsiveUiEngineStyles")
             && Frame.contentDocument?.getElementById("StoryMobileScrollInputStyles")
         );
-    }, Route, { timeout: 10000 });
+    }, Route, { timeout: 20000 });
 
-    await Page.setViewportSize({ width: 1365, height: 900 });
-    await Page.goto(BaseUrl + "/index.html#main.html", { waitUntil: "domcontentloaded", timeout: 45000 });
-    await WaitForRoute("main.html");
-
-    const ShellCanvas = await Page.evaluate(() => {
-        const HtmlStyle = getComputedStyle(document.documentElement);
-        return {
-            htmlAttachment: HtmlStyle.backgroundAttachment,
-            backgroundImage: HtmlStyle.backgroundImage,
-            hasGradientImage: HtmlStyle.backgroundImage.includes("gradient")
-        };
-    });
-    const ShellCanvasOk = IsFixed(ShellCanvas.htmlAttachment) && ShellCanvas.hasGradientImage;
-
-    async function InspectRoute(Route, Viewport) {
+    async function InspectFrame(Route, Viewport) {
         const Frame = Page.frames().find(Child => {
             if (Child.parentFrame() !== Page.mainFrame()) return false;
             try { return new URL(Child.url()).pathname.split("/").pop() === Route; }
             catch { return false; }
         });
         if (!Frame) throw new Error("Missing iframe document for " + Route);
-
-        const Before = await Frame.evaluate(() => {
-            const HtmlStyle = getComputedStyle(document.documentElement);
-            const BodyStyle = getComputedStyle(document.body);
-            const Scroller = document.scrollingElement || document.documentElement;
-            const OverflowNodes = [document.documentElement, document.body,
-                ...document.querySelectorAll("body *")].filter(Element => {
-                    const Style = getComputedStyle(Element);
-                    return /^(auto|scroll|overlay)$/.test(Style.overflowY)
-                        && Element.scrollHeight - Element.clientHeight > 20;
-                });
+        const State = await Frame.evaluate(() => {
+            const Root = document.documentElement;
+            const Html = getComputedStyle(Root);
+            const Body = getComputedStyle(document.body);
+            const Canvas = getComputedStyle(Root, "::before");
+            const Module = window.GlobalModule;
+            const Theme = String(Root.dataset.storyGradient || "");
+            const CanvasOk = Canvas.position === "fixed"
+                && Canvas.backgroundImage.includes("gradient")
+                && Canvas.pointerEvents === "none";
+            const NoCompetingGradient = !Html.backgroundImage.includes("gradient")
+                && !Body.backgroundImage.includes("gradient");
             return {
-                htmlAttachment: HtmlStyle.backgroundAttachment,
-                bodyAttachment: BodyStyle.backgroundAttachment,
-                hasGradientImage: (HtmlStyle.backgroundImage + " " + BodyStyle.backgroundImage
-                    + " " + getComputedStyle(document.body, "::before").backgroundImage).includes("gradient"),
-                rootScrollHeight: Scroller.scrollHeight,
-                rootClientHeight: Scroller.clientHeight,
-                rootOverflowY: getComputedStyle(Scroller).overflowY,
-                scrollableElements: OverflowNodes.slice(0, 8).map(Element => ({
-                    id: Element.id || "",
-                    className: typeof Element.className === "string" ? Element.className.slice(0, 100) : "",
-                    scrollHeight: Element.scrollHeight,
-                    clientHeight: Element.clientHeight,
-                    overflowY: getComputedStyle(Element).overflowY,
-                    scrollTop: Element.scrollTop
-                }))
+                moduleLoaded: Boolean(Module && Module.version === "1.0.0"),
+                theme: Theme,
+                canvasPosition: Canvas.position,
+                canvasGradient: Canvas.backgroundImage.includes("gradient"),
+                noCompetingGradient: NoCompetingGradient,
+                ok: Boolean(Module && Theme && Module.gradients.getTheme() === Theme
+                    && CanvasOk && NoCompetingGradient)
             };
         });
-
-        let Scroll = { attempted: false, moved: null, container: "" };
-        if (Viewport === "desktop" && Before.rootScrollHeight - Before.rootClientHeight > 24) {
-            await Page.mouse.move(680, 450);
-            await Page.mouse.wheel(0, 680);
-            await Page.waitForTimeout(350);
-            Scroll = await Frame.evaluate(() => {
-                const Nodes = [document.documentElement, document.body, ...document.querySelectorAll("body *")];
-                const Moved = Nodes.find(Element => Element.scrollTop > 4);
-                const Scroller = document.scrollingElement || document.documentElement;
-                return {
-                    attempted: true,
-                    moved: Boolean(window.scrollY > 4 || Scroller.scrollTop > 4 || document.body.scrollTop > 4 || Moved),
-                    container: Moved ? (Moved.id || String(Moved.className || Moved.tagName).slice(0, 90)) : "document",
-                    windowScrollY: window.scrollY,
-                    documentScrollTop: document.documentElement.scrollTop,
-                    bodyScrollTop: document.body.scrollTop
-                };
-            });
-        }
-
-        const Passed = IsFixed(Before.htmlAttachment) && IsFixed(Before.bodyAttachment)
-            && (!Scroll.attempted || Scroll.moved);
-        Results.push({
-            route: Route,
-            viewport: Viewport,
-            ...Before,
-            scroll: Scroll,
-            shellCanvasOk: ShellCanvasOk,
-            ok: Passed && ShellCanvasOk
-        });
+        const Shot = await Page.screenshot({ fullPage: false, timeout: 15000 });
+        return { route: Route, viewport: Viewport, ...State, screenshotBytes: Shot.length };
     }
 
-    for (const Route of Routes) {
+    async function InspectDirectRoute(Route, Viewport) {
+        try {
+            const Response = await Page.goto(BaseUrl + "/" + Route, {
+                waitUntil: "domcontentloaded",
+                timeout: 45000
+            });
+            await Page.waitForTimeout(800);
+            const ActualRoute = await Page.evaluate(() => location.pathname.split("/").pop());
+            const State = await InspectDocumentGradient(Page);
+            const Shot = await Page.screenshot({ fullPage: false, timeout: 15000 });
+            return {
+                route: Route,
+                viewport: Viewport,
+                actualRoute: ActualRoute,
+                redirected: ActualRoute !== Route,
+                httpStatus: Response?.status() || 0,
+                ...State,
+                screenshotBytes: Shot.length,
+                ok: ActualRoute === Route && State.ok === true
+            };
+        } catch (Error) {
+            return { route: Route, viewport: Viewport, ok: false, error: SafeErrorMessage(Error, "") };
+        }
+    }
+
+    await Page.setViewportSize({ width: 1365, height: 900 });
+    await Page.goto(BaseUrl + "/index.html#main.html", { waitUntil: "domcontentloaded", timeout: 45000 });
+    await WaitForRoute("main.html");
+    const ShellCanvas = await InspectDocumentGradient(Page);
+
+    for (const Route of ShellRoutes) {
         try {
             const Navigation = await Page.evaluate(Expected => {
                 const Current = window.StoryShell?.GetCurrentRoute?.() || "";
                 if (Current === Expected) return true;
                 return Boolean(window.StoryShell?.Navigate?.(Expected));
             }, Route);
-            if (!Navigation) throw new Error("Shell navigation rejected route " + Route);
+            if (!Navigation) throw new Error("Shell navigation rejected " + Route);
             await WaitForRoute(Route);
-            await InspectRoute(Route, "desktop");
+            Results.push(await InspectFrame(Route, "desktop"));
         } catch (Error) {
             Results.push({ route: Route, viewport: "desktop", ok: false, error: SafeErrorMessage(Error, "") });
         }
     }
 
     await Page.setViewportSize({ width: 390, height: 844 });
-    for (const Route of ["main.html", "social.html", "settings.html", "terms.html"]) {
+    for (const Route of ShellMobileRoutes) {
         try {
-            // Start each mobile route from the shell URL so the initial frame is
-            // created at the mobile viewport instead of racing a persistent frame.
             await Page.goto(BaseUrl + "/index.html#" + Route, {
                 waitUntil: "domcontentloaded",
                 timeout: 30000
             });
             await WaitForRoute(Route);
-            await InspectRoute(Route, "mobile");
+            Results.push(await InspectFrame(Route, "mobile"));
         } catch (Error) {
             Results.push({ route: Route, viewport: "mobile", ok: false, error: SafeErrorMessage(Error, "") });
         }
     }
 
-    return { ok: Results.length === Routes.length + 4 && Results.every(Result => Result.ok), results: Results };
+    // Direct navigation on the authenticated browser context catches auth redirects.
+    await Page.setViewportSize({ width: 1365, height: 900 });
+    for (const Route of DirectRoutes) {
+        DirectResults.push(await InspectDirectRoute(Route, "desktop"));
+    }
+    await Page.setViewportSize({ width: 390, height: 844 });
+    for (const Route of DirectMobileRoutes) {
+        DirectResults.push(await InspectDirectRoute(Route, "mobile"));
+    }
+
+    return {
+        ok: ShellCanvas.ok === true
+            && Results.length === ShellRoutes.length + ShellMobileRoutes.length
+            && Results.every(Result => Result.ok === true)
+            && DirectResults.length === DirectRoutes.length + DirectMobileRoutes.length
+            && DirectResults.every(Result => Result.ok === true),
+        shellCanvas: ShellCanvas,
+        shellRoutes: Results,
+        directRoutes: DirectResults
+    };
 }
 
 async function VisitAndSummarize(Page, Name, Url) {

@@ -25,10 +25,6 @@ body.LevelSelectPage {
     padding: 22px;
     color: var(--GameInk);
     font-family: Georgia, "Times New Roman", serif;
-    background:
-        radial-gradient(circle at 18% -10%, rgba(211, 160, 94, .18), transparent 31%),
-        radial-gradient(circle at 92% 12%, rgba(107, 59, 33, .22), transparent 30%),
-        linear-gradient(145deg, #4b2c1d 0%, #23140e 46%, #110a07 100%);
 }
 
 .LevelSelectShell {

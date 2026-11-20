@@ -102,10 +102,6 @@
     background: rgba(87, 48, 27, .09);
 }
 
-html:has(body.AccountSettingsPage) {
-    background: #8d6849;
-}
-
 .AccountSettingsPage {
     min-height: 100vh;
     background: transparent;

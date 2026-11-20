@@ -1,0 +1,37 @@
+/* Story Rewrite GlobalModule: sole owner of each page's viewport gradient. */
+:root {
+    --story-gradient-base: #4d301f;
+    --story-global-gradient-image: linear-gradient(155deg, #b38b61 0%, #8b6848 42%, #6e4c33 72%, #4d301f 100%);
+    --story-global-gradient-repeat: no-repeat;
+    --story-global-gradient-size: cover;
+    --story-global-gradient-position: center center;
+}
+
+html {
+    position: relative !important;
+    isolation: isolate !important;
+    min-height: 100%;
+    background: var(--story-gradient-base) !important;
+    background-image: none !important;
+}
+
+/* One fixed viewport canvas. Page styles must not paint their own html/body gradients. */
+html::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    display: block;
+    pointer-events: none;
+    background-image: var(--story-global-gradient-image);
+    background-repeat: var(--story-global-gradient-repeat);
+    background-position: var(--story-global-gradient-position);
+    background-size: var(--story-global-gradient-size);
+}
+
+body {
+    min-height: 100vh;
+    background: transparent !important;
+    background-image: none !important;
+    background-color: transparent !important;
+}
