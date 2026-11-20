@@ -95,7 +95,7 @@
         color: #e8c99b;
         border: 1px solid rgba(211, 159, 91, .2);
         border-radius: 13px;
-        background: linear-gradient(180deg, rgba(92, 54, 31, .82), rgba(48, 27, 17, .9));
+        background: var(--story-gradient-token-088);
         box-shadow: inset 0 1px rgba(255, 235, 198, .055);
         font: 800 0.625rem/1 system-ui, sans-serif;
         letter-spacing: .055em;
@@ -106,24 +106,24 @@
 
     .MobileControlButton:active {
         transform: scale(.96);
-        background: linear-gradient(180deg, rgba(109, 66, 37, .92), rgba(54, 30, 18, .96));
+        background: var(--story-gradient-token-089);
     }
 
     .MobileControlButton.Primary {
         color: #2a170d;
         border-color: rgba(255, 219, 158, .68);
-        background: linear-gradient(180deg, #efc982, #c8873f);
+        background: var(--story-gradient-token-090);
         box-shadow: inset 0 1px rgba(255,255,255,.28), 0 7px 20px rgba(190, 120, 48, .2);
     }
 
     .MobileControlButton.Primary:active {
-        background: linear-gradient(180deg, #dfb96f, #b97835);
+        background: var(--story-gradient-token-091);
     }
 
     .MobileControlButton.IsActive {
         color: #2a170d;
         border-color: rgba(255, 219, 158, .55);
-        background: linear-gradient(180deg, #e7bc72, #b87535);
+        background: var(--story-gradient-token-092);
     }
 
     .MobileControlButton:disabled,
