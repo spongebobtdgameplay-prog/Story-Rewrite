@@ -45,7 +45,7 @@
     color: #f0cb92;
     border: 1px solid rgba(245, 216, 168, .25);
     border-radius: 15px;
-    background: linear-gradient(145deg, #5c3923, #302018);
+    background: var(--story-gradient-token-130);
     box-shadow: inset 0 1px rgba(255,255,255,.08), 0 10px 26px rgba(39,18,7,.16);
 }
 
@@ -104,7 +104,7 @@
     overflow: hidden;
     border: 1px solid #3a2418;
     border-radius: 22px;
-    background: linear-gradient(180deg, #4b2f20, #2a1d16);
+    background: var(--story-gradient-token-131);
     box-shadow: 0 28px 78px rgba(38, 18, 7, .34), inset 0 1px rgba(255, 245, 222, .08);
 }
 
@@ -124,10 +124,7 @@
     min-width: 0;
     padding: 25px 22px 22px;
     border-right: 1px solid rgba(241, 211, 169, .14);
-    background:
-        radial-gradient(circle at 18% 7%, rgba(255,249,229,.6), transparent 32%),
-        repeating-linear-gradient(0deg, rgba(93,61,35,.035) 0 1px, transparent 1px 5px),
-        linear-gradient(180deg, #e1c395, #c89f6b);
+    background: var(--story-gradient-token-132);
 }
 
 .StorySocialSidebar::before {
@@ -148,12 +145,7 @@
     bottom: 0;
     width: 54px;
     pointer-events: none;
-    background: linear-gradient(
-        90deg,
-        rgba(54, 41, 33, 0),
-        rgba(54, 41, 33, .18) 58%,
-        rgba(53, 42, 35, .46)
-    );
+    background: var(--story-gradient-token-133);
 }
 
 .StorySocialPaneHeader {
@@ -213,7 +205,7 @@
     padding: 11px 12px;
     border: 1px solid rgba(102, 68, 36, .44);
     border-radius: 11px;
-    background: linear-gradient(180deg, rgba(255, 248, 231, .94), rgba(236, 215, 179, .86));
+    background: var(--story-gradient-token-134);
     box-shadow: inset 0 1px rgba(255,255,255,.62), 0 5px 14px rgba(82, 50, 25, .08);
 }
 
@@ -268,7 +260,7 @@
 .StorySocialIndexRule {
     flex: 1 1 auto;
     height: 1px;
-    background: linear-gradient(90deg, rgba(108,70,37,.28), transparent);
+    background: var(--story-gradient-token-135);
 }
 
 .StorySocialUserList {
@@ -314,7 +306,7 @@
 
 .StorySocialUserButton.Active {
     border-color: #8f5f30;
-    background: linear-gradient(180deg, #f8e8c7, #e6c99a);
+    background: var(--story-gradient-token-136);
     box-shadow: 0 0 0 3px rgba(161, 105, 48, .16), 0 9px 18px rgba(78, 46, 20, .11);
 }
 
@@ -325,9 +317,7 @@
     place-items: center;
     border: 1px solid rgba(126, 78, 36, .4);
     border-radius: 50%;
-    background:
-        radial-gradient(circle at 34% 28%, #fff1d0, transparent 34%),
-        linear-gradient(145deg, #8b5b31, #4f2f1c);
+    background: var(--story-gradient-token-137);
     box-shadow: inset 0 1px rgba(255,245,221,.18), 0 5px 12px rgba(70,38,15,.14);
     color: #fff0d2;
     font: 900 1rem/1 Georgia, "Times New Roman", serif;
@@ -427,9 +417,7 @@
     display: flex;
     flex-direction: column;
     min-height: 0;
-    background:
-        radial-gradient(circle at 88% 8%, rgba(216, 177, 117, .13), transparent 24%),
-        linear-gradient(180deg, #352a23, #28201b);
+    background: var(--story-gradient-token-138);
 }
 
 .StorySocialChatEmpty {
@@ -452,7 +440,7 @@
     color: #ddba7d;
     border: 1px solid rgba(223, 188, 128, .27);
     border-radius: 24px;
-    background: linear-gradient(145deg, rgba(116, 76, 40, .52), rgba(49, 34, 26, .78));
+    background: var(--story-gradient-token-139);
     box-shadow: inset 0 1px rgba(255,245,219,.09), 0 16px 34px rgba(10,7,4,.18);
 }
 
@@ -494,11 +482,11 @@
 .StorySocialEmptyRule span {
     flex: 1 1 auto;
     height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(213, 174, 113, .3));
+    background: var(--story-gradient-token-140);
 }
 
 .StorySocialEmptyRule span:last-child {
-    background: linear-gradient(90deg, rgba(213, 174, 113, .3), transparent);
+    background: var(--story-gradient-token-141);
 }
 
 .StorySocialEmptyRule i {
@@ -514,9 +502,7 @@
     height: 100%;
     display: flex;
     flex-direction: column;
-    background:
-        radial-gradient(circle at 88% 8%, rgba(216,177,117,.13), transparent 24%),
-        linear-gradient(180deg, #352a23, #28201b);
+    background: var(--story-gradient-token-142);
 }
 
 .StorySocialPage [hidden] {
@@ -530,7 +516,7 @@
     gap: 18px;
     padding: 20px 24px 17px;
     border-bottom: 1px solid rgba(227, 188, 122, .17);
-    background: linear-gradient(180deg, rgba(65, 48, 39, .88), rgba(44, 34, 28, .88));
+    background: var(--story-gradient-token-143);
 }
 
 .StorySocialUserIdentity {
@@ -608,7 +594,7 @@
     padding: 9px 10px;
     border: 1px solid rgba(224, 185, 121, .13);
     border-radius: 10px;
-    background: linear-gradient(180deg, rgba(86, 63, 48, .5), rgba(47, 35, 28, .6));
+    background: var(--story-gradient-token-144);
 }
 
 .StorySocialProfileStat span {
@@ -643,7 +629,7 @@
 .StorySocialConversationLabel i {
     flex: 1 1 auto;
     height: 1px;
-    background: linear-gradient(90deg, rgba(222, 181, 117, .18), transparent);
+    background: var(--story-gradient-token-145);
 }
 
 .StorySocialMessages {
@@ -659,9 +645,7 @@
     padding: 14px 20px 18px;
     scrollbar-width: thin;
     scrollbar-color: #715138 transparent;
-    background:
-        radial-gradient(circle at 12% 0%, rgba(218, 182, 122, .06), transparent 25%),
-        linear-gradient(180deg, #2f241e 0%, #2b221d 100%);
+    background: var(--story-gradient-token-146);
 }
 
 .StorySocialMessage {
@@ -679,7 +663,7 @@
     color: #fff0d4;
     border-color: rgba(219, 178, 111, .26);
     border-radius: 13px 13px 5px 13px;
-    background: linear-gradient(180deg, #7e532f, #67411f);
+    background: var(--story-gradient-token-147);
 }
 
 .StorySocialMessageText {
@@ -920,17 +904,7 @@
 
 @media (min-width: 761px) {
     .StorySocialChatView {
-        background:
-            radial-gradient(
-                circle at 88% 8%,
-                rgba(216,177,117,.13),
-                transparent 24%
-            ),
-            linear-gradient(
-                180deg,
-                #352a23,
-                #28201b
-            );
+        background: var(--story-gradient-token-148);
     }
 }
 
@@ -962,7 +936,7 @@
 .StorySocialMessages{border-bottom:1px solid rgba(12,7,4,.3)}
 .StorySocialMessage{border-width:1.5px;border-color:rgba(225,190,132,.2);box-shadow:0 6px 16px rgba(7,4,2,.22)}
 .StorySocialMessageText{color:#fff0d7;font-weight:700}
-.StorySocialMessage.Sent{border-color:rgba(234,196,126,.48);background:linear-gradient(155deg,#895b33,#5d371c)}
+.StorySocialMessage.Sent{border-color:rgba(234,196,126,.48);background: var(--story-gradient-token-149)}
 .StorySocialComposer{border-top-width:2px;border-top-color:rgba(225,187,124,.25)}
 .StorySocialComposerField input{border-width:2px;border-color:rgba(217,178,116,.4);font-weight:700}
 .StorySocialComposerField input:focus{border-color:#d4a15e;box-shadow:0 0 0 3px rgba(208,154,91,.16)}
@@ -1021,7 +995,7 @@ body.StorySocialPage {
 .StorySocialUserList,.StorySocialMessages { overscroll-behavior:auto!important; overscroll-behavior-y:auto!important; touch-action:pan-y; }
 .StorySocialChatHeader { min-width:0; flex-wrap:wrap; }
 .StorySocialUserIdentity { flex:1 1 180px; }
-.StorySocialIdentityStamp { box-sizing:border-box; flex:0 1 190px; width:min(100%,190px); min-width:0; max-width:190px; padding:9px 11px; gap:2px; border-color:rgba(223,186,124,.38); background:linear-gradient(145deg,rgba(25,17,13,.76),rgba(43,29,20,.9)); box-shadow:inset 0 1px rgba(255,244,219,.08),0 5px 12px rgba(8,4,2,.16); }
+.StorySocialIdentityStamp { box-sizing:border-box; flex:0 1 190px; width:min(100%,190px); min-width:0; max-width:190px; padding:9px 11px; gap:2px; border-color:rgba(223,186,124,.38); background: var(--story-gradient-token-150); box-shadow:inset 0 1px rgba(255,244,219,.08),0 5px 12px rgba(8,4,2,.16); }
 .StorySocialIdentityStamp span { color:#d0b58b; font-size:0.5625rem; letter-spacing:.14em; }
 .StorySocialIdentityStamp strong { max-width:100%; overflow-wrap:anywhere; word-break:break-word; color:#ffe0a8; font-size:clamp(0.625rem,.95vw,0.75rem); line-height:1.35; letter-spacing:.015em; }
 .StorySocialComposerField span { color:#9acb83; font-size:0.75rem; font-weight:900; letter-spacing:.015em; text-shadow:0 1px 1px rgba(0,0,0,.28); }
@@ -1106,7 +1080,7 @@ body.StorySocialPage {
     place-items:center;
     border-radius:50%;
     color:#fff0d2;
-    background:linear-gradient(145deg,#8b5b31,#4f2f1c);
+    background: var(--story-gradient-token-151);
     font:900 0.75rem/1 Georgia,"Times New Roman",serif;
 }
 .StorySocialInboxCopy{min-width:0;display:grid;gap:3px}
@@ -1252,7 +1226,7 @@ body.StorySocialPage {
     border: 1px solid rgba(225, 190, 132, .38);
     border-radius: 16px;
     color: #f7e5c7;
-    background: linear-gradient(160deg, #32231a, #211711);
+    background: var(--story-gradient-token-152);
     box-shadow: 0 24px 80px rgba(0, 0, 0, .62);
     z-index: 2147483647;
 }
@@ -1323,7 +1297,7 @@ body.StorySocialPage {
 }
 .StorySocialReportSubmit {
     color: #2a1a0f;
-    background: linear-gradient(180deg, #f3d29b, #c99a5f);
+    background: var(--story-gradient-token-153);
 }
 .StorySocialReportActions button:focus-visible {
     outline: 2px solid #ffe3b0;
@@ -1916,7 +1890,7 @@ body.StorySocialPage {
         border: 1px solid rgba(211, 159, 91, .25);
         border-radius: 9px;
         color: #f1d6a8;
-        background: linear-gradient(180deg, #55351f, #342116);
+        background: var(--story-gradient-token-154);
         font: 900 .75rem/1.1 system-ui, sans-serif;
         text-decoration: none;
         text-transform: uppercase;
@@ -1925,7 +1899,7 @@ body.StorySocialPage {
     }
 
     .StorySocialMobileNav a:active {
-        background: linear-gradient(180deg, #efc982, #c8873f);
+        background: var(--story-gradient-token-090);
         color: #2a170d;
     }
 
@@ -2221,7 +2195,7 @@ body.StorySocialPage {
 .StorySocialPage .StorySocialSidebar > .StorySocialSearchBox,
 .StorySocialPage .StorySocialSidebar > .StorySocialSearchBox:focus-within {
     background-color: var(--SocialPaper) !important;
-    background-image: linear-gradient(180deg, rgba(255, 248, 231, .94), rgba(236, 215, 179, .86)) !important;
+    background-image: var(--story-gradient-token-134) !important;
     background-attachment: scroll;
     background-repeat: no-repeat;
     background-size: 100% 100%;
