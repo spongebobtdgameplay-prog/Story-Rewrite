@@ -208,12 +208,6 @@
         if (Element.classList.contains("StorySocialChat") || Element.classList.contains("StorySocialChatView")) {
             return "social-chat";
         }
-        if (Element.classList.contains("StoryBotAppearancePreview")) {
-            const Theme = String(Root.dataset.storybotTheme || "classic").trim().toLowerCase();
-            return ["classic", "midnight", "violet", "paper"].includes(Theme)
-                ? "storybot-preview-" + Theme
-                : "storybot-preview-classic";
-        }
         if (Element.classList.contains("ChapterGameHeader")) {
             return "chapter-header-" + GetClassSuffix(Element, "Theme-", "default");
         }
@@ -241,7 +235,7 @@
     function ApplySurfaces() {
         const Targets = document.querySelectorAll(
             "[data-story-gradient-surface], .StorySocialChat, .StorySocialChatView, " +
-            ".ChapterGameHeader, .StageMapArea, .GameScene, .SceneAtmosphere, .StoryBotAppearancePreview, .MultiplayerHero, " +
+            ".ChapterGameHeader, .StageMapArea, .GameScene, .SceneAtmosphere, .MultiplayerHero, " +
             ".RoomActionCard, .RoomPanel, .ChatPanel, .AccountCard"
         );
 
@@ -551,41 +545,6 @@
         ] }]
     });
 
-
-    // Settings page StoryBot preview: cache each user-selectable message gradient.
-    RegisterSurface("storybot-preview-classic", {
-        alpha: true,
-        backgroundColor: "transparent",
-        layers: [{ type: "linear", angle: 135, stops: [
-            { at: 0, color: "rgba(83,55,33,.78)" },
-            { at: 1, color: "rgba(48,31,20,.92)" }
-        ] }]
-    });
-    RegisterSurface("storybot-preview-midnight", {
-        alpha: true,
-        backgroundColor: "transparent",
-        layers: [{ type: "linear", angle: 135, stops: [
-            { at: 0, color: "rgba(33,48,72,.97)" },
-            { at: 1, color: "rgba(15,23,39,.98)" }
-        ] }]
-    });
-    RegisterSurface("storybot-preview-violet", {
-        alpha: true,
-        backgroundColor: "transparent",
-        layers: [{ type: "linear", angle: 135, stops: [
-            { at: 0, color: "rgba(64,42,86,.97)" },
-            { at: 1, color: "rgba(34,22,48,.98)" }
-        ] }]
-    });
-    RegisterSurface("storybot-preview-paper", {
-        alpha: true,
-        backgroundColor: "transparent",
-        layers: [{ type: "linear", angle: 135, stops: [
-            { at: 0, color: "rgba(249,239,218,.99)" },
-            { at: 1, color: "rgba(229,210,177,.99)" }
-        ] }]
-    });
-
     function RegisterTheme(Name, Definition) {
         const Key = String(Name || "").trim().toLowerCase();
         if (!/^[a-z][a-z0-9-]{0,31}$/.test(Key) || !Definition || typeof Definition !== "object") return false;
@@ -707,11 +666,6 @@
         ThemeObserver.observe(document.body, {
             attributes: true,
             attributeFilter: ["class", "data-story-gradient-theme"]
-        });
-        const StoryBotThemeObserver = new MutationObserver(ApplySurfaces);
-        StoryBotThemeObserver.observe(Root, {
-            attributes: true,
-            attributeFilter: ["data-storybot-theme"]
         });
     }
 
