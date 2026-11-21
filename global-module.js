@@ -409,15 +409,12 @@
     }
     function IsCssGradientCachePage() {
         const Body = document.body;
-        // Multiplayer uses live CSS gradients intentionally. Rasterizing every
-        // descendant and forcing recaptures on hover/ARIA/class mutations caused
-        // visible gradient swaps and occasional whole-page flashes.
         return Boolean(Body && (
             Body.classList.contains("StorySettingsPage")
+            || Body.classList.contains("MultiplayerPage")
             || Body.classList.contains("ThinkPage")
         ));
-    }
-    let CssGradientScanForceQueued = false;
+    }let CssGradientScanForceQueued = false;
     function ApplyCssGradientCaches(Force = false) {
         if(!IsCssGradientCachePage())return;
         const PageBody=document.body;
