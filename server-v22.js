@@ -19,7 +19,8 @@ Module.prototype._compile = function(Content, Filename) {
             throw new Error("server-v22 Turnstile patch failed: helper insertion anchor.");
         }
 
-        const Helpers = String.raw`\nconst AuthorizedAiRateLimits = new Map();
+        const Helpers = String.raw`
+const AuthorizedAiRateLimits = new Map();
 const AuthorizedAiWindowMs = 60 * 1000;
 const AuthorizedAiMaxRequests = 8;
 
