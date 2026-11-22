@@ -76,7 +76,7 @@ async function HandleAuthorizedAi(Request, Response, Origin) {
 
     try {
         const GeminiResponse = await fetch(
-            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent",
             {
                 method: "POST",
                 headers: {
@@ -96,7 +96,17 @@ async function HandleAuthorizedAi(Request, Response, Origin) {
 
         const Result = await GeminiResponse.json().catch(() => ({}));
         if (!GeminiResponse.ok) {
-            console.error("Gemini API returned HTTP", GeminiResponse.status);
+            const ProviderError = Result?.error && typeof Result.error === "object"
+                ? {
+                    code: Result.error.code,
+                    status: Result.error.status,
+                    message: String(Result.error.message || "").slice(0, 500)
+                }
+                : { message: "No structured provider error returned." };
+            console.error("Gemini API request failed:", JSON.stringify({
+                httpStatus: GeminiResponse.status,
+                providerError: ProviderError
+            }));
             return SendJson(Response, 502, {
                 error: GeminiResponse.status === 429
                     ? "Gemini is temporarily rate-limited. Try again shortly."
