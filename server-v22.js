@@ -76,7 +76,7 @@ async function HandleAuthorizedAi(Request, Response, Origin) {
 
     try {
         const GeminiResponse = await fetch(
-            "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent",
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent",
             {
                 method: "POST",
                 headers: {
@@ -127,7 +127,7 @@ async function HandleAuthorizedAi(Request, Response, Origin) {
         return SendJson(Response, 200, {
             ok: true,
             text: Text.slice(0, 12000),
-            model: "gemini-2.5-flash"
+            model: "gemini-3.5-flash-lite"
         }, Origin);
     } catch (Error) {
         console.error("Authorized AI request failed:", String(Error?.message || Error).slice(0, 180));
