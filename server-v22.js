@@ -214,9 +214,9 @@ async function VerifyRegistrationTurnstileToken(Token) {
         }
         Source = Source.replace(
             AuthorizedAiRouteAnchor,
-            '    if (RequestPath === "/api/authorized-ai" && Request.method === "POST") {\\n' +
-            '        return HandleAuthorizedAi(Request, Response, Origin);\\n' +
-            '    }\\n\\n' +
+            '    if (RequestPath === "/api/authorized-ai" && Request.method === "POST") {\n' +
+            '        return HandleAuthorizedAi(Request, Response, Origin);\n' +
+            '    }\n\n' +
             AuthorizedAiRouteAnchor
         );
 
