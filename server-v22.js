@@ -19,7 +19,7 @@ Module.prototype._compile = function(Content, Filename) {
             throw new Error("server-v22 Turnstile patch failed: helper insertion anchor.");
         }
 
-        const Helpers = String.rawconst AuthorizedAiRateLimits = new Map();
+        const Helpers = String.raw`\nconst AuthorizedAiRateLimits = new Map();
 const AuthorizedAiWindowMs = 60 * 1000;
 const AuthorizedAiMaxRequests = 8;
 
@@ -208,16 +208,16 @@ async function VerifyRegistrationTurnstileToken(Token) {
         Source = Source.slice(0, AfterValidation) + Verification + Source.slice(AfterValidation);
 
         const AuthorizedAiRouteAnchor =
-            '    if (!Database) return SendJson(Response, 503, { error: "The account database is not configured yet." }, Origin);';
+            '    if (!Account) return SendJson(Response, 401, { error: "Sign in required." }, Origin);';
         if (Source.split(AuthorizedAiRouteAnchor).length !== 2) {
             throw new Error("server-v22 Gemini API patch failed: API route insertion anchor.");
         }
         Source = Source.replace(
             AuthorizedAiRouteAnchor,
+            AuthorizedAiRouteAnchor + '\n\n' +
             '    if (RequestPath === "/api/authorized-ai" && Request.method === "POST") {\n' +
             '        return HandleAuthorizedAi(Request, Response, Origin);\n' +
-            '    }\n\n' +
-            AuthorizedAiRouteAnchor
+            '    }'
         );
 
         PatchApplied = true;
