@@ -409,9 +409,10 @@
     }
     function IsCssGradientCachePage() {
         const Body = document.body;
+        // Multiplayer intentionally keeps native CSS gradients. Rasterizing its
+        // surfaces and refreshing them during chat/input DOM changes causes flicker.
         return Boolean(Body && (
             Body.classList.contains("StorySettingsPage")
-            || Body.classList.contains("MultiplayerPage")
             || Body.classList.contains("ThinkPage")
         ));
     }let CssGradientScanForceQueued = false;
