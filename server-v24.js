@@ -184,7 +184,10 @@ Module.prototype._compile = function(Content, Filename) {
             "    let ExpiresAt = 0;",
             "    try { ExpiresAt = Number(JSON.parse(Buffer.from(Parts[0] || \"\", \"base64url\").toString(\"utf8\"))?.expiresAt || 0); } catch {}",
             "    const MaxAge = Math.max(0, Math.floor((ExpiresAt - Date.now()) / 1000));",
-            "    Response.setHeader(\"Set-Cookie\", StorySessionCookieName + \"=\" + encodeURIComponent(Token) + \"; Path=/; HttpOnly; Secure; SameSite=None; Max-Age=\" + MaxAge);",
+            '    Response.setHeader("Set-Cookie", [',
+            '        StorySessionCookieName + "=" + encodeURIComponent(Token) + "; Path=/; HttpOnly; Secure; SameSite=None; Max-Age=" + MaxAge,',
+            '        StoryLegacySessionCookieName + "=; Path=/; HttpOnly; Secure; SameSite=None; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT"',
+            "    ]);",
             "}"
         ].join("\n");
         const CookieSetterReplacement = [
@@ -197,7 +200,10 @@ Module.prototype._compile = function(Content, Filename) {
             "        ExpiresAt = Number(Claims?.expiresAt || (Number(Claims?.exp || 0) * 1000));",
             "    } catch {}",
             "    const MaxAge = Math.max(0, Math.floor((ExpiresAt - Date.now()) / 1000));",
-            "    Response.setHeader(\"Set-Cookie\", StorySessionCookieName + \"=\" + encodeURIComponent(Token) + \"; Path=/; HttpOnly; Secure; SameSite=None; Max-Age=\" + MaxAge);",
+            '    Response.setHeader("Set-Cookie", [',
+            '        StorySessionCookieName + "=" + encodeURIComponent(Token) + "; Path=/; HttpOnly; Secure; SameSite=None; Max-Age=" + MaxAge,',
+            '        StoryLegacySessionCookieName + "=; Path=/; HttpOnly; Secure; SameSite=None; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT"',
+            "    ]);",
             "}"
         ].join("\n");
         if (Source.split(CookieSetterAnchor).length !== 2) {
