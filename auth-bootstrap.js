@@ -5,7 +5,8 @@
     const LegacyKey = "StoryRewriteSessionToken";
     const LegacyAccountsKey = "StoryRewriteSavedAccountsV1";
     const SavedNamesKey = "StoryRewriteSavedAccountNamesV1";
-    const SessionMarkerKey = "StoryRewriteCookieSessionActiveV1";
+    const SessionMarkerKey = "srw_k9p4x2_r1";
+    const PreviousSessionMarkerKey = "StoryRewriteCookieSessionActiveV1";
     const ProfileKey = "StoryRewriteLastProfileV1";
     const ValidatedAtKey = "StoryRewriteAuthValidatedAt";
 
@@ -22,7 +23,7 @@
     // start while a cold backend wakes up. Server-side requests remain authoritative;
     // a later 401 clears this marker and sends the player back to sign-in.
     const PreviousSessionMarker = (() => {
-        try { return localStorage.getItem(SessionMarkerKey) === "1"; } catch { return false; }
+        try { return localStorage.getItem(SessionMarkerKey) === "1" || localStorage.getItem(PreviousSessionMarkerKey) === "1"; } catch { return false; }
     })();
     const PreviousValidatedAt = (() => {
         try { return Number(localStorage.getItem(ValidatedAtKey) || 0); } catch { return 0; }
@@ -68,6 +69,7 @@
         sessionStorage.removeItem(LegacyKey);
         localStorage.removeItem(LegacyAccountsKey);
         localStorage.removeItem(SessionMarkerKey);
+        localStorage.removeItem(PreviousSessionMarkerKey);
     } catch {}
 
     async function ReadResponse(Response) {
