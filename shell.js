@@ -91,7 +91,7 @@
 
     function GetShellAuthMarker() {
         try {
-            return localStorage.getItem("StoryRewriteCookieSessionActiveV1") === "1" ? "cookie-session" : "";
+            return localStorage.getItem("srw_k9p4x2_r1") === "1" ? "cookie-session" : "";
         } catch {
             return "";
         }
@@ -152,7 +152,7 @@
 
     function HasAuthenticatedSession() {
         try {
-            return localStorage.getItem("StoryRewriteCookieSessionActiveV1") === "1";
+            return localStorage.getItem("srw_k9p4x2_r1") === "1";
         } catch {
             return false;
         }
@@ -923,7 +923,7 @@
     }
 
     window.addEventListener("storage", Event => {
-        if (Event.key !== "StoryRewriteCookieSessionActiveV1") return;
+        if (Event.key !== "srw_k9p4x2_r1") return;
         if (!HasAuthenticatedSession()) StopMusic();
     });
 
