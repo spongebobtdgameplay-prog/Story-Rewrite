@@ -18,9 +18,9 @@
         }
     }
 
-    // Keep a very recent, previously validated browser session available when
-    // the Render cold start/network temporarily fails. A real 401 still signs
-    // the browser out; only transport/server unavailability can use this grace.
+    // Remember a previously authenticated browser session so the shell can
+    // start while a cold backend wakes up. Server-side requests remain authoritative;
+    // a later 401 clears this marker and sends the player back to sign-in.
     const PreviousSessionMarker = (() => {
         try { return localStorage.getItem(SessionMarkerKey) === "1"; } catch { return false; }
     })();
@@ -132,25 +132,59 @@
     }
 
     async function FetchSessionWithRetry() {
-        let Result = await FetchSession();
-        if (Result.authenticated || !Result.unavailable) return Result;
+        const SessionCheck = (async () => {
+            let Result = await FetchSession();
+            if (Result.authenticated || !Result.unavailable) return Result;
 
-        // GitHub Pages reaches the backend cross-origin, so its first request
-        // can hit a sleeping Render instance. Retry once before deciding.
-        await new Promise(Resolve => window.setTimeout(Resolve, 1200));
-        Result = await FetchSession();
-        if (Result.authenticated || !Result.unavailable) return Result;
+            // A cold backend may need a moment to wake up. Retry once, but do
+            // not make a returning player's shell wait through both timeouts.
+            await new Promise(Resolve => window.setTimeout(Resolve, 1200));
+            Result = await FetchSession();
+            if (Result.authenticated || !Result.unavailable) return Result;
 
-        const PreviousSessionIsFresh = PreviousSessionMarker
-            && PreviousProfile?.username
-            && PreviousValidatedAt > 0
-            && Date.now() - PreviousValidatedAt < 10 * 60 * 1000;
-        if (PreviousSessionIsFresh) {
-            try { localStorage.setItem(SessionMarkerKey, "1"); } catch {}
-            return { authenticated: true, profile: PreviousProfile, stale: true };
-        }
+            const PreviousSessionIsFresh = PreviousSessionMarker
+                && PreviousProfile?.username
+                && PreviousValidatedAt > 0
+                && Date.now() - PreviousValidatedAt < 10 * 60 * 1000;
+            if (PreviousSessionIsFresh) {
+                try { localStorage.setItem(SessionMarkerKey, "1"); } catch {}
+                return { authenticated: true, profile: PreviousProfile, stale: true };
+            }
 
-        return Result;
+            return Result;
+        })();
+
+        const CurrentPage = String(window.location.pathname || "").split("/").pop().toLowerCase();
+        const CanRestoreCachedSession = CurrentPage !== "auth.html"
+            && PreviousSessionMarker
+            && PreviousProfile?.username;
+
+        if (!CanRestoreCachedSession) return SessionCheck;
+
+        // Start the shell from the last-known signed-in state after 800 ms.
+        // Keep validating in the background; a confirmed 401 still signs out.
+        const StartupResult = await Promise.race([
+            SessionCheck,
+            new Promise(Resolve => window.setTimeout(() => Resolve(null), 800))
+        ]);
+        if (StartupResult) return StartupResult;
+
+        try { localStorage.setItem(SessionMarkerKey, "1"); } catch {}
+
+        void SessionCheck.then(Result => {
+            if (Result.authenticated || Result.unavailable) return;
+
+            try {
+                localStorage.removeItem(SessionMarkerKey);
+                localStorage.removeItem(ValidatedAtKey);
+            } catch {}
+
+            if (String(window.location.pathname || "").split("/").pop().toLowerCase() !== "auth.html") {
+                window.location.replace(new URL("auth.html", window.location.href).href);
+            }
+        }).catch(() => {});
+
+        return { authenticated: true, profile: PreviousProfile, stale: true };
     }
 
     function CompleteSession(Data) {
