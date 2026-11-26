@@ -178,38 +178,15 @@ Module.prototype._compile = function(Content, Filename) {
         }
         Source = Source.replace(SessionStoreAnchor, SessionStoreReplacement);
 
-        const CookieSetterAnchor = [
-            "function SetStorySessionCookie(Response, Token) {",
-            "    const Parts = String(Token || \"\").split(\".\");",
-            "    let ExpiresAt = 0;",
-            "    try { ExpiresAt = Number(JSON.parse(Buffer.from(Parts[0] || \"\", \"base64url\").toString(\"utf8\"))?.expiresAt || 0); } catch {}",
-            "    const MaxAge = Math.max(0, Math.floor((ExpiresAt - Date.now()) / 1000));",
-            '    Response.setHeader("Set-Cookie", [',
-            '        StorySessionCookieName + "=" + encodeURIComponent(Token) + "; Path=/; HttpOnly; Secure; SameSite=None; Max-Age=" + MaxAge,',
-            '        StoryLegacySessionCookieName + "=; Path=/; HttpOnly; Secure; SameSite=None; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT"',
-            "    ]);",
-            "}"
+        const CookieExpiryParserAnchor = '    try { ExpiresAt = Number(JSON.parse(Buffer.from(Parts[0] || "", "base64url").toString("utf8"))?.expiresAt || 0); } catch {}';
+        const CookieExpiryParserReplacement = [
+            "    const PayloadPart = Parts.length === 3 ? Parts[1] : Parts[0];",
+            '    try { ExpiresAt = Number(JSON.parse(Buffer.from(PayloadPart || "", "base64url").toString("utf8"))?.expiresAt || 0); } catch {}'
         ].join("\n");
-        const CookieSetterReplacement = [
-            "function SetStorySessionCookie(Response, Token) {",
-            "    const Parts = String(Token || \"\").split(\".\");",
-            "    const PayloadPart = Parts.length === 2 ? Parts[0] : Parts.length === 3 ? Parts[1] : \"\";",
-            "    let ExpiresAt = 0;",
-            "    try {",
-            "        const Claims = JSON.parse(Buffer.from(PayloadPart || \"\", \"base64url\").toString(\"utf8\"));",
-            "        ExpiresAt = Number(Claims?.expiresAt || (Number(Claims?.exp || 0) * 1000));",
-            "    } catch {}",
-            "    const MaxAge = Math.max(0, Math.floor((ExpiresAt - Date.now()) / 1000));",
-            '    Response.setHeader("Set-Cookie", [',
-            '        StorySessionCookieName + "=" + encodeURIComponent(Token) + "; Path=/; HttpOnly; Secure; SameSite=None; Max-Age=" + MaxAge,',
-            '        StoryLegacySessionCookieName + "=; Path=/; HttpOnly; Secure; SameSite=None; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT"',
-            "    ]);",
-            "}"
-        ].join("\n");
-        if (Source.split(CookieSetterAnchor).length !== 2) {
+        if (Source.split(CookieExpiryParserAnchor).length !== 2) {
             throw new Error("server-v24 JWT patch failed: cookie expiry parser anchor.");
         }
-        Source = Source.replace(CookieSetterAnchor, CookieSetterReplacement);
+        Source = Source.replace(CookieExpiryParserAnchor, CookieExpiryParserReplacement);
 
         const CookieMigrationAnchor = [
             '    const StoryRequestCookieToken = GetStorySessionCookieToken(Request.headers.cookie || "");',
