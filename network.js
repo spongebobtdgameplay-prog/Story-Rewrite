@@ -1,5 +1,5 @@
 const STORY_AUTH_TOKEN_KEY = "StoryRewriteAuthToken";
-const STORY_COOKIE_SESSION_MARKER_KEY = "StoryRewriteCookieSessionActiveV1";
+const STORY_COOKIE_SESSION_MARKER_KEY = "srw_k9p4x2_r1";
 const STORY_SAVED_ACCOUNT_NAMES_KEY = "StoryRewriteSavedAccountNamesV1";
 const STORY_LEGACY_AUTH_TOKEN_KEY = "StoryRewriteSessionToken";
 const STORY_SERVER_OVERRIDE_KEY = "StoryRewriteServerOverride";
