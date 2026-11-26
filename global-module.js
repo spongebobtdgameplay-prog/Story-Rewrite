@@ -409,12 +409,10 @@
     }
     function IsCssGradientCachePage() {
         const Body = document.body;
-        // Multiplayer intentionally keeps native CSS gradients. Rasterizing its
-        // surfaces and refreshing them during chat/input DOM changes causes flicker.
-        return Boolean(Body && (
-            Body.classList.contains("StorySettingsPage")
-            || Body.classList.contains("ThinkPage")
-        ));
+        // Settings keeps native CSS gradients. Its controls update classes and
+        // aria state frequently; snapshotting/restoring those gradients causes
+        // visible flashes whenever a setting changes.
+        return Boolean(Body && Body.classList.contains("ThinkPage"));
     }let CssGradientScanForceQueued = false;
     function ApplyCssGradientCaches(Force = false) {
         if(!IsCssGradientCachePage())return;
@@ -800,7 +798,7 @@
     }
 
     window.GlobalModule = Object.freeze({
-        version: "1.2.0",
+        version: "1.2.1",
         gradients: Object.freeze({
             registerTheme: RegisterTheme,
             setTheme: SetTheme,
