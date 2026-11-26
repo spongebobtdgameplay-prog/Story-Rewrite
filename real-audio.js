@@ -93,7 +93,7 @@
         danger: "Music/danger.mp3"
     };
 
-    const MusicAuthMarkerKey = "StoryRewriteCookieSessionActiveV1";
+    const MusicAuthMarkerKey = "srw_k9p4x2_r1";
 
     function HasAuthenticatedMusicSession() {
         try {
