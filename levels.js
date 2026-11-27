@@ -3,10 +3,15 @@ const LevelPageState = {
     Save: null,
     SelectedWorldId: null,
     SelectedStageId: null,
-    AutoStartStageId: null
+    AutoStartStageId: null,
+    Ready: false,
+    RefreshPromise: null
 };
 
 window.addEventListener("DOMContentLoaded", InitLevelsPage);
+window.addEventListener("StoryShellActivate", () => {
+    if (LevelPageState.Ready) void RefreshLevelsProgress();
+});
 
 async function InitLevelsPage() {
     const ErrorBox = document.getElementById("PageError");
@@ -42,6 +47,7 @@ async function InitLevelsPage() {
         }
 
         RenderLevelsPage();
+        LevelPageState.Ready = true;
 
         if (LevelPageState.AutoStartStageId) {
             const Node = document.querySelector(`[data-stage-node="${CSS.escape(LevelPageState.AutoStartStageId)}"]`);
@@ -53,6 +59,47 @@ async function InitLevelsPage() {
         ErrorBox.hidden = false;
         ErrorBox.textContent = Error.message;
     }
+}
+
+async function RefreshLevelsProgress() {
+    if (!LevelPageState.Ready || LevelPageState.RefreshPromise) {
+        return LevelPageState.RefreshPromise;
+    }
+
+    const Refresh = (async () => {
+        try {
+            const LatestSave = await FetchServerSave();
+            if (!LatestSave || !LevelPageState.Data) return;
+
+            LevelPageState.Save = NormalizeSave(LevelPageState.Data, LatestSave);
+            ApplyStoryCosmetic(LevelPageState.Save);
+
+            const CurrentStage = LevelPageState.Data.stages[LevelPageState.Save.currentStage];
+            if (CurrentStage && IsWorldUnlocked(LevelPageState.Save, CurrentStage.worldId)) {
+                LevelPageState.SelectedWorldId = CurrentStage.worldId;
+            } else if (!IsWorldUnlocked(LevelPageState.Save, LevelPageState.SelectedWorldId)) {
+                LevelPageState.SelectedWorldId = LevelPageState.Data.worlds.find(World =>
+                    IsWorldUnlocked(LevelPageState.Save, World.id)
+                )?.id || LevelPageState.Data.worlds[0]?.id;
+            }
+
+            LevelPageState.SelectedStageId = GetDefaultStageId(LevelPageState.SelectedWorldId);
+            RenderLevelsPage();
+        } catch (Error) {
+            console.warn("Could not refresh chapter-map progress:", Error);
+        }
+    })();
+
+    LevelPageState.RefreshPromise = Refresh;
+    try {
+        await Refresh;
+    } finally {
+        if (LevelPageState.RefreshPromise === Refresh) LevelPageState.RefreshPromise = null;
+    }
+}
+
+function ApplyChapterMapGradients() {
+    window.GlobalModule?.gradients?.applySurfaces?.();
 }
 
 function GetDefaultStageId(WorldId) {
@@ -102,7 +149,7 @@ function RenderWorldRail() {
         const Cleared = Stages.filter(Stage => GetStageStars(LevelPageState.Save, Stage.id) > 0).length;
 
         return `
-            <button class="WorldTab ${Active ? "Active" : ""} ${Unlocked ? "" : "Locked"}" type="button" data-world-id="${EscapeText(World.id)}" ${Unlocked ? "" : "disabled"}>
+            <button class="WorldTab ${Active ? "Active" : ""} ${Unlocked ? "" : "Locked"}" type="button" data-world-id="${EscapeText(World.id)}" data-story-gradient-surface="${Unlocked ? (Active ? "chapter-map-world-tab-active" : "chapter-map-world-tab") : ""}" ${Unlocked ? "" : "disabled"}>
                 <span class="WorldTabNumber">World ${World.number}</span>
                 <span class="WorldTabName">${EscapeText(World.shortName || World.name)}</span>
                 <span class="WorldTabProgress">${Unlocked ? `${Cleared}/${Stages.length} cleared` : "Locked"}</span>
@@ -146,11 +193,13 @@ function RenderSelectedWorld() {
                 <section class="StageMapArea Theme-${EscapeText(World.theme)}">
                     <div class="StageMapTitle">Chapter Route</div>
                     <div class="StageRoute">
-                        <div class="RouteTurn"></div>
+                        <div class="StageRouteLine StageRouteLineTop" data-story-gradient-surface="chapter-map-route-horizontal"></div>
+                        <div class="StageRouteLine StageRouteLineBottom" data-story-gradient-surface="chapter-map-route-horizontal"></div>
+                        <div class="RouteTurn" data-story-gradient-surface="chapter-map-route-vertical"></div>
                         ${Stages.map((Stage, Index) => BuildStageNode(Stage, Index + 1)).join("")}
                     </div>
                 </section>
-                <aside class="StageBriefing" id="StageBriefing">${BuildStageBriefing(SelectedStage)}</aside>
+                <aside class="StageBriefing" id="StageBriefing" data-story-gradient-surface="chapter-map-briefing">${BuildStageBriefing(SelectedStage)}</aside>
             </div>
         </section>
     `;
@@ -161,6 +210,8 @@ function RenderSelectedWorld() {
             RenderSelectedWorld();
         });
     });
+
+    ApplyChapterMapGradients();
 
     const PlayButton = Mount.querySelector(".BriefingPlay[data-stage-id]");
     if (PlayButton) {
@@ -183,7 +234,7 @@ function BuildStageNode(Stage, Position) {
     return `
         <div class="StageNodeWrap ${Selected ? "Selected" : ""} ${Current ? "CurrentTarget" : ""}" data-position="${Position}">
             <div class="StageNodeDifficulty">${EscapeText(String(Stage.difficulty || "Normal").toUpperCase())}</div>
-            <button class="${Classes}" type="button" data-stage-node="${EscapeText(Stage.id)}" ${Unlocked ? "" : "disabled"} aria-label="${Unlocked ? `Level ${Stage.levelNumber}: ${EscapeText(Stage.name)}` : `Level ${Stage.levelNumber}: Locked until earlier progress is completed`}">
+            <button class="${Classes}" type="button" data-stage-node="${EscapeText(Stage.id)}" data-story-gradient-surface="${Unlocked ? (Completed ? "chapter-map-stage-node-completed" : "chapter-map-stage-node") : ""}" ${Unlocked ? "" : "disabled"} aria-label="${Unlocked ? `Level ${Stage.levelNumber}: ${EscapeText(Stage.name)}` : `Level ${Stage.levelNumber}: Locked until earlier progress is completed`}">
                 ${Unlocked ? EscapeText(Stage.levelNumber) : `
                     <span class="StageNodeLock" aria-hidden="true">
                         <svg viewBox="0 0 24 24" focusable="false">
@@ -217,7 +268,7 @@ function BuildStageBriefing(Stage) {
         <div class="BriefingSection"><span class="BriefingLabel">Threat</span><p>${EscapeText(Stage.threat)}</p></div>
         <div class="BriefingSection"><span class="BriefingLabel">Must Survive</span><p>${EscapeText(Stage.survivalRule)}</p></div>
         <div class="BriefingStars">${BuildStars(Stars)}</div>
-        <button class="BriefingPlay" type="button" ${Unlocked ? `data-stage-id="${EscapeText(Stage.id)}"` : "disabled"}>${Unlocked ? "Open This Page" : "Level Locked"}</button>
+        <button class="BriefingPlay" type="button" data-story-gradient-surface="chapter-map-briefing-play" ${Unlocked ? `data-stage-id="${EscapeText(Stage.id)}"` : "disabled"}>${Unlocked ? "Open This Page" : "Level Locked"}</button>
     `;
 }
 
