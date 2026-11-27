@@ -589,6 +589,87 @@
         ]
     });
 
+    function BuildStripeStops(Color, Segments = 24, SolidRatio = 12 / 22) {
+        const Stops = [];
+        for (let Index = 0; Index < Segments; Index += 1) {
+            const Start = Index / Segments;
+            const End = Math.min(1, Start + SolidRatio / Segments);
+            Stops.push({ at: Start, color: Color });
+            Stops.push({ at: End, color: "rgba(0,0,0,0)" });
+        }
+        if (Stops[Stops.length - 1]?.at < 1) {
+            Stops.push({ at: 1, color: "rgba(0,0,0,0)" });
+        }
+        return Stops;
+    }
+
+    RegisterSurface("chapter-map-header", {
+        backgroundColor: "#1d110c",
+        layers: [{ type: "linear", angle: 180, stops: [
+            { at: 0, color: "rgba(54,31,20,.97)" },
+            { at: 1, color: "rgba(29,17,11,.98)" }
+        ] }]
+    });
+    RegisterSurface("chapter-map-header-button", {
+        backgroundColor: "#362014",
+        layers: [{ type: "linear", angle: 180, stops: [
+            { at: 0, color: "#5a3722" },
+            { at: 1, color: "#362014" }
+        ] }]
+    });
+    RegisterSurface("chapter-map-world-tab", {
+        backgroundColor: "#24150e",
+        layers: [{ type: "linear", angle: 180, stops: [
+            { at: 0, color: "#3c2418" },
+            { at: 1, color: "#24150e" }
+        ] }]
+    });
+    RegisterSurface("chapter-map-world-tab-active", {
+        backgroundColor: "#352015",
+        layers: [{ type: "linear", angle: 180, stops: [
+            { at: 0, color: "#684126" },
+            { at: 1, color: "#352015" }
+        ] }]
+    });
+    RegisterSurface("chapter-map-stage-node", {
+        backgroundColor: "#301c12",
+        layers: [{ type: "radial", x: 0.34, y: 0.27, radiusScale: 0.92, stops: [
+            { at: 0, color: "#67432a" },
+            { at: 1, color: "#301c12" }
+        ] }]
+    });
+    RegisterSurface("chapter-map-stage-node-completed", {
+        backgroundColor: "#a56b2a",
+        layers: [{ type: "radial", x: 0.34, y: 0.27, radiusScale: 0.92, stops: [
+            { at: 0, color: "#f0c575" },
+            { at: 1, color: "#a56b2a" }
+        ] }]
+    });
+    RegisterSurface("chapter-map-briefing", {
+        backgroundColor: "#1d110c",
+        layers: [{ type: "linear", angle: 180, stops: [
+            { at: 0, color: "#2f1c13" },
+            { at: 1, color: "#1d110c" }
+        ] }]
+    });
+    RegisterSurface("chapter-map-briefing-play", {
+        backgroundColor: "#ba7730",
+        layers: [{ type: "linear", angle: 180, stops: [
+            { at: 0, color: "#f0c574" },
+            { at: 1, color: "#ba7730" }
+        ] }]
+    });
+    RegisterSurface("chapter-map-route-horizontal", {
+        backgroundColor: "transparent",
+        alpha: true,
+        layers: [{ type: "linear", angle: 90, stops: BuildStripeStops("rgba(213,166,96,.55)") }]
+    });
+    RegisterSurface("chapter-map-route-vertical", {
+        backgroundColor: "transparent",
+        alpha: true,
+        layers: [{ type: "linear", angle: 180, stops: BuildStripeStops("rgba(213,166,96,.55)") }]
+    });
+
     RegisterSurface("scene-background-fromville", {
         backgroundColor: "#080b0a",
         layers: [
@@ -798,7 +879,7 @@
     }
 
     window.GlobalModule = Object.freeze({
-        version: "1.2.1",
+        version: "1.2.2",
         gradients: Object.freeze({
             registerTheme: RegisterTheme,
             setTheme: SetTheme,
