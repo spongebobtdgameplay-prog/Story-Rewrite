@@ -13,7 +13,7 @@
 <link rel="stylesheet" href="looks2.css?v=20261120-gradient-registry1">
 <link rel="stylesheet" href="looks3.css?v=20261120-gradient-registry1">
 <link rel="stylesheet" href="looks4.css?v=20261106-font-restore1">
-<link rel="stylesheet" href="game-ui.css?v=20261120-gradient-registry1">
+<link rel="stylesheet" href="game-ui.css?v=20261126-globalmodule1">
 <link rel="stylesheet" href="multiplayer.css?v=20261120-gradient-registry1">
 <link rel="stylesheet" href="shell-ui.css?v=20261120-gradient-registry1">    <style>
         .StageNodeDifficulty {
@@ -37,21 +37,21 @@
         body.LevelSelectPage { overscroll-behavior: none; overflow-x: hidden; }
     </style>
     <link rel="stylesheet" href="global-module.css?v=20261120-gradient-registry1">
-    <script src="global-module.js?v=20261125-gradient-no-flicker1" defer></script>
+    <script src="global-module.js?v=20261126-chaptermap-surfaces1" defer></script>
     <meta name="story-rewrite-global-module" content="2">
 </head>
 <body class="LevelSelectPage">
     <div class="LevelSelectShell">
-        <header class="GameSelectHeader">
-            <button class="GameBackButton IconBackButton" type="button" data-story-back="main.html" aria-label="Go back"></button>
+        <header class="GameSelectHeader" data-story-gradient-surface="chapter-map-header">
+            <button class="GameBackButton IconBackButton" data-story-gradient-surface="chapter-map-header-button" type="button" data-story-back="main.html" aria-label="Go back"></button>
             <div class="GameHeaderCopy">
                 <div class="GameHeaderEyebrow">Story Rewrite</div>
                 <h1>Chapter Map</h1>
                 <p>Choose a world, follow its route, and open the next page.</p>
             </div>
             <div class="GameHeaderActions">
-                <button class="GameHeaderButton" type="button" data-story-go="multiplayer.html">Multiplayer</button>
-                <button class="GameHeaderButton" type="button" data-story-go="tutorial.html">How to Play</button>
+                <button class="GameHeaderButton" data-story-gradient-surface="chapter-map-header-button" type="button" data-story-go="multiplayer.html">Multiplayer</button>
+                <button class="GameHeaderButton" data-story-gradient-surface="chapter-map-header-button" type="button" data-story-go="tutorial.html">How to Play</button>
             </div>
         </header>
         <section class="GameStatsBar" id="OverviewStats"></section>
@@ -65,6 +65,6 @@
 <script src="audio.js?v=20261030-engine6"></script>
 <script src="real-audio.js?v=20261125-marker-renamed1"></script>
 <script src="shell-ui.js?v=20261031-githubfix1"></script>
-<script src="levels.js?v=20261030-engine1"></script>
+<script src="levels.js?v=20261126-progress-refresh1"></script>
 </body>
 </html>
